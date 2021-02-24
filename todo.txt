@@ -1,0 +1,11 @@
+in order:
+ - server preempts (so it doesn't wait on READY forever)
+ - server timer for answers
+ - parse question spreadsheet
+ - simple answer checking mechanism
+ - cool graphics
+ - ui layouting
+ - complex answer checking mechanism
+ - fill out server messages to contain more info (family names, etc)
+ - lobbies
+ - avatar pics + fun stuff like a celebration emoji effect
