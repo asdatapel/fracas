@@ -127,7 +127,7 @@ Mesh load_obj()
             for (int i =0; i < 3; i++){
                 int pos = (atoi(parse_token(&buf, buf_end).data) - 1) * 3;
                 int uv = (atoi(parse_token(&buf, buf_end).data) - 1) * 2;
-                int normal = atoi(parse_token(&buf, buf_end).data);
+                int normal = (atoi(parse_token(&buf, buf_end).data) - 1) * 3;
                 f[f_i++] = v[pos];
                 f[f_i++] = v[pos + 1];
                 f[f_i++] = v[pos + 2];

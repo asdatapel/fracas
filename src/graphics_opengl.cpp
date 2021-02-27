@@ -95,6 +95,8 @@ static void init_graphics()
     glEnable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_FRAMEBUFFER_SRGB);
+    glEnable(GL_CULL_FACE);
+    glFrontFace(GL_CW);
 
     basic_shader = create_shader_program("resources/shaders/vert.gl", "resources/shaders/frag.gl");
     basic_shader_resolution_uniform = glGetUniformLocation(basic_shader, "resolution");
