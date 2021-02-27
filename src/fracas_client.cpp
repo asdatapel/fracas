@@ -6,6 +6,7 @@
 #include <thread>
 
 #include "font.hpp"
+#include "mesh.hpp"
 #include "net.hpp"
 #include "platform.hpp"
 #include "ui.hpp"
@@ -33,6 +34,7 @@ ServerMessageType ui_state;
 char round_num;
 char faceoffer0_i, faceoffer1_i;
 AllocatedString<128> question;
+uint64_t answer_end_time;
 char answering_player_i;
 char buzzing_family;
 char faceoff_winner;
@@ -44,6 +46,16 @@ uint16_t flip_answer_score;
 char incorrects;
 char round_winner;
 uint16_t family0_score, family1_score;
+
+
+Bitmap albedo;
+Bitmap normal;
+Bitmap metal;
+Bitmap roughness;
+Texture albedo_tex;
+Texture normal_tex;
+Texture metal_tex;
+Texture roughness_tex;
 
 void handleJOIN_RESPONSE(char *data)
 {
@@ -112,7 +124,9 @@ void handleASK_QUESTION(char *data)
 
 void handlePROMPT_FOR_ANSWER(char *data)
 {
-    read_byte(data, &answering_player_i);
+    data = read_byte(data, &answering_player_i);
+    data = read_long(data, &answer_end_time);
+    printf("Sending timestamp: %llu\n", answer_end_time);
     ui_state = ServerMessageType::PROMPT_FOR_ANSWER;
 
     printf("received %s\n", __func__);
@@ -236,6 +250,15 @@ bool init_if_not()
     {
         initted = true;
 
+        albedo = parse_bitmap(read_entire_file("resources/models/albedo.bmp"));
+        albedo_tex = to_texture(albedo, true);
+        normal = parse_bitmap(read_entire_file("resources/models/normal.bmp"));
+        normal_tex = to_texture(normal, true);
+        metal = parse_bitmap(read_entire_file("resources/models/metal.bmp"));
+        metal_tex = to_texture(metal, true);
+        roughness = parse_bitmap(read_entire_file("resources/models/roughness.bmp"));
+        roughness_tex = to_texture(roughness, true);
+
         if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
         {
             printf("Failed. Error Code : %d", WSAGetLastError());
@@ -249,10 +272,10 @@ bool init_if_not()
         server_address.sin_family = AF_INET;
         inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr.S_un.S_addr);
         server_address.sin_port = htons(6519);
-        if (connect(server_socket, (sockaddr *)&server_address, sizeof(server_address)) != 0)
-        {
-            printf("Could not connect to server : %d", WSAGetLastError());
-        }
+        // if (connect(server_socket, (sockaddr *)&server_address, sizeof(server_address)) != 0)
+        // {
+        //     printf("Could not connect to server : %d", WSAGetLastError());
+        // }
         {
             u_long mode = 1;
             ioctlsocket(server_socket, FIONBIO, (unsigned long *)&mode);
@@ -312,17 +335,17 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ta
 
     int msg_len;
     char msg[MAX_MSG_SIZE];
-    while ((msg_len = server.recieve_msg(msg)) > 0)
-    {
-        ServerMessageType msg_type;
-        char *data = read_byte(msg, (char *)&msg_type);
+    // while ((msg_len = server.recieve_msg(msg)) > 0)
+    // {
+    //     ServerMessageType msg_type;
+    //     char *data = read_byte(msg, (char *)&msg_type);
 
-        if (msg_type >= ServerMessageType::INVALID)
-            DEBUG_PRINT("There has been an error\n");
+    //     if (msg_type >= ServerMessageType::INVALID)
+    //         DEBUG_PRINT("There has been an error\n");
 
-        HandleFunc handle_func = handle_funcs[(uint8_t)msg_type];
-        handle_func(data);
-    }
+    //     HandleFunc handle_func = handle_funcs[(uint8_t)msg_type];
+    //     handle_func(data);
+    // }
 
     static UiContext ui_context;
 
@@ -330,60 +353,60 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ta
     {
     case ServerMessageType::DESCRIBE_LOBBY:
     {
-        for (int i = 0; i < 12; i++)
-        {
-            float rect_width = 400;
-            float rect_height = 100;
-            float left = (target.width / 2) - rect_width - 10;
-            float top = (target.height / 2) - (rect_height * 2) - (10 * 2);
+        // for (int i = 0; i < 12; i++)
+        // {
+        //     float rect_width = 400;
+        //     float rect_height = 100;
+        //     float left = (target.width / 2) - rect_width - 10;
+        //     float top = (target.height / 2) - (rect_height * 2) - (10 * 2);
 
-            float this_left = (i % 2) * (rect_width + 10) + left;
-            float this_top = (i / 2) * (rect_height + 10) + top;
-            draw_rect(target, {this_left, this_top, rect_width, rect_height}, {i * .1f, (i % 4) * .25f, (i % 3) * .25f, 255});
-            if (players[i].len != 0)
-            {
-                draw_string(target, &font, this_left, this_top + rect_height / 2, 1.f, players[i]);
-            }
-        }
+        //     float this_left = (i % 2) * (rect_width + 10) + left;
+        //     float this_top = (i / 2) * (rect_height + 10) + top;
+        //     draw_rect(target, {this_left, this_top, rect_width, rect_height}, {i * .1f, (i % 4) * .25f, (i % 3) * .25f, 255});
+        //     if (players[i].len != 0)
+        //     {
+        //         draw_string(target, &font, this_left, this_top + rect_height / 2, 1.f, players[i]);
+        //     }
+        // }
 
-        static AllocatedString<32> username;
-        do_text_box(&username, &ui_context, target, input_state, &font, &username, {500, 900, 300, 50}, 8, {1, 0, 0, .8});
+        // static AllocatedString<32> username;
+        // do_text_box(&username, &ui_context, target, input_state, &font, &username, {500, 900, 300, 50}, 8, {1, 0, 0, .8});
 
-        String buttonstr = String::from("Set Name");
-        bool set_name = do_button(&buttonstr, &ui_context, target, input_state, &font, buttonstr, {850, 900, 0, 50}, 8, {0, 0, 1, .8});
-        if (set_name)
-        {
-            int this_msg_size = sizeof(uint16_t) + sizeof(ClientMessageType) + sizeof(uint16_t) + username.len;
-            if (this_msg_size > MAX_MSG_SIZE)
-            {
-                printf("Msg too big: %d", this_msg_size);
-                return true;
-            }
+        // String buttonstr = String::from("Set Name");
+        // bool set_name = do_button(&buttonstr, &ui_context, target, input_state, &font, buttonstr, {850, 900, 0, 50}, 8, {0, 0, 1, .8});
+        // if (set_name)
+        // {
+        //     int this_msg_size = sizeof(uint16_t) + sizeof(ClientMessageType) + sizeof(uint16_t) + username.len;
+        //     if (this_msg_size > MAX_MSG_SIZE)
+        //     {
+        //         printf("Msg too big: %d", this_msg_size);
+        //         return true;
+        //     }
 
-            char msg_data[MAX_MSG_SIZE];
-            char *buf_pos = msg_data;
-            buf_pos = append_short(buf_pos, this_msg_size);
-            buf_pos = append_byte(buf_pos, (char)ClientMessageType::JOIN);
-            buf_pos = append_string(buf_pos, username);
+        //     char msg_data[MAX_MSG_SIZE];
+        //     char *buf_pos = msg_data;
+        //     buf_pos = append_short(buf_pos, this_msg_size);
+        //     buf_pos = append_byte(buf_pos, (char)ClientMessageType::JOIN);
+        //     buf_pos = append_string(buf_pos, username);
 
-            server.send_all(msg_data, this_msg_size);
-        }
+        //     server.send_all(msg_data, this_msg_size);
+        // }
 
-        if (my_id == 0)
-        {
-            String buttonstr = String::from("Start Game");
-            bool start_game = do_button(&buttonstr, &ui_context, target, input_state, &font, buttonstr, {25, 25, 0, 75}, 15, {0, 1, 1, .8});
-            if (start_game)
-            {
-                int this_msg_size = sizeof(uint16_t) + sizeof(ClientMessageType);
-                char msg_data[MAX_MSG_SIZE];
-                char *buf_pos = msg_data;
-                buf_pos = append_short(buf_pos, this_msg_size);
-                buf_pos = append_byte(buf_pos, (char)ClientMessageType::START);
+        // if (my_id == 0)
+        // {
+        //     String buttonstr = String::from("Start Game");
+        //     bool start_game = do_button(&buttonstr, &ui_context, target, input_state, &font, buttonstr, {25, 25, 0, 75}, 15, {0, 1, 1, .8});
+        //     if (start_game)
+        //     {
+        //         int this_msg_size = sizeof(uint16_t) + sizeof(ClientMessageType);
+        //         char msg_data[MAX_MSG_SIZE];
+        //         char *buf_pos = msg_data;
+        //         buf_pos = append_short(buf_pos, this_msg_size);
+        //         buf_pos = append_byte(buf_pos, (char)ClientMessageType::START);
 
-                server.send_all(msg_data, this_msg_size);
-            }
-        }
+        //         server.send_all(msg_data, this_msg_size);
+        //     }
+        // }
     }
     break;
     case ServerMessageType::START_GAME:
@@ -572,6 +595,8 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ta
     default:
         break;
     }
+
+    draw_threed(target, albedo_tex, normal_tex, metal_tex, roughness_tex);
 
     return true;
 }

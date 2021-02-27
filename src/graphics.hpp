@@ -48,9 +48,9 @@ static Bitmap parse_bitmap(FileData file_data)
             int bitmap_i = (bitmap.width * (bitmap.height - 1)) - (y * bitmap.width) + (x);
 
             Vec4i color;
-            color.x = *(file_data.data + file_i);
+            color.z = *(file_data.data + file_i);
             color.y = *(file_data.data + file_i + 1);
-            color.z = *(file_data.data + file_i + 2);
+            color.x = *(file_data.data + file_i + 2);
             color.w = *(file_data.data + file_i + 3);
             bitmap.data[bitmap_i] = color;
         }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <chrono>
 #include <utility>
 
 #include "net.hpp"
@@ -29,6 +30,9 @@ struct Family
 };
 struct GameState
 {
+    uint64_t preempt_timer = 0;
+    uint64_t answer_timer = 0;
+
     Array<Client, 12> clients;
 
     bool waiting_on_ready = false;
@@ -226,6 +230,10 @@ char *construct_msg_prompt_for_answer(GameState &game, char *buf_pos)
 {
     buf_pos = append_byte(buf_pos, (char)ServerMessageType::PROMPT_FOR_ANSWER);
     buf_pos = append_byte(buf_pos, game.who_can_answer());
+
+    uint64_t answer_end_time = std::chrono::system_clock::now().time_since_epoch().count() + game.answer_timer;
+    printf("Sending timestamp: %llu\n", answer_end_time);
+    buf_pos = append_long(buf_pos, answer_end_time);
     return buf_pos;
 }
 
@@ -285,10 +293,24 @@ char *construct_msg_end_round(GameState &game, char *buf_pos)
 void set_next_stage(GameState &game, void (*func)(GameState &game))
 {
     game.next_stage = func;
+    game.preempt_timer = 0; // 10 seconds
 
     DEBUG_PRINT("waiting on READY\n");
     game.waiting_on_ready = true;
     game.num_ready = 0;
+}
+
+void do_next_stage(GameState &game)
+{
+    DEBUG_PRINT("done waiting on READY\n");
+    game.waiting_on_ready = false;
+    for (int i = 0; i < game.clients.len; i++)
+    {
+        game.clients[i].ready = false;
+    }
+
+    assert(game.next_stage);
+    game.next_stage(game);
 }
 
 void stage_ask_question(GameState &game)
@@ -306,7 +328,7 @@ void stage_start_faceoff(GameState &game)
 
 void stage_prompt_for_answer(GameState &game)
 {
-    // TODO: Start timer
+    game.answer_timer = 30000000000; // 30 seconds
 
     build_and_broadcast_msg(game, construct_msg_prompt_for_answer);
 }
@@ -499,17 +521,10 @@ void handleREADY(GameState &game, char *data, int client_i)
         game.num_ready++;
         DEBUG_PRINT("READY count now at %d\n", game.num_ready);
     }
+
     if (game.num_ready == game.clients.len)
     {
-        DEBUG_PRINT("done waiting on READY\n");
-        game.waiting_on_ready = false;
-        for (int i = 0; i < game.clients.len; i++)
-        {
-            game.clients[i].ready = false;
-        }
-
-        assert(game.next_stage);
-        game.next_stage(game);
+        do_next_stage(game);
     }
 };
 
@@ -645,3 +660,15 @@ HandleFunc handle_funcs[(int)ClientMessageType::INVALID] = {
     handlePASS_OR_PLAY, // PASS_OR_PLAY
     handleANSWER,       // ANSWER
 };
+
+void server_tick(GameState &game, uint64_t elapsed_micros)
+{
+    if (game.waiting_on_ready)
+    {
+        game.preempt_timer += elapsed_micros;
+        if (game.preempt_timer > 10000000000)
+        {
+            do_next_stage(game);
+        }
+    }
+}

@@ -28,6 +28,12 @@ static int textured_mapped_shader_pos_uniform;
 static int textured_mapped_shader_scale_uniform;
 static int textured_mapped_shader_uv_uniform;
 
+unsigned int threed_shader;
+static int threed_shader_t_uniform;
+unsigned int threed_vao;
+static unsigned int threed_vbo;
+Mesh mesh;
+
 static void check_error_shader(unsigned int shader, const char *name)
 {
     int success;
@@ -86,6 +92,7 @@ static void init_graphics()
     glClearColor(powf(.392f, 2.2f), powf(.584f, 2.2f), powf(.929f, 2.2f), 1.0f);
 
     glEnable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_FRAMEBUFFER_SRGB);
 
@@ -151,11 +158,52 @@ static void init_graphics()
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)(12 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    mesh = load_obj();
+    threed_shader = create_shader_program("resources/shaders/threed_vert.gl", "resources/shaders/threed_frag.gl");
+    threed_shader_t_uniform = glGetUniformLocation(threed_shader, "t");
+    glGenBuffers(1, &threed_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, threed_vbo);
+    glBufferData(GL_ARRAY_BUFFER, mesh.buf_size, mesh.data, GL_STATIC_DRAW);
+
+    glGenVertexArrays(1, &threed_vao);
+    glBindVertexArray(threed_vao);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(5 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 }
 
 static void clear_backbuffer()
 {
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+static void draw_threed(RenderTarget target, Texture albedo, Texture normal, Texture metal, Texture roughness)
+{
+    glUseProgram(threed_shader);
+    glBindVertexArray(threed_vao);
+
+    static float t = 0.0f;
+    t += 0.01f;
+    glUniform1f(threed_shader_t_uniform, t);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, albedo.gl_reference);
+    glUniform1i(glGetUniformLocation(threed_shader, "albedo_tex"), 0);
+    glActiveTexture(GL_TEXTURE0 + 1);
+    glBindTexture(GL_TEXTURE_2D, normal.gl_reference);
+    glUniform1i(glGetUniformLocation(threed_shader, "normal_tex"), 1);
+    glActiveTexture(GL_TEXTURE0 + 2);
+    glBindTexture(GL_TEXTURE_2D, metal.gl_reference);
+    glUniform1i(glGetUniformLocation(threed_shader, "metal_tex"), 2);
+    glActiveTexture(GL_TEXTURE0 + 3);
+    glBindTexture(GL_TEXTURE_2D, roughness.gl_reference);
+    glUniform1i(glGetUniformLocation(threed_shader, "roughness_tex"), 3);
+
+    glDrawArrays(GL_TRIANGLES, 0, mesh.verts);
 }
 
 static void draw_rect(RenderTarget target, Rect rect, Color color)
@@ -179,6 +227,7 @@ static void draw_textured_rect(RenderTarget target, Rect rect, Color color, Text
     glUniform2f(textured_shader_scale_uniform, rect.width, rect.height);
     glUniform4f(textured_shader_color_uniform, color.r, color.g, color.b, color.a);
 
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex.gl_reference);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -193,6 +242,7 @@ static void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, T
     glUniform2f(textured_mapped_shader_scale_uniform, rect.width, rect.height);
     glUniform4f(textured_mapped_shader_uv_uniform, uv.x, uv.y, uv.width, uv.height);
 
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex.gl_reference);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);

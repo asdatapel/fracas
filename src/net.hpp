@@ -54,6 +54,14 @@ char *append_short(char *buf, uint16_t val)
     return buf;
 }
 
+char *append_long(char *buf, uint64_t val)
+{
+    uint64_t n_val = htonll(val);
+    *(uint64_t *)buf = n_val;
+    buf += sizeof(uint64_t);
+    return buf;
+}
+
 char *append_string(char *buf, char *str, uint16_t len)
 {
     buf = append_short(buf, len);
@@ -79,6 +87,13 @@ char *read_short(char *buf, uint16_t *val)
     uint16_t n_val = *(uint16_t *)buf;
     *val = ntohs(n_val);
     return buf + 2;
+}
+
+char *read_long(char *buf, uint64_t *val)
+{
+    uint64_t n_val = *(uint64_t *)buf;
+    *val = ntohll(n_val);
+    return buf + 8;
 }
 
 char *read_string(char *buf, char *output_buf, uint16_t *len)

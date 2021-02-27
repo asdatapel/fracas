@@ -1,3 +1,4 @@
+#include <chrono>
 #include <stdio.h>
 #include <stdint.h>
 
@@ -38,8 +39,14 @@ int main(int argc, char *argv[])
 
     listen(s, 3);
 
+
+    auto loop_start_time = std::chrono::high_resolution_clock::now();
     while (true)
     {
+        auto now = std::chrono::high_resolution_clock::now();
+        auto elapsed = now - loop_start_time;
+        loop_start_time = now; 
+
         {
             SOCKET new_socket;
             sockaddr_in client;
@@ -88,6 +95,8 @@ int main(int argc, char *argv[])
                 handle_func(game, data, i);
             }
         }
+
+        server_tick(game, elapsed.count());
 
         // printf("Sleeping...\n");
         // Sleep(1000);
