@@ -48,14 +48,6 @@ char round_winner;
 uint16_t family0_score, family1_score;
 
 
-Bitmap albedo;
-Bitmap normal;
-Bitmap metal;
-Bitmap roughness;
-Texture albedo_tex;
-Texture normal_tex;
-Texture metal_tex;
-Texture roughness_tex;
 
 void handleJOIN_RESPONSE(char *data)
 {
@@ -250,15 +242,6 @@ bool init_if_not()
     {
         initted = true;
 
-        albedo = parse_bitmap(read_entire_file("resources/models/albedo.bmp"));
-        albedo_tex = to_texture(albedo, true);
-        normal = parse_bitmap(read_entire_file("resources/models/normal.bmp"));
-        normal_tex = to_texture(normal, true);
-        metal = parse_bitmap(read_entire_file("resources/models/metal.bmp"));
-        metal_tex = to_texture(metal, true);
-        roughness = parse_bitmap(read_entire_file("resources/models/roughness.bmp"));
-        roughness_tex = to_texture(roughness, true);
-
         if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
         {
             printf("Failed. Error Code : %d", WSAGetLastError());
@@ -290,8 +273,40 @@ bool init_if_not()
     return true;
 }
 
+void graphics_test_stuff(RenderTarget target)
+{
+    static bool init = false;
+    
+    static Bitmap albedo;
+    static Bitmap normal;
+    static Bitmap metal;
+    static Bitmap roughness;
+    static Texture albedo_tex;
+    static Texture normal_tex;
+    static Texture metal_tex;
+    static Texture roughness_tex;
+    if (!init)
+    {
+        init = true;
+
+        albedo = parse_bitmap(read_entire_file("resources/models/x/albedo.bmp"));
+        albedo_tex = to_texture(albedo, true);
+        normal = parse_bitmap(read_entire_file("resources/models/x/normal.bmp"));
+        normal_tex = to_texture(normal, true);
+        metal = parse_bitmap(read_entire_file("resources/models/x/metal.bmp"));
+        metal_tex = to_texture(metal, true);
+        roughness = parse_bitmap(read_entire_file("resources/models/x/roughness.bmp"));
+        roughness_tex = to_texture(roughness, true);
+    }
+
+
+    draw_threed(target, albedo_tex, normal_tex, metal_tex, roughness_tex);
+}
+
 bool game_update(const float time_step, InputState *input_state, RenderTarget target)
 {
+    graphics_test_stuff(target);
+
     if (!init_if_not())
         return false;
 
@@ -595,8 +610,6 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ta
     default:
         break;
     }
-
-    draw_threed(target, albedo_tex, normal_tex, metal_tex, roughness_tex);
 
     return true;
 }

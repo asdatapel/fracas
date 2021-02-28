@@ -60,8 +60,8 @@ float GeometrySmith(vec3 n, vec3 V, vec3 l, float roughness)
 
 void main()
 {
-    vec3 light_pos = vec3(0.0, sin(t * 2) - 1, 0.5);
-    vec3 light_color = vec3(2.53 * (sin(t) + 1), .94 * (sin(t) + 1), .83 * (sin(t) + 1));
+    vec3 light_pos = vec3(0.5, sin(t), 1.5);
+    vec3 light_color = vec3(3,2,1);
 
     vec3 cam_pos = vec3(0.0, 0.0, 0.0);
 
@@ -100,7 +100,7 @@ void main()
 
     vec3 color = light_out;
 	
-    color = color / (color + vec3(1.0));
+    // color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2)); 
 
     FragColor = vec4(color, 1.0);

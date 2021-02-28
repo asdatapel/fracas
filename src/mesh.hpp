@@ -42,7 +42,7 @@ void skip_to_next_line(char **buf, char *end)
 
 Mesh load_obj()
 {
-    const char *filename = "resources/models/curved_x.obj";
+    const char *filename = "resources/models/x/x.obj";
     FileData file = read_entire_file(filename);
 
     int v_count = 0;
