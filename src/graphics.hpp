@@ -13,8 +13,8 @@ struct Bitmap {
 
 struct Texture
 {
-    Bitmap data;
     unsigned int gl_reference;
+    int width, height;
 };
 
 struct RenderTarget
@@ -23,10 +23,26 @@ struct RenderTarget
     uint32_t height;
 };
 
-void init_graphics();
+struct VertexBuffer
+{
+    unsigned int vao;
+    unsigned int vbo;
+    int size;
+    int vert_count;
+};
+
+struct Material
+{
+    Texture albedo;
+    Texture normal;
+    Texture metal;
+    Texture roughness;
+};
+
+void init_graphics(RenderTarget target);
 void clear_backbuffer();
 void draw_rect(RenderTarget target, Rect rect, Color color);
-Texture to_texture(Bitmap bitmap, bool smooth = true);
+Texture to_texture(Bitmap bitmap, bool mipmaps = true);
 void draw_textured_rect(RenderTarget target, Rect rect, Color color, Texture tex);
 void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture tex);
 
@@ -57,4 +73,9 @@ static Bitmap parse_bitmap(FileData file_data)
     }
 
     return bitmap;
+}
+
+static void free_bitmap(Bitmap bitmap)
+{
+    free(bitmap.data);
 }

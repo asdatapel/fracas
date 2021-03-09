@@ -77,13 +77,13 @@ struct AllocatedString : String
 
     void operator=(const AllocatedString &str2)
     {
-        len = min(str2.len, MAX_LEN);
+        len = fmin(str2.len, MAX_LEN);
         memcpy(data, str2.data, len);
     }
 
     void operator=(const String &str2)
     {
-        len = min(str2.len, MAX_LEN);
+        len = fmin(str2.len, MAX_LEN);
         memcpy(data, str2.data, len);
     }
 

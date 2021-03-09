@@ -1,6 +1,7 @@
 src/glad/*
 src/glfw/*
 src/KHR/*
+src/glm/*
 build/*
 glfw3.dll
 .vscode

@@ -1,10 +1,13 @@
 #include <stdio.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-
 #include <mutex>
 #include <thread>
 
+#include <winsock2.h>
+#include <ws2tcpip.h>
+
+#include "stb/stb_image.hpp"
+
+#include "camera.hpp"
 #include "font.hpp"
 #include "mesh.hpp"
 #include "net.hpp"
@@ -46,8 +49,6 @@ uint16_t flip_answer_score;
 char incorrects;
 char round_winner;
 uint16_t family0_score, family1_score;
-
-
 
 void handleJOIN_RESPONSE(char *data)
 {
@@ -273,39 +274,164 @@ bool init_if_not()
     return true;
 }
 
-void graphics_test_stuff(RenderTarget target)
+void graphics_test_stuff(RenderTarget target, InputState *input)
 {
+    static Material x;
+    static Material bar;
+    static VertexBuffer x_buf;
+    static VertexBuffer bar_buf;
+
+    static Texture hdri_tex;
+    static Texture unfiltered_cubemap;
+    static Texture irradiance_map;
+    static Texture env_map;
+    static Texture brdf_lut;
+    static Texture text_tex;
+
+    static Texture env_maps[4];
+
     static bool init = false;
-    
-    static Bitmap albedo;
-    static Bitmap normal;
-    static Bitmap metal;
-    static Bitmap roughness;
-    static Texture albedo_tex;
-    static Texture normal_tex;
-    static Texture metal_tex;
-    static Texture roughness_tex;
     if (!init)
     {
         init = true;
+        {
+            ////////////////////////
+            //TODO: MEMORY LEAK HERE
+            ////////////////////////
+            Mesh x_mesh = load_obj("resources/models/x/x.obj");
+            Mesh bar_mesh = load_bar_objs("resources/models/bar/bar3.obj", "resources/models/bar/bar_text3.obj");
+            x_buf = upload_vertex_buffer(x_mesh);
+            bar_buf = upload_vertex_buffer(bar_mesh);
 
-        albedo = parse_bitmap(read_entire_file("resources/models/x/albedo.bmp"));
-        albedo_tex = to_texture(albedo, true);
-        normal = parse_bitmap(read_entire_file("resources/models/x/normal.bmp"));
-        normal_tex = to_texture(normal, true);
-        metal = parse_bitmap(read_entire_file("resources/models/x/metal.bmp"));
-        metal_tex = to_texture(metal, true);
-        roughness = parse_bitmap(read_entire_file("resources/models/x/roughness.bmp"));
-        roughness_tex = to_texture(roughness, true);
+            Bitmap albedo;
+            Bitmap normal;
+            Bitmap metal;
+            Bitmap roughness;
+            Bitmap text;
+
+            ////////////////////////
+            //TODO: MEMORY LEAK HERE
+            ////////////////////////
+            albedo = parse_bitmap(read_entire_file("resources/models/x/albedo.bmp"));
+            x.albedo = to_texture(albedo, true);
+            normal = parse_bitmap(read_entire_file("resources/models/x/normal.bmp"));
+            x.normal = to_texture(normal, true);
+            metal = parse_bitmap(read_entire_file("resources/models/x/metal.bmp"));
+            x.metal = to_texture(metal, true);
+            roughness = parse_bitmap(read_entire_file("resources/models/x/roughness.bmp"));
+            x.roughness = to_texture(roughness, true);
+
+            albedo = parse_bitmap(read_entire_file("resources/models/bar/albedo.bmp"));
+            bar.albedo = to_texture(albedo, true);
+            normal = parse_bitmap(read_entire_file("resources/models/bar/normal.bmp"));
+            bar.normal = to_texture(normal, true);
+            metal = parse_bitmap(read_entire_file("resources/models/bar/metal.bmp"));
+            bar.metal = to_texture(metal, true);
+            roughness = parse_bitmap(read_entire_file("resources/models/bar/roughness.bmp"));
+            bar.roughness = to_texture(roughness, true);
+            text = parse_bitmap(read_entire_file("resources/models/bar/text.bmp"));
+            text_tex = to_texture(text, true);
+        }
+
+        {
+            int width, height, components;
+            stbi_set_flip_vertically_on_load(true);
+            float *hdri = stbi_loadf("resources/hdri/ahornsteig.hdr", &width, &height, &components, 0);
+            hdri_tex = to_texture(hdri, width, height);
+            stbi_image_free(hdri);
+
+            unfiltered_cubemap = hdri_to_cubemap(hdri_tex, 1024);
+            irradiance_map = convolve_irradiance_map(unfiltered_cubemap, 32);
+            env_maps[0] = filter_env_map(unfiltered_cubemap, 32);
+            env_maps[1] = filter_env_map(unfiltered_cubemap, 64);
+            env_maps[2] = filter_env_map(unfiltered_cubemap, 128);
+            env_maps[3] = filter_env_map(unfiltered_cubemap, 512);
+            brdf_lut = generate_brdf_lut(512);
+        }
     }
 
+    static int frames_since_change = 0;
+    frames_since_change++;
+    static bool val;
+    if (input->keys[(int)Keys::Z])
+    {
+        if (frames_since_change > 30)
+        {
+            frames_since_change = 0;
+            val = !val;
+        }
+    }
+    static float t = 0.f;
+    if (val)
+    {
+        t += 0.01f;
+    }
 
-    draw_threed(target, albedo_tex, normal_tex, metal_tex, roughness_tex);
+    static int frames_since_change2 = 0;
+    frames_since_change2++;
+    static int selected_env_map = 3;
+    if (input->keys[(int)Keys::X])
+    {
+        if (frames_since_change2 > 30)
+        {
+            frames_since_change2 = 0;
+            selected_env_map = (selected_env_map + 1) % 4;
+            printf("%d\n", selected_env_map);
+        }
+    }
+
+    static Camera camera;
+    camera.update(target, input);
+
+    for (int i = 0; i < 8; i++)
+    {
+        float x = (i % 2) * 4.f;
+        float y = (i / 2) * 0.8f;
+
+        float my_t = 0;
+        static float t2 = 0.f;
+        if (i == 4)
+        {
+            if (val)
+            {
+                t2 += 0.01f;
+                my_t = t2;
+            }
+        }
+        float bar_rot = (powf(my_t * 4, 2) * 90.f) - 90.f;
+        if (bar_rot < -90.f)
+        {
+            bar_rot = -90.f;
+        }
+        if (bar_rot > 90.f)
+        {
+            bar_rot = 90.f;
+        }
+
+        glm::mat4 bar_mat = glm::rotate(glm::translate(glm::mat4(1.0f), {x, y, 0.f}), glm::radians(bar_rot), glm::vec3{1.f, 0.f, 0.f});
+        draw_bar(target, camera, bar_mat, bar_buf, bar, irradiance_map, env_maps[selected_env_map], brdf_lut, text_tex);
+    }
+
+    float speed_denoms[3] = {2, 2.75, 2.15};
+    for (int i = 0; i < 3; i++)
+    {
+        glm::vec3 initial_pos = {-1 + i, 0, 5};
+        glm::quat initial_rot({(i * .5f), .1f + (i * .1f), -0.5f + (i * 1.4f)});
+        glm::vec3 target_pos = {i - 1, 0.f, 0.f};
+        glm::quat target_rot({glm::radians(90.f), 0.f, 0.f});
+        float actual_t = 1.f - powf(glm::clamp(t / 2, 0.f, 1.f), speed_denoms[i]);
+        glm::vec3 actual_pos = initial_pos + ((target_pos - initial_pos) * actual_t);
+        glm::quat actual_rot = glm::normalize(initial_rot + ((target_rot - initial_rot) * actual_t));
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), actual_pos) * glm::toMat4(actual_rot);
+        draw_threed(target, camera, model, x_buf, x, irradiance_map, env_maps[selected_env_map], brdf_lut);
+    }
+
+    draw_cubemap(unfiltered_cubemap, camera);
 }
 
 bool game_update(const float time_step, InputState *input_state, RenderTarget target)
 {
-    graphics_test_stuff(target);
+    graphics_test_stuff(target, input_state);
 
     if (!init_if_not())
         return false;
@@ -327,26 +453,26 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ta
         }
     }
 
-    for (int i = 0; i < input_state->key_input.len; i++)
-    {
-        switch (input_state->key_input[i])
-        {
-        case Keys::S:
-        {
-            int this_msg_size = sizeof(uint16_t) + sizeof(ClientMessageType);
-            char msg_data[MAX_MSG_SIZE];
-            char *buf_pos = msg_data;
-            buf_pos = append_short(buf_pos, this_msg_size);
-            buf_pos = append_byte(buf_pos, (char)ClientMessageType::READY);
+    // for (int i = 0; i < input_state->key_input.len; i++)
+    // {
+    //     switch (input_state->key_input[i])
+    //     {
+    //     case Keys::S:
+    //     {
+    //         int this_msg_size = sizeof(uint16_t) + sizeof(ClientMessageType);
+    //         char msg_data[MAX_MSG_SIZE];
+    //         char *buf_pos = msg_data;
+    //         buf_pos = append_short(buf_pos, this_msg_size);
+    //         buf_pos = append_byte(buf_pos, (char)ClientMessageType::READY);
 
-            server.send_all(msg_data, this_msg_size);
-            printf("Sent READY\n");
-        }
-        break;
-        default:
-            break;
-        }
-    }
+    //         server.send_all(msg_data, this_msg_size);
+    //         printf("Sent READY\n");
+    //     }
+    //     break;
+    //     default:
+    //         break;
+    //     }
+    // }
 
     int msg_len;
     char msg[MAX_MSG_SIZE];

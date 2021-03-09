@@ -139,6 +139,11 @@ struct Vec4i
     uint8_t x, y, z, w;
 };
 
+struct Vec3f
+{
+    float x, y, z;
+};
+
 struct Rect
 {
     float x, y;

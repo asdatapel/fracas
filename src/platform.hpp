@@ -6,13 +6,19 @@
 enum struct Keys
 {
     BACKSPACE,
+    W,
     A,
     S,
     D,
+    Z,
+    X,
+    C,
+    INVALID
 };
 
 struct InputState
 {
+    bool keys[(int)Keys::INVALID];
     bool w, a, s, d;
     bool escape;
 

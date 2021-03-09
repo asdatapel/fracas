@@ -20,7 +20,10 @@ uint32_t OUTPUT_BUFFER_HEIGHT = 1080;
 
 void fill_input_state(GLFWwindow *window, InputState *state)
 {
-    *state = {};
+    // reset per frame data
+    state->text_input = {};
+    state->key_input = {};
+    state->mouse_input = {};
 
     glfwGetCursorPos(window, &state->mouse_x, &state->mouse_y);
 }
@@ -39,23 +42,38 @@ void key_input_callback(GLFWwindow *window, int key, int scancode, int action, i
 {
     InputState *input_state = static_cast<InputState *>(glfwGetWindowUserPointer(window));
 
-    if (action == GLFW_PRESS || action == GLFW_REPEAT)
+    auto append_if_press = [&](Keys k) {
+        input_state->keys[(int)k] = (action == GLFW_PRESS || action == GLFW_REPEAT);
+        if (action == GLFW_PRESS || action == GLFW_REPEAT)
+            input_state->key_input.append(k);
+    };
+
+    switch (key)
     {
-        switch (key)
-        {
-        case GLFW_KEY_BACKSPACE:
-            input_state->key_input.append(Keys::BACKSPACE);
-            break;
-        case GLFW_KEY_A:
-            input_state->key_input.append(Keys::A);
-            break;
-        case GLFW_KEY_S:
-            input_state->key_input.append(Keys::S);
-            break;
-        case GLFW_KEY_D:
-            input_state->key_input.append(Keys::D);
-            break;
-        }
+    case GLFW_KEY_BACKSPACE:
+        append_if_press(Keys::BACKSPACE);
+        break;
+    case GLFW_KEY_W:
+        append_if_press(Keys::W);
+        break;
+    case GLFW_KEY_A:
+        append_if_press(Keys::A);
+        break;
+    case GLFW_KEY_S:
+        append_if_press(Keys::S);
+        break;
+    case GLFW_KEY_D:
+        append_if_press(Keys::D);
+        break;
+    case GLFW_KEY_Z:
+        append_if_press(Keys::Z);
+        break;
+    case GLFW_KEY_X:
+        append_if_press(Keys::X);
+        break;
+    case GLFW_KEY_C:
+        append_if_press(Keys::C);
+        break;
     }
 }
 
@@ -63,9 +81,14 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
     InputState *input_state = static_cast<InputState *>(glfwGetWindowUserPointer(window));
 
-    if (button == GLFW_MOUSE_BUTTON_LEFT)
+    switch (button)
     {
+    case (GLFW_MOUSE_BUTTON_LEFT):
+    {
+        input_state->mouse_left = action == GLFW_PRESS;
         input_state->mouse_input.append({action == GLFW_PRESS});
+    }
+    break;
     }
 }
 
@@ -76,6 +99,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwSwapInterval(1); // vsync on
+    glfwWindowHint(GLFW_SAMPLES, 4);
 
 #if MACOS
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -96,7 +120,6 @@ int main()
         return -1;
     }
 
-    init_graphics();
 
     InputState input_state = {};
     glfwSetWindowUserPointer(window, &input_state);
@@ -104,6 +127,7 @@ int main()
     glfwSetKeyCallback(window, key_input_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     RenderTarget render_target = {OUTPUT_BUFFER_WIDTH, OUTPUT_BUFFER_HEIGHT};
+    init_graphics(render_target);
 
     auto loop_start_time = std::chrono::high_resolution_clock::now();
     while (!glfwWindowShouldClose(window))

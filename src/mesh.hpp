@@ -5,11 +5,18 @@
 #include "platform.hpp"
 #include "util.hpp"
 
+struct Component
+{
+    int offset, size, stride;
+};
 struct Mesh
 {
     float *data;
     int verts;
     uint64_t buf_size;
+
+    int components_count;
+    Component *components;
 };
 
 bool is_whitespace(char c) { return c == ' ' || c == '\n' || c == '\r' || c == '\0' || c == '/'; };
@@ -40,9 +47,8 @@ void skip_to_next_line(char **buf, char *end)
         (*buf)++;
 }
 
-Mesh load_obj()
+Mesh load_obj(const char *filename)
 {
-    const char *filename = "resources/models/x/x.obj";
     FileData file = read_entire_file(filename);
 
     int v_count = 0;
@@ -56,7 +62,7 @@ Mesh load_obj()
     while ((token = parse_token(&buf, buf_end)).len)
     {
         // replace whitespace seperator will null terminator, makes it much easier to user atof() later
-        *buf = '\0'; 
+        *buf = '\0';
 
         if (strcmp(token, String::from("v")))
         {
@@ -124,7 +130,8 @@ Mesh load_obj()
         }
         else if (strcmp(token, String::from("f")))
         {
-            for (int i =0; i < 3; i++){
+            for (int i = 0; i < 3; i++)
+            {
                 int pos = (atoi(parse_token(&buf, buf_end).data) - 1) * 3;
                 int uv = (atoi(parse_token(&buf, buf_end).data) - 1) * 2;
                 int normal = (atoi(parse_token(&buf, buf_end).data) - 1) * 3;
@@ -132,7 +139,7 @@ Mesh load_obj()
                 f[f_i++] = v[pos + 1];
                 f[f_i++] = v[pos + 2];
                 f[f_i++] = vt[uv];
-                f[f_i++] = -vt[uv + 1];
+                f[f_i++] = 1 - vt[uv + 1];
                 f[f_i++] = vn[normal];
                 f[f_i++] = vn[normal + 1];
                 f[f_i++] = vn[normal + 2];
@@ -149,5 +156,54 @@ Mesh load_obj()
     free(vn);
     free(vt);
 
-    return {f, 3 * f_count, sizeof(float) * 8 * 3 * f_count};
+    Mesh mesh = {f, 3 * f_count, sizeof(float) * 8 * 3 * f_count};
+    mesh.components_count = 3;
+    mesh.components = (Component*)malloc(mesh.components_count * sizeof(Component));
+    mesh.components[0] = {0, 3, 8};
+    mesh.components[1] = {3, 2, 8};
+    mesh.components[2] = {5, 3, 8};
+
+    return mesh;
+}
+
+void free_mesh(Mesh mesh)
+{
+    free(mesh.data);
+    free(mesh.components);
+}
+
+Mesh load_bar_objs(const char *filename1, const char *filename2)
+{
+    Mesh mesh1 = load_obj(filename1);
+    Mesh mesh2 = load_obj(filename2);
+
+    float *f = (float *)malloc(sizeof(float) * 10 * mesh1.verts);
+    int f_i = 0;
+    for (int i = 0; i < mesh1.verts; i++)
+    {
+        int v_i = i * 8;
+        f[f_i++] = mesh1.data[v_i + 0];
+        f[f_i++] = mesh1.data[v_i + 1];
+        f[f_i++] = mesh1.data[v_i + 2];
+        f[f_i++] = mesh1.data[v_i + 3];
+        f[f_i++] = mesh1.data[v_i + 4];
+        f[f_i++] = mesh1.data[v_i + 5];
+        f[f_i++] = mesh1.data[v_i + 6];
+        f[f_i++] = mesh1.data[v_i + 7];
+        f[f_i++] = mesh2.data[v_i + 3];
+        f[f_i++] = mesh2.data[v_i + 4];
+    }
+
+    free_mesh(mesh1);
+    free_mesh(mesh2);
+    
+    Mesh mesh = {f, mesh1.verts, sizeof(float) * 10 * mesh1.verts};
+    mesh.components_count = 4;
+    mesh.components = (Component*)malloc(mesh.components_count * sizeof(Component));
+    mesh.components[0] = {0, 3, 10};
+    mesh.components[1] = {3, 2, 10};
+    mesh.components[2] = {5, 3, 10};
+    mesh.components[3] = {8, 2, 10};
+
+    return mesh;
 }
