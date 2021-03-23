@@ -5,3 +5,7 @@ src/glm/*
 build/*
 glfw3.dll
 .vscode
+*.blend1
+*.png
+*.bmp
+*.obj

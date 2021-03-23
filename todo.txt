@@ -2,7 +2,10 @@ in order:
  - server preempts (so it doesn't wait on READY forever)
  - server timer for answers
  - cool graphics
-    - flicker at texture edges
+    - simplify shaders (add #include functionality)
+    - get more models in
+    - emit maps + normal maps
+    - combine uniform maps
  - parse question spreadsheet
  - simple answer checking mechanism
  - ui layouting

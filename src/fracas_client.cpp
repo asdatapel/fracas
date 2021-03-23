@@ -6,6 +6,7 @@
 #include <ws2tcpip.h>
 
 #include "stb/stb_image.hpp"
+#include "stb/stb_truetype.hpp"
 
 #include "camera.hpp"
 #include "font.hpp"
@@ -274,131 +275,317 @@ bool init_if_not()
     return true;
 }
 
-void graphics_test_stuff(RenderTarget target, InputState *input)
+unsigned char ttf_buffer[1 << 20];
+unsigned char temp_bitmap[2048 * 2048];
+stbtt_bakedchar cdata[96];
+
+void font_stuff(RenderTarget target, InputState *input, int index, String answer, int score)
 {
-    static Material x;
-    static Material bar;
-    static VertexBuffer x_buf;
-    static VertexBuffer bar_buf;
+    static Texture tex;
+    static Texture num_texs[8];
 
-    static Texture hdri_tex;
-    static Texture unfiltered_cubemap;
-    static Texture irradiance_map;
-    static Texture env_map;
-    static Texture brdf_lut;
-    static Texture text_tex;
-
-    static Texture env_maps[4];
+    static float baseline;
+    static float font_size = 128;
+    static float ascent_size;
 
     static bool init = false;
     if (!init)
     {
         init = true;
+
+        FILE *f;
+        fopen_s(&f, "c:/windows/fonts/impact.ttf", "rb");
+        fread_s(ttf_buffer, 1 << 20, 1, 1 << 20, f);
+
+        stbtt_fontinfo stb_font;
+        stbtt_InitFont(&stb_font, ttf_buffer, 0);
+        float scale = stbtt_ScaleForPixelHeight(&stb_font, font_size);
+        int ascent, descent, lineGap;
+        stbtt_GetFontVMetrics(&stb_font, &ascent, &descent, &lineGap);
+        ascent_size = ascent * scale;
+
+        int x0, y0, x1, y1;
+        stbtt_GetFontBoundingBox(&stb_font, &x0, &y0, &x1, &y1);
+        x0 *= scale;
+        baseline = font_size + y0 * scale;
+        x1 *= scale;
+        y1 *= scale;
+
+        int width = 1024, height = 1024;
+        stbtt_BakeFontBitmap(ttf_buffer, 0, font_size, temp_bitmap, width, height, 32, 96, cdata); // no guarantee this fits!
+        tex = to_single_channel_texture(temp_bitmap, width, height, true);
+
+        for (int i = 0; i < 8; i++)
         {
-            ////////////////////////
-            //TODO: MEMORY LEAK HERE
-            ////////////////////////
-            Mesh x_mesh = load_obj("resources/models/x/x.obj");
-            Mesh bar_mesh = load_bar_objs("resources/models/bar/bar3.obj", "resources/models/bar/bar_text3.obj");
-            x_buf = upload_vertex_buffer(x_mesh);
-            bar_buf = upload_vertex_buffer(bar_mesh);
+            char file[8][50] = {
+                "resources/models/bar3/num_1.bmp",
+                "resources/models/bar3/num_2.bmp",
+                "resources/models/bar3/num_3.bmp",
+                "resources/models/bar3/num_4.bmp",
+                "resources/models/bar3/num_5.bmp",
+                "resources/models/bar3/num_6.bmp",
+                "resources/models/bar3/num_7.bmp",
+                "resources/models/bar3/num_8.bmp",
+            };
+            num_texs[i] = to_texture(parse_bitmap(read_entire_file(file[i])), true);
+        }
 
-            Bitmap albedo;
-            Bitmap normal;
-            Bitmap metal;
-            Bitmap roughness;
-            Bitmap text;
+        // can free ttf_buffer at this point
+        // can free temp_bitmap at this point
+    }
 
-            ////////////////////////
-            //TODO: MEMORY LEAK HERE
-            ////////////////////////
-            albedo = parse_bitmap(read_entire_file("resources/models/x/albedo.bmp"));
-            x.albedo = to_texture(albedo, true);
-            normal = parse_bitmap(read_entire_file("resources/models/x/normal.bmp"));
-            x.normal = to_texture(normal, true);
-            metal = parse_bitmap(read_entire_file("resources/models/x/metal.bmp"));
-            x.metal = to_texture(metal, true);
-            roughness = parse_bitmap(read_entire_file("resources/models/x/roughness.bmp"));
-            x.roughness = to_texture(roughness, true);
+    auto get_width = [](String text, float scale) {
+        float x = 0;
+        float y = 0;
+        for (int i = 0; i < text.len; i++)
+        {
+            stbtt_aligned_quad q;
+            stbtt_GetBakedQuad(cdata, tex.width, tex.width, text.data[i] - 32, &x, &y, &q, 1);
+        }
+        return scale * x;
+    };
 
-            albedo = parse_bitmap(read_entire_file("resources/models/bar/albedo.bmp"));
-            bar.albedo = to_texture(albedo, true);
-            normal = parse_bitmap(read_entire_file("resources/models/bar/normal.bmp"));
-            bar.normal = to_texture(normal, true);
-            metal = parse_bitmap(read_entire_file("resources/models/bar/metal.bmp"));
-            bar.metal = to_texture(metal, true);
-            roughness = parse_bitmap(read_entire_file("resources/models/bar/roughness.bmp"));
-            bar.roughness = to_texture(roughness, true);
-            text = parse_bitmap(read_entire_file("resources/models/bar/text.bmp"));
-            text_tex = to_texture(text, true);
+    {
+        float h_scale = 3.f;
+        float v_scale = 6.f;
+
+        float actual_target_width = target.width * .8f;
+        float actual_target_height = target.height / 2.f;
+        float target_border = target.width * 0.05f;
+
+        float text_width = get_width(answer, h_scale);
+        float text_height = ascent_size * v_scale;
+
+        float oversize = (actual_target_width - target_border) / text_width;
+        if (oversize < 1.f)
+        {
+            h_scale *= oversize;
+            v_scale *= oversize;
+            text_width *= oversize;
+            text_height *= oversize;
+        }
+
+        float x_start = (actual_target_width - text_width) / 2.f;
+        float y_start = (actual_target_height - text_height) / 2.f;
+
+        float x = 0;
+        float y = baseline;
+        for (int i = 0; i < answer.len; i++)
+        {
+            stbtt_aligned_quad q;
+            stbtt_GetBakedQuad(cdata, tex.width, tex.width, answer.data[i] - 32, &x, &y, &q, 1);
+
+            Rect rect = {x_start + (h_scale * q.x0), y_start + (v_scale * q.y0), h_scale * (q.x1 - q.x0), v_scale * (q.y1 - q.y0)};
+            draw_textured_mapped_rect(target, rect, {q.s0, q.t1, q.s1 - q.s0, q.t0 - q.t1}, tex);
+        }
+    }
+
+    {
+        assert(score > 0 && score < 100);
+        char buf[3];
+        _itoa_s(score, buf, 10);
+        String text;
+        text.data = buf;
+        text.len = strlen(buf);
+
+        float h_scale = 3.f;
+        float v_scale = 6.f;
+
+        float text_height = ascent_size * v_scale;
+        float text_width = get_width(text, h_scale);
+
+        float actual_target_width = target.width * .19f;
+        float actual_target_height = target.height / 2.f;
+        float target_border = target.width * 0.025f;
+        float target_left = target.width - actual_target_width;
+
+        float x_start = target_left + ((actual_target_width - text_width) / 2.f);
+        float y_start = (actual_target_height - text_height) / 2.f;
+
+        float x = 0;
+        float y = baseline;
+        for (int i = 0; i < text.len; i++)
+        {
+            stbtt_aligned_quad q;
+            stbtt_GetBakedQuad(cdata, tex.width, tex.width, text.data[i] - 32, &x, &y, &q, 1);
+
+            Rect rect = {x_start + (h_scale * q.x0), y_start + (v_scale * q.y0), h_scale * (q.x1 - q.x0), v_scale * (q.y1 - q.y0)};
+            draw_textured_mapped_rect(target, rect, {q.s0, q.t1, q.s1 - q.s0, q.t0 - q.t1}, tex);
+        }
+    }
+
+    {
+        Texture num_tex = num_texs[index];
+        float aspect = (float)num_tex.width / num_tex.height;
+
+        float border = target.height / 25.f;
+        float height = (target.height / 2.f) - (border * 2.f);
+        float width = height * aspect / 2.f;
+
+        float top = (target.height / 2.f) + border;
+        float left = (target.width - width) / 2.f;
+
+        Rect rect = {left, top, width, height};
+        draw_textured_rect(target, rect, {}, num_tex);
+    }
+}
+
+struct StandardPbrDrawable
+{
+    VertexBuffer vert_buf;
+    StandardPbrMaterial mat;
+};
+StandardPbrDrawable load_drawable(String dir, bool double_uvs = false)
+{
+    char filename_buf[1024];
+    memcpy(filename_buf, dir.data, dir.len);
+
+
+    memcpy(filename_buf + dir.len, "/diffuse.bmp\0", sizeof("/diffuse.bmp\0"));
+    Bitmap albedo = parse_bitmap(read_entire_file(filename_buf));
+    Texture albedo_tex = to_texture(albedo, true);
+    // TODO free file
+    // TODO free bitmap
+
+    memcpy(filename_buf + dir.len, "/normal.bmp\0", sizeof("/normal.bmp\0"));
+    Bitmap normal = parse_bitmap(read_entire_file(filename_buf));
+    Texture normal_tex = to_texture(normal, true);
+    // TODO free file
+    // TODO free bitmap
+
+    memcpy(filename_buf + dir.len, "/metal.bmp\0", sizeof("/metal.bmp\0"));
+    Bitmap metal = parse_bitmap(read_entire_file(filename_buf));
+    Texture metal_tex = to_texture(metal, true);
+    // TODO free file
+    // TODO free bitmap
+
+    memcpy(filename_buf + dir.len, "/roughness.bmp\0", sizeof("/roughness.bmp\0"));
+    Bitmap roughness = parse_bitmap(read_entire_file(filename_buf));
+    Texture roughness_tex = to_texture(roughness, true);
+    // TODO free file
+    // TODO free bitmap
+
+    StandardPbrMaterial mat;
+    mat.texture_array[0] = albedo_tex;
+    mat.texture_array[1] = normal_tex;
+    mat.texture_array[2] = metal_tex;
+    mat.texture_array[3] = roughness_tex;
+
+    StandardPbrDrawable drawable;
+    drawable.mat = mat;
+
+    memcpy(filename_buf + dir.len, "/model_0.obj\0", sizeof("/model_0.obj\0"));
+    if (!double_uvs)
+    {
+        Mesh mesh = load_obj(filename_buf);
+        drawable.vert_buf = upload_vertex_buffer(mesh);
+        // TODO free mesh
+        // TODO free file
+    }
+    else
+    {
+        char filename2_buf[1024];
+        memcpy(filename2_buf, dir.data, dir.len);
+        memcpy(filename2_buf + dir.len, "/model_1.obj\0", sizeof("/model_1.obj\0"));
+
+        Mesh mesh = load_obj_extra_uvs(filename_buf, filename2_buf);
+        drawable.vert_buf = upload_vertex_buffer(mesh);
+        // TODO free mesh
+        // TODO free file
+    }
+
+    return drawable;
+}
+
+void graphics_test_stuff(RenderTarget target, InputState *input)
+{
+    static Texture hdri_tex;
+    static Texture unfiltered_cubemap;
+    static Texture irradiance_map;
+    static Texture brdf_lut;
+    static Texture env_map;
+
+    static String answers[8] = {
+        String::from("RED ASJKDD ASKJHDQQW"),
+        String::from("BLUE"),
+        String::from("ORANGE"),
+        String::from("GREEN"),
+        String::from("PURPLE"),
+        String::from("VIOLET"),
+        String::from("PINK"),
+        String::from("CYAN"),
+    };
+    static RenderTarget answer_textures[8];
+
+    static StandardPbrDrawable x;
+    static StandardPbrDrawable bar;
+
+    static Shader threed;
+    static Shader bar_shade;
+
+    static bool init = false;
+    if (!init)
+    {
+        init = true;
+
+        threed = load_shader(threed_shader);
+        bar_shade = load_shader(bar_shader);
+        {
+            x = load_drawable(String::from("resources/models/x2"));
+            bar = load_drawable(String::from("resources/models/bar"), true);
         }
 
         {
             int width, height, components;
             stbi_set_flip_vertically_on_load(true);
-            float *hdri = stbi_loadf("resources/hdri/ahornsteig.hdr", &width, &height, &components, 0);
+            float *hdri = stbi_loadf("resources/hdri/Newport_Loft_Ref.hdr", &width, &height, &components, 0);
             hdri_tex = to_texture(hdri, width, height);
             stbi_image_free(hdri);
 
             unfiltered_cubemap = hdri_to_cubemap(hdri_tex, 1024);
             irradiance_map = convolve_irradiance_map(unfiltered_cubemap, 32);
-            env_maps[0] = filter_env_map(unfiltered_cubemap, 32);
-            env_maps[1] = filter_env_map(unfiltered_cubemap, 64);
-            env_maps[2] = filter_env_map(unfiltered_cubemap, 128);
-            env_maps[3] = filter_env_map(unfiltered_cubemap, 512);
+            env_map = filter_env_map(unfiltered_cubemap, 512);
             brdf_lut = generate_brdf_lut(512);
         }
-    }
 
-    static int frames_since_change = 0;
-    frames_since_change++;
-    static bool val;
-    if (input->keys[(int)Keys::Z])
-    {
-        if (frames_since_change > 30)
+        for (int i = 0; i < 8; i++)
         {
-            frames_since_change = 0;
-            val = !val;
+            answer_textures[i] = new_render_target(2048, 2048, false);
         }
     }
-    static float t = 0.f;
-    if (val)
-    {
-        t += 0.01f;
-    }
 
-    static int frames_since_change2 = 0;
-    frames_since_change2++;
-    static int selected_env_map = 3;
-    if (input->keys[(int)Keys::X])
+    for (int i = 0; i < 8; i++)
     {
-        if (frames_since_change2 > 30)
-        {
-            frames_since_change2 = 0;
-            selected_env_map = (selected_env_map + 1) % 4;
-            printf("%d\n", selected_env_map);
-        }
+        bind(answer_textures[i]);
+        clear_backbuffer();
+        font_stuff(answer_textures[i], input, i, answers[i], i + 8);
+        gen_mips(answer_textures[i].color_tex);
     }
 
     static Camera camera;
     camera.update(target, input);
 
+    bind(target);
+    clear_backbuffer();
+    static float bar_ts[8] = {};
+    static bool animating[8] = {};
+    for (int i = 0; i < input->key_input.len; i++)
+    {
+        if (input->key_input[i] >= Keys::NUM_1 && input->key_input[i] <= Keys::NUM_8)
+        {
+            animating[(int)input->key_input[i] - (int)Keys::NUM_1] = !animating[(int)input->key_input[i] - (int)Keys::NUM_1];
+        }
+    }
     for (int i = 0; i < 8; i++)
     {
         float x = (i % 2) * 4.f;
-        float y = (i / 2) * 0.8f;
+        float y = (i / 2) * -0.8f;
 
-        float my_t = 0;
-        static float t2 = 0.f;
-        if (i == 4)
+        if (animating[i])
         {
-            if (val)
-            {
-                t2 += 0.01f;
-                my_t = t2;
-            }
+            bar_ts[i] += 0.01f;
         }
-        float bar_rot = (powf(my_t * 4, 2) * 90.f) - 90.f;
+        float bar_rot = (powf(bar_ts[i] * 4, 2) * 90.f) - 90.f;
         if (bar_rot < -90.f)
         {
             bar_rot = -90.f;
@@ -409,12 +596,23 @@ void graphics_test_stuff(RenderTarget target, InputState *input)
         }
 
         glm::mat4 bar_mat = glm::rotate(glm::translate(glm::mat4(1.0f), {x, y, 0.f}), glm::radians(bar_rot), glm::vec3{1.f, 0.f, 0.f});
-        draw_bar(target, camera, bar_mat, bar_buf, bar, irradiance_map, env_maps[selected_env_map], brdf_lut, text_tex);
+
+        bind_shader(bar_shade);
+        bind_cubemap_texture(bar_shade, Shader::UniformId::IRRADIANCE, irradiance_map);
+        bind_cubemap_texture(bar_shade, Shader::UniformId::ENV_MAP, env_map);
+        bind_texture(bar_shade, Shader::UniformId::BRDF, brdf_lut);
+        bind_camera(threed, camera);
+        bind_mat4(bar_shade, Shader::UniformId::MODEL, bar_mat);
+        bind_material(bar_shade, bar.mat);
+        bind_texture(bar_shade, Shader::UniformId::OVERLAY_TEXTURE, answer_textures[i].color_tex);
+        draw(target, bar_shade, bar.vert_buf);
     }
 
     float speed_denoms[3] = {2, 2.75, 2.15};
     for (int i = 0; i < 3; i++)
     {
+        float t = 0.f;
+        t += 0.01f;
         glm::vec3 initial_pos = {-1 + i, 0, 5};
         glm::quat initial_rot({(i * .5f), .1f + (i * .1f), -0.5f + (i * 1.4f)});
         glm::vec3 target_pos = {i - 1, 0.f, 0.f};
@@ -423,7 +621,15 @@ void graphics_test_stuff(RenderTarget target, InputState *input)
         glm::vec3 actual_pos = initial_pos + ((target_pos - initial_pos) * actual_t);
         glm::quat actual_rot = glm::normalize(initial_rot + ((target_rot - initial_rot) * actual_t));
         glm::mat4 model = glm::translate(glm::mat4(1.0f), actual_pos) * glm::toMat4(actual_rot);
-        draw_threed(target, camera, model, x_buf, x, irradiance_map, env_maps[selected_env_map], brdf_lut);
+
+        bind_shader(threed);
+        bind_cubemap_texture(threed, Shader::UniformId::IRRADIANCE, irradiance_map);
+        bind_cubemap_texture(threed, Shader::UniformId::ENV_MAP, env_map);
+        bind_texture(threed, Shader::UniformId::BRDF, brdf_lut);
+        bind_camera(threed, camera);
+        bind_mat4(threed, Shader::UniformId::MODEL, model);
+        bind_material(threed, x.mat);
+        draw(target, threed, x.vert_buf);
     }
 
     draw_cubemap(unfiltered_cubemap, camera);
@@ -431,10 +637,10 @@ void graphics_test_stuff(RenderTarget target, InputState *input)
 
 bool game_update(const float time_step, InputState *input_state, RenderTarget target)
 {
-    graphics_test_stuff(target, input_state);
-
     if (!init_if_not())
         return false;
+
+    graphics_test_stuff(target, input_state);
 
     if (animation_wait)
     {

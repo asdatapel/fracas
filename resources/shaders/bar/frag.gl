@@ -3,16 +3,16 @@
 out vec4 FragColor;
 
 uniform float t;
-uniform vec3 cam_pos;
+uniform vec3 camera_position;
 
-uniform sampler2D albedo_tex;
-uniform sampler2D normal_tex;
-uniform sampler2D metal_tex;
-uniform sampler2D roughness_tex;
-uniform sampler2D text_tex;
+uniform sampler2D albedo_texture;
+uniform sampler2D normal_texture;
+uniform sampler2D metal_texture;
+uniform sampler2D roughness_texture;
+uniform sampler2D overlay_texture;
 
 uniform samplerCube irradiance;
-uniform samplerCube env;
+uniform samplerCube env_map;
 uniform sampler2D   brdf;  
 
 in vec3 frag_world_pos;
@@ -73,19 +73,19 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 void main()
 {
     vec3 light_pos = vec3(0, 0, 0);
-    vec3 light_color = vec3(10, 10, 10);
+    vec3 light_color = vec3(10.0, 10, 10);
 
-    vec3 main_albedo = texture(albedo_tex, frag_main_uv).rgb;
-    vec4 text_albedo = texture(text_tex, frag_text_uv);
-    vec3 albedo = mix(main_albedo, text_albedo.rgb  * 10, text_albedo.a);
-    vec3 normal = texture(normal_tex, frag_main_uv).xyz;
-    float main_metal = texture(metal_tex, frag_main_uv).x;
+    vec3 main_albedo = texture(albedo_texture, frag_main_uv).rgb;
+    vec4 text_albedo = texture(overlay_texture, frag_text_uv);
+    vec3 albedo = mix(main_albedo, vec3(text_albedo * 5), text_albedo.a);
+    vec3 normal = texture(normal_texture, frag_main_uv).xyz;
+    float main_metal = texture(metal_texture, frag_main_uv).x;
     float metal = mix(main_metal, 0, text_albedo.a);
-    float main_roughness = max(texture(roughness_tex, frag_main_uv).x, 0.001);
-    float roughness = mix(main_roughness, 0.1 + (0.9 - text_albedo.r), text_albedo.a);
+    float main_roughness = max(texture(roughness_texture, frag_main_uv).x, 0.001);
+    float roughness = mix(main_roughness, 0.1 + (0.9 - text_albedo.g), text_albedo.a);
 
     vec3 n = normalize(frag_normal);
-    vec3 V = normalize(cam_pos - frag_world_pos);
+    vec3 V = normalize(camera_position - frag_world_pos);
 
     vec3 f0 = vec3(0.04); 
     f0      = mix(f0, albedo, metal);
@@ -123,11 +123,11 @@ void main()
     
     const float MAX_REFLECTION_LOD = 7.0; // assuming 128x128 texture
     //////////////////////////////////////////////////////////////////////
-    // BAD HACK BAD HACK BAD HACK env map will look too rough at high LODs
-    // vec2 standardLod = textureQueryLod(env, R);
+    // BAD HACK BAD HACK BAD HACK env_map map will look too rough at high LODs
+    // vec2 standardLod = textureQueryLod(env_map, R);
     // float actualLod = max(standardLod.x, roughness * MAX_REFLECTION_LOD);
     //////////////////////////////////////////////////////////////////////
-    vec3 prefilteredColor = textureLod(env, R, roughness * MAX_REFLECTION_LOD).rgb;   
+    vec3 prefilteredColor = textureLod(env_map, R, roughness * MAX_REFLECTION_LOD).rgb;   
     vec2 envBRDF  = texture(brdf, vec2(max(dot(n, V), 0.0), roughness)).rg;
     vec3 ambient_specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
     

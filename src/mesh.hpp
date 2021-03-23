@@ -139,7 +139,7 @@ Mesh load_obj(const char *filename)
                 f[f_i++] = v[pos + 1];
                 f[f_i++] = v[pos + 2];
                 f[f_i++] = vt[uv];
-                f[f_i++] = 1 - vt[uv + 1];
+                f[f_i++] = vt[uv + 1];
                 f[f_i++] = vn[normal];
                 f[f_i++] = vn[normal + 1];
                 f[f_i++] = vn[normal + 2];
@@ -172,7 +172,7 @@ void free_mesh(Mesh mesh)
     free(mesh.components);
 }
 
-Mesh load_bar_objs(const char *filename1, const char *filename2)
+Mesh load_obj_extra_uvs(const char *filename1, const char *filename2)
 {
     Mesh mesh1 = load_obj(filename1);
     Mesh mesh2 = load_obj(filename2);

@@ -50,6 +50,46 @@ void key_input_callback(GLFWwindow *window, int key, int scancode, int action, i
 
     switch (key)
     {
+    case GLFW_KEY_0:
+    case GLFW_KEY_KP_0:
+        append_if_press(Keys::NUM_0);
+        break;
+    case GLFW_KEY_1:
+    case GLFW_KEY_KP_1:
+        append_if_press(Keys::NUM_1);
+        break;
+    case GLFW_KEY_2:
+    case GLFW_KEY_KP_2:
+        append_if_press(Keys::NUM_2);
+        break;
+    case GLFW_KEY_3:
+    case GLFW_KEY_KP_3:
+        append_if_press(Keys::NUM_3);
+        break;
+    case GLFW_KEY_4:
+    case GLFW_KEY_KP_4:
+        append_if_press(Keys::NUM_4);
+        break;
+    case GLFW_KEY_5:
+    case GLFW_KEY_KP_5:
+        append_if_press(Keys::NUM_5);
+        break;
+    case GLFW_KEY_6:
+    case GLFW_KEY_KP_6:
+        append_if_press(Keys::NUM_6);
+        break;
+    case GLFW_KEY_7:
+    case GLFW_KEY_KP_7:
+        append_if_press(Keys::NUM_7);
+        break;
+    case GLFW_KEY_8:
+    case GLFW_KEY_KP_8:
+        append_if_press(Keys::NUM_8);
+        break;
+    case GLFW_KEY_9:
+    case GLFW_KEY_KP_9:
+        append_if_press(Keys::NUM_9);
+        break;
     case GLFW_KEY_BACKSPACE:
         append_if_press(Keys::BACKSPACE);
         break;
@@ -126,8 +166,7 @@ int main()
     glfwSetCharCallback(window, character_input_callback);
     glfwSetKeyCallback(window, key_input_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
-    RenderTarget render_target = {OUTPUT_BUFFER_WIDTH, OUTPUT_BUFFER_HEIGHT};
-    init_graphics(render_target);
+    RenderTarget target = init_graphics(OUTPUT_BUFFER_WIDTH, OUTPUT_BUFFER_HEIGHT);
 
     auto loop_start_time = std::chrono::high_resolution_clock::now();
     while (!glfwWindowShouldClose(window))
@@ -140,7 +179,7 @@ int main()
         fill_input_state(window, &input_state);
         glfwPollEvents();
 
-        if (!game_update(1.f / FRAME_RATE_HZ, &input_state, render_target))
+        if (!game_update(1.f / FRAME_RATE_HZ, &input_state, target))
             glfwSetWindowShouldClose(window, true);
 
         glfwSwapBuffers(window);

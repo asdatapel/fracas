@@ -19,8 +19,10 @@ struct Texture
 
 struct RenderTarget
 {
-    uint32_t width;
-    uint32_t height;
+    uint32_t width, height;
+    unsigned int gl_fbo;
+    unsigned int gl_depth_buffer;
+    Texture color_tex;
 };
 
 struct VertexBuffer
@@ -31,18 +33,10 @@ struct VertexBuffer
     int vert_count;
 };
 
-struct Material
-{
-    Texture albedo;
-    Texture normal;
-    Texture metal;
-    Texture roughness;
-};
-
-void init_graphics(RenderTarget target);
+RenderTarget init_graphics(RenderTarget target);
 void clear_backbuffer();
-void draw_rect(RenderTarget target, Rect rect, Color color);
 Texture to_texture(Bitmap bitmap, bool mipmaps = true);
+void draw_rect(RenderTarget target, Rect rect, Color color);
 void draw_textured_rect(RenderTarget target, Rect rect, Color color, Texture tex);
 void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture tex);
 
@@ -61,7 +55,8 @@ static Bitmap parse_bitmap(FileData file_data)
         for (int x = 0; x < bitmap.width; x++)
         {
             int file_i = (((y * bitmap.width) + x) * sizeof(Vec4i)) + pixels_offset;
-            int bitmap_i = (bitmap.width * (bitmap.height - 1)) - (y * bitmap.width) + (x);
+            // int bitmap_i = (bitmap.width * (bitmap.height - 1)) - (y * bitmap.width) + (x);
+            int bitmap_i = (y * bitmap.width) + x;
 
             Vec4i color;
             color.z = *(file_data.data + file_i);
