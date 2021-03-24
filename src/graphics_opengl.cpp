@@ -10,8 +10,8 @@
 
 #include "graphics.hpp"
 #include "platform.hpp"
+#include "material.hpp"
 #include "math.hpp"
-#include "mesh.hpp"
 #include "shader.hpp"
 
 RenderTarget main_target;
@@ -19,16 +19,16 @@ RenderTarget main_target;
 unsigned int temp_fbo;
 unsigned int temp_rbo;
 
-unsigned int basic_shader;
-unsigned int textured_shader;
-unsigned int textured_mapped_shader;
-unsigned int threed_shader;
-unsigned int bar_shader;
-unsigned int rect_to_cubemap_shader;
-unsigned int cubemap_shader;
-unsigned int irradiance_shader;
-unsigned int env_filter_shader;
-unsigned int brdf_lut_shader;
+Shader basic_shader;
+Shader textured_shader;
+Shader textured_mapped_shader;
+Shader threed_shader;
+Shader bar_shader;
+Shader rect_to_cubemap_shader;
+Shader cubemap_shader;
+Shader irradiance_shader;
+Shader env_filter_shader;
+Shader brdf_lut_shader;
 
 unsigned int screen_quad_vao;
 unsigned int screen_quad_vbo;
@@ -184,16 +184,16 @@ static RenderTarget init_graphics(uint32_t width, uint32_t height)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    basic_shader = create_shader_program("resources/shaders/basic");
-    textured_shader = create_shader_program("resources/shaders/textured");
-    textured_mapped_shader = create_shader_program("resources/shaders/font_atlas");
-    threed_shader = create_shader_program("resources/shaders/threed");
-    bar_shader = create_shader_program("resources/shaders/bar");
-    rect_to_cubemap_shader = create_shader_program("resources/shaders/rect_to_cubemap");
-    cubemap_shader = create_shader_program("resources/shaders/cubemap");
-    irradiance_shader = create_shader_program("resources/shaders/irradiance");
-    env_filter_shader = create_shader_program("resources/shaders/env_filter");
-    brdf_lut_shader = create_shader_program("resources/shaders/brdf_lut");
+    basic_shader = load_shader(create_shader_program("resources/shaders/basic"));
+    textured_shader = load_shader(create_shader_program("resources/shaders/textured"));
+    textured_mapped_shader = load_shader(create_shader_program("resources/shaders/font_atlas"));
+    threed_shader = load_shader(create_shader_program("resources/shaders/threed"));
+    bar_shader = load_shader(create_shader_program("resources/shaders/bar"));
+    rect_to_cubemap_shader = load_shader(create_shader_program("resources/shaders/rect_to_cubemap"));
+    cubemap_shader = load_shader(create_shader_program("resources/shaders/cubemap"));
+    irradiance_shader = load_shader(create_shader_program("resources/shaders/irradiance"));
+    env_filter_shader = load_shader(create_shader_program("resources/shaders/env_filter"));
+    brdf_lut_shader = load_shader(create_shader_program("resources/shaders/brdf_lut"));
 
     return main_target;
 }
@@ -250,6 +250,7 @@ static Texture to_single_channel_texture(uint8_t *data, int width, int height, b
 static Texture to_texture(float *data, int width, int height)
 {
     Texture tex;
+    tex.type = Texture::Type::_2D;
     tex.width = width;
     tex.height = height;
 
@@ -270,6 +271,7 @@ static Texture to_texture(float *data, int width, int height)
 static Texture new_tex(int width, int height, bool mipmaps = false)
 {
     Texture tex;
+    tex.type = Texture::Type::_2D;
     tex.width = width;
     tex.height = height;
 
@@ -288,6 +290,7 @@ static Texture new_tex(int width, int height, bool mipmaps = false)
 static Texture new_cubemap_tex(int square_width, bool mipmaps = false)
 {
     Texture tex;
+    tex.type = Texture::Type::CUBEMAP;
     tex.width = square_width;
     tex.height = square_width;
 
@@ -350,10 +353,6 @@ RenderTarget new_render_target(uint32_t width, uint32_t height, bool depth = fal
     RenderTarget target{width, height};
     glGenFramebuffers(1, &target.gl_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, target.gl_fbo);
-    // glGenRenderbuffers(1, &target.gl_depth_buffer);
-    // glBindRenderbuffer(GL_RENDERBUFFER, target.gl_depth_buffer);
-    // glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
-    // glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, temp_rbo);
     
     target.color_tex = new_tex(width, height, true);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, target.color_tex.gl_reference, 0);
@@ -379,32 +378,52 @@ static void bind_camera(Shader shader, Camera camera)
     glUniform3f(shader.uniform_handles[(int)Shader::UniformId::CAMERA_POSITION], camera.pos_x, camera.pos_y, camera.pos_z);
 }
 
+static void bind_1f(Shader shader, Shader::UniformId uniform_id, float val)
+{
+    glUniform1f(shader.uniform_handles[(int)uniform_id], val);
+}
+
+static void bind_2i(Shader shader, Shader::UniformId uniform_id, int i1, int i2)
+{
+    glUniform2i(shader.uniform_handles[(int)uniform_id], i1, i2);
+}
+
+static void bind_2f(Shader shader, Shader::UniformId uniform_id, float f1, float f2)
+{
+    glUniform2f(shader.uniform_handles[(int)uniform_id], f1, f2);
+}
+
+static void bind_4f(Shader shader, Shader::UniformId uniform_id, float f1, float f2, float f3, float f4)
+{
+    glUniform4f(shader.uniform_handles[(int)uniform_id], f1, f2, f3, f4);
+}
+
 static void bind_mat4(Shader shader, Shader::UniformId uniform_id, glm::mat4 mat)
 {
     glUniformMatrix4fv(shader.uniform_handles[(int)uniform_id], 1, GL_FALSE, &mat[0][0]);
 }
 
-static void bind_cubemap_texture(Shader shader, Shader::UniformId uniform_id, Texture texture)
-{
-    glUniform1i(shader.uniform_handles[(int)uniform_id], shader.tex_units[(int)uniform_id]);
-    glActiveTexture(GL_TEXTURE0 + shader.tex_units[(int)uniform_id]);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, texture.gl_reference);
-}
-
 static void bind_texture(Shader shader, Shader::UniformId uniform_id, Texture texture)
 {
+    GLenum gl_tex_type = GL_TEXTURE_2D;
+    switch(texture.type){
+        case(Texture::Type::_2D):
+            gl_tex_type = GL_TEXTURE_2D;
+            break;
+        case(Texture::Type::CUBEMAP):
+            gl_tex_type = GL_TEXTURE_CUBE_MAP;
+            break;
+    }
     glUniform1i(shader.uniform_handles[(int)uniform_id], shader.tex_units[(int)uniform_id]);
     glActiveTexture(GL_TEXTURE0 + shader.tex_units[(int)uniform_id]);
-    glBindTexture(GL_TEXTURE_2D, texture.gl_reference);
+    glBindTexture(gl_tex_type, texture.gl_reference);
 }
 
 static void bind_material(Shader shader, Material material)
 {
     for (int i = 0; i < material.num_textures; i++)
     {
-        glUniform1i(shader.uniform_handles[(int)material.uniform_ids[i]], shader.tex_units[(int)material.uniform_ids[i]]);
-        glActiveTexture(GL_TEXTURE0 + shader.tex_units[(int)material.uniform_ids[i]]);
-        glBindTexture(GL_TEXTURE_2D, material.textures[i].gl_reference);
+        bind_texture(shader, material.uniform_ids[i], material.textures[i]);
     }
 }
 
@@ -417,7 +436,6 @@ static void draw(RenderTarget target, Shader shader, VertexBuffer buf)
     glBindVertexArray(buf.vao);
     glDrawArrays(GL_TRIANGLES, 0, buf.vert_count);
 }
-
 
 Texture hdri_to_cubemap(Texture hdri, int size)
 {
@@ -433,11 +451,9 @@ Texture hdri_to_cubemap(Texture hdri, int size)
             glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
             glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
 
-    glUseProgram(rect_to_cubemap_shader);
-    glUniformMatrix4fv(glGetUniformLocation(rect_to_cubemap_shader, "projection"), 1, GL_FALSE, &captureProjection[0][0]);
-    glUniform1i(glGetUniformLocation(rect_to_cubemap_shader, "equirectangularMap"), 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, hdri.gl_reference);
+    bind_shader(rect_to_cubemap_shader);
+    bind_mat4(rect_to_cubemap_shader, Shader::UniformId::PROJECTION, captureProjection);
+    bind_texture(rect_to_cubemap_shader, Shader::UniformId::EQUIRECTANGULAR_MAP, hdri);
 
     glBindFramebuffer(GL_FRAMEBUFFER, temp_fbo);
     glBindRenderbuffer(GL_RENDERBUFFER, temp_rbo);
@@ -448,7 +464,7 @@ Texture hdri_to_cubemap(Texture hdri, int size)
     glBindFramebuffer(GL_FRAMEBUFFER, temp_fbo);
     for (unsigned int i = 0; i < 6; ++i)
     {
-        glUniformMatrix4fv(glGetUniformLocation(rect_to_cubemap_shader, "view"), 1, GL_FALSE, &captureViews[i][0][0]);
+        bind_mat4(rect_to_cubemap_shader, Shader::UniformId::VIEW, captureViews[i]);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, target.gl_reference, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -468,13 +484,12 @@ void draw_cubemap(Texture tex, Camera camera)
 {
     glDepthFunc(GL_LEQUAL);
 
-    glUseProgram(cubemap_shader);
-    glUniformMatrix4fv(glGetUniformLocation(cubemap_shader, "view"), 1, GL_FALSE, &camera.view[0][0]);
-    glUniformMatrix4fv(glGetUniformLocation(cubemap_shader, "projection"), 1, GL_FALSE, &camera.perspective[0][0]);
+    bind_shader(cubemap_shader);
+    
+    bind_mat4(cubemap_shader, Shader::UniformId::PROJECTION, camera.perspective);
+    bind_mat4(cubemap_shader, Shader::UniformId::VIEW, camera.view);
 
-    glUniform1i(glGetUniformLocation(cubemap_shader, "env_map"), 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, tex.gl_reference);
+    bind_texture(cubemap_shader, Shader::UniformId::ENV_MAP, tex);
 
     glBindVertexArray(cube_vao);
     glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -501,16 +516,14 @@ Texture convolve_irradiance_map(Texture src, int size)
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, target.width, target.height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, temp_rbo);
 
-    glUseProgram(irradiance_shader);
-    glUniformMatrix4fv(glGetUniformLocation(irradiance_shader, "projection"), 1, GL_FALSE, &captureProjection[0][0]);
-    glUniform1i(glGetUniformLocation(irradiance_shader, "env_map"), 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, src.gl_reference);
+    bind_shader(irradiance_shader);
+    bind_mat4(irradiance_shader, Shader::UniformId::PROJECTION, captureProjection);
+    bind_texture(irradiance_shader, Shader::UniformId::ENV_MAP, src);
 
     glViewport(0, 0, target.width, target.height);
     for (unsigned int i = 0; i < 6; ++i)
     {
-        glUniformMatrix4fv(glGetUniformLocation(irradiance_shader, "view"), 1, GL_FALSE, &captureViews[i][0][0]);
+        bind_mat4(irradiance_shader, Shader::UniformId::VIEW, captureViews[i]);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, target.gl_reference, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -539,11 +552,9 @@ Texture filter_env_map(Texture src, int size)
             glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
             glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
 
-    glUseProgram(env_filter_shader);
-    glUniformMatrix4fv(glGetUniformLocation(env_filter_shader, "projection"), 1, GL_FALSE, &captureProjection[0][0]);
-    glUniform1i(glGetUniformLocation(env_filter_shader, "env_map"), 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, src.gl_reference);
+    bind_shader(env_filter_shader);
+    bind_mat4(env_filter_shader, Shader::UniformId::PROJECTION, captureProjection);
+    bind_texture(env_filter_shader, Shader::UniformId::ENV_MAP, src);
 
     glBindFramebuffer(GL_FRAMEBUFFER, temp_fbo);
     unsigned int maxMipLevels = 9; // assuming 512x512 texture
@@ -557,10 +568,10 @@ Texture filter_env_map(Texture src, int size)
         glViewport(0, 0, mipWidth, mipHeight);
 
         float roughness = (float)mip / (float)(maxMipLevels - 1);
-        glUniform1f(glGetUniformLocation(env_filter_shader, "roughness"), roughness);
+        bind_1f(env_filter_shader, Shader::UniformId::ROUGHNESS, roughness);
         for (unsigned int i = 0; i < 6; ++i)
         {
-            glUniformMatrix4fv(glGetUniformLocation(env_filter_shader, "view"), 1, GL_FALSE, &captureViews[i][0][0]);
+            bind_mat4(env_filter_shader, Shader::UniformId::VIEW, captureViews[i]);
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                    GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, ret.gl_reference, mip);
 
@@ -605,9 +616,9 @@ Texture generate_brdf_lut(int size)
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, target.gl_reference, 0);
 
     glViewport(0, 0, target.width, target.height);
-    glUseProgram(brdf_lut_shader);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    bind_shader(brdf_lut_shader);
     glBindVertexArray(screen_quad_vao);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
@@ -618,128 +629,14 @@ Texture generate_brdf_lut(int size)
     return target;
 }
 
-// static void draw_threed(RenderTarget target, Camera camera, glm::mat4 model, VertexBuffer buf, Material material, Texture cubemap, Texture env_map, Texture brdf_lut)
-// {
-//     glUseProgram(threed_shader);
-
-//     unsigned int t_uniform = glGetUniformLocation(threed_shader, "t");
-//     unsigned int model_uniform = glGetUniformLocation(threed_shader, "model");
-//     unsigned int view_uniform = glGetUniformLocation(threed_shader, "view");
-//     unsigned int projection_uniform = glGetUniformLocation(threed_shader, "projection");
-//     unsigned int camera_position_uniform = glGetUniformLocation(threed_shader, "camera_position");
-//     unsigned int albedo_tex_uniform = glGetUniformLocation(threed_shader, "albedo_texture");
-//     unsigned int normal_tex_uniform = glGetUniformLocation(threed_shader, "normal_texture");
-//     unsigned int metal_tex_uniform = glGetUniformLocation(threed_shader, "metal_texture");
-//     unsigned int roughness_tex_uniform = glGetUniformLocation(threed_shader, "roughness_texture");
-//     unsigned int irradiance_uniform = glGetUniformLocation(threed_shader, "irradiance");
-//     unsigned int env_uniform = glGetUniformLocation(threed_shader, "env_map");
-//     unsigned int brdf_uniform = glGetUniformLocation(threed_shader, "brdf");
-
-//     static float t = 0.0f;
-//     t += 0.01f;
-//     glUniform1f(t_uniform, t);
-
-//     glUniformMatrix4fv(model_uniform, 1, GL_FALSE, &model[0][0]);
-//     glUniformMatrix4fv(view_uniform, 1, GL_FALSE, &camera.view[0][0]);
-//     glUniformMatrix4fv(projection_uniform, 1, GL_FALSE, &camera.perspective[0][0]);
-//     glUniform3f(camera_position_uniform, camera.pos_x, camera.pos_y, camera.pos_z);
-
-//     glUniform1i(albedo_tex_uniform, 0);
-//     glActiveTexture(GL_TEXTURE0);
-//     glBindTexture(GL_TEXTURE_2D, material.albedo.gl_reference);
-//     glUniform1i(normal_tex_uniform, 1);
-//     glActiveTexture(GL_TEXTURE0 + 1);
-//     glBindTexture(GL_TEXTURE_2D, material.normal.gl_reference);
-//     glUniform1i(metal_tex_uniform, 2);
-//     glActiveTexture(GL_TEXTURE0 + 2);
-//     glBindTexture(GL_TEXTURE_2D, material.metal.gl_reference);
-//     glUniform1i(roughness_tex_uniform, 3);
-//     glActiveTexture(GL_TEXTURE0 + 3);
-//     glBindTexture(GL_TEXTURE_2D, material.roughness.gl_reference);
-//     glUniform1i(irradiance_uniform, 4);
-//     glActiveTexture(GL_TEXTURE0 + 4);
-//     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap.gl_reference);
-//     glUniform1i(env_uniform, 5);
-//     glActiveTexture(GL_TEXTURE0 + 5);
-//     glBindTexture(GL_TEXTURE_CUBE_MAP, env_map.gl_reference);
-//     glUniform1i(brdf_uniform, 6);
-//     glActiveTexture(GL_TEXTURE0 + 6);
-//     glBindTexture(GL_TEXTURE_2D, brdf_lut.gl_reference);
-
-//     glBindVertexArray(buf.vao);
-//     glDrawArrays(GL_TRIANGLES, 0, buf.vert_count);
-// }
-
-// static void draw_bar(RenderTarget target, Camera camera, glm::mat4 model, VertexBuffer buf, Material material, Texture cubemap, Texture env_map, Texture brdf_lut, Texture text)
-// {
-//     glUseProgram(bar_shader);
-
-//     unsigned int t_uniform = glGetUniformLocation(bar_shader, "t");
-//     unsigned int model_uniform = glGetUniformLocation(bar_shader, "model");
-//     unsigned int view_uniform = glGetUniformLocation(bar_shader, "view");
-//     unsigned int projection_uniform = glGetUniformLocation(bar_shader, "projection");
-//     unsigned int camera_position_uniform = glGetUniformLocation(bar_shader, "camera_position");
-
-//     unsigned int albedo_tex_uniform = glGetUniformLocation(bar_shader, "albedo_texture");
-//     unsigned int normal_tex_uniform = glGetUniformLocation(bar_shader, "normal_texture");
-//     unsigned int metal_tex_uniform = glGetUniformLocation(bar_shader, "metal_texture");
-//     unsigned int roughness_tex_uniform = glGetUniformLocation(bar_shader, "roughness_texture");
-//     unsigned int text_tex_uniform = glGetUniformLocation(bar_shader, "overlay_texture");
-//     unsigned int irradiance_uniform = glGetUniformLocation(bar_shader, "irradiance");
-//     unsigned int env_uniform = glGetUniformLocation(bar_shader, "env_map");
-//     unsigned int brdf_uniform = glGetUniformLocation(bar_shader, "brdf");
-
-//     static float t = 0.0f;
-//     t += 0.01f;
-
-//     glUniform1f(t_uniform, t);
-//     glUniformMatrix4fv(model_uniform, 1, GL_FALSE, &model[0][0]);
-//     glUniformMatrix4fv(view_uniform, 1, GL_FALSE, &camera.view[0][0]);
-//     glUniformMatrix4fv(projection_uniform, 1, GL_FALSE, &camera.perspective[0][0]);
-//     glUniform3f(camera_position_uniform, camera.pos_x, camera.pos_y, camera.pos_z);
-
-//     glUniform1i(albedo_tex_uniform, 0);
-//     glActiveTexture(GL_TEXTURE0);
-//     glBindTexture(GL_TEXTURE_2D, material.albedo.gl_reference);
-//     glUniform1i(normal_tex_uniform, 1);
-//     glActiveTexture(GL_TEXTURE0 + 1);
-//     glBindTexture(GL_TEXTURE_2D, material.normal.gl_reference);
-//     glUniform1i(metal_tex_uniform, 2);
-//     glActiveTexture(GL_TEXTURE0 + 2);
-//     glBindTexture(GL_TEXTURE_2D, material.metal.gl_reference);
-//     glUniform1i(roughness_tex_uniform, 3);
-//     glActiveTexture(GL_TEXTURE0 + 3);
-//     glBindTexture(GL_TEXTURE_2D, material.roughness.gl_reference);
-//     glUniform1i(irradiance_uniform, 4);
-//     glActiveTexture(GL_TEXTURE0 + 4);
-//     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap.gl_reference);
-//     glUniform1i(env_uniform, 5);
-//     glActiveTexture(GL_TEXTURE0 + 5);
-//     glBindTexture(GL_TEXTURE_CUBE_MAP, env_map.gl_reference);
-//     glUniform1i(brdf_uniform, 6);
-//     glActiveTexture(GL_TEXTURE0 + 6);
-//     glBindTexture(GL_TEXTURE_2D, brdf_lut.gl_reference);
-//     glUniform1i(text_tex_uniform, 7);
-//     glActiveTexture(GL_TEXTURE0 + 7);
-//     glBindTexture(GL_TEXTURE_2D, text.gl_reference);
-
-//     glBindVertexArray(buf.vao);
-//     glDrawArrays(GL_TRIANGLES, 0, buf.vert_count);
-// }
-
 static void draw_rect(RenderTarget target, Rect rect, Color color)
 {
-    glUseProgram(basic_shader);
+    bind_shader(basic_shader);
 
-    unsigned int resolution_uniform = glGetUniformLocation(basic_shader, "resolution");
-    unsigned int pos_uniform = glGetUniformLocation(basic_shader, "pos");
-    unsigned int scale_uniform = glGetUniformLocation(basic_shader, "scale");
-    unsigned int color_uniform = glGetUniformLocation(basic_shader, "color");
-
-    glUniform2i(resolution_uniform, target.width, target.height);
-    glUniform2f(pos_uniform, rect.x, rect.y);
-    glUniform2f(scale_uniform, rect.width, rect.height);
-    glUniform4f(color_uniform, color.r, color.g, color.b, color.a);
+    bind_2i(basic_shader, Shader::UniformId::RESOLUTION, target.width, target.height);
+    bind_2f(basic_shader, Shader::UniformId::POS,rect.x, rect.y);
+    bind_2f(basic_shader, Shader::UniformId::SCALE, rect.width, rect.height);
+    bind_4f(basic_shader, Shader::UniformId::COLOR, color.r, color.g, color.b, color.a);
 
     glBindVertexArray(screen_quad_vao);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -747,18 +644,13 @@ static void draw_rect(RenderTarget target, Rect rect, Color color)
 
 static void draw_textured_rect(RenderTarget target, Rect rect, Color color, Texture tex)
 {
-    glUseProgram(textured_shader);
+    bind_shader(textured_shader);
 
-    unsigned int resolution_uniform = glGetUniformLocation(textured_shader, "resolution");
-    unsigned int pos_uniform = glGetUniformLocation(textured_shader, "pos");
-    unsigned int scale_uniform = glGetUniformLocation(textured_shader, "scale");
-    unsigned int color_uniform = glGetUniformLocation(textured_shader, "color");
-
-    glUniform2i(resolution_uniform, target.width, target.height);
-    glUniform2f(pos_uniform, rect.x, rect.y);
-    glUniform2f(scale_uniform, rect.width, rect.height);
-    glUniform4f(color_uniform, color.r, color.g, color.b, color.a);
-
+    bind_2i(textured_shader, Shader::UniformId::RESOLUTION, target.width, target.height);
+    bind_2f(textured_shader, Shader::UniformId::POS,rect.x, rect.y);
+    bind_2f(textured_shader, Shader::UniformId::SCALE, rect.width, rect.height);
+    bind_4f(textured_shader, Shader::UniformId::COLOR, color.r, color.g, color.b, color.a);
+    
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex.gl_reference);
 
@@ -768,18 +660,12 @@ static void draw_textured_rect(RenderTarget target, Rect rect, Color color, Text
 
 static void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture tex)
 {
-    Shader shader = load_shader(textured_mapped_shader);
-    bind_shader(shader);
+    bind_shader(textured_mapped_shader);
 
-    int resolution_uniform = glGetUniformLocation(textured_mapped_shader, "resolution");
-    int pos_uniform = glGetUniformLocation(textured_mapped_shader, "pos");
-    int scale_uniform = glGetUniformLocation(textured_mapped_shader, "scale");
-    int uv_uniform = glGetUniformLocation(textured_mapped_shader, "uv");
-
-    glUniform2i(resolution_uniform, target.width, target.height);
-    glUniform2f(pos_uniform, rect.x, rect.y);
-    glUniform2f(scale_uniform, rect.width, rect.height);
-    glUniform4f(uv_uniform, uv.x, uv.y, uv.width, uv.height);
+    bind_2i(textured_mapped_shader, Shader::UniformId::RESOLUTION, target.width, target.height);
+    bind_2f(textured_mapped_shader, Shader::UniformId::POS,rect.x, rect.y);
+    bind_2f(textured_mapped_shader, Shader::UniformId::SCALE, rect.width, rect.height);
+    bind_4f(textured_mapped_shader, Shader::UniformId::UV, uv.x, uv.y, uv.width, uv.height);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex.gl_reference);

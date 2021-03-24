@@ -430,16 +430,41 @@ void font_stuff(RenderTarget target, InputState *input, int index, String answer
     }
 }
 
-struct StandardPbrDrawable
-{
-    VertexBuffer vert_buf;
-    StandardPbrMaterial mat;
-};
-StandardPbrDrawable load_drawable(String dir, bool double_uvs = false)
+
+VertexBuffer load_vertex_buffer(String dir, bool double_uvs = false)
 {
     char filename_buf[1024];
     memcpy(filename_buf, dir.data, dir.len);
+    
+    VertexBuffer ret;
+    memcpy(filename_buf + dir.len, "/model_0.obj\0", sizeof("/model_0.obj\0"));
+    if (!double_uvs)
+    {
+        Mesh mesh = load_obj(filename_buf);
+        ret = upload_vertex_buffer(mesh);
+        // TODO free mesh
+        // TODO free file
+    }
+    else
+    {
+        char filename2_buf[1024];
+        memcpy(filename2_buf, dir.data, dir.len);
+        memcpy(filename2_buf + dir.len, "/model_1.obj\0", sizeof("/model_1.obj\0"));
 
+        Mesh mesh = load_obj_extra_uvs(filename_buf, filename2_buf);
+        ret = upload_vertex_buffer(mesh);
+        // TODO free mesh
+        // TODO free file
+    }
+
+    return ret;
+}
+
+
+StandardPbrMaterial load_material(String dir)
+{
+    char filename_buf[1024];
+    memcpy(filename_buf, dir.data, dir.len);
 
     memcpy(filename_buf + dir.len, "/diffuse.bmp\0", sizeof("/diffuse.bmp\0"));
     Bitmap albedo = parse_bitmap(read_entire_file(filename_buf));
@@ -471,39 +496,20 @@ StandardPbrDrawable load_drawable(String dir, bool double_uvs = false)
     mat.texture_array[2] = metal_tex;
     mat.texture_array[3] = roughness_tex;
 
-    StandardPbrDrawable drawable;
-    drawable.mat = mat;
-
-    memcpy(filename_buf + dir.len, "/model_0.obj\0", sizeof("/model_0.obj\0"));
-    if (!double_uvs)
-    {
-        Mesh mesh = load_obj(filename_buf);
-        drawable.vert_buf = upload_vertex_buffer(mesh);
-        // TODO free mesh
-        // TODO free file
-    }
-    else
-    {
-        char filename2_buf[1024];
-        memcpy(filename2_buf, dir.data, dir.len);
-        memcpy(filename2_buf + dir.len, "/model_1.obj\0", sizeof("/model_1.obj\0"));
-
-        Mesh mesh = load_obj_extra_uvs(filename_buf, filename2_buf);
-        drawable.vert_buf = upload_vertex_buffer(mesh);
-        // TODO free mesh
-        // TODO free file
-    }
-
-    return drawable;
+    return mat;
 }
 
 void graphics_test_stuff(RenderTarget target, InputState *input)
 {
     static Texture hdri_tex;
     static Texture unfiltered_cubemap;
-    static Texture irradiance_map;
-    static Texture brdf_lut;
-    static Texture env_map;
+
+    static VertexBuffer x_verts;
+    static StandardPbrMaterial x_mat;
+    static VertexBuffer bar_verts;
+    static StandardPbrMaterial bar_mat;
+
+    static StandardPbrEnvMaterial env_mat;
 
     static String answers[8] = {
         String::from("RED ASJKDD ASKJHDQQW"),
@@ -517,25 +523,21 @@ void graphics_test_stuff(RenderTarget target, InputState *input)
     };
     static RenderTarget answer_textures[8];
 
-    static StandardPbrDrawable x;
-    static StandardPbrDrawable bar;
-
-    static Shader threed;
-    static Shader bar_shade;
 
     static bool init = false;
     if (!init)
     {
         init = true;
 
-        threed = load_shader(threed_shader);
-        bar_shade = load_shader(bar_shader);
         {
-            x = load_drawable(String::from("resources/models/x2"));
-            bar = load_drawable(String::from("resources/models/bar"), true);
+            x_verts = load_vertex_buffer(String::from("resources/models/x2"));
+            x_mat = load_material(String::from("resources/models/x2"));
+            bar_verts = load_vertex_buffer(String::from("resources/models/bar"), true);
+            bar_mat = load_material(String::from("resources/models/bar"));
         }
 
         {
+
             int width, height, components;
             stbi_set_flip_vertically_on_load(true);
             float *hdri = stbi_loadf("resources/hdri/Newport_Loft_Ref.hdr", &width, &height, &components, 0);
@@ -543,9 +545,13 @@ void graphics_test_stuff(RenderTarget target, InputState *input)
             stbi_image_free(hdri);
 
             unfiltered_cubemap = hdri_to_cubemap(hdri_tex, 1024);
-            irradiance_map = convolve_irradiance_map(unfiltered_cubemap, 32);
-            env_map = filter_env_map(unfiltered_cubemap, 512);
-            brdf_lut = generate_brdf_lut(512);
+
+            Texture irradiance_map = convolve_irradiance_map(unfiltered_cubemap, 32);
+            Texture env_map = filter_env_map(unfiltered_cubemap, 512);
+            Texture brdf_lut  = generate_brdf_lut(512);
+            env_mat.texture_array[0] = irradiance_map;
+            env_mat.texture_array[1] = env_map;
+            env_mat.texture_array[2] = brdf_lut;
         }
 
         for (int i = 0; i < 8; i++)
@@ -595,17 +601,15 @@ void graphics_test_stuff(RenderTarget target, InputState *input)
             bar_rot = 90.f;
         }
 
-        glm::mat4 bar_mat = glm::rotate(glm::translate(glm::mat4(1.0f), {x, y, 0.f}), glm::radians(bar_rot), glm::vec3{1.f, 0.f, 0.f});
+        glm::mat4 model = glm::rotate(glm::translate(glm::mat4(1.0f), {x, y, 0.f}), glm::radians(bar_rot), glm::vec3{1.f, 0.f, 0.f});
 
-        bind_shader(bar_shade);
-        bind_cubemap_texture(bar_shade, Shader::UniformId::IRRADIANCE, irradiance_map);
-        bind_cubemap_texture(bar_shade, Shader::UniformId::ENV_MAP, env_map);
-        bind_texture(bar_shade, Shader::UniformId::BRDF, brdf_lut);
-        bind_camera(threed, camera);
-        bind_mat4(bar_shade, Shader::UniformId::MODEL, bar_mat);
-        bind_material(bar_shade, bar.mat);
-        bind_texture(bar_shade, Shader::UniformId::OVERLAY_TEXTURE, answer_textures[i].color_tex);
-        draw(target, bar_shade, bar.vert_buf);
+        bind_shader(bar_shader);
+        bind_camera(bar_shader, camera);
+        bind_mat4(bar_shader, Shader::UniformId::MODEL, model);
+        bind_material(bar_shader, env_mat);
+        bind_material(bar_shader, bar_mat);
+        bind_texture(bar_shader, Shader::UniformId::OVERLAY_TEXTURE, answer_textures[i].color_tex);
+        draw(target, bar_shader, bar_verts);
     }
 
     float speed_denoms[3] = {2, 2.75, 2.15};
@@ -622,14 +626,12 @@ void graphics_test_stuff(RenderTarget target, InputState *input)
         glm::quat actual_rot = glm::normalize(initial_rot + ((target_rot - initial_rot) * actual_t));
         glm::mat4 model = glm::translate(glm::mat4(1.0f), actual_pos) * glm::toMat4(actual_rot);
 
-        bind_shader(threed);
-        bind_cubemap_texture(threed, Shader::UniformId::IRRADIANCE, irradiance_map);
-        bind_cubemap_texture(threed, Shader::UniformId::ENV_MAP, env_map);
-        bind_texture(threed, Shader::UniformId::BRDF, brdf_lut);
-        bind_camera(threed, camera);
-        bind_mat4(threed, Shader::UniformId::MODEL, model);
-        bind_material(threed, x.mat);
-        draw(target, threed, x.vert_buf);
+        bind_shader(threed_shader);
+        bind_camera(threed_shader, camera);
+        bind_mat4(threed_shader, Shader::UniformId::MODEL, model);
+        bind_material(threed_shader, x_mat);
+        bind_material(threed_shader, env_mat);
+        draw(target, threed_shader, x_verts);
     }
 
     draw_cubemap(unfiltered_cubemap, camera);

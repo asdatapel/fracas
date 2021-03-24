@@ -5,6 +5,7 @@
 
 #include "platform.hpp"
 #include "math.hpp"
+#include "mesh.hpp"
 
 struct Bitmap {
     int width, height;
@@ -12,7 +13,13 @@ struct Bitmap {
 };
 
 struct Texture
-{
+{   
+    enum struct Type
+    {
+        _2D,
+        CUBEMAP,
+    };
+    Type type;
     unsigned int gl_reference;
     int width, height;
 };
@@ -34,11 +41,15 @@ struct VertexBuffer
 };
 
 RenderTarget init_graphics(RenderTarget target);
-void clear_backbuffer();
+
 Texture to_texture(Bitmap bitmap, bool mipmaps = true);
+VertexBuffer upload_vertex_buffer(Mesh mesh);
+
 void draw_rect(RenderTarget target, Rect rect, Color color);
 void draw_textured_rect(RenderTarget target, Rect rect, Color color, Texture tex);
 void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture tex);
+
+void clear_backbuffer();
 
 static Bitmap parse_bitmap(FileData file_data)
 {

@@ -6,12 +6,6 @@ if len(sys.argv) != 2:
     exit()
 dir = sys.argv[1]
 
-# traverse root directory, and list directories as dirs and files as files
-
-
-# for _, _, files in os.walk(dir):
-#     for file in files:
-#         print(file)
 all_uniforms = {}
 shader_files = ["\\".join([root, f]) for root,dirs,files in os.walk(dir) for f in files if f.endswith(".gl")]
 for filename in shader_files:
@@ -30,8 +24,3 @@ for k in all_uniforms:
     print(k.upper(),",")
 for k in all_uniforms:
     print("{", '"' + k + '"', ",", str(all_uniforms[k]).lower(), "},")
-    
-# for k in textures:
-#     print(k)
-# for k in textures:
-#     print(k.upper())
