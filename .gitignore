@@ -3,7 +3,7 @@ src/glfw/*
 src/KHR/*
 src/glm/*
 build/*
-generated/*
+generated/* 
 resources2/*
 glfw3.dll
 .vscode

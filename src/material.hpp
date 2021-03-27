@@ -53,3 +53,11 @@ struct StandardPbrEnvMaterial : Material
         memcpy(textures, other.textures, N * sizeof(Texture));
     }
 };
+
+void bind_material(Shader shader, Material material)
+{
+    for (int i = 0; i < material.num_textures; i++)
+    {
+        bind_texture(shader, material.uniform_ids[i], material.textures[i]);
+    }
+}

@@ -5,15 +5,13 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
-#include "stb/stb_image.hpp"
-#include "stb/stb_truetype.hpp"
-
 #include "assets.hpp"
 #include "camera.hpp"
 #include "font.hpp"
 #include "mesh.hpp"
 #include "net.hpp"
 #include "platform.hpp"
+#include "scene.hpp"
 #include "ui.hpp"
 
 #include "graphics_opengl.cpp"
@@ -26,6 +24,7 @@ SOCKET server_socket;
 Peer server;
 
 Assets assets;
+Scene scene;
 
 const int MAX_PLAYERS = 12;
 AllocatedString<32> players[MAX_PLAYERS];
@@ -269,106 +268,15 @@ bool init_if_not()
         server = {server_socket};
 
         assets = load_assets();
+        scene = init_scene(&assets);
         ui_state = ServerMessageType::DESCRIBE_LOBBY;
     }
 
     return true;
 }
 
-void font_stuff(RenderTarget target, Assets *assets, InputState *input, int index, String answer, int score)
+void graphics_test_stuff(RenderTarget target, Scene *scene, Assets *assets, InputState *input)
 {
-    Font font = assets->fonts[(int)FontId::RESOURCES_FONTS_ANTON_REGULAR_TTF];
-    Texture *num_texs[8] = {
-        &assets->textures[(int)TextureAssetId::RESOURCES_MODELS_BAR3_NUM_1_BMP],
-        &assets->textures[(int)TextureAssetId::RESOURCES_MODELS_BAR3_NUM_2_BMP],
-        &assets->textures[(int)TextureAssetId::RESOURCES_MODELS_BAR3_NUM_3_BMP],
-        &assets->textures[(int)TextureAssetId::RESOURCES_MODELS_BAR3_NUM_4_BMP],
-        &assets->textures[(int)TextureAssetId::RESOURCES_MODELS_BAR3_NUM_5_BMP],
-        &assets->textures[(int)TextureAssetId::RESOURCES_MODELS_BAR3_NUM_6_BMP],
-        &assets->textures[(int)TextureAssetId::RESOURCES_MODELS_BAR3_NUM_7_BMP],
-        &assets->textures[(int)TextureAssetId::RESOURCES_MODELS_BAR3_NUM_8_BMP],
-    };
-
-    float aspect_ratio = 2.f;
-    float text_scale = 4.f;
-    {
-        float target_border = 0.05f;
-        Rect sub_target = {target_border, target_border, .8f - (target_border * 2), .5f - (target_border * 2)};
-        draw_centered_text(font, target, answer, sub_target, text_scale, aspect_ratio);
-    }
-
-    {
-        assert(score > 0 && score < 100);
-        char buf[3];
-        _itoa_s(score, buf, 10);
-        String text;
-        text.data = buf;
-        text.len = strlen(buf);
-
-        float target_border = 0.025f;
-        Rect sub_target = {1 - .19f + target_border, target_border, .19f - target_border - target_border, .5f - target_border};
-        draw_centered_text(font, target, text, sub_target, text_scale, aspect_ratio);
-    }
-
-    {
-        Texture num_tex = *num_texs[index];
-        float img_width = (float)num_tex.width / target.width;
-        float img_height = (float)num_tex.height / target.height;
-
-        float border = .04f;
-        float scale = (.5f - (border * 2.f)) / (img_height * aspect_ratio);
-        float height = img_height * scale;
-        float width = img_width * scale;
-
-        float top = .5f + border;
-        float left = (1.f - width) / 2.f;
-
-        Rect rect = {left * target.width, top * target.height, target.width * width, target.height * height * aspect_ratio};
-        draw_textured_rect(target, rect, {}, num_tex);
-    }
-}
-
-void graphics_test_stuff(RenderTarget target, Assets *assets, InputState *input)
-{
-    static Texture hdri_tex;
-    static Texture unfiltered_cubemap;
-    static StandardPbrEnvMaterial env_mat;
-
-    static RenderTarget answer_textures[8];
-    static RenderTarget score_textures[2];
-
-    static bool init = false;
-    if (!init)
-    {
-        init = true;
-
-        {
-            int width, height, components;
-            stbi_set_flip_vertically_on_load(true);
-            float *hdri = stbi_loadf("resources/hdri/Newport_Loft_Ref.hdr", &width, &height, &components, 0);
-            hdri_tex = to_texture(hdri, width, height);
-            stbi_image_free(hdri);
-
-            unfiltered_cubemap = hdri_to_cubemap(hdri_tex, 1024);
-
-            Texture irradiance_map = convolve_irradiance_map(unfiltered_cubemap, 32);
-            Texture env_map = filter_env_map(unfiltered_cubemap, 512);
-            Texture brdf_lut = generate_brdf_lut(512);
-            env_mat.texture_array[0] = irradiance_map;
-            env_mat.texture_array[1] = env_map;
-            env_mat.texture_array[2] = brdf_lut;
-        }
-
-        for (int i = 0; i < 8; i++)
-        {
-            answer_textures[i] = new_render_target(2048, 2048, false);
-        }
-        for (int i = 0; i < 2; i++)
-        {
-            score_textures[i] = new_render_target(1024, 1024, false);
-        }
-    }
-
     static String answers[8] = {
         String::from("RED ASJKDD ASKJHDQQW"),
         String::from("BLUE"),
@@ -381,97 +289,12 @@ void graphics_test_stuff(RenderTarget target, Assets *assets, InputState *input)
     };
     for (int i = 0; i < 8; i++)
     {
-        bind(answer_textures[i]);
-        clear_backbuffer();
-        font_stuff(answer_textures[i], assets, input, i, answers[i], i + 8);
-        gen_mips(answer_textures[i].color_tex);
+        draw_bar_overlay(scene, assets, i, answers[i], i + 8);
     }
 
     bind(target);
     clear_backbuffer();
-
-    static Camera camera;
-    camera.update(target, input);
-
-    VertexBuffer x_verts = assets->vertex_buffers[(int)MeshId::RESOURCES_MODELS_X2];
-    StandardPbrMaterial x_mat = assets->materials[(int)MaterialId::RESOURCES_MODELS_X2];
-    VertexBuffer bar_verts = assets->vertex_buffers[(int)MeshId::RESOURCES_MODELS_BAR];
-    StandardPbrMaterial bar_mat = assets->materials[(int)MaterialId::RESOURCES_MODELS_BAR];
-    VertexBuffer test_verts = assets->vertex_buffers[(int)MeshId::RESOURCES_MODELS_LONG_TABLE];
-    StandardPbrMaterial test_mat = assets->materials[(int)MaterialId::RESOURCES_MODELS_LONG_TABLE];
-
-    static float bar_ts[8] = {};
-    static bool animating[8] = {};
-    for (int i = 0; i < input->key_input.len; i++)
-    {
-        if (input->key_input[i] >= Keys::NUM_1 && input->key_input[i] <= Keys::NUM_8)
-        {
-            animating[(int)input->key_input[i] - (int)Keys::NUM_1] = !animating[(int)input->key_input[i] - (int)Keys::NUM_1];
-        }
-    }
-    for (int i = 0; i < 8; i++)
-    {
-        float x = (i % 2) * 4.f;
-        float y = (i / 2) * -0.8f;
-
-        if (animating[i])
-        {
-            bar_ts[i] += 0.01f;
-        }
-        float bar_rot = (powf(bar_ts[i] * 4, 2) * 90.f) - 90.f;
-        if (bar_rot < -90.f)
-        {
-            bar_rot = -90.f;
-        }
-        if (bar_rot > 90.f)
-        {
-            bar_rot = 90.f;
-        }
-
-        glm::mat4 model = glm::rotate(glm::translate(glm::mat4(1.0f), {x, y, 0.f}), glm::radians(bar_rot), glm::vec3{1.f, 0.f, 0.f});
-
-        bind_shader(bar_shader);
-        bind_camera(bar_shader, camera);
-        bind_mat4(bar_shader, UniformId::MODEL, model);
-        bind_material(bar_shader, env_mat);
-        bind_material(bar_shader, bar_mat);
-        bind_texture(bar_shader, UniformId::OVERLAY_TEXTURE, answer_textures[i].color_tex);
-        draw(target, bar_shader, bar_verts);
-    }
-
-    float speed_denoms[3] = {2, 2.75, 2.15};
-    for (int i = 0; i < 3; i++)
-    {
-        float t = 0.f;
-        t += 0.01f;
-        glm::vec3 initial_pos = {-1 + i, 0, 5};
-        glm::quat initial_rot({(i * .5f), .1f + (i * .1f), -0.5f + (i * 1.4f)});
-        glm::vec3 target_pos = {i - 1, 0.f, 0.f};
-        glm::quat target_rot({glm::radians(90.f), 0.f, 0.f});
-        float actual_t = 1.f - powf(glm::clamp(t / 2, 0.f, 1.f), speed_denoms[i]);
-        glm::vec3 actual_pos = initial_pos + ((target_pos - initial_pos) * actual_t);
-        glm::quat actual_rot = glm::normalize(initial_rot + ((target_rot - initial_rot) * actual_t));
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), actual_pos) * glm::toMat4(actual_rot);
-
-        bind_shader(threed_shader);
-        bind_camera(threed_shader, camera);
-        bind_mat4(threed_shader, UniformId::MODEL, model);
-        bind_material(threed_shader, x_mat);
-        bind_material(threed_shader, env_mat);
-        draw(target, threed_shader, x_verts);
-    }
-
-    static float t = 0.f;
-    t += 0.01f;
-    glm::mat4 model = glm::rotate(glm::translate(glm::mat4(1.0f), {0.f, 2.f, 0.f}), glm::radians(t), glm::vec3{0.f, 1.f, 0.f});
-    bind_shader(threed_shader);
-    bind_camera(threed_shader, camera);
-    bind_mat4(threed_shader, UniformId::MODEL, model);
-    bind_material(threed_shader, env_mat);
-    bind_material(threed_shader, test_mat);
-    draw(target, threed_shader, test_verts);
-
-    draw_cubemap(unfiltered_cubemap, camera);
+    draw_scene(scene, target, assets, input);
 }
 
 bool game_update(const float time_step, InputState *input_state, RenderTarget target)
@@ -479,7 +302,7 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ta
     if (!init_if_not())
         return false;
 
-    graphics_test_stuff(target, &assets, input_state);
+    graphics_test_stuff(target, &scene, &assets, input_state);
 
     if (animation_wait)
     {
@@ -540,60 +363,60 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ta
     {
     case ServerMessageType::DESCRIBE_LOBBY:
     {
-        for (int i = 0; i < 12; i++)
-        {
-            float rect_width = 400;
-            float rect_height = 100;
-            float left = (target.width / 2) - rect_width - 10;
-            float top = (target.height / 2) - (rect_height * 2) - (10 * 2);
+        // for (int i = 0; i < 12; i++)
+        // {
+        //     float rect_width = 400;
+        //     float rect_height = 100;
+        //     float left = (target.width / 2) - rect_width - 10;
+        //     float top = (target.height / 2) - (rect_height * 2) - (10 * 2);
 
-            float this_left = (i % 2) * (rect_width + 10) + left;
-            float this_top = (i / 2) * (rect_height + 10) + top;
-            draw_rect(target, {this_left, this_top, rect_width, rect_height}, {i * .1f, (i % 4) * .25f, (i % 3) * .25f, 255});
-            if (players[i].len != 0)
-            {
-                draw_text(font, target, players[i], this_left, this_top + rect_height / 2, 1.f, 1.f);
-            }
-        }
+        //     float this_left = (i % 2) * (rect_width + 10) + left;
+        //     float this_top = (i / 2) * (rect_height + 10) + top;
+        //     draw_rect(target, {this_left, this_top, rect_width, rect_height}, {i * .1f, (i % 4) * .25f, (i % 3) * .25f, 255});
+        //     if (players[i].len != 0)
+        //     {
+        //         draw_text(font, target, players[i], this_left, this_top + rect_height / 2, 1.f, 1.f);
+        //     }
+        // }
 
-        static AllocatedString<32> username;
-        do_text_box(&username, &ui_context, target, input_state, font, &username, {500, 900, 300, 50}, 8, {1, 0, 0, .8});
+        // static AllocatedString<32> username;
+        // do_text_box(&username, &ui_context, target, input_state, font, &username, {500, 900, 300, 50}, 8, {1, 0, 0, .8});
 
-        String buttonstr = String::from("Set Name");
-        bool set_name = do_button(&buttonstr, &ui_context, target, input_state, font, buttonstr, {850, 900, 0, 50}, 8, {0, 0, 1, .8});
-        if (set_name)
-        {
-            int this_msg_size = sizeof(uint16_t) + sizeof(ClientMessageType) + sizeof(uint16_t) + username.len;
-            if (this_msg_size > MAX_MSG_SIZE)
-            {
-                printf("Msg too big: %d", this_msg_size);
-                return true;
-            }
+        // String buttonstr = String::from("Set Name");
+        // bool set_name = do_button(&buttonstr, &ui_context, target, input_state, font, buttonstr, {850, 900, 0, 50}, 8, {0, 0, 1, .8});
+        // if (set_name)
+        // {
+        //     int this_msg_size = sizeof(uint16_t) + sizeof(ClientMessageType) + sizeof(uint16_t) + username.len;
+        //     if (this_msg_size > MAX_MSG_SIZE)
+        //     {
+        //         printf("Msg too big: %d", this_msg_size);
+        //         return true;
+        //     }
 
-            char msg_data[MAX_MSG_SIZE];
-            char *buf_pos = msg_data;
-            buf_pos = append_short(buf_pos, this_msg_size);
-            buf_pos = append_byte(buf_pos, (char)ClientMessageType::JOIN);
-            buf_pos = append_string(buf_pos, username);
+        //     char msg_data[MAX_MSG_SIZE];
+        //     char *buf_pos = msg_data;
+        //     buf_pos = append_short(buf_pos, this_msg_size);
+        //     buf_pos = append_byte(buf_pos, (char)ClientMessageType::JOIN);
+        //     buf_pos = append_string(buf_pos, username);
 
-            server.send_all(msg_data, this_msg_size);
-        }
+        //     server.send_all(msg_data, this_msg_size);
+        // }
 
-        if (my_id == 0)
-        {
-            String buttonstr = String::from("Start Game");
-            bool start_game = do_button(&buttonstr, &ui_context, target, input_state, font, buttonstr, {25, 25, 0, 75}, 15, {0, 1, 1, .8});
-            if (start_game)
-            {
-                int this_msg_size = sizeof(uint16_t) + sizeof(ClientMessageType);
-                char msg_data[MAX_MSG_SIZE];
-                char *buf_pos = msg_data;
-                buf_pos = append_short(buf_pos, this_msg_size);
-                buf_pos = append_byte(buf_pos, (char)ClientMessageType::START);
+        // if (my_id == 0)
+        // {
+        //     String buttonstr = String::from("Start Game");
+        //     bool start_game = do_button(&buttonstr, &ui_context, target, input_state, font, buttonstr, {25, 25, 0, 75}, 15, {0, 1, 1, .8});
+        //     if (start_game)
+        //     {
+        //         int this_msg_size = sizeof(uint16_t) + sizeof(ClientMessageType);
+        //         char msg_data[MAX_MSG_SIZE];
+        //         char *buf_pos = msg_data;
+        //         buf_pos = append_short(buf_pos, this_msg_size);
+        //         buf_pos = append_byte(buf_pos, (char)ClientMessageType::START);
 
-                server.send_all(msg_data, this_msg_size);
-            }
-        }
+        //         server.send_all(msg_data, this_msg_size);
+        //     }
+        // }
     }
     break;
     case ServerMessageType::START_GAME:

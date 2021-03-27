@@ -2,33 +2,14 @@
 
 #include <glad/glad.h>
 
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/type_ptr.hpp"
-#include "glm/gtc/quaternion.hpp"
-#include "glm/gtx/quaternion.hpp"
-
 #include "graphics.hpp"
 #include "platform.hpp"
-#include "material.hpp"
 #include "math.hpp"
-#include "shader.hpp"
 
 RenderTarget main_target;
 
 unsigned int temp_fbo;
 unsigned int temp_rbo;
-
-Shader basic_shader;
-Shader textured_shader;
-Shader textured_mapped_shader;
-Shader threed_shader;
-Shader bar_shader;
-Shader rect_to_cubemap_shader;
-Shader cubemap_shader;
-Shader irradiance_shader;
-Shader env_filter_shader;
-Shader brdf_lut_shader;
 
 unsigned int screen_quad_vao;
 unsigned int screen_quad_vbo;
@@ -249,7 +230,7 @@ Texture to_single_channel_texture(uint8_t *data, int width, int height, bool mip
     return tex;
 }
 
-static Texture to_texture(float *data, int width, int height)
+Texture to_texture(float *data, int width, int height)
 {
     Texture tex;
     tex.type = Texture::Type::_2D;
@@ -270,7 +251,7 @@ static Texture to_texture(float *data, int width, int height)
     return tex;
 }
 
-static Texture new_tex(int width, int height, bool mipmaps = false)
+Texture new_tex(int width, int height, bool mipmaps = false)
 {
     Texture tex;
     tex.type = Texture::Type::_2D;
@@ -289,7 +270,7 @@ static Texture new_tex(int width, int height, bool mipmaps = false)
     return tex;
 }
 
-static Texture new_cubemap_tex(int square_width, bool mipmaps = false)
+Texture new_cubemap_tex(int square_width, bool mipmaps = false)
 {
     Texture tex;
     tex.type = Texture::Type::CUBEMAP;
@@ -350,12 +331,12 @@ VertexBuffer upload_vertex_buffer(Mesh mesh)
     return ret;
 }
 
-RenderTarget new_render_target(uint32_t width, uint32_t height, bool depth = false)
+RenderTarget new_render_target(uint32_t width, uint32_t height, bool depth)
 {
     RenderTarget target{width, height};
     glGenFramebuffers(1, &target.gl_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, target.gl_fbo);
-    
+
     target.color_tex = new_tex(width, height, true);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, target.color_tex.gl_reference, 0);
 
@@ -371,13 +352,6 @@ void bind(RenderTarget target)
 void bind_shader(Shader shader)
 {
     glUseProgram(shader.shader_handle);
-}
-
-void bind_camera(Shader shader, Camera camera)
-{
-    glUniformMatrix4fv(shader.uniform_handles[(int)UniformId::VIEW], 1, GL_FALSE, &camera.view[0][0]);
-    glUniformMatrix4fv(shader.uniform_handles[(int)UniformId::PROJECTION], 1, GL_FALSE, &camera.perspective[0][0]);
-    glUniform3f(shader.uniform_handles[(int)UniformId::CAMERA_POSITION], camera.pos_x, camera.pos_y, camera.pos_z);
 }
 
 void bind_1f(Shader shader, UniformId uniform_id, float val)
@@ -408,25 +382,18 @@ void bind_mat4(Shader shader, UniformId uniform_id, glm::mat4 mat)
 void bind_texture(Shader shader, UniformId uniform_id, Texture texture)
 {
     GLenum gl_tex_type = GL_TEXTURE_2D;
-    switch(texture.type){
-        case(Texture::Type::_2D):
-            gl_tex_type = GL_TEXTURE_2D;
-            break;
-        case(Texture::Type::CUBEMAP):
-            gl_tex_type = GL_TEXTURE_CUBE_MAP;
-            break;
+    switch (texture.type)
+    {
+    case (Texture::Type::_2D):
+        gl_tex_type = GL_TEXTURE_2D;
+        break;
+    case (Texture::Type::CUBEMAP):
+        gl_tex_type = GL_TEXTURE_CUBE_MAP;
+        break;
     }
     glUniform1i(shader.uniform_handles[(int)uniform_id], shader.tex_units[(int)uniform_id]);
     glActiveTexture(GL_TEXTURE0 + shader.tex_units[(int)uniform_id]);
     glBindTexture(gl_tex_type, texture.gl_reference);
-}
-
-void bind_material(Shader shader, Material material)
-{
-    for (int i = 0; i < material.num_textures; i++)
-    {
-        bind_texture(shader, material.uniform_ids[i], material.textures[i]);
-    }
 }
 
 void draw(RenderTarget target, Shader shader, VertexBuffer buf)
@@ -482,16 +449,9 @@ Texture hdri_to_cubemap(Texture hdri, int size)
     return target;
 }
 
-void draw_cubemap(Texture tex, Camera camera)
+void draw_cubemap()
 {
     glDepthFunc(GL_LEQUAL);
-
-    bind_shader(cubemap_shader);
-    
-    bind_mat4(cubemap_shader, UniformId::PROJECTION, camera.perspective);
-    bind_mat4(cubemap_shader, UniformId::VIEW, camera.view);
-
-    bind_texture(cubemap_shader, UniformId::ENV_MAP, tex);
 
     glBindVertexArray(cube_vao);
     glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -636,7 +596,7 @@ void draw_rect(RenderTarget target, Rect rect, Color color)
     bind_shader(basic_shader);
 
     bind_2i(basic_shader, UniformId::RESOLUTION, target.width, target.height);
-    bind_2f(basic_shader, UniformId::POS,rect.x, rect.y);
+    bind_2f(basic_shader, UniformId::POS, rect.x, rect.y);
     bind_2f(basic_shader, UniformId::SCALE, rect.width, rect.height);
     bind_4f(basic_shader, UniformId::COLOR, color.r, color.g, color.b, color.a);
 
@@ -649,10 +609,10 @@ void draw_textured_rect(RenderTarget target, Rect rect, Color color, Texture tex
     bind_shader(textured_shader);
 
     bind_2i(textured_shader, UniformId::RESOLUTION, target.width, target.height);
-    bind_2f(textured_shader, UniformId::POS,rect.x, rect.y);
+    bind_2f(textured_shader, UniformId::POS, rect.x, rect.y);
     bind_2f(textured_shader, UniformId::SCALE, rect.width, rect.height);
     bind_4f(textured_shader, UniformId::COLOR, color.r, color.g, color.b, color.a);
-    
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex.gl_reference);
 
@@ -665,10 +625,9 @@ void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture 
     bind_shader(textured_mapped_shader);
 
     bind_2i(textured_mapped_shader, UniformId::RESOLUTION, target.width, target.height);
-    bind_2f(textured_mapped_shader, UniformId::POS,rect.x, rect.y);
+    bind_2f(textured_mapped_shader, UniformId::POS, rect.x, rect.y);
     bind_2f(textured_mapped_shader, UniformId::SCALE, rect.width, rect.height);
     bind_4f(textured_mapped_shader, UniformId::UV, uv.x, uv.y, uv.width, uv.height);
-
 
     bind_texture(textured_mapped_shader, UniformId::TEX, tex);
 

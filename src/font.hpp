@@ -1,5 +1,7 @@
 #pragma once
 
+#include "stb/stb_truetype.hpp"
+
 #include "graphics.hpp"
 #include "platform.hpp"
 #include "util.hpp"

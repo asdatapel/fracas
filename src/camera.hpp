@@ -83,3 +83,10 @@ struct Camera
         perspective = glm::perspective(glm::radians(90.f), (float)target.width / (float)target.height, 0.01f, 100.0f);
     }
 };
+
+void bind_camera(Shader shader, Camera camera)
+{
+    glUniformMatrix4fv(shader.uniform_handles[(int)UniformId::VIEW], 1, GL_FALSE, &camera.view[0][0]);
+    glUniformMatrix4fv(shader.uniform_handles[(int)UniformId::PROJECTION], 1, GL_FALSE, &camera.perspective[0][0]);
+    glUniform3f(shader.uniform_handles[(int)UniformId::CAMERA_POSITION], camera.pos_x, camera.pos_y, camera.pos_z);
+}
