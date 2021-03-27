@@ -26,7 +26,7 @@ bool reset_if_me(Uiid me, Uiid &val)
 }
 
 template <size_t N>
-void do_text_box(Uiid me, UiContext *context, RenderTarget target, InputState *input, Font *font, AllocatedString<N> *str, Rect rect, float border, Color color)
+void do_text_box(Uiid me, UiContext *context, RenderTarget target, InputState *input, const Font &font, AllocatedString<N> *str, Rect rect, float border, Color color)
 {
     if (input->mouse_x > rect.x && input->mouse_x < rect.x + rect.width && input->mouse_y > rect.y && input->mouse_y < rect.y + rect.height)
     {
@@ -95,19 +95,19 @@ void do_text_box(Uiid me, UiContext *context, RenderTarget target, InputState *i
     draw_rect(target, {rect.x + rect.width - border, rect.y, border, rect.height}, light);
     draw_rect(target, rect, color);
 
-    draw_string(target, font, rect.x + border, rect.y, 1.f, *str);
+    draw_text(font, target, *str, rect.x + border, rect.y, 1.f, 1.f);
 }
 
-bool do_button(Uiid me, UiContext *context, RenderTarget target, InputState *input, Font *font, String str, Rect rect, float border, Color color)
+bool do_button(Uiid me, UiContext *context, RenderTarget target, InputState *input, const Font &font, String str, Rect rect, float border, Color color)
 {
     if (rect.height == 0)
     {
-        rect.height = font->size + (2 * border);
+        rect.height = font.font_size_px + (2 * border);
     }
-    float text_scale = (rect.height - (2 * border)) / font->size;
+    float text_scale = (rect.height - (2 * border)) / font.font_size_px;
     if (rect.width == 0)
     {
-        rect.width = string_width(font, text_scale, str) + (2 * border);
+        rect.width = get_text_width(font, str, text_scale) + (2 * border);
     }
 
     if (input->mouse_x > rect.x && input->mouse_x < rect.x + rect.width && input->mouse_y > rect.y && input->mouse_y < rect.y + rect.height)
@@ -161,27 +161,23 @@ bool do_button(Uiid me, UiContext *context, RenderTarget target, InputState *inp
     draw_rect(target, {rect.x + rect.width - border, rect.y, border, rect.height}, dark);
     draw_rect(target, rect, color);
 
-    draw_string(target, font, rect.x + border, rect.y, text_scale, str);
+    draw_text(font, target, str, rect.x + border, rect.y, text_scale, text_scale);
 
     return reset_if_me(me, context->active);
 }
 
-void do_label(Uiid me, UiContext *context, RenderTarget target, InputState *input, Font *font, String str, Rect rect, Color color)
+void do_label(Uiid me, UiContext *context, RenderTarget target, InputState *input, const Font &font, String str, Rect rect, Color color)
 {
     if (rect.height == 0)
     {
-        rect.height = font->size;
+        rect.height = font.font_size_px;
     }
-    float text_scale = rect.height / font->size;
+    float text_scale = rect.height / font.font_size_px;
     if (rect.width == 0)
     {
-        rect.width = string_width(font, text_scale, str);
+        rect.width = get_text_width(font, str, text_scale);
     }
 
     draw_rect(target, rect, color);
-    draw_string(target, font, rect.x, rect.y, text_scale, str);
+    draw_text(font, target, str, rect.x, rect.y, text_scale, text_scale);
 }
-
-
-
-

@@ -5,18 +5,20 @@
 struct Material
 {
     int num_textures;
-    Shader::UniformId *uniform_ids;
+    const UniformId *uniform_ids;
     Texture *textures;
 };
 
 struct StandardPbrMaterial : Material
 {
-    static const int N = 4;
-    static inline Shader::UniformId uniform_id_array[N] = {
-        Shader::UniformId::ALBEDO_TEXTURE,
-        Shader::UniformId::NORMAL_TEXTURE,
-        Shader::UniformId::METAL_TEXTURE,
-        Shader::UniformId::ROUGHNESS_TEXTURE,
+    static const int N = 6;
+    static inline UniformId uniform_id_array[N] = {
+        UniformId::ALBEDO_TEXTURE,
+        UniformId::NORMAL_TEXTURE,
+        UniformId::METAL_TEXTURE,
+        UniformId::ROUGHNESS_TEXTURE,
+        UniformId::EMIT_TEXTURE,
+        UniformId::AO_TEXTURE,
     };
     Texture texture_array[N];
     StandardPbrMaterial()
@@ -34,10 +36,10 @@ struct StandardPbrMaterial : Material
 struct StandardPbrEnvMaterial : Material
 {
     static const int N = 3;
-    static inline Shader::UniformId uniform_id_array[N] = {
-        Shader::UniformId::IRRADIANCE,
-        Shader::UniformId::ENV_MAP,
-        Shader::UniformId::BRDF,
+    static inline UniformId uniform_id_array[N] = {
+        UniformId::IRRADIANCE,
+        UniformId::ENV_MAP,
+        UniformId::BRDF,
     };
     Texture texture_array[N];
     StandardPbrEnvMaterial()

@@ -43,6 +43,7 @@ struct VertexBuffer
 RenderTarget init_graphics(RenderTarget target);
 
 Texture to_texture(Bitmap bitmap, bool mipmaps = true);
+Texture to_single_channel_texture(uint8_t *data, int width, int height, bool mipmaps);
 VertexBuffer upload_vertex_buffer(Mesh mesh);
 
 void draw_rect(RenderTarget target, Rect rect, Color color);

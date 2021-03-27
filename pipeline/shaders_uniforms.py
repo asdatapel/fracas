@@ -1,13 +1,9 @@
 import os
 import sys
 
-if len(sys.argv) != 2:
-    print("Wrong number of args")
-    exit()
-dir = sys.argv[1]
-
 all_uniforms = {}
-shader_files = ["\\".join([root, f]) for root,dirs,files in os.walk(dir) for f in files if f.endswith(".gl")]
+shader_files = ["\\".join([root, f]) for root,dirs,files in os.walk("resources/shaders") for f in files if f.endswith(".gl")]
+shader_files += ["\\".join([root, f]) for root,dirs,files in os.walk("./shaders") for f in files if f.endswith(".lib")]
 for filename in shader_files:
     file = open(filename, 'r')
     split_lines = [line.split() for line in file if line.startswith("uniform")]
@@ -19,8 +15,33 @@ for filename in shader_files:
     for u in sampler_names:
         all_uniforms[u] = True
 
+enum_list = ""
+definition_list = ""
+for k in all_uniforms:
+    enum_list += k.upper() + ",\n"
+for k in all_uniforms:
+    definition_list += "{" + '"' + k + '"' + "," + str(all_uniforms[k]).lower() + "},\n"
 
-for k in all_uniforms:
-    print(k.upper(),",")
-for k in all_uniforms:
-    print("{", '"' + k + '"', ",", str(all_uniforms[k]).lower(), "},")
+out = f"""
+#pragma once
+
+enum struct UniformId
+{{
+    {enum_list}
+
+    INVALID,
+}};
+const static int UNIFORM_COUNT = (int)UniformId::INVALID;
+
+struct UniformDefinition
+{{
+    char name[50];
+    bool is_texture;
+}};
+constexpr static UniformDefinition UNIFORM_DEFINITIONS[UNIFORM_COUNT] = {{
+    {definition_list}
+}};
+"""
+
+outfile = open("generated/uniforms.hpp", 'w+')
+outfile.write(out)

@@ -146,7 +146,7 @@ unsigned int create_shader_program(const char *folder)
     return shaderProgram;
 }
 
-static RenderTarget init_graphics(uint32_t width, uint32_t height)
+RenderTarget init_graphics(uint32_t width, uint32_t height)
 {
     glViewport(0, 0, width, height);
     glClearColor(powf(.392f, 2.2f), powf(.584f, 2.2f), powf(.929f, 2.2f), 0.0f);
@@ -187,8 +187,8 @@ static RenderTarget init_graphics(uint32_t width, uint32_t height)
     basic_shader = load_shader(create_shader_program("resources/shaders/basic"));
     textured_shader = load_shader(create_shader_program("resources/shaders/textured"));
     textured_mapped_shader = load_shader(create_shader_program("resources/shaders/font_atlas"));
-    threed_shader = load_shader(create_shader_program("resources/shaders/threed"));
-    bar_shader = load_shader(create_shader_program("resources/shaders/bar"));
+    threed_shader = load_shader(create_shader_program("resources2/shaders/threed"));
+    bar_shader = load_shader(create_shader_program("resources2/shaders/threed_with_overlay"));
     rect_to_cubemap_shader = load_shader(create_shader_program("resources/shaders/rect_to_cubemap"));
     cubemap_shader = load_shader(create_shader_program("resources/shaders/cubemap"));
     irradiance_shader = load_shader(create_shader_program("resources/shaders/irradiance"));
@@ -198,14 +198,15 @@ static RenderTarget init_graphics(uint32_t width, uint32_t height)
     return main_target;
 }
 
-static void clear_backbuffer()
+void clear_backbuffer()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-static Texture to_texture(Bitmap bitmap, bool mipmaps)
+Texture to_texture(Bitmap bitmap, bool mipmaps)
 {
     Texture tex;
+    tex.type = Texture::Type::_2D;
     tex.width = bitmap.width;
     tex.height = bitmap.height;
 
@@ -225,9 +226,10 @@ static Texture to_texture(Bitmap bitmap, bool mipmaps)
     return tex;
 }
 
-static Texture to_single_channel_texture(uint8_t *data, int width, int height, bool mipmaps)
+Texture to_single_channel_texture(uint8_t *data, int width, int height, bool mipmaps)
 {
     Texture tex;
+    tex.type = Texture::Type::_2D;
     tex.width = width;
     tex.height = height;
 
@@ -366,44 +368,44 @@ void bind(RenderTarget target)
     glViewport(0, 0, target.width, target.height);
 }
 
-static void bind_shader(Shader shader)
+void bind_shader(Shader shader)
 {
     glUseProgram(shader.shader_handle);
 }
 
-static void bind_camera(Shader shader, Camera camera)
+void bind_camera(Shader shader, Camera camera)
 {
-    glUniformMatrix4fv(shader.uniform_handles[(int)Shader::UniformId::VIEW], 1, GL_FALSE, &camera.view[0][0]);
-    glUniformMatrix4fv(shader.uniform_handles[(int)Shader::UniformId::PROJECTION], 1, GL_FALSE, &camera.perspective[0][0]);
-    glUniform3f(shader.uniform_handles[(int)Shader::UniformId::CAMERA_POSITION], camera.pos_x, camera.pos_y, camera.pos_z);
+    glUniformMatrix4fv(shader.uniform_handles[(int)UniformId::VIEW], 1, GL_FALSE, &camera.view[0][0]);
+    glUniformMatrix4fv(shader.uniform_handles[(int)UniformId::PROJECTION], 1, GL_FALSE, &camera.perspective[0][0]);
+    glUniform3f(shader.uniform_handles[(int)UniformId::CAMERA_POSITION], camera.pos_x, camera.pos_y, camera.pos_z);
 }
 
-static void bind_1f(Shader shader, Shader::UniformId uniform_id, float val)
+void bind_1f(Shader shader, UniformId uniform_id, float val)
 {
     glUniform1f(shader.uniform_handles[(int)uniform_id], val);
 }
 
-static void bind_2i(Shader shader, Shader::UniformId uniform_id, int i1, int i2)
+void bind_2i(Shader shader, UniformId uniform_id, int i1, int i2)
 {
     glUniform2i(shader.uniform_handles[(int)uniform_id], i1, i2);
 }
 
-static void bind_2f(Shader shader, Shader::UniformId uniform_id, float f1, float f2)
+void bind_2f(Shader shader, UniformId uniform_id, float f1, float f2)
 {
     glUniform2f(shader.uniform_handles[(int)uniform_id], f1, f2);
 }
 
-static void bind_4f(Shader shader, Shader::UniformId uniform_id, float f1, float f2, float f3, float f4)
+void bind_4f(Shader shader, UniformId uniform_id, float f1, float f2, float f3, float f4)
 {
     glUniform4f(shader.uniform_handles[(int)uniform_id], f1, f2, f3, f4);
 }
 
-static void bind_mat4(Shader shader, Shader::UniformId uniform_id, glm::mat4 mat)
+void bind_mat4(Shader shader, UniformId uniform_id, glm::mat4 mat)
 {
     glUniformMatrix4fv(shader.uniform_handles[(int)uniform_id], 1, GL_FALSE, &mat[0][0]);
 }
 
-static void bind_texture(Shader shader, Shader::UniformId uniform_id, Texture texture)
+void bind_texture(Shader shader, UniformId uniform_id, Texture texture)
 {
     GLenum gl_tex_type = GL_TEXTURE_2D;
     switch(texture.type){
@@ -419,7 +421,7 @@ static void bind_texture(Shader shader, Shader::UniformId uniform_id, Texture te
     glBindTexture(gl_tex_type, texture.gl_reference);
 }
 
-static void bind_material(Shader shader, Material material)
+void bind_material(Shader shader, Material material)
 {
     for (int i = 0; i < material.num_textures; i++)
     {
@@ -427,11 +429,11 @@ static void bind_material(Shader shader, Material material)
     }
 }
 
-static void draw(RenderTarget target, Shader shader, VertexBuffer buf)
+void draw(RenderTarget target, Shader shader, VertexBuffer buf)
 {
     static float t = 0.0f;
     t += 0.01f;
-    glUniform1f(shader.uniform_handles[(int)Shader::UniformId::T], t);
+    glUniform1f(shader.uniform_handles[(int)UniformId::T], t);
 
     glBindVertexArray(buf.vao);
     glDrawArrays(GL_TRIANGLES, 0, buf.vert_count);
@@ -452,8 +454,8 @@ Texture hdri_to_cubemap(Texture hdri, int size)
             glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
 
     bind_shader(rect_to_cubemap_shader);
-    bind_mat4(rect_to_cubemap_shader, Shader::UniformId::PROJECTION, captureProjection);
-    bind_texture(rect_to_cubemap_shader, Shader::UniformId::EQUIRECTANGULAR_MAP, hdri);
+    bind_mat4(rect_to_cubemap_shader, UniformId::PROJECTION, captureProjection);
+    bind_texture(rect_to_cubemap_shader, UniformId::EQUIRECTANGULAR_MAP, hdri);
 
     glBindFramebuffer(GL_FRAMEBUFFER, temp_fbo);
     glBindRenderbuffer(GL_RENDERBUFFER, temp_rbo);
@@ -464,7 +466,7 @@ Texture hdri_to_cubemap(Texture hdri, int size)
     glBindFramebuffer(GL_FRAMEBUFFER, temp_fbo);
     for (unsigned int i = 0; i < 6; ++i)
     {
-        bind_mat4(rect_to_cubemap_shader, Shader::UniformId::VIEW, captureViews[i]);
+        bind_mat4(rect_to_cubemap_shader, UniformId::VIEW, captureViews[i]);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, target.gl_reference, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -486,10 +488,10 @@ void draw_cubemap(Texture tex, Camera camera)
 
     bind_shader(cubemap_shader);
     
-    bind_mat4(cubemap_shader, Shader::UniformId::PROJECTION, camera.perspective);
-    bind_mat4(cubemap_shader, Shader::UniformId::VIEW, camera.view);
+    bind_mat4(cubemap_shader, UniformId::PROJECTION, camera.perspective);
+    bind_mat4(cubemap_shader, UniformId::VIEW, camera.view);
 
-    bind_texture(cubemap_shader, Shader::UniformId::ENV_MAP, tex);
+    bind_texture(cubemap_shader, UniformId::ENV_MAP, tex);
 
     glBindVertexArray(cube_vao);
     glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -517,13 +519,13 @@ Texture convolve_irradiance_map(Texture src, int size)
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, temp_rbo);
 
     bind_shader(irradiance_shader);
-    bind_mat4(irradiance_shader, Shader::UniformId::PROJECTION, captureProjection);
-    bind_texture(irradiance_shader, Shader::UniformId::ENV_MAP, src);
+    bind_mat4(irradiance_shader, UniformId::PROJECTION, captureProjection);
+    bind_texture(irradiance_shader, UniformId::ENV_MAP, src);
 
     glViewport(0, 0, target.width, target.height);
     for (unsigned int i = 0; i < 6; ++i)
     {
-        bind_mat4(irradiance_shader, Shader::UniformId::VIEW, captureViews[i]);
+        bind_mat4(irradiance_shader, UniformId::VIEW, captureViews[i]);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, target.gl_reference, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -553,8 +555,8 @@ Texture filter_env_map(Texture src, int size)
             glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
 
     bind_shader(env_filter_shader);
-    bind_mat4(env_filter_shader, Shader::UniformId::PROJECTION, captureProjection);
-    bind_texture(env_filter_shader, Shader::UniformId::ENV_MAP, src);
+    bind_mat4(env_filter_shader, UniformId::PROJECTION, captureProjection);
+    bind_texture(env_filter_shader, UniformId::ENV_MAP, src);
 
     glBindFramebuffer(GL_FRAMEBUFFER, temp_fbo);
     unsigned int maxMipLevels = 9; // assuming 512x512 texture
@@ -568,10 +570,10 @@ Texture filter_env_map(Texture src, int size)
         glViewport(0, 0, mipWidth, mipHeight);
 
         float roughness = (float)mip / (float)(maxMipLevels - 1);
-        bind_1f(env_filter_shader, Shader::UniformId::ROUGHNESS, roughness);
+        bind_1f(env_filter_shader, UniformId::ROUGHNESS, roughness);
         for (unsigned int i = 0; i < 6; ++i)
         {
-            bind_mat4(env_filter_shader, Shader::UniformId::VIEW, captureViews[i]);
+            bind_mat4(env_filter_shader, UniformId::VIEW, captureViews[i]);
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                    GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, ret.gl_reference, mip);
 
@@ -629,27 +631,27 @@ Texture generate_brdf_lut(int size)
     return target;
 }
 
-static void draw_rect(RenderTarget target, Rect rect, Color color)
+void draw_rect(RenderTarget target, Rect rect, Color color)
 {
     bind_shader(basic_shader);
 
-    bind_2i(basic_shader, Shader::UniformId::RESOLUTION, target.width, target.height);
-    bind_2f(basic_shader, Shader::UniformId::POS,rect.x, rect.y);
-    bind_2f(basic_shader, Shader::UniformId::SCALE, rect.width, rect.height);
-    bind_4f(basic_shader, Shader::UniformId::COLOR, color.r, color.g, color.b, color.a);
+    bind_2i(basic_shader, UniformId::RESOLUTION, target.width, target.height);
+    bind_2f(basic_shader, UniformId::POS,rect.x, rect.y);
+    bind_2f(basic_shader, UniformId::SCALE, rect.width, rect.height);
+    bind_4f(basic_shader, UniformId::COLOR, color.r, color.g, color.b, color.a);
 
     glBindVertexArray(screen_quad_vao);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
-static void draw_textured_rect(RenderTarget target, Rect rect, Color color, Texture tex)
+void draw_textured_rect(RenderTarget target, Rect rect, Color color, Texture tex)
 {
     bind_shader(textured_shader);
 
-    bind_2i(textured_shader, Shader::UniformId::RESOLUTION, target.width, target.height);
-    bind_2f(textured_shader, Shader::UniformId::POS,rect.x, rect.y);
-    bind_2f(textured_shader, Shader::UniformId::SCALE, rect.width, rect.height);
-    bind_4f(textured_shader, Shader::UniformId::COLOR, color.r, color.g, color.b, color.a);
+    bind_2i(textured_shader, UniformId::RESOLUTION, target.width, target.height);
+    bind_2f(textured_shader, UniformId::POS,rect.x, rect.y);
+    bind_2f(textured_shader, UniformId::SCALE, rect.width, rect.height);
+    bind_4f(textured_shader, UniformId::COLOR, color.r, color.g, color.b, color.a);
     
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex.gl_reference);
@@ -658,17 +660,17 @@ static void draw_textured_rect(RenderTarget target, Rect rect, Color color, Text
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
-static void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture tex)
+void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture tex)
 {
     bind_shader(textured_mapped_shader);
 
-    bind_2i(textured_mapped_shader, Shader::UniformId::RESOLUTION, target.width, target.height);
-    bind_2f(textured_mapped_shader, Shader::UniformId::POS,rect.x, rect.y);
-    bind_2f(textured_mapped_shader, Shader::UniformId::SCALE, rect.width, rect.height);
-    bind_4f(textured_mapped_shader, Shader::UniformId::UV, uv.x, uv.y, uv.width, uv.height);
+    bind_2i(textured_mapped_shader, UniformId::RESOLUTION, target.width, target.height);
+    bind_2f(textured_mapped_shader, UniformId::POS,rect.x, rect.y);
+    bind_2f(textured_mapped_shader, UniformId::SCALE, rect.width, rect.height);
+    bind_4f(textured_mapped_shader, UniformId::UV, uv.x, uv.y, uv.width, uv.height);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, tex.gl_reference);
+
+    bind_texture(textured_mapped_shader, UniformId::TEX, tex);
 
     glBindVertexArray(screen_quad_vao);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

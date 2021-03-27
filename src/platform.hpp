@@ -62,6 +62,7 @@ struct FileData
     int length;
 };
 FileData read_entire_file(const char *);
+void free_file(FileData);
 uint64_t debug_get_cycle_count();
 
 struct Client

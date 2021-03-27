@@ -51,7 +51,7 @@ def do(filepath):
         bsdf.inputs[metal_input].default_value = 0
         
 
-    bpy.ops.object.bake(type='DIFFUSE', save_mode='EXTERNAL', use_clear = True)
+    bpy.ops.object.bake(type='DIFFUSE', pass_filter={'COLOR'}, save_mode='EXTERNAL', use_clear = True)
     img.save_render(filepath=filepath + 'diffuse.png')
         
     
@@ -82,6 +82,9 @@ def do(filepath):
 
     bpy.ops.object.bake(type='NORMAL', save_mode='EXTERNAL')
     img.save_render(filepath=filepath + 'normal.png')
+
+    bpy.ops.object.bake(type='AO', save_mode='EXTERNAL')
+    img.save_render(filepath=filepath + 'ao.png')
 
     # reset materials
     for mat in obj.data.materials:

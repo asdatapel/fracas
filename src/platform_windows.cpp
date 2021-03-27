@@ -204,6 +204,10 @@ read_entire_file(const char *filename)
         OPEN_EXISTING,
         NULL,
         NULL);
+    if (file_handle == INVALID_HANDLE_VALUE)
+    {
+        return {nullptr, 0};
+    }
 
     LARGE_INTEGER filesize;
     GetFileSizeEx(file_handle, &filesize);
@@ -221,6 +225,10 @@ read_entire_file(const char *filename)
         NULL);
 
     return res;
+}
+void free_file(FileData file)
+{
+    free(file.data);
 }
 
 uint64_t debug_get_cycle_count()
