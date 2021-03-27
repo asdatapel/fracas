@@ -275,34 +275,13 @@ bool init_if_not()
     return true;
 }
 
-void graphics_test_stuff(RenderTarget target, Scene *scene, Assets *assets, InputState *input)
-{
-    static String answers[8] = {
-        String::from("RED ASJKDD ASKJHDQQW"),
-        String::from("BLUE"),
-        String::from("ORANGE"),
-        String::from("GREEN"),
-        String::from("PURPLE"),
-        String::from("VIOLET"),
-        String::from("PINK"),
-        String::from("CYAN"),
-    };
-    for (int i = 0; i < 8; i++)
-    {
-        draw_bar_overlay(scene, assets, i, answers[i], i + 8);
-    }
-
-    bind(target);
-    clear_backbuffer();
-    draw_scene(scene, target, assets, input);
-}
-
 bool game_update(const float time_step, InputState *input_state, RenderTarget target)
 {
     if (!init_if_not())
         return false;
 
-    graphics_test_stuff(target, &scene, &assets, input_state);
+    clear_bars(target, &scene);
+    draw_scene(&scene, target, input_state);
 
     if (animation_wait)
     {

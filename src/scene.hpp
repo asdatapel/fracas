@@ -87,7 +87,7 @@ Scene init_scene(Assets *assets)
     return scene;
 }
 
-void draw_scene(Scene *scene, RenderTarget target, Assets *assets, InputState *input)
+void draw_scene(Scene *scene, RenderTarget target, InputState *input)
 {
     scene->camera.update(target, input);
 
@@ -169,7 +169,7 @@ void draw_scene(Scene *scene, RenderTarget target, Assets *assets, InputState *i
     draw_cubemap();
 }
 
-void draw_bar_overlay(Scene *scene, Assets *assets, int index, String answer, int score)
+void draw_bar_overlay(RenderTarget previous_target, Scene *scene, int index, String answer, int score)
 {
     RenderTarget target = scene->answer_targets[index];
     bind(target);
@@ -214,4 +214,24 @@ void draw_bar_overlay(Scene *scene, Assets *assets, int index, String answer, in
     }
 
     gen_mips(target.color_tex);
+    bind(previous_target);
+}
+
+void clear_bars(RenderTarget previous_target, Scene *scene)
+{
+    // TODO should be empty
+    static String answers[8] = {
+        String::from("RED ASJKDD ASKJHDQQW"),
+        String::from("BLUE"),
+        String::from("ORANGE"),
+        String::from("GREEN"),
+        String::from("PURPLE"),
+        String::from("VIOLET"),
+        String::from("PINK"),
+        String::from("CYAN"),
+    };
+    for (int i = 0; i < 8; i++)
+    {
+        draw_bar_overlay(previous_target, scene, i, answers[i], i + 8);
+    }
 }
