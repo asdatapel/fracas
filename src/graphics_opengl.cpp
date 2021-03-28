@@ -604,6 +604,12 @@ void draw_rect(RenderTarget target, Rect rect, Color color)
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
+void draw_rect()
+{
+    glBindVertexArray(screen_quad_vao);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
 void draw_textured_rect(RenderTarget target, Rect rect, Color color, Texture tex)
 {
     bind_shader(textured_shader);

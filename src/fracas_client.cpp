@@ -342,60 +342,68 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ta
     {
     case ServerMessageType::DESCRIBE_LOBBY:
     {
-        // for (int i = 0; i < 12; i++)
-        // {
-        //     float rect_width = 400;
-        //     float rect_height = 100;
-        //     float left = (target.width / 2) - rect_width - 10;
-        //     float top = (target.height / 2) - (rect_height * 2) - (10 * 2);
+        for (int i = 0; i < 12; i++)
+        {
+            float rect_width = 400;
+            float rect_height = 100;
+            float left = (target.width / 2) - rect_width - 10;
+            float top = (target.height / 2) - (rect_height * 2) - (10 * 2);
 
-        //     float this_left = (i % 2) * (rect_width + 10) + left;
-        //     float this_top = (i / 2) * (rect_height + 10) + top;
-        //     draw_rect(target, {this_left, this_top, rect_width, rect_height}, {i * .1f, (i % 4) * .25f, (i % 3) * .25f, 255});
-        //     if (players[i].len != 0)
-        //     {
-        //         draw_text(font, target, players[i], this_left, this_top + rect_height / 2, 1.f, 1.f);
-        //     }
-        // }
+            float this_left = (i % 2) * (rect_width + 10) + left;
+            float this_top = (i / 2) * (rect_height + 10) + top;
 
-        // static AllocatedString<32> username;
-        // do_text_box(&username, &ui_context, target, input_state, font, &username, {500, 900, 300, 50}, 8, {1, 0, 0, .8});
+            // Color color = {i * .1f, (i % 4) * .25f, (i % 3) * .25f, 255};
+            // bind_shader(basic_shader);
+            // bind_2i(basic_shader, UniformId::RESOLUTION, target.width, target.height);
+            // bind_2f(basic_shader, UniformId::POS, this_left, this_top);
+            // bind_2f(basic_shader, UniformId::SCALE, rect_width, rect_height);
+            // bind_4f(basic_shader, UniformId::COLOR, color.r, color.g, color.b, color.a);
+            // draw_rect();
 
-        // String buttonstr = String::from("Set Name");
-        // bool set_name = do_button(&buttonstr, &ui_context, target, input_state, font, buttonstr, {850, 900, 0, 50}, 8, {0, 0, 1, .8});
-        // if (set_name)
-        // {
-        //     int this_msg_size = sizeof(uint16_t) + sizeof(ClientMessageType) + sizeof(uint16_t) + username.len;
-        //     if (this_msg_size > MAX_MSG_SIZE)
-        //     {
-        //         printf("Msg too big: %d", this_msg_size);
-        //         return true;
-        //     }
+            if (players[i].len != 0)
+            {
+                draw_text(font, target, players[i], this_left, this_top + rect_height / 2, 1.f, 1.f);
+            }
+        }
+        
+        static AllocatedString<32> username;
+        do_text_box(&username, &ui_context, target, input_state, font, &username, {500, 900, 300, 50}, 8, {1, 0, 0, .8});
 
-        //     char msg_data[MAX_MSG_SIZE];
-        //     char *buf_pos = msg_data;
-        //     buf_pos = append_short(buf_pos, this_msg_size);
-        //     buf_pos = append_byte(buf_pos, (char)ClientMessageType::JOIN);
-        //     buf_pos = append_string(buf_pos, username);
+        String buttonstr = String::from("Set Name");
+        bool set_name = do_button(&buttonstr, &ui_context, target, input_state, font, buttonstr, {850, 900, 0, 50}, 8, {0, 0, 1, .8});
+        if (set_name)
+        {
+            int this_msg_size = sizeof(uint16_t) + sizeof(ClientMessageType) + sizeof(uint16_t) + username.len;
+            if (this_msg_size > MAX_MSG_SIZE)
+            {
+                printf("Msg too big: %d", this_msg_size);
+                return true;
+            }
 
-        //     server.send_all(msg_data, this_msg_size);
-        // }
+            char msg_data[MAX_MSG_SIZE];
+            char *buf_pos = msg_data;
+            buf_pos = append_short(buf_pos, this_msg_size);
+            buf_pos = append_byte(buf_pos, (char)ClientMessageType::JOIN);
+            buf_pos = append_string(buf_pos, username);
 
-        // if (my_id == 0)
-        // {
-        //     String buttonstr = String::from("Start Game");
-        //     bool start_game = do_button(&buttonstr, &ui_context, target, input_state, font, buttonstr, {25, 25, 0, 75}, 15, {0, 1, 1, .8});
-        //     if (start_game)
-        //     {
-        //         int this_msg_size = sizeof(uint16_t) + sizeof(ClientMessageType);
-        //         char msg_data[MAX_MSG_SIZE];
-        //         char *buf_pos = msg_data;
-        //         buf_pos = append_short(buf_pos, this_msg_size);
-        //         buf_pos = append_byte(buf_pos, (char)ClientMessageType::START);
+            server.send_all(msg_data, this_msg_size);
+        }
 
-        //         server.send_all(msg_data, this_msg_size);
-        //     }
-        // }
+        if (my_id == 0)
+        {
+            String buttonstr = String::from("Start Game");
+            bool start_game = do_button(&buttonstr, &ui_context, target, input_state, font, buttonstr, {25, 25, 0, 75}, 15, {0, 1, 1, .8});
+            if (start_game)
+            {
+                int this_msg_size = sizeof(uint16_t) + sizeof(ClientMessageType);
+                char msg_data[MAX_MSG_SIZE];
+                char *buf_pos = msg_data;
+                buf_pos = append_short(buf_pos, this_msg_size);
+                buf_pos = append_byte(buf_pos, (char)ClientMessageType::START);
+
+                server.send_all(msg_data, this_msg_size);
+            }
+        }
     }
     break;
     case ServerMessageType::START_GAME:

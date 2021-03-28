@@ -222,7 +222,7 @@ void clear_bars(RenderTarget previous_target, Scene *scene)
     // TODO should be empty
     static String answers[8] = {
         String::from("RED ASJKDD ASKJHDQQW"),
-        String::from("BLUE"),
+        String::from("Blue"),
         String::from("ORANGE"),
         String::from("GREEN"),
         String::from("PURPLE"),

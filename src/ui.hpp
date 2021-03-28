@@ -155,11 +155,11 @@ bool do_button(Uiid me, UiContext *context, RenderTarget target, InputState *inp
         light = tmp;
     }
 
-    draw_rect(target, {rect.x, rect.y, rect.width, border}, light);
-    draw_rect(target, {rect.x, rect.y, border, rect.height}, light);
-    draw_rect(target, {rect.x, rect.y + rect.height - border, rect.width, border}, dark);
-    draw_rect(target, {rect.x + rect.width - border, rect.y, border, rect.height}, dark);
-    draw_rect(target, rect, color);
+    // draw_rect(target, {rect.x, rect.y, rect.width, border}, light);
+    // draw_rect(target, {rect.x, rect.y, border, rect.height}, light);
+    // draw_rect(target, {rect.x, rect.y + rect.height - border, rect.width, border}, dark);
+    // draw_rect(target, {rect.x + rect.width - border, rect.y, border, rect.height}, dark);
+    // draw_rect(target, rect, color);
 
     draw_text(font, target, str, rect.x + border, rect.y, text_scale, text_scale);
 
