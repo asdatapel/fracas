@@ -2,10 +2,9 @@ in order:
  - server preempts (so it doesn't wait on READY forever)
  - server timer for answers
  - cool graphics
-    - simplify shaders (add #include functionality)
     - get more models in
-    - emit maps + normal maps
     - combine uniform maps
+    - signed distance fields for text
  - parse question spreadsheet
  - simple answer checking mechanism
  - ui layouting

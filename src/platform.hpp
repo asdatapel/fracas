@@ -23,6 +23,8 @@ enum struct Keys
     Z,
     X,
     C,
+    UP,
+    DOWN,
     INVALID
 };
 
@@ -54,6 +56,8 @@ struct InputState
     
     double mouse_x;
     double mouse_y;
+    double prev_mouse_x;
+    double prev_mouse_y;
 };
 
 struct FileData

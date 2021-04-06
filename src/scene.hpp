@@ -82,7 +82,7 @@ Scene init_scene(Assets *assets)
     scene.num_texs[6] = assets->textures[(int)TextureAssetId::RESOURCES_MODELS_BAR3_NUM_7_BMP];
     scene.num_texs[7] = assets->textures[(int)TextureAssetId::RESOURCES_MODELS_BAR3_NUM_8_BMP];
 
-    scene.font = assets->fonts[(int)FontId::RESOURCES_FONTS_ANTON_REGULAR_TTF];
+    scene.font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ANTON_REGULAR_TTF], 128);
 
     return scene;
 }
@@ -179,8 +179,10 @@ void draw_bar_overlay(RenderTarget previous_target, Scene *scene, int index, Str
     float text_scale = 4.f;
     {
         float target_border = 0.05f;
-        Rect sub_target = {target_border, target_border, .8f - (target_border * 2), .5f - (target_border * 2)};
-        draw_centered_text(scene->font, target, answer, sub_target, text_scale, aspect_ratio);
+        Rect sub_target = {0, 0,
+                           .8f * target.width,
+                           .5f * target.height};
+        draw_centered_text(scene->font, target, answer, sub_target, target_border, text_scale, aspect_ratio);
     }
 
     {
@@ -191,9 +193,12 @@ void draw_bar_overlay(RenderTarget previous_target, Scene *scene, int index, Str
         text.data = buf;
         text.len = strlen(buf);
 
-        float target_border = 0.025f;
-        Rect sub_target = {1 - .19f + target_border, target_border, .19f - target_border - target_border, .5f - target_border};
-        draw_centered_text(scene->font, target, text, sub_target, text_scale, aspect_ratio);
+        float border = 0.025f;
+        Rect sub_target = {(1 - .19f) * target.width,
+                           0,
+                           .19f * target.width,
+                           .5f * target.height};
+        draw_centered_text(scene->font, target, text, sub_target,  border, text_scale, aspect_ratio);
     }
 
     {

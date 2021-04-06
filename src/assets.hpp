@@ -13,7 +13,7 @@ struct Assets
     Mesh meshes[MESH_COUNT];
     VertexBuffer vertex_buffers[MESH_COUNT];
 
-    Font fonts[FONT_ASSET_COUNT];
+    FileData font_files[FONT_ASSET_COUNT];
 };
 
 Assets load_assets()
@@ -49,7 +49,7 @@ Assets load_assets()
 
     for (int i = 0; i < FONT_ASSET_COUNT; i++)
     {
-        assets.fonts[i] = load_font(FONT_FILES[i], 128);
+        assets.font_files[i] = read_entire_file(FONT_FILES[i]);
     }
 
     return assets;

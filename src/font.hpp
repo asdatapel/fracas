@@ -27,15 +27,13 @@ struct Font
   Character characters[NUM_CHARS_IN_FONT];
 };
 
-Font load_font(const char *filename, float size)
+Font load_font(FileData file, float size)
 {
   Font font;
   font.font_size_px = size;
 
-  FileData font_file = read_entire_file(filename);
-
   stbtt_fontinfo stb_font;
-  stbtt_InitFont(&stb_font, (unsigned char *)font_file.data, 0);
+  stbtt_InitFont(&stb_font, (unsigned char *)file.data, 0);
   float stb_scale = stbtt_ScaleForPixelHeight(&stb_font, size);
 
   int ascent, descent, lineGap;
@@ -45,12 +43,12 @@ Font load_font(const char *filename, float size)
 
   int x0, y0, x1, y1;
   stbtt_GetFontBoundingBox(&stb_font, &x0, &y0, &x1, &y1);
-  font.baseline = ( -y0) * stb_scale;
+  font.baseline = size + (y0 * stb_scale);
 
   unsigned char *bitmap = (unsigned char *)malloc(2048 * 2048);
   int bitmap_width = 2048, bitmap_height = 2048;
   stbtt_bakedchar cdata[96];
-  int success = stbtt_BakeFontBitmap((unsigned char *)font_file.data, 0, size, bitmap, bitmap_width, bitmap_height, 32, 96, cdata); // no guarantee this fits!
+  int success = stbtt_BakeFontBitmap((unsigned char *)file.data, 0, size, bitmap, bitmap_width, bitmap_height, 32, 96, cdata); // no guarantee this fits!
   font.atlas = to_single_channel_texture(bitmap, bitmap_width, bitmap_height, true);
 
   for (int i = 32; i < NUM_CHARS_IN_FONT; i++)
@@ -66,7 +64,6 @@ Font load_font(const char *filename, float size)
   }
 
   free(bitmap);
-  free_file(font_file);
 
   return font;
 }
@@ -80,15 +77,45 @@ float get_text_width(const Font &font, String text, float scale = 1.f)
   }
   return width * scale;
 }
-float get_single_line_height(const Font &font, String text, float scale = 1.f)
+
+float max_ascent(const Font &font, String text)
 {
-  float height = 0;
+  float ascent = 0;
   for (int i = 0; i < text.len; i++)
   {
-    if (font.characters[text.data[i]].shape.height > height)
-      height = font.characters[text.data[i]].shape.height;
+    if (font.characters[text.data[i]].shape.y < ascent)
+      ascent = font.characters[text.data[i]].shape.y;
   }
-  return height * scale;
+  return ascent;
+}
+
+float max_descent(const Font &font, String text)
+{
+  float descent = 0;
+  for (int i = 0; i < text.len; i++)
+  {
+    if (font.characters[text.data[i]].shape.y + font.characters[text.data[i]].shape.height > descent)
+      descent = font.characters[text.data[i]].shape.y + font.characters[text.data[i]].shape.height;
+  }
+  return descent;
+}
+
+float get_single_line_height(const Font &font, String text, float scale = 1.f)
+{
+  return (max_descent(font, text) - max_ascent(font, text)) * scale;
+}
+
+void draw_text_cropped(const Font &font, RenderTarget target, String text, float x, float y, float h_scale, float v_scale)
+{
+  float ascent = max_ascent(font, text);
+  float baseline = -max_ascent(font, text) * v_scale;
+  for (int i = 0; i < text.len; i++)
+  {
+    Character c = font.characters[text.data[i]];
+    Rect shape_rect = {x + c.shape.x, y + baseline + (v_scale * c.shape.y), h_scale * c.shape.width, v_scale * c.shape.height};
+    x += c.advance * h_scale;
+    draw_textured_mapped_rect(target, shape_rect, c.uv, font.atlas);
+  }
 }
 
 void draw_text(const Font &font, RenderTarget target, String text, float x, float y, float h_scale, float v_scale)
@@ -103,12 +130,18 @@ void draw_text(const Font &font, RenderTarget target, String text, float x, floa
   }
 }
 
-void draw_centered_text(const Font &font, RenderTarget target, String text, Rect sub_target, float scale, float aspect_ratio)
+void draw_centered_text(const Font &font, RenderTarget target, String text, Rect sub_target, float border, float scale, float aspect_ratio)
 {
-  float text_width = get_text_width(font, text, scale) / target.width;
-  float text_height = get_single_line_height(font, text, scale * aspect_ratio) / target.height;
+  float border_x = border * sub_target.width;
+  float border_y = border * sub_target.height;
 
-  float oversize = sub_target.width / text_width;
+  float width = sub_target.width  - (border_x * 2);
+  float height = sub_target.height  - (border_y * 2);
+
+  float text_width = get_text_width(font, text, scale);
+  float text_height = get_single_line_height(font, text, scale * aspect_ratio);
+
+  float oversize = width / text_width;
   if (oversize < 1.f)
   {
     scale *= oversize;
@@ -116,8 +149,16 @@ void draw_centered_text(const Font &font, RenderTarget target, String text, Rect
     text_height *= oversize;
   }
 
-  float x_start = sub_target.x + ((sub_target.width - text_width) / 2.f);
-  float y_start = sub_target.y + ((sub_target.height - text_height) / 2.f);
+  oversize = height / text_height;
+  if (oversize < 1.f)
+  {
+    scale *= oversize;
+    text_width *= oversize;
+    text_height *= oversize;
+  }
 
-  draw_text(font, target, text, x_start * target.width, y_start * target.height, scale, scale * aspect_ratio);
+  float x_start = sub_target.x + border_x + ((width - text_width) / 2.f);
+  float y_start = sub_target.y + border_y + ((height - text_height) / 2.f);
+
+  draw_text_cropped(font, target, text, x_start, y_start, scale, scale * aspect_ratio);
 }

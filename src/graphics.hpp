@@ -18,6 +18,7 @@
 Shader basic_shader;
 Shader textured_shader;
 Shader textured_mapped_shader;
+Shader blurred_colors_shader;
 Shader threed_shader;
 Shader bar_shader;
 Shader rect_to_cubemap_shader;

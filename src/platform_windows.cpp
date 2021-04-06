@@ -18,6 +18,12 @@ const static long long FRAME_TIME_NS = 1000000000 / FRAME_RATE_HZ;
 uint32_t OUTPUT_BUFFER_WIDTH = 1920;
 uint32_t OUTPUT_BUFFER_HEIGHT = 1080;
 
+struct GlfwState 
+{
+    InputState *input_state;
+    RenderTarget *main_target;
+};
+
 void fill_input_state(GLFWwindow *window, InputState *state)
 {
     // reset per frame data
@@ -25,12 +31,14 @@ void fill_input_state(GLFWwindow *window, InputState *state)
     state->key_input = {};
     state->mouse_input = {};
 
+    state->prev_mouse_x = state->mouse_x;
+    state->prev_mouse_y = state->mouse_y;
     glfwGetCursorPos(window, &state->mouse_x, &state->mouse_y);
 }
 
 void character_input_callback(GLFWwindow *window, unsigned int codepoint)
 {
-    InputState *input_state = static_cast<InputState *>(glfwGetWindowUserPointer(window));
+    InputState *input_state = static_cast<GlfwState *>(glfwGetWindowUserPointer(window))->input_state;
 
     if (codepoint < 256) // only doing ASCII
     {
@@ -40,7 +48,7 @@ void character_input_callback(GLFWwindow *window, unsigned int codepoint)
 
 void key_input_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
-    InputState *input_state = static_cast<InputState *>(glfwGetWindowUserPointer(window));
+    InputState *input_state = static_cast<GlfwState *>(glfwGetWindowUserPointer(window))->input_state;
 
     auto append_if_press = [&](Keys k) {
         input_state->keys[(int)k] = (action == GLFW_PRESS || action == GLFW_REPEAT);
@@ -114,12 +122,18 @@ void key_input_callback(GLFWwindow *window, int key, int scancode, int action, i
     case GLFW_KEY_C:
         append_if_press(Keys::C);
         break;
+    case GLFW_KEY_UP:
+        append_if_press(Keys::UP);
+        break;
+    case GLFW_KEY_DOWN:
+        append_if_press(Keys::DOWN);
+        break;
     }
 }
 
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
-    InputState *input_state = static_cast<InputState *>(glfwGetWindowUserPointer(window));
+    InputState *input_state = static_cast<GlfwState *>(glfwGetWindowUserPointer(window))->input_state;
 
     switch (button)
     {
@@ -130,6 +144,13 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
     }
     break;
     }
+}
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+    RenderTarget *target = static_cast<GlfwState *>(glfwGetWindowUserPointer(window))->main_target;
+    target->width = width;
+    target->height = height;
 }
 
 int main()
@@ -162,11 +183,14 @@ int main()
 
 
     InputState input_state = {};
-    glfwSetWindowUserPointer(window, &input_state);
+    RenderTarget target = init_graphics(OUTPUT_BUFFER_WIDTH, OUTPUT_BUFFER_HEIGHT);
+
+    GlfwState glfw_state = {&input_state, &target};
+    glfwSetWindowUserPointer(window, &glfw_state);
     glfwSetCharCallback(window, character_input_callback);
     glfwSetKeyCallback(window, key_input_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
-    RenderTarget target = init_graphics(OUTPUT_BUFFER_WIDTH, OUTPUT_BUFFER_HEIGHT);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     auto loop_start_time = std::chrono::high_resolution_clock::now();
     while (!glfwWindowShouldClose(window))

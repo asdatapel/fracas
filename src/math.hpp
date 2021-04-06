@@ -62,64 +62,96 @@ Color rgb_to_hsl(Color in)
     return {h, s, l, in.a};
 }
 
-// http://marcocorvi.altervista.org/games/imgpr/rgb-hsl.htm
 Color hsl_to_rgb(Color in)
 {
-    float r, g, b;
-    // If S=0, define R, G, and B all to L
-    if (in.g == 0)
+    // http://marcocorvi.altervista.org/games/imgpr/rgb-hsl.htm
+    // float r, g, b;
+    // // If S=0, define R, G, and B all to L
+    // if (in.g == 0)
+    // {
+    //     return {in.b, in.b, in.b, in.a};
+    // }
+
+    // float temp1, temp2;
+    // // If L < 1/2, temp2=L*(1+S)
+    // if (in.b < 0.5f)
+    // {
+    //     temp2 = in.b * (1 + in.g);
+    // }
+    // // Else, temp2=L+S - L*S
+    // else
+    // {
+    //     temp2 = (in.b + in.g) - (in.b * in.g);
+    // }
+
+    // // Let temp1 = 2 * L - temp2
+    // temp1 = 2 * in.b - temp2;
+
+    // // Convert H to the range 0-1
+    // in.r = in.r / 360.f;
+
+    // // For each of R, G, B, compute another temporary value, temp3, as follows:
+    // // for R, temp3=H+1/3; if temp3 > 1, temp3 = temp3 - 1
+    // // for G, temp3=H
+    // // for B, temp3=H-1/3; if temp3 < 0, temp3 = temp3 + 1
+    // // For each of R, G, B, do the following test:
+    // // If temp3 < 1/6, color=temp1+(temp2-temp1)*6*temp3
+    // // Else if temp3 < 1/2, color=temp2
+    // // Else if temp3 < 2/3, color=temp1+(temp2-temp1)*(2/3 - temp3)*6
+    // // Else color=temp1
+    // auto do_something = [=](float temp3) {
+    //     if (temp3 < 1 / 6.f)
+    //         return temp1 + (temp2 - temp1) * 6 * temp3;
+    //     if (temp3 < 1 / 2.f)
+    //         return temp2;
+    //     if (temp3 < 2 / 3.f)
+    //         return temp1 + (temp2 - temp1) * (2 / 3 - temp3) * 6;
+    //     return temp1;
+    // };
+    // float r_temp3 = in.r + (1 / 3.f);
+    // if (r_temp3 > 1)
+    //     r_temp3 = r_temp3 - 1;
+    // float g_temp3 = in.r;
+    // float b_temp3 = in.r - (1 / 3.f);
+    // if (b_temp3 < 0)
+    //     b_temp3 = b_temp3 + 1;
+
+    // return {do_something(r_temp3),
+    //         do_something(g_temp3),
+    //         do_something(b_temp3),
+    //         in.a};
+
+    //https://stackoverflow.com/questions/2353211/hsl-to-rgb-color-conversion
+    float h = in.r / 360.f;
+    float s = in.g;
+    float l = in.b;
+
+    Color out = {l, l, l, in.a};
+    if (s != 0)
     {
-        return {in.b, in.b, in.b, in.a};
+        auto hue2rgb = [](float p, float q, float t)
+        {
+            if (t < 0)
+                t += 1;
+            if (t > 1)
+                t -= 1;
+            if (t < 1 / 6.f)
+                return p + (q - p) * 6 * t;
+            if (t < 1 / 2.f)
+                return q;
+            if (t < 2 / 3.f)
+                return p + (q - p) * (2 / 3.f - t) * 6;
+            return p;
+        };
+
+        float q = l < 0.5f ? l * (1 + s) : l + s - l * s;
+        float p = 2 * l - q;
+        out.r = hue2rgb(p, q, h + 1 / 3.f);
+        out.g = hue2rgb(p, q, h);
+        out.b = hue2rgb(p, q, h - 1 / 3.f);
     }
 
-    float temp1, temp2;
-    // If L < 1/2, temp2=L*(1+S)
-    if (in.b < 0.5f)
-    {
-        temp2 = in.b * (1 + in.g);
-    }
-    // Else, temp2=L+S - L*S
-    else
-    {
-        temp2 = (in.b + in.g) - (in.b * in.g);
-    }
-
-    // Let temp1 = 2 * L - temp2
-    temp1 = 2 * in.b - temp2;
-
-    // Convert H to the range 0-1
-    in.r = in.r / 360.f;
-
-    // For each of R, G, B, compute another temporary value, temp3, as follows:
-    // for R, temp3=H+1/3; if temp3 > 1, temp3 = temp3 - 1
-    // for G, temp3=H
-    // for B, temp3=H-1/3; if temp3 < 0, temp3 = temp3 + 1
-    // For each of R, G, B, do the following test:
-    // If temp3 < 1/6, color=temp1+(temp2-temp1)*6*temp3
-    // Else if temp3 < 1/2, color=temp2
-    // Else if temp3 < 2/3, color=temp1+(temp2-temp1)*(2/3 - temp3)*6
-    // Else color=temp1
-    auto do_something = [=](float temp3) {
-        if (temp3 < 1 / 6.f)
-            return temp1 + (temp2 - temp1) * 6 * temp3;
-        if (temp3 < 1 / 2.f)
-            return temp2;
-        if (temp3 < 2 / 3.f)
-            return temp1 + (temp2 - temp1) * (2 / 3 - temp3) * 6;
-        return temp1;
-    };
-    float r_temp3 = in.r + (1 / 3.f);
-    if (r_temp3 > 1)
-        r_temp3 = r_temp3 - 1;
-    float g_temp3 = in.r;
-    float b_temp3 = in.r - (1 / 3.f);
-    if (b_temp3 < 0)
-        b_temp3 = b_temp3 + 1;
-
-    return {do_something(r_temp3),
-            do_something(g_temp3),
-            do_something(b_temp3),
-            in.a};
+    return out;
 }
 
 Color lighten(Color in, float val)

@@ -168,6 +168,7 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
     basic_shader = load_shader(create_shader_program("resources/shaders/basic"));
     textured_shader = load_shader(create_shader_program("resources/shaders/textured"));
     textured_mapped_shader = load_shader(create_shader_program("resources/shaders/font_atlas"));
+    blurred_colors_shader = load_shader(create_shader_program("resources2/shaders/blurred_colors"));
     threed_shader = load_shader(create_shader_program("resources2/shaders/threed"));
     bar_shader = load_shader(create_shader_program("resources2/shaders/threed_with_overlay"));
     rect_to_cubemap_shader = load_shader(create_shader_program("resources/shaders/rect_to_cubemap"));
