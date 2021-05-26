@@ -1,18 +1,41 @@
 #include <chrono>
 #include <stdio.h>
 #include <stdint.h>
+#include <map>
 
 #include <winsock2.h>
 
+#include "common.hpp"
 #include "game_state.hpp"
+#include "lobby.hpp"
 #include "net.hpp"
 
 #pragma comment(lib, "ws2_32.lib")
 
+
+typedef void (*HandleFunc)(MessageReader *, Client *);
+HandleFunc handle_funcs[(int)ClientMessageType::INVALID] = {
+    handle_LIST_GAMES,  // LIST_GAMES,
+    handle_CREATE_GAME, // CREATE_GAME,
+    handle_JOIN_GAME,   // JOIN_GAME,
+    handle_LEAVE_GAME,  // LEAVE_GAME,
+    
+    handle_LEAVE_GAME,  
+                        // READY,
+                        // START,
+                        // BUZZ,
+                        // PASS_OR_PLAY,
+                        // ANSWER,
+
+                        // HOST_START_ASK_QUESTION,
+                        // HOST_RESPOND_TO_ANSWER,
+                        // HOST_END_GAME,
+
+                        // CELEBRATE,
+};
+
 int main(int argc, char *argv[])
 {
-    GameState game;
-
     WSADATA wsa;
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
     {
@@ -39,13 +62,12 @@ int main(int argc, char *argv[])
 
     listen(s, 3);
 
-
     auto loop_start_time = std::chrono::high_resolution_clock::now();
     while (true)
     {
         auto now = std::chrono::high_resolution_clock::now();
         auto elapsed = now - loop_start_time;
-        loop_start_time = now; 
+        loop_start_time = now;
 
         {
             SOCKET new_socket;
@@ -62,41 +84,45 @@ int main(int argc, char *argv[])
             }
             else
             {
-                if (game.clients.append({new_socket}) != -1)
-                {
-                    build_and_broadcast_msg(game, construct_msg_describe_lobby);
-                }
+                add_client(new_socket);
             }
         }
 
-        for (int i = 0; i < game.clients.len; i++)
+        for (auto it : clients)
         {
-            Client &client = game.clients[i];
-            if (client.peer.socket == 0)
+            ClientId client_id = it.first;
+            Client *client = &it.second;
+            if (client->peer.socket == 0)
             {
-                if (game.round == -1) // if game hasn't started
-                {
-                    game.clients.swap_delete(i);
-                }
+                remove_client(client_id);
                 continue;
             }
 
             int msg_len;
             char msg[MAX_MSG_SIZE];
-            while ((msg_len = client.peer.recieve_msg(msg)) > 0)
+            while ((msg_len = client->peer.recieve_msg(msg)) > 0)
             {
                 ClientMessageType msg_type;
                 char *data = read_byte(msg, (char *)&msg_type);
+                MessageReader msg(data, msg_len - 1);
 
                 if (msg_type >= ClientMessageType::INVALID)
                     DEBUG_PRINT("There has been an error\n");
 
                 HandleFunc handle_func = handle_funcs[(uint8_t)msg_type];
-                handle_func(game, data, i);
+                handle_func(&msg, client);
             }
         }
 
-        server_tick(game, elapsed.count());
+        for (auto it : games)
+        {
+            GameState *game = &it.second;
+            //server_tick(game, elapsed.count());
+            if (game->stage == GameStage::DEAD)
+            {
+                games.erase(it.first);
+            }
+        }
 
         // printf("Sleeping...\n");
         // Sleep(1000);

@@ -171,6 +171,11 @@ struct Vec4i
     uint8_t x, y, z, w;
 };
 
+struct Vec2f
+{
+    float x, y;
+};
+
 struct Vec3f
 {
     float x, y, z;

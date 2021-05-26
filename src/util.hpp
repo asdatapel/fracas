@@ -47,6 +47,16 @@ struct Array
         len--;
     }
 
+    void shift_delete(int i)
+    {
+        while (i + 1 < len)
+        {
+            arr[i] = arr[i + 1];
+            i++;
+        }
+        len--;
+    }
+
     T arr[N];
     size_t len = 0;
     const static size_t MAX_LEN = N;

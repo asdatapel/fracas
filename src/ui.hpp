@@ -188,6 +188,12 @@ void do_label(Uiid me, UiContext *context, RenderTarget target, InputState *inpu
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
 
+
+float get_standard_border(RenderTarget target)
+{
+    return target.width / 50.f;
+}
+
 struct UiContext2
 {
     Uiid hot;           // moused over
@@ -379,7 +385,7 @@ void do_text_box(TextBox<N> *me, UiContext2 *context, RenderTarget target, Input
     Color color = me->color;
     Color highlight = darken(color, .1f);
     highlight.a = 1.f;
-
+ 
     if (context->active == me)
     {
         color = highlight;

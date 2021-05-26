@@ -84,6 +84,7 @@ void bind_mat4(Shader shader, UniformId uniform_id, glm::mat4 mat);
 void bind_texture(Shader shader, UniformId uniform_id, Texture texture);
 
 void draw(RenderTarget target, Shader shader, VertexBuffer buf);
+void draw_rect();
 void draw_rect(RenderTarget target, Rect rect, Color color);
 void draw_textured_rect(RenderTarget target, Rect rect, Color color, Texture tex);
 void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture tex);

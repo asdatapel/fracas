@@ -68,24 +68,3 @@ struct FileData
 FileData read_entire_file(const char *);
 void free_file(FileData);
 uint64_t debug_get_cycle_count();
-
-struct Client
-{
-    Peer peer = {};
-
-    bool ready = false;
-
-    AllocatedString<32> username;
-    void set_username(String str)
-    {
-        username.len = 0;
-        for (int i = 0; i < str.len && i < username.MAX_LEN; i++)
-        {
-            if (str.data[i] > 32 && str.data[i] < 127)
-            {
-                username.data[username.len] = str.data[i];
-                username.len++;
-            }
-        }
-    }
-};
