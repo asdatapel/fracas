@@ -1,0 +1,27 @@
+message Game
+id uint
+name string
+owner string
+is_self_hosted bool
+num_players int
+
+message ListGamesRequest
+
+message ListGamesResponse
+games list Game
+
+rpc ListGames
+ListGamesRequest
+ListGamesResponse
+
+message CreateGameRequest
+name string
+is_self_hosted bool
+
+message CreateGameResponse
+game_id uint
+owner_id uint
+
+rpc CreateGame
+CreateGameRequest
+CreateGameResponse
