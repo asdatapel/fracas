@@ -18,7 +18,22 @@ const static long long FRAME_TIME_NS = 1000000000 / FRAME_RATE_HZ;
 uint32_t OUTPUT_BUFFER_WIDTH = 1920;
 uint32_t OUTPUT_BUFFER_HEIGHT = 1080;
 
-struct GlfwState 
+GLFWwindow *window;
+
+void set_fullscreen(bool enable)
+{
+    if (enable)
+    {
+        GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+        glfwSetWindowMonitor(window, monitor, 0, 0, OUTPUT_BUFFER_WIDTH, OUTPUT_BUFFER_HEIGHT, GLFW_DONT_CARE);
+    }
+    else
+    {
+        glfwSetWindowMonitor(window, NULL, 50, 50, OUTPUT_BUFFER_WIDTH, OUTPUT_BUFFER_HEIGHT, GLFW_DONT_CARE);
+    }
+}
+
+struct GlfwState
 {
     InputState *input_state;
     RenderTarget *main_target;
@@ -146,7 +161,7 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
     }
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
     RenderTarget *target = static_cast<GlfwState *>(glfwGetWindowUserPointer(window))->main_target;
     target->width = width;
@@ -166,7 +181,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    GLFWwindow *window = glfwCreateWindow(OUTPUT_BUFFER_WIDTH, OUTPUT_BUFFER_HEIGHT, "El Dorado", NULL, NULL);
+    window = glfwCreateWindow(OUTPUT_BUFFER_WIDTH, OUTPUT_BUFFER_HEIGHT, "El Dorado", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -180,7 +195,6 @@ int main()
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
-
 
     InputState input_state = {};
     RenderTarget target = init_graphics(OUTPUT_BUFFER_WIDTH, OUTPUT_BUFFER_HEIGHT);

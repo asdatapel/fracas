@@ -4,65 +4,63 @@
 
 #include "common.hpp"
 #include "game_state.hpp"
-#include "net.hpp"
-#include "serialize.hpp"
+#include "net/net.hpp"
+#include "net/rpc_generated.hpp"
 
-std::map<GameId, GameState> games;
-std::map<ClientId, Client> clients;
+struct ServerData
+{
+    std::map<GameId, GameState> games;
+    std::map<ClientId, Client> clients;
+};
 
-ClientId add_client(SOCKET s)
+ClientId add_client(ServerData *server_data, SOCKET s)
 {
     static ClientId next_client_id = 1;
     next_client_id++;
 
-    if (clients.size() > MAX_CLIENTS)
+    if (server_data->clients.size() > MAX_CLIENTS)
     {
         // TODO send error message SERVER_FULL
         return 0;
     }
 
     Client client;
-    client.peer.socket = s;
+    client.peer.s = s;
     client.client_id = next_client_id;
 
-    clients[next_client_id] = client;
+    server_data->clients[next_client_id] = client;
     return next_client_id;
 }
 
-void remove_client(ClientId client_id)
+void remove_client(ServerData *server_data, ClientId client_id)
 {
-    Client *client = &clients[client_id];
-    if (client->game_id && games.count(client->game_id))
+    Client *client = &server_data->clients[client_id];
+    if (client->game_id && server_data->games.count(client->game_id))
     {
-        GameState *game = &games[client->game_id];
-        game->add_player(client_id);
+        GameState &game = server_data->games[client->game_id];
+        game.remove_player(client_id);
     }
-    clients.erase(client_id);
+    server_data->clients.erase(client_id);
 }
 
-GameId add_game(GameProperties properties)
+GameId add_game(ServerData *server_data, GameProperties properties)
 {
     static GameId next_game_id = 1;
     next_game_id++;
 
-    if (games.size() > MAX_GAMES)
+    if (server_data->games.size() > MAX_GAMES)
     {
         return 0;
     }
 
-    games[next_game_id] = GameState{properties};
+    server_data->games[next_game_id] = GameState{properties};
     return next_game_id;
 }
 
-void handle_LIST_GAMES(MessageReader *msg, Client *client)
+void RpcServer::ListGames(ClientId client_id, ListGamesRequest *req, ListGamesResponse *resp)
 {
-    // message should be otherwise empty, maybe it can contain a filter in the future
-
-    const int PAGE_SIZE = 10;
-
-    MessageBuilder resp((char)ServerMessageType::LIST_GAMES_RESPONSE);
     uint16_t count = 0;
-    for (auto it : games)
+    for (auto it : server_data->games)
     {
         GameId game_id = it.first;
         GameState *game = &it.second;
@@ -71,55 +69,41 @@ void handle_LIST_GAMES(MessageReader *msg, Client *client)
             continue;
         }
 
-        resp.append(count);
-        resp.append(game_id);
-        append(&resp, &game->properties);
+        Game game_msg;
+        game_msg.id = game_id;
+        game_msg.name = game->properties.name;
+        game_msg.owner = server_data->clients[game->properties.owner].username;
+        game_msg.num_players = game->num_players();
+        game_msg.is_self_hosted = game->properties.is_self_hosted;
 
-        count++;
-        if (count % PAGE_SIZE == 0)
-        {
-            resp.send(&client->peer);
-            resp.reset((char)ServerMessageType::LIST_GAMES_RESPONSE);
-        }
+        resp->games.push_back(game_msg);
     }
-
-    resp.send(&client->peer);
 }
 
-void handle_CREATE_GAME(MessageReader *msg, Client *client)
+void RpcServer::CreateGame(ClientId client_id, CreateGameRequest *req, CreateGameResponse *resp)
 {
+    Client *client = &server_data->clients[client_id];
+    if (client->game_id)
+    {
+        return; // client is already in a game
+    }
+
+    //TODO validate settings
+
     GameProperties game_properties;
     game_properties.owner = client->client_id;
-    msg->read(&game_properties.name);
-    msg->read(&game_properties.is_self_hosted);
+    game_properties.name = req->name;
+    game_properties.is_self_hosted = req->is_self_hosted;
 
-    GameId game_id = add_game(game_properties);
+    GameId game_id = add_game(server_data, game_properties);
     if (game_id)
     {
-        GameState *game = &games[game_id];
+        GameState *game = &server_data->games[game_id];
 
-        MessageBuilder resp((char)ServerMessageType::JOIN_GAME_RESPONSE);
-        JoinGameMessage out;
-        out.game_id = game_id;
-        out.my_id = client->client_id;
-        out.game_properties = game->properties;
-        append(&resp, &out);
-        resp.send(&client->peer);
-        
-        // DescribeGameMessage out;
-        // out.game_id = game_id;
-        // out.num_players = game->num_players();
-        // for (int i = 0; i < game->families[0].players.len; i++)
-        // {
-        //     out.players->append(game->families[0].players[i]);
-        // }
-        // for (int i = 0; i < game->families[1].players.len; i++)
-        // {
-        //     out.players->append(game->families[1].players[i]);
-        // }
+        resp->game_id = game_id;
+        resp->owner_id = client->client_id;
 
-        // append(&resp, &game_properties);
-        // resp.send(&client->peer);
+        client->game_id = game_id;
     }
     else
     {
@@ -127,47 +111,48 @@ void handle_CREATE_GAME(MessageReader *msg, Client *client)
     }
 }
 
-void handle_JOIN_GAME(MessageReader *msg, Client *client)
-{
-    GameId game_id;
-    msg->read(&game_id);
 
-    if (client->game_id != 0)
-    {
-        // TODO send error YOURE_ALREADY_IN_A_GAME_IDIOT
-        return;
-    }
+// void handle_JOIN_GAME(MessageReader *msg, Client *client)
+// {
+//     GameId game_id;
+//     // msg->read(&game_id);
 
-    if (games.count(game_id) == 0)
-    {
-        // TODO send error REQUESTED_GAME_NOT_FOUND
-        return;
-    }
+//     if (client->game_id != 0)
+//     {
+//         // TODO send error YOURE_ALREADY_IN_A_GAME_IDIOT
+//         return;
+//     }
 
-    GameState *game = &games[game_id];
-    game->add_player(client->client_id);
-    client->game_id = game_id;
+//     if (games.count(game_id) == 0)
+//     {
+//         // TODO send error REQUESTED_GAME_NOT_FOUND
+//         return;
+//     }
 
-    MessageBuilder resp((char)ServerMessageType::JOIN_GAME_RESPONSE);
-    append(&resp, &game->properties);
-    resp.send(&client->peer);
-}
+//     GameState *game = &games[game_id];
+//     game->add_player(client->client_id);
+//     client->game_id = game_id;
 
-void handle_LEAVE_GAME(MessageReader *msg, Client *client)
-{
-    if (client->game_id == 0)
-    {
-        // TODO send error NOT_IN_GAME
-        return;
-    }
+//     MessageBuilder resp((char)ServerMessageType::JOIN_GAME_RESPONSE);
+//     append(&resp, &game->properties);
+//     resp.send(&client->peer);
+// }
 
-    if (games.count(client->game_id) == 0)
-    {
-        // TODO send error INTERNAL_ERROR
-        return;
-    }
+// void handle_LEAVE_GAME(MessageReader *msg, Client *client)
+// {
+//     if (client->game_id == 0)
+//     {
+//         // TODO send error NOT_IN_GAME
+//         return;
+//     }
 
-    GameState *game = &games[client->game_id];
-    game->remove_player(client->client_id);
-    client->game_id = 0;
-}
+//     if (games.count(client->game_id) == 0)
+//     {
+//         // TODO send error INTERNAL_ERROR
+//         return;
+//     }
+
+//     GameState *game = &games[client->game_id];
+//     game->remove_player(client->client_id);
+//     client->game_id = 0;
+// }

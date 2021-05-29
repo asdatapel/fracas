@@ -4,8 +4,17 @@
 #include <chrono>
 #include <utility>
 
-#include "net.hpp"
+#include "net/net.hpp"
 #include "util.hpp"
+
+struct GameProperties
+{
+    ClientId owner;
+
+    AllocatedString<64> name = {};
+    bool is_self_hosted = false;
+};
+
 
 enum struct GameStage
 {
@@ -44,7 +53,7 @@ struct GameState
     int num_ready = 0;
     void (*next_stage)(GameState &) = nullptr;
 
-    Array<Family, 2> families;
+    Array<Family, 2> families = {{}, {}};
 
     Array<int, 2> current_players;
     int playing_family = -1;

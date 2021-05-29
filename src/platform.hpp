@@ -1,7 +1,6 @@
 #pragma once
 
 #include "util.hpp"
-#include "net.hpp"
 
 enum struct Keys
 {
@@ -68,3 +67,5 @@ struct FileData
 FileData read_entire_file(const char *);
 void free_file(FileData);
 uint64_t debug_get_cycle_count();
+
+void set_fullscreen(bool enable);

@@ -5,44 +5,35 @@
 
 #include <winsock2.h>
 
+#include "net/net.cpp"
+
 #include "common.hpp"
 #include "game_state.hpp"
 #include "lobby.hpp"
-#include "net.hpp"
+#include "net/net.hpp"
 
-#pragma comment(lib, "ws2_32.lib")
+// typedef void (*HandleFunc)(MessageReader *, Client *);
+// HandleFunc handle_funcs[(int)ClientMessageType::INVALID] = {
+//     handle_CREATE_GAME, // CREATE_GAME,
+//     handle_JOIN_GAME,   // JOIN_GAME,
+//     handle_LEAVE_GAME,  // LEAVE_GAME,
 
+//     handle_LEAVE_GAME,
+//     // READY,
+//     // START,
+//     // BUZZ,
+//     // PASS_OR_PLAY,
+//     // ANSWER,
 
-typedef void (*HandleFunc)(MessageReader *, Client *);
-HandleFunc handle_funcs[(int)ClientMessageType::INVALID] = {
-    handle_LIST_GAMES,  // LIST_GAMES,
-    handle_CREATE_GAME, // CREATE_GAME,
-    handle_JOIN_GAME,   // JOIN_GAME,
-    handle_LEAVE_GAME,  // LEAVE_GAME,
-    
-    handle_LEAVE_GAME,  
-                        // READY,
-                        // START,
-                        // BUZZ,
-                        // PASS_OR_PLAY,
-                        // ANSWER,
+//     // HOST_START_ASK_QUESTION,
+//     // HOST_RESPOND_TO_ANSWER,
+//     // HOST_END_GAME,
 
-                        // HOST_START_ASK_QUESTION,
-                        // HOST_RESPOND_TO_ANSWER,
-                        // HOST_END_GAME,
+//     // CELEBRATE,
+// };
 
-                        // CELEBRATE,
-};
-
-int main(int argc, char *argv[])
+SOCKET open_socket(uint16_t port)
 {
-    WSADATA wsa;
-    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
-    {
-        printf("Failed. Error Code : %d", WSAGetLastError());
-        return 1;
-    }
-
     SOCKET s;
     if ((s = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
     {
@@ -54,13 +45,25 @@ int main(int argc, char *argv[])
     sockaddr_in server;
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons(6519);
+    server.sin_port = htons(port);
     if (bind(s, (sockaddr *)&server, sizeof(server)) == SOCKET_ERROR)
     {
         printf("Bind failed with error code : %d", WSAGetLastError());
     }
-
     listen(s, 3);
+
+    return s;
+}
+
+int main(int argc, char *argv[])
+{
+    init_net();
+    ServerData server_data;
+
+    SOCKET s = open_socket(6519);
+    SOCKET rpc_socket = open_socket(6666);
+
+    RpcServer rpc_server{&server_data};
 
     auto loop_start_time = std::chrono::high_resolution_clock::now();
     while (true)
@@ -69,11 +72,30 @@ int main(int argc, char *argv[])
         auto elapsed = now - loop_start_time;
         loop_start_time = now;
 
+        // {
+        //     SOCKET new_socket;
+        //     sockaddr_in client;
+        //     int c = sizeof(sockaddr_in);
+        //     new_socket = accept(s, (sockaddr *)&client, &c);
+        //     if (new_socket == INVALID_SOCKET)
+        //     {
+        //         int err;
+        //         if ((err = WSAGetLastError()) != WSAEWOULDBLOCK)
+        //         {
+        //             printf("accept failed with error code : %d\n", err);
+        //         }
+        //     }
+        //     else
+        //     {
+        //         add_client(new_socket);
+        //     }
+        // }
+
         {
             SOCKET new_socket;
             sockaddr_in client;
             int c = sizeof(sockaddr_in);
-            new_socket = accept(s, (sockaddr *)&client, &c);
+            new_socket = accept(rpc_socket, (sockaddr *)&client, &c);
             if (new_socket == INVALID_SOCKET)
             {
                 int err;
@@ -84,17 +106,17 @@ int main(int argc, char *argv[])
             }
             else
             {
-                add_client(new_socket);
+                add_client(&server_data, new_socket);
             }
         }
 
-        for (auto it : clients)
+        for (auto &it : server_data.clients)
         {
             ClientId client_id = it.first;
             Client *client = &it.second;
-            if (client->peer.socket == 0)
+            if (!client->peer.is_connected())
             {
-                remove_client(client_id);
+                remove_client(&server_data, client_id);
                 continue;
             }
 
@@ -102,25 +124,26 @@ int main(int argc, char *argv[])
             char msg[MAX_MSG_SIZE];
             while ((msg_len = client->peer.recieve_msg(msg)) > 0)
             {
-                ClientMessageType msg_type;
-                char *data = read_byte(msg, (char *)&msg_type);
-                MessageReader msg(data, msg_len - 1);
+                rpc_server.handle_rpc(client->client_id, &client->peer, msg, msg_len); 
+                // ClientMessageType msg_type;
+                // char *data = read_byte(msg, (char *)&msg_type);
+                // MessageReader msg(data, msg_len - 1);
 
-                if (msg_type >= ClientMessageType::INVALID)
-                    DEBUG_PRINT("There has been an error\n");
+                // if (msg_type >= ClientMessageType::INVALID)
+                //     DEBUG_PRINT("There has been an error\n");
 
-                HandleFunc handle_func = handle_funcs[(uint8_t)msg_type];
-                handle_func(&msg, client);
+                // HandleFunc handle_func = handle_funcs[(uint8_t)msg_type];
+                // handle_func(&msg, client);
             }
         }
 
-        for (auto it : games)
+        for (auto it : server_data.games)
         {
             GameState *game = &it.second;
             //server_tick(game, elapsed.count());
             if (game->stage == GameStage::DEAD)
             {
-                games.erase(it.first);
+                server_data.games.erase(it.first);
             }
         }
 
@@ -129,7 +152,7 @@ int main(int argc, char *argv[])
     }
 
     closesocket(s);
-    WSACleanup();
+    deinit_net();
 
     return 0;
 }
