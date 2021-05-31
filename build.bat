@@ -1,5 +1,6 @@
 @echo off
 
+python .\src\net\rpc_parse.py .\src\net\messages.rpc .\src\net
 if not exist build mkdir build
 pushd src
 clang -g -std=c++17 ./fracas_server.cpp -o ../build/fracas_server.exe

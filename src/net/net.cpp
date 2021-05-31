@@ -181,10 +181,17 @@ void append(MessageBuilder *msg, char *str, uint16_t len)
     memcpy(msg->data, str, len);
     msg->data += len;
 }
-void append(MessageBuilder *msg, String str)
+// void append(MessageBuilder *msg, String str)
+// {
+//     append(msg, str.len);
+
+//     memcpy(msg->data, str.data, str.len);
+//     msg->data += str.len;
+// }
+template <size_t N>
+void append(MessageBuilder *msg, AllocatedString<N> &str)
 {
     append(msg, str.len);
-
     memcpy(msg->data, str.data, str.len);
     msg->data += str.len;
 }
@@ -279,12 +286,23 @@ uint32_t read(MessageReader *msg, char *output_buf, uint16_t *len)
 
     return *len;
 }
-uint32_t read(MessageReader *msg, String *output)
+// uint32_t read(MessageReader *msg, String *output)
+// {
+//     read(msg, &output->len);
+
+//     msg->check(msg->data + output->len);
+//     output->data = msg->data;
+//     msg->data += output->len;
+
+//     return output->len;
+// }
+template <size_t N>
+uint32_t read(MessageReader *msg, AllocatedString<N> *output)
 {
     read(msg, &output->len);
 
     msg->check(msg->data + output->len);
-    output->data = msg->data;
+    memcpy(output->data, msg->data, output->len);
     msg->data += output->len;
 
     return output->len;

@@ -96,7 +96,9 @@ void append(MessageBuilder *msg, uint32_t val);
 void append(MessageBuilder *msg, int32_t val);
 void append(MessageBuilder *msg, uint64_t val);
 void append(MessageBuilder *msg, char *str, uint16_t len);
-void append(MessageBuilder *msg, String str);
+// void append(MessageBuilder *msg, String str);
+template <size_t N>
+void append(MessageBuilder *msg, AllocatedString<N> &str);
 
 struct MessageReader
 {
@@ -117,6 +119,8 @@ uint32_t read(MessageReader *msg, uint32_t *val);
 uint32_t read(MessageReader *msg, int32_t *val);
 uint32_t read(MessageReader *msg, uint64_t *val);
 uint32_t read(MessageReader *msg, char *output_buf, uint16_t *len);
-uint32_t read(MessageReader *msg, String *output);
+// uint32_t read(MessageReader *msg, String *output);
+template <size_t N>
+uint32_t read(MessageReader *msg, AllocatedString<N> *str);
 // returns pointer to string within buf, no copying
 uint32_t read_string_inplace(MessageReader *msg, char **val, uint16_t *len);

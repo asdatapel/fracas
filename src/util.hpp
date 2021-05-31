@@ -16,7 +16,7 @@ struct Array
         len = il.size();
 
         int i = 0;
-        for (auto t: il)
+        for (auto t : il)
         {
             arr[i] = t;
             i++;
@@ -62,47 +62,40 @@ struct Array
     const static size_t MAX_LEN = N;
 };
 
-struct String
-{
-    char *data = nullptr;
-    uint16_t len = 0;
-
-    template <size_t N>
-    static String from(const char (&str)[N])
-    {
-        String ret;
-        ret.data = (char *)&str;
-        ret.len = N - 1; // remove '\0'
-        return ret;
-    }
-};
 
 template <size_t N>
-struct AllocatedString : String
+struct AllocatedString
 {
-    AllocatedString()
-    {
-        data = arr;
-    }
+    AllocatedString(){} 
 
-    void operator=(const AllocatedString &str2)
+    template <size_t N2>
+    void operator=(const AllocatedString<N2> &str2)
     {
         len = fmin(str2.len, MAX_LEN);
         memcpy(data, str2.data, len);
     }
 
-    void operator=(const String &str2)
+    template <size_t N2>
+    AllocatedString(AllocatedString<N2> &&str2)
     {
         len = fmin(str2.len, MAX_LEN);
         memcpy(data, str2.data, len);
     }
+
+    // void operator=(const String &str2)
+    // {
+    //     data = arr;
+    //     len = fmin(str2.len, MAX_LEN);
+    //     memcpy(data, str2.data, len);
+    //     printf("operator=(const String &str2), %.*s\n", str2.len, str2.data);
+    // }
 
     int append(char c)
     {
         if (len >= MAX_LEN)
             return -1;
-            
-        arr[len] = c;
+
+        data[len] = c;
         return len++;
     }
 
@@ -111,24 +104,58 @@ struct AllocatedString : String
         int i = 0;
         while (s[i] != '\0' && len < MAX_LEN)
         {
-            arr[len++] = s[i];
+            data[len++] = s[i];
         }
 
         return len;
     }
 
-    int append(String s)
+    // int append(String s)
+    // {
+    //     if (len + s.len >= MAX_LEN)
+    //         return -1;
+
+    //     memcpy(arr + len, s.data, s.len);
+    //     len += s.len;
+    //     return len;
+    // }
+
+    char data[N];
+    uint16_t len = 0;
+    static const uint16_t MAX_LEN = N;
+};
+
+
+struct String
+{
+    char *data = nullptr;
+    uint16_t len = 0;
+
+    String(){}
+
+    template <size_t N>
+    String(AllocatedString<N> &str2)
     {
-        if (len + s.len >= MAX_LEN)
-            return -1;
-            
-        memcpy(arr + len, s.data, s.len);
-        len += s.len;
-        return len;
+        
+        data = str2.data;
+        len = str2.len;
     }
 
-    char arr[N];
-    static const uint16_t MAX_LEN = N;
+    template <size_t N>
+    void operator=(const AllocatedString<N> &str2)
+    {
+        data = str2.data;
+        len = str2.len;
+    }
+    
+    template <size_t N>
+    static String from(const char (&str)[N])
+    {
+        String ret;
+        ret.data = (char *)&str;
+        ret.len = N - 1; // remove '\0'
+        return ret;
+    }
 };
 
 bool strcmp(String str1, String str2)

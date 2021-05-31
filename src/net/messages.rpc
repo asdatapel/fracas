@@ -1,4 +1,4 @@
-message Game
+message GameMetadata
 id uint
 name string
 owner string
@@ -8,11 +8,21 @@ num_players int
 message ListGamesRequest
 
 message ListGamesResponse
-games list Game
+games list GameMetadata
 
 rpc ListGames
 ListGamesRequest
 ListGamesResponse
+
+message GetGameRequest
+game_id uint
+
+message GetGameResponse
+game GameMetadata
+
+rpc GetGame
+GetGameRequest
+GetGameResponse
 
 message CreateGameRequest
 name string
@@ -25,3 +35,20 @@ owner_id uint
 rpc CreateGame
 CreateGameRequest
 CreateGameResponse
+
+message JoinGameRequest
+game_id uint
+
+message JoinGameResponse
+
+rpc JoinGame
+JoinGameRequest
+JoinGameResponse
+
+message LeaveGameRequest
+
+message LeaveGameResponse
+
+rpc LeaveGame
+LeaveGameRequest
+LeaveGameResponse

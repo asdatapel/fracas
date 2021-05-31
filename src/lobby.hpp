@@ -5,7 +5,7 @@
 #include "common.hpp"
 #include "game_state.hpp"
 #include "net/net.hpp"
-#include "net/rpc_generated.hpp"
+#include "net/generated_rpc_server.hpp"
 
 struct ServerData
 {
@@ -69,15 +69,30 @@ void RpcServer::ListGames(ClientId client_id, ListGamesRequest *req, ListGamesRe
             continue;
         }
 
-        Game game_msg;
+        GameMetadata game_msg;
         game_msg.id = game_id;
         game_msg.name = game->properties.name;
         game_msg.owner = server_data->clients[game->properties.owner].username;
         game_msg.num_players = game->num_players();
         game_msg.is_self_hosted = game->properties.is_self_hosted;
-
         resp->games.push_back(game_msg);
     }
+}
+
+void RpcServer::GetGame(ClientId client_id, GetGameRequest *req, GetGameResponse *resp)
+{
+    if (server_data->games.count(req->game_id) == 0)
+    {
+        // TODO send NOT_FOUND
+        return;
+    }
+    GameState *game = &server_data->games[req->game_id];
+
+    resp->game.id = req->game_id;
+    resp->game.name = game->properties.name;
+    resp->game.owner = server_data->clients[game->properties.owner].username;
+    resp->game.num_players = game->num_players();
+    resp->game.is_self_hosted = game->properties.is_self_hosted;
 }
 
 void RpcServer::CreateGame(ClientId client_id, CreateGameRequest *req, CreateGameResponse *resp)
@@ -111,6 +126,41 @@ void RpcServer::CreateGame(ClientId client_id, CreateGameRequest *req, CreateGam
     }
 }
 
+void RpcServer::JoinGame(ClientId client_id, JoinGameRequest *req, JoinGameResponse *resp)
+{
+    Client *client = &server_data->clients[client_id];
+    if (client->game_id)
+    {
+        return; // client is already in a game
+    }
+    if (server_data->games.count(req->game_id) == 0)
+    {
+        // TODO send error, game NOT_FOUND
+        return;
+    }
+
+    GameState *game = &server_data->games[req->game_id];
+    game->add_player(client_id);
+    client->game_id = req->game_id;
+}
+
+void RpcServer::LeaveGame(ClientId client_id, LeaveGameRequest *req, LeaveGameResponse *resp)
+{
+    Client *client = &server_data->clients[client_id];
+    if (!client->game_id)
+    {
+        return; // client is not in a game
+    }
+    if (server_data->games.count(client->game_id) == 0)
+    {
+        // TODO send error INTERNAL_ERROR
+        return;
+    }
+
+    GameState *game = &server_data->games[client->game_id];
+    game->remove_player(client->client_id);
+    client->game_id = 0;
+}
 
 // void handle_JOIN_GAME(MessageReader *msg, Client *client)
 // {
@@ -136,23 +186,4 @@ void RpcServer::CreateGame(ClientId client_id, CreateGameRequest *req, CreateGam
 //     MessageBuilder resp((char)ServerMessageType::JOIN_GAME_RESPONSE);
 //     append(&resp, &game->properties);
 //     resp.send(&client->peer);
-// }
-
-// void handle_LEAVE_GAME(MessageReader *msg, Client *client)
-// {
-//     if (client->game_id == 0)
-//     {
-//         // TODO send error NOT_IN_GAME
-//         return;
-//     }
-
-//     if (games.count(client->game_id) == 0)
-//     {
-//         // TODO send error INTERNAL_ERROR
-//         return;
-//     }
-
-//     GameState *game = &games[client->game_id];
-//     game->remove_player(client->client_id);
-//     client->game_id = 0;
 // }

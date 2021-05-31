@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "graphics.hpp"
-#include "net/rpc_client.hpp"
+#include "net/generated_rpc_client.hpp"
 
 bool in_rect(Vec2f point, Rect rect, Rect mask = {})
 {
@@ -218,11 +218,11 @@ struct CheckBox
     }
 };
 
-struct GameList
+struct List
 {
     Rect rect;
     int max_items = -1; // -1 for no limit
-    std::vector<String> items;
+    std::vector<AllocatedString<64>> items;
 
     Selectable scrollbar_selectable;
     float scrollbar_y_offset = 0.f;
@@ -231,7 +231,7 @@ struct GameList
     const float ITEM_HEIGHT = 60.f;
     const float ITEM_BORDER = 10.f;
 
-    void update_and_draw(RenderTarget target, InputState *input)
+    void update_and_draw(RenderTarget target, InputState *input, Font *font)
     {
         float item_width = rect.width * .925f;
         float vertical_border = rect.width * 0.0255f;
@@ -303,11 +303,19 @@ struct GameList
                 item_color = darken(item_color, 0.1f);
             }
             draw_rect(target, item_rect, item_color);
+
+            float text_border = item_rect.height / 10.f;
+            float text_height = item_rect.height - (2 * text_border);
+            float text_width = item_rect.width - (2 * text_border);
+            float text_scale = text_height / font->font_size_px;
+            float text_x = item_rect.x + text_border;
+            float text_y = item_rect.y + text_border;
+            draw_text(*font, target, items[i], text_x, text_y, text_scale, text_scale);
         }
         glDisable(GL_SCISSOR_TEST);
     };
 
-    void add_item(String item)
+    void add_item(AllocatedString<64> item)
     {
         if (items.size() == max_items)
         {
@@ -333,6 +341,7 @@ struct MainMenu
     MenuPage *join;
     MenuPage *create;
     MenuPage *settings;
+    MenuPage *lobby;
 };
 
 struct MainPage : MenuPage
@@ -397,6 +406,88 @@ struct MainPage : MenuPage
     }
 };
 
+struct LobbyPage : MenuPage
+{
+    Button2 back_button;
+    Button2 start_game_button;
+
+    Rect family_1_title_background;
+    Rect family_1_panel;
+    List family_1_list;
+
+    Rect family_2_title_background;
+    Rect family_2_panel;
+    List family_2_list;
+
+    Font font;
+    RpcClient *rpc_client;
+    uint32_t game_id;
+
+    LobbyPage(Assets *assets, RpcClient *rpc_client)
+    {
+        font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_REGULAR_TTF], 128);
+        this->rpc_client = rpc_client;
+
+        back_button.rect = anchor_bottom_right(
+            {0.2f * 1920, 0.2f * 1920 * 9.f / 16.f / 2.f},
+            {25.f, 25.f});
+        back_button.text = String::from("Back");
+        start_game_button.rect = translate(back_button.rect, {0, -(back_button.rect.height + 25.f)});
+        start_game_button.text = String::from("Create");
+
+        Rect left_panels = add_border({0, 0, 1920 / 3.f, 1080}, {25.f, 25.f});
+        family_1_title_background = {left_panels.x, left_panels.y, left_panels.width, 100.f};
+        family_1_panel = {family_1_title_background.x,
+                              family_1_title_background.y + family_1_title_background.height + 25.f,
+                              family_1_title_background.width,
+                              1080 - (family_1_title_background.y + family_1_title_background.height + 25.f) - 25.f};
+
+        Rect right_panels = add_border({1920 / 3.f, 0, 1920 / 3.f, 1080}, {25.f, 25.f});
+        family_2_title_background = {right_panels.x, right_panels.y, right_panels.width, 100.f};
+        family_2_panel = {family_2_title_background.x,
+                              family_2_title_background.y + family_2_title_background.height + 25.f,
+                              family_2_title_background.width,
+                              1080 - (family_2_title_background.y + family_2_title_background.height + 25.f) - 25.f};
+
+        // Rect game_settings_content = add_border(game_settings_panel, {25.f, 25.f});
+        // game_name_text_box.rect = {game_settings_content.x, game_settings_content.y, game_settings_content.width, 75.f};
+        // fullscreen_checkbox.rect = translate(game_name_text_box.rect, {0, back_button.rect.height + 5.f});
+        // fullscreen_checkbox.rect.width = fullscreen_checkbox.rect.height;
+    }
+
+    void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu) override
+    {
+        GameMetadata game_metadata = rpc_client->GetGame({game_id}).game;
+
+        if (back_button.update_and_draw(target, input, &font))
+        {
+            rpc_client->LeaveGame({});
+            menu->current = menu->main;
+        }
+
+        draw_rect(target, family_1_title_background, {1.f, 0.f, 1.f, .4f});
+        draw_centered_text(font, target, String::from("Family 1"), family_1_title_background, .1f, 10, 1);
+        draw_rect(target, family_1_panel, {0.f, 1.f, 0.f, .4f});
+
+
+        draw_rect(target, family_2_title_background, {1.f, 0.f, 1.f, .4f});
+        draw_centered_text(font, target, String::from("Family 2"), family_2_title_background, .1f, 10, 1);
+        draw_rect(target, family_2_panel, {0.f, 1.f, 0.f, .4f});
+
+        // draw_rect(target, game_settings_panel, {0.f, 1.f, 0.f, .4f});
+        // game_name_text_box.update_and_draw(target, input, &font);
+        // if (fullscreen_checkbox.update_and_draw(target, input, &font))
+        // {
+        //     set_fullscreen(fullscreen_checkbox.checked);
+        // }
+    }
+
+    void set_game_id(uint32_t game_id)
+    {
+        this->game_id = game_id;
+    }
+};
+
 struct JoinGamePage : MenuPage
 {
     Button2 back_button;
@@ -405,19 +496,18 @@ struct JoinGamePage : MenuPage
     Rect title_background;
 
     Rect game_list_panel;
-    GameList game_list;
+    List game_list;
 
     Rect game_detail_panel;
 
     Font font;
     RpcClient *rpc_client;
 
-
     JoinGamePage(Assets *assets, RpcClient *rpc_client)
     {
         font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_REGULAR_TTF], 128);
         this->rpc_client = rpc_client;
-        
+
         back_button.rect = anchor_bottom_right(
             {0.2f * 1920, 0.2f * 1920 * 9.f / 16.f / 2.f},
             {25.f, 25.f});
@@ -434,10 +524,6 @@ struct JoinGamePage : MenuPage
                            title_background.width,
                            1080 - (title_background.y + title_background.height + 25.f) - 25.f};
         game_list.rect = add_border(game_list_panel, {25.f, 25.f});
-        for (int i = 0; i < 100; i++)
-        {
-            game_list.add_item(String::from("hello"));
-        }
 
         game_detail_panel = add_border({1920 / 2.f, 0.f, 1920 / 2.f, 1080 / 2.f}, {25.f, 25.f});
     }
@@ -458,12 +544,12 @@ struct JoinGamePage : MenuPage
             ListGamesResponse resp;
             rpc_client->ListGames(req, &resp);
             game_list.items.clear();
-            for (auto g: resp.games)
+            for (auto g : resp.games)
             {
                 game_list.add_item(g.name);
             }
         }
-        game_list.update_and_draw(target, input);
+        game_list.update_and_draw(target, input, &font);
 
         if (game_list.selected_item > -1)
         {
@@ -482,8 +568,8 @@ struct CreateGamePage : MenuPage
 
     Rect game_settings_panel;
 
-    RpcClient *rpc_client;
     Font font;
+    RpcClient *rpc_client;
     TextBox2<64> game_name_text_box;
 
     CreateGamePage(Assets *assets, RpcClient *rpc_client)
@@ -518,10 +604,9 @@ struct CreateGamePage : MenuPage
         }
         if (create_button.update_and_draw(target, input, &font))
         {
-            CreateGameRequest req;
-            req.name = game_name_text_box.text;
-            CreateGameResponse resp;
-            rpc_client->CreateGame(req, &resp);
+            CreateGameResponse resp = rpc_client->CreateGame({game_name_text_box.text});
+            ((LobbyPage *)menu->lobby)->set_game_id(resp.game_id);
+            menu->current = menu->lobby;
         }
 
         draw_rect(target, title_background, {1.f, 0.f, 1.f, .4f});
@@ -540,14 +625,16 @@ struct SettingsPage : MenuPage
     Rect title_background;
 
     Rect game_settings_panel;
+    TextBox2<64> server_ip_address_text_box;
+    Button2 connect_to_server_button;
 
     Font font;
-    TextBox2<64> game_name_text_box;
-    CheckBox fullscreen_checkbox;
+    RpcClient *rpc_client;
 
-    SettingsPage(Assets *assets)
+    SettingsPage(Assets *assets, RpcClient *rpc_client)
     {
         font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_REGULAR_TTF], 128);
+        this->rpc_client = rpc_client;
 
         back_button.rect = anchor_bottom_right(
             {0.2f * 1920, 0.2f * 1920 * 9.f / 16.f / 2.f},
@@ -565,9 +652,9 @@ struct SettingsPage : MenuPage
                                1080 - (title_background.y + title_background.height + 25.f) - 25.f};
 
         Rect game_settings_content = add_border(game_settings_panel, {25.f, 25.f});
-        game_name_text_box.rect = {game_settings_content.x, game_settings_content.y, game_settings_content.width, 75.f};
-        fullscreen_checkbox.rect = translate(game_name_text_box.rect, {0, back_button.rect.height + 5.f});
-        fullscreen_checkbox.rect.width = fullscreen_checkbox.rect.height;
+        server_ip_address_text_box.rect = {game_settings_content.x, game_settings_content.y, game_settings_content.width, 75.f};
+        connect_to_server_button.rect = translate(server_ip_address_text_box.rect, {0, server_ip_address_text_box.rect.height + 5.f});
+        connect_to_server_button.rect.width = connect_to_server_button.rect.height;
     }
 
     void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu) override
@@ -581,68 +668,14 @@ struct SettingsPage : MenuPage
         draw_centered_text(font, target, String::from("New Game"), title_background, .1f, 10, 1);
 
         draw_rect(target, game_settings_panel, {0.f, 1.f, 0.f, .4f});
-        game_name_text_box.update_and_draw(target, input, &font);
-        if (fullscreen_checkbox.update_and_draw(target, input, &font))
+        server_ip_address_text_box.update_and_draw(target, input, &font);
+        if (connect_to_server_button.update_and_draw(target, input, &font))
         {
-            set_fullscreen(fullscreen_checkbox.checked);
+            rpc_client->peer.close();
+            char ip[65];
+            memcpy(ip, server_ip_address_text_box.text.data, server_ip_address_text_box.text.len);
+            ip[server_ip_address_text_box.text.len] = '\0';
+            rpc_client->peer.open(ip, 6666, true);
         }
     }
 };
-
-struct LobbyPage : MenuPage
-{
-    Button2 back_button;
-    Button2 create_button;
-
-    Rect title_background;
-
-    Rect game_settings_panel;
-
-    Font font;
-    TextBox2<64> game_name_text_box;
-    CheckBox fullscreen_checkbox;
-
-    LobbyPage(Assets *assets)
-    {
-        font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_REGULAR_TTF], 128);
-
-        back_button.rect = anchor_bottom_right(
-            {0.2f * 1920, 0.2f * 1920 * 9.f / 16.f / 2.f},
-            {25.f, 25.f});
-        back_button.text = String::from("Back");
-        create_button.rect = translate(back_button.rect, {0, -(back_button.rect.height + 25.f)});
-        create_button.text = String::from("Create");
-
-        Rect left_panels = add_border({0, 0, 1920 / 2.f, 1080 / 2.f}, {25.f, 25.f});
-        title_background = {left_panels.x, left_panels.y, left_panels.width, 100.f};
-
-        game_settings_panel = {title_background.x,
-                               title_background.y + title_background.height + 25.f,
-                               title_background.width,
-                               1080 - (title_background.y + title_background.height + 25.f) - 25.f};
-
-        Rect game_settings_content = add_border(game_settings_panel, {25.f, 25.f});
-        game_name_text_box.rect = {game_settings_content.x, game_settings_content.y, game_settings_content.width, 75.f};
-        fullscreen_checkbox.rect = translate(game_name_text_box.rect, {0, back_button.rect.height + 5.f});
-        fullscreen_checkbox.rect.width = fullscreen_checkbox.rect.height;
-    }
-
-    void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu) override
-    {
-        if (back_button.update_and_draw(target, input, &font))
-        {
-            menu->current = menu->main;
-        }
-
-        draw_rect(target, title_background, {1.f, 0.f, 1.f, .4f});
-        draw_centered_text(font, target, String::from("New Game"), title_background, .1f, 10, 1);
-
-        draw_rect(target, game_settings_panel, {0.f, 1.f, 0.f, .4f});
-        game_name_text_box.update_and_draw(target, input, &font);
-        if (fullscreen_checkbox.update_and_draw(target, input, &font))
-        {
-            set_fullscreen(fullscreen_checkbox.checked);
-        }
-    }
-};
-

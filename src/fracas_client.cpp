@@ -11,7 +11,7 @@
 #include "mesh.hpp"
 #include "main_menu.hpp"
 #include "net/net.hpp"
-#include "net/rpc_client.hpp"
+#include "net/generated_rpc_client.hpp"
 #include "platform.hpp"
 #include "scene.hpp"
 #include "ui.hpp"
@@ -293,9 +293,10 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ta
 
     static MainMenu main_menu;
     static MainPage main(&assets);
-    static SettingsPage settings(&assets);
+    static SettingsPage settings(&assets, &client);
     static CreateGamePage create(&assets, &client);
     static JoinGamePage join(&assets, &client);
+    static LobbyPage lobby(&assets, &client);
     static bool inited = false;
     if (!inited)
     {
@@ -304,6 +305,7 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ta
         main_menu.settings = &settings;
         main_menu.create = &create;
         main_menu.join = &join;
+        main_menu.lobby = &lobby;
         main_menu.current = main_menu.main;
     }
     glDisable(GL_DEPTH_TEST);

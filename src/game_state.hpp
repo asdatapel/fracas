@@ -170,6 +170,9 @@ struct GameState
 
     bool is_player_in_this_game(ClientId client_id)
     {
+        if (properties.is_self_hosted && properties.owner == client_id){
+            return true;
+        }
         for (int i = 0; i < families[0].players.len; i++)
         {
             if (families[0].players[i] == client_id)

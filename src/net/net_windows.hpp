@@ -92,7 +92,7 @@ struct Peer
                 }
                 return -1;
             }
-            received_this_time = 0;
+            return -1;
         }
 
         received_so_far += received_this_time;
