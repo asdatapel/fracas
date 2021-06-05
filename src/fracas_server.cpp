@@ -110,13 +110,16 @@ int main(int argc, char *argv[])
             }
         }
 
+        ClientId client_to_delete = 0; // delete one at a time :shrug:
         for (auto &it : server_data.clients)
         {
             ClientId client_id = it.first;
-            Client *client = &it.second;
+            Client *client = &(it.second);
+
             if (!client->peer.is_connected())
             {
                 remove_client(&server_data, client_id);
+                client_to_delete = client_id;
                 continue;
             }
 
@@ -124,7 +127,7 @@ int main(int argc, char *argv[])
             char msg[MAX_MSG_SIZE];
             while ((msg_len = client->peer.recieve_msg(msg)) > 0)
             {
-                rpc_server.handle_rpc(client->client_id, &client->peer, msg, msg_len); 
+                rpc_server.handle_rpc(client->client_id, &client->peer, msg, msg_len);
                 // ClientMessageType msg_type;
                 // char *data = read_byte(msg, (char *)&msg_type);
                 // MessageReader msg(data, msg_len - 1);
@@ -136,7 +139,11 @@ int main(int argc, char *argv[])
                 // handle_func(&msg, client);
             }
         }
-
+        if(client_to_delete)
+        {
+            server_data.clients.erase(client_to_delete);
+        }
+        
         for (auto it : server_data.games)
         {
             GameState *game = &it.second;

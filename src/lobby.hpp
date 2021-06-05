@@ -1,6 +1,6 @@
 #pragma once
 
-#include <map>
+#include <unordered_map>
 
 #include "common.hpp"
 #include "game_state.hpp"
@@ -9,8 +9,8 @@
 
 struct ServerData
 {
-    std::map<GameId, GameState> games;
-    std::map<ClientId, Client> clients;
+    std::unordered_map<GameId, GameState> games;
+    std::unordered_map<ClientId, Client> clients;
 };
 
 ClientId add_client(ServerData *server_data, SOCKET s)
@@ -40,7 +40,6 @@ void remove_client(ServerData *server_data, ClientId client_id)
         GameState &game = server_data->games[client->game_id];
         game.remove_player(client_id);
     }
-    server_data->clients.erase(client_id);
 }
 
 GameId add_game(ServerData *server_data, GameProperties properties)
@@ -54,6 +53,7 @@ GameId add_game(ServerData *server_data, GameProperties properties)
     }
 
     server_data->games[next_game_id] = GameState{properties};
+    server_data->games[next_game_id].add_player(properties.owner);
     return next_game_id;
 }
 
@@ -64,18 +64,17 @@ void RpcServer::ListGames(ClientId client_id, ListGamesRequest *req, ListGamesRe
     {
         GameId game_id = it.first;
         GameState *game = &it.second;
-        if (game->has_started())
-        {
-            continue;
-        }
 
-        GameMetadata game_msg;
-        game_msg.id = game_id;
-        game_msg.name = game->properties.name;
-        game_msg.owner = server_data->clients[game->properties.owner].username;
-        game_msg.num_players = game->num_players();
-        game_msg.is_self_hosted = game->properties.is_self_hosted;
-        resp->games.push_back(game_msg);
+        if (game->stage == GameStage::NOT_STARTED)
+        {
+            GameMetadata game_msg;
+            game_msg.id = game_id;
+            game_msg.name = game->properties.name;
+            game_msg.owner = server_data->clients[game->properties.owner].username;
+            game_msg.num_players = game->num_players();
+            game_msg.is_self_hosted = game->properties.is_self_hosted;
+            resp->games.push_back(game_msg);
+        }
     }
 }
 
@@ -93,6 +92,20 @@ void RpcServer::GetGame(ClientId client_id, GetGameRequest *req, GetGameResponse
     resp->game.owner = server_data->clients[game->properties.owner].username;
     resp->game.num_players = game->num_players();
     resp->game.is_self_hosted = game->properties.is_self_hosted;
+    for (int i = 0; i < game->families[0].players.len; i++)
+    {
+        ClientId this_client_id = game->families[0].players[i];
+        resp->players.push_back({this_client_id,
+                                 server_data->clients[this_client_id].username,
+                                 false});
+    }
+    for (int i = 0; i < game->families[1].players.len; i++)
+    {
+        ClientId this_client_id = game->families[1].players[i];
+        resp->players.push_back({this_client_id,
+                                 server_data->clients[this_client_id].username,
+                                 true});
+    }
 }
 
 void RpcServer::CreateGame(ClientId client_id, CreateGameRequest *req, CreateGameResponse *resp)
@@ -133,6 +146,7 @@ void RpcServer::JoinGame(ClientId client_id, JoinGameRequest *req, JoinGameRespo
     {
         return; // client is already in a game
     }
+
     if (server_data->games.count(req->game_id) == 0)
     {
         // TODO send error, game NOT_FOUND
@@ -161,29 +175,3 @@ void RpcServer::LeaveGame(ClientId client_id, LeaveGameRequest *req, LeaveGameRe
     game->remove_player(client->client_id);
     client->game_id = 0;
 }
-
-// void handle_JOIN_GAME(MessageReader *msg, Client *client)
-// {
-//     GameId game_id;
-//     // msg->read(&game_id);
-
-//     if (client->game_id != 0)
-//     {
-//         // TODO send error YOURE_ALREADY_IN_A_GAME_IDIOT
-//         return;
-//     }
-
-//     if (games.count(game_id) == 0)
-//     {
-//         // TODO send error REQUESTED_GAME_NOT_FOUND
-//         return;
-//     }
-
-//     GameState *game = &games[game_id];
-//     game->add_player(client->client_id);
-//     client->game_id = game_id;
-
-//     MessageBuilder resp((char)ServerMessageType::JOIN_GAME_RESPONSE);
-//     append(&resp, &game->properties);
-//     resp.send(&client->peer);
-// }

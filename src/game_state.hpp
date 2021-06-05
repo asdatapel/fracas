@@ -236,17 +236,17 @@ struct GameState
             // MAYBETODO we can switch the owner instead, as long as the game isn't self hosted
         }
 
-        if (families[0].players.len == 0 || families[1].players.len == 0)
+        if (stage != GameStage::NOT_STARTED && (families[0].players.len == 0 || families[1].players.len == 0))
+        {
+            end_game();
+        }
+
+        if (num_players() == 0)
         {
             end_game();
         }
 
         // TODO broadcast PLAYER_LEFT
-
-        if (num_players() == 0)
-        {
-            stage = GameStage::ENDED;
-        }
     }
 
     bool has_started()

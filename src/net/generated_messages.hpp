@@ -97,6 +97,41 @@ uint32_t read(MessageReader *msg, std::vector<ListGamesResponse> *out) {
 	return len;
 };
 
+struct Player {
+	uint32_t user_id; 
+	AllocatedString<64> name; 
+	bool team; 
+};
+void append(MessageBuilder *msg, Player &in) {
+	append(msg, in.user_id);
+	append(msg, in.name);
+	append(msg, in.team);
+};
+uint32_t read(MessageReader *msg, Player *out) {
+	uint32_t len = 0;
+
+	len += read(msg, &out->user_id);
+	len += read(msg, &out->name);
+	len += read(msg, &out->team);
+
+	return len;
+};
+void append(MessageBuilder *msg, std::vector<Player> &in) {
+	append(msg, (uint16_t)in.size());
+	for (auto &it : in){append(msg, it);}
+};
+uint32_t read(MessageReader *msg, std::vector<Player> *out) {
+	uint32_t len = 0;
+
+	uint16_t list_len;
+	len += read(msg, &list_len);
+	for (int i = 0; i < list_len; i++) {
+		Player elem; len += read(msg, &elem); out->push_back(elem);
+	}
+
+	return len;
+};
+
 struct GetGameRequest {
 	uint32_t game_id; 
 };
@@ -128,14 +163,17 @@ uint32_t read(MessageReader *msg, std::vector<GetGameRequest> *out) {
 
 struct GetGameResponse {
 	GameMetadata game; 
+	std::vector<Player> players; 
 };
 void append(MessageBuilder *msg, GetGameResponse &in) {
 	append(msg, in.game);
+	append(msg, in.players);
 };
 uint32_t read(MessageReader *msg, GetGameResponse *out) {
 	uint32_t len = 0;
 
 	len += read(msg, &out->game);
+	len += read(msg, &out->players);
 
 	return len;
 };

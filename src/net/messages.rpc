@@ -14,11 +14,17 @@ rpc ListGames
 ListGamesRequest
 ListGamesResponse
 
+message Player
+user_id uint
+name string
+team bool
+
 message GetGameRequest
 game_id uint
 
 message GetGameResponse
 game GameMetadata
+players list Player
 
 rpc GetGame
 GetGameRequest

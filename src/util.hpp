@@ -76,7 +76,7 @@ struct AllocatedString
     }
 
     template <size_t N2>
-    AllocatedString(AllocatedString<N2> &&str2)
+    AllocatedString(AllocatedString<N2> &str2)
     {
         len = fmin(str2.len, MAX_LEN);
         memcpy(data, str2.data, len);
