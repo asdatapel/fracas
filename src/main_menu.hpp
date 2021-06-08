@@ -81,6 +81,14 @@ Rect anchor_bottom_right(Vec2f dimensions, Vec2f distance)
             dimensions.y};
 }
 
+Rect anchor_top_right(Vec2f dimensions, Vec2f distance)
+{
+    return {1920 - dimensions.x - distance.x,
+            distance.y,
+            dimensions.x,
+            dimensions.y};
+}
+
 Rect translate(Rect rect, Vec2f d)
 {
     return {rect.x + d.x,
@@ -150,8 +158,8 @@ template <size_t N>
 struct TextBox2
 {
     Rect rect;
-    AllocatedString<N> text;
 
+    AllocatedString<N> text;
     Selectable selectable;
 
     void update_and_draw(RenderTarget target, InputState *input, Font *font)
@@ -179,12 +187,31 @@ struct TextBox2
 
         float text_border = rect.height / 10.f;
         float text_height = rect.height - (2 * text_border);
-        float text_width = rect.width - (2 * text_border);
+        float max_text_width = rect.width - (2 * text_border);
         float text_scale = text_height / font->font_size_px;
         float text_x = rect.x + text_border;
         float text_y = rect.y + text_border;
         draw_rect(target, rect, color);
-        draw_rect(target, {text_x, text_y + (font->baseline * text_scale) + text_border / 2.f, text_width, text_border / 2.f}, darken(color, .1f));
+        draw_rect(target, {text_x, text_y + (font->baseline * text_scale) + text_border / 2.f, max_text_width, text_border / 2.f}, darken(color, .1f));
+        draw_text(*font, target, text, text_x, text_y, text_scale, text_scale);
+    }
+};
+
+struct Label
+{
+    Rect rect;
+    String text;
+    Color background_color = {0, 0, 0, 0};
+
+    void update_and_draw(RenderTarget target, InputState *input, Font *font)
+    {
+        float text_border = rect.height / 10.f;
+        float text_height = rect.height - (2 * text_border);
+        float text_width = rect.width - (2 * text_border);
+        float text_scale = text_height / font->font_size_px;
+        float text_x = rect.x + text_border;
+        float text_y = rect.y + text_border;
+        draw_rect(target, {rect.x, rect.y, text_width, rect.height}, background_color);
         draw_text(*font, target, text, text_x, text_y, text_scale, text_scale);
     }
 };
@@ -213,7 +240,12 @@ struct CheckBox
     }
 };
 
-struct List
+struct SelectionGroup
+{
+    void *selected = nullptr;
+};
+
+struct List : SelectionGroup
 {
     struct Item
     {
@@ -227,6 +259,7 @@ struct List
 
     Selectable scrollbar_selectable;
     float scrollbar_y_offset = 0.f;
+    SelectionGroup *selection_group = this;
     int selected_i = -1;
     uint32_t selected_item_id = 0;
 
@@ -296,12 +329,13 @@ struct List
             Selectable item_selectable = Selectable::check(input, item_rect, {}, false, false, rect);
             if (item_selectable.focus_started)
             {
+                selection_group->selected = this;
                 selected_i = i;
                 selected_item_id = items[i].id;
             }
 
             Color item_color = {255 / 255.f, 125 / 255.f, 19 / 255.f, 1};
-            if (selected_i == i)
+            if (selection_group->selected == this && selected_i == i)
             {
                 item_color = darken(item_color, 0.1f);
             }
@@ -330,7 +364,11 @@ struct List
 
     uint32_t get_selected_id()
     {
-        return selected_item_id;
+        if (selection_group->selected == this)
+        {
+            return selected_item_id;
+        }
+        return 0;
     }
 
     void refresh(std::vector<Item> new_items)
@@ -436,6 +474,10 @@ struct LobbyPage : MenuPage
     Button2 back_button;
     Button2 start_game_button;
 
+    Button2 swap_button;
+
+    SelectionGroup player_selection_group;
+
     Rect family_1_title_background;
     Rect family_1_panel;
     List family_1_list;
@@ -460,12 +502,18 @@ struct LobbyPage : MenuPage
         start_game_button.rect = translate(back_button.rect, {0, -(back_button.rect.height + 25.f)});
         start_game_button.text = String::from("Create");
 
+        swap_button.rect = anchor_top_right(
+            {0.2f * 1920, 0.2f * 1920 * 9.f / 16.f / 2.f},
+            {25.f, 25.f});
+        swap_button.text = String::from("Swap Team");
+
         Rect left_panels = add_border({0, 0, 1920 / 3.f, 1080}, {25.f, 25.f});
         family_1_title_background = {left_panels.x, left_panels.y, left_panels.width, 100.f};
         family_1_panel = {family_1_title_background.x,
                           family_1_title_background.y + family_1_title_background.height + 25.f,
                           family_1_title_background.width,
                           1080 - (family_1_title_background.y + family_1_title_background.height + 25.f) - 25.f};
+        family_1_list.selection_group = &player_selection_group;
         family_1_list.rect = add_border(family_1_panel, {25.f, 25.f});
         family_1_list.max_items = MAX_PLAYERS_PER_GAME * 2;
 
@@ -475,6 +523,7 @@ struct LobbyPage : MenuPage
                           family_2_title_background.y + family_2_title_background.height + 25.f,
                           family_2_title_background.width,
                           1080 - (family_2_title_background.y + family_2_title_background.height + 25.f) - 25.f};
+        family_2_list.selection_group = &player_selection_group;
         family_2_list.rect = add_border(family_2_panel, {25.f, 25.f});
         family_2_list.max_items = MAX_PLAYERS_PER_GAME * 2;
     }
@@ -506,9 +555,20 @@ struct LobbyPage : MenuPage
                 family_2_list_items.push_back({p.user_id, p.name.len > 0 ? p.name : String::from("Joining...")});
         }
         family_1_list.refresh(family_1_list_items);
-        family_1_list.update_and_draw(target, input, &font);
         family_2_list.refresh(family_2_list_items);
+
+        family_1_list.update_and_draw(target, input, &font);
         family_2_list.update_and_draw(target, input, &font);
+
+        if (player_selection_group.selected)
+        {
+            if (swap_button.update_and_draw(target, input, &font))
+            {
+                rpc_client->SwapTeam({
+                    game_id,
+                    ((List *)player_selection_group.selected)->get_selected_id()});
+            }
+        }
     }
 
     void set_game_id(uint32_t game_id)
@@ -602,8 +662,8 @@ struct CreateGamePage : MenuPage
     Rect title_background;
 
     Rect game_settings_panel;
-    Rect game_name_label;
-    TextBox2<64> game_name_text_box;
+    Label game_name_label;
+    TextBox2<32> game_name_text_box;
 
     Font font;
     RpcClient *rpc_client;
@@ -629,10 +689,16 @@ struct CreateGamePage : MenuPage
                                1080 - (title_background.y + title_background.height + 25.f) - 25.f};
 
         Rect game_settings_content = add_border(game_settings_panel, {25.f, 25.f});
-        game_name_text_box.rect = {game_settings_content.x,
-                                   game_settings_content.y,
-                                   game_settings_content.width,
-                                   75.f}
+        // auto place_next_option = [](Rect container, Rect *label, Rect *input)->float {
+
+        // };
+        game_name_label = {{game_settings_content.x,
+                            game_settings_content.y,
+                            game_settings_content.width,
+                            40.f},
+                           String::from("Game Name:")};
+        game_name_text_box.rect = translate(game_name_label.rect, {0, game_name_label.rect.height + 10.f});
+        game_name_text_box.rect.height = 70.f;
     }
 
     void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu) override
@@ -652,6 +718,7 @@ struct CreateGamePage : MenuPage
         draw_centered_text(font, target, String::from("New Game"), title_background, .1f, 10, 1);
 
         draw_rect(target, game_settings_panel, {0.f, 1.f, 0.f, .4f});
+        game_name_label.update_and_draw(target, input, &font);
         game_name_text_box.update_and_draw(target, input, &font);
     }
 };

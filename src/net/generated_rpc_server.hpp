@@ -10,6 +10,7 @@ struct RpcServer {
 	void GetGame(ClientId client_id, GetGameRequest*, GetGameResponse*);
 	void CreateGame(ClientId client_id, CreateGameRequest*, CreateGameResponse*);
 	void JoinGame(ClientId client_id, JoinGameRequest*, JoinGameResponse*);
+	void SwapTeam(ClientId client_id, SwapTeamRequest*, SwapTeamResponse*);
 	void LeaveGame(ClientId client_id, LeaveGameRequest*, LeaveGameResponse*);
 };
 void RpcServer::handle_rpc(ClientId client_id, Peer *peer, char *data, int msg_len) {
@@ -48,6 +49,14 @@ void RpcServer::handle_rpc(ClientId client_id, Peer *peer, char *data, int msg_l
 			JoinGameResponse resp;
 			read(&in, &req);
 			JoinGame(client_id, &req, &resp);
+			append(&out, resp);
+			out.send(peer);
+		} break;
+		case Rpc::SwapTeam: {
+			SwapTeamRequest req;
+			SwapTeamResponse resp;
+			read(&in, &req);
+			SwapTeam(client_id, &req, &resp);
 			append(&out, resp);
 			out.send(peer);
 		} break;

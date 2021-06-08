@@ -312,6 +312,64 @@ uint32_t read(MessageReader *msg, std::vector<JoinGameResponse> *out) {
 	return len;
 };
 
+struct SwapTeamRequest {
+	uint32_t game_id; 
+	uint32_t user_id; 
+};
+void append(MessageBuilder *msg, SwapTeamRequest &in) {
+	append(msg, in.game_id);
+	append(msg, in.user_id);
+};
+uint32_t read(MessageReader *msg, SwapTeamRequest *out) {
+	uint32_t len = 0;
+
+	len += read(msg, &out->game_id);
+	len += read(msg, &out->user_id);
+
+	return len;
+};
+void append(MessageBuilder *msg, std::vector<SwapTeamRequest> &in) {
+	append(msg, (uint16_t)in.size());
+	for (auto &it : in){append(msg, it);}
+};
+uint32_t read(MessageReader *msg, std::vector<SwapTeamRequest> *out) {
+	uint32_t len = 0;
+
+	uint16_t list_len;
+	len += read(msg, &list_len);
+	for (int i = 0; i < list_len; i++) {
+		SwapTeamRequest elem; len += read(msg, &elem); out->push_back(elem);
+	}
+
+	return len;
+};
+
+struct SwapTeamResponse {
+};
+void append(MessageBuilder *msg, SwapTeamResponse &in) {
+};
+uint32_t read(MessageReader *msg, SwapTeamResponse *out) {
+	uint32_t len = 0;
+
+
+	return len;
+};
+void append(MessageBuilder *msg, std::vector<SwapTeamResponse> &in) {
+	append(msg, (uint16_t)in.size());
+	for (auto &it : in){append(msg, it);}
+};
+uint32_t read(MessageReader *msg, std::vector<SwapTeamResponse> *out) {
+	uint32_t len = 0;
+
+	uint16_t list_len;
+	len += read(msg, &list_len);
+	for (int i = 0; i < list_len; i++) {
+		SwapTeamResponse elem; len += read(msg, &elem); out->push_back(elem);
+	}
+
+	return len;
+};
+
 struct LeaveGameRequest {
 };
 void append(MessageBuilder *msg, LeaveGameRequest &in) {
@@ -369,6 +427,7 @@ enum struct Rpc : char {
 	GetGame,
 	CreateGame,
 	JoinGame,
+	SwapTeam,
 	LeaveGame,
 };
 

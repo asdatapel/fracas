@@ -19,6 +19,9 @@ struct RpcClient {
 	void JoinGame(JoinGameRequest &, JoinGameResponse*);
 	JoinGameResponse JoinGame(JoinGameRequest);
 
+	void SwapTeam(SwapTeamRequest &, SwapTeamResponse*);
+	SwapTeamResponse SwapTeam(SwapTeamRequest);
+
 	void LeaveGame(LeaveGameRequest &, LeaveGameResponse*);
 	LeaveGameResponse LeaveGame(LeaveGameRequest);
 
@@ -69,6 +72,18 @@ void RpcClient::JoinGame(JoinGameRequest &req, JoinGameResponse *resp) {
 JoinGameResponse RpcClient::JoinGame(JoinGameRequest req) {
 	JoinGameResponse resp;
 	JoinGame(req, &resp);
+	return resp;
+}
+
+void RpcClient::SwapTeam(SwapTeamRequest &req, SwapTeamResponse *resp) {
+	MessageBuilder out; append(&out, (char) Rpc::SwapTeam); append(&out, req); out.send(&peer);
+
+	int msg_len; char msg[MAX_MSG_SIZE];while ((msg_len = peer.recieve_msg(msg)) < 0){}
+	MessageReader in(msg, msg_len); read(&in, resp);
+}
+SwapTeamResponse RpcClient::SwapTeam(SwapTeamRequest req) {
+	SwapTeamResponse resp;
+	SwapTeam(req, &resp);
 	return resp;
 }
 

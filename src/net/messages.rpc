@@ -51,6 +51,16 @@ rpc JoinGame
 JoinGameRequest
 JoinGameResponse
 
+message SwapTeamRequest
+game_id uint
+user_id uint
+
+message SwapTeamResponse
+
+rpc SwapTeam
+SwapTeamRequest
+SwapTeamResponse
+
 message LeaveGameRequest
 
 message LeaveGameResponse

@@ -92,19 +92,12 @@ void RpcServer::GetGame(ClientId client_id, GetGameRequest *req, GetGameResponse
     resp->game.owner = server_data->clients[game->properties.owner].username;
     resp->game.num_players = game->num_players();
     resp->game.is_self_hosted = game->properties.is_self_hosted;
-    for (int i = 0; i < game->families[0].players.len; i++)
+    for (int i = 0; i < game->players.len; i++)
     {
-        ClientId this_client_id = game->families[0].players[i];
+        ClientId this_client_id = game->players[i].first;
         resp->players.push_back({this_client_id,
                                  server_data->clients[this_client_id].username,
-                                 false});
-    }
-    for (int i = 0; i < game->families[1].players.len; i++)
-    {
-        ClientId this_client_id = game->families[1].players[i];
-        resp->players.push_back({this_client_id,
-                                 server_data->clients[this_client_id].username,
-                                 true});
+                                 game->players[i].second == 1});
     }
 }
 
@@ -116,7 +109,7 @@ void RpcServer::CreateGame(ClientId client_id, CreateGameRequest *req, CreateGam
         return; // client is already in a game
     }
 
-    //TODO validate settings
+    // TODO validate settings
 
     GameProperties game_properties;
     game_properties.owner = client->client_id;
@@ -124,19 +117,15 @@ void RpcServer::CreateGame(ClientId client_id, CreateGameRequest *req, CreateGam
     game_properties.is_self_hosted = req->is_self_hosted;
 
     GameId game_id = add_game(server_data, game_properties);
-    if (game_id)
-    {
-        GameState *game = &server_data->games[game_id];
-
-        resp->game_id = game_id;
-        resp->owner_id = client->client_id;
-
-        client->game_id = game_id;
-    }
-    else
+    if (!game_id)
     {
         // TODO send error message TOO_MANY_GAMES
     }
+
+    GameState *game = &server_data->games[game_id];
+    resp->game_id = game_id;
+    resp->owner_id = client->client_id;
+    client->game_id = game_id;
 }
 
 void RpcServer::JoinGame(ClientId client_id, JoinGameRequest *req, JoinGameResponse *resp)
@@ -156,6 +145,41 @@ void RpcServer::JoinGame(ClientId client_id, JoinGameRequest *req, JoinGameRespo
     GameState *game = &server_data->games[req->game_id];
     game->add_player(client_id);
     client->game_id = req->game_id;
+}
+
+void RpcServer::SwapTeam(ClientId client_id, SwapTeamRequest *req, SwapTeamResponse *resp)
+{
+    Client *client = &server_data->clients[client_id];
+    if (client->game_id != req->game_id)
+    {
+        return; // client is not in the requested game
+    }
+    if (server_data->games.count(req->game_id) == 0)
+    {
+        // TODO send error, game NOT_FOUND
+        return;
+    }
+    GameState *game = &server_data->games[req->game_id];
+    if (game->properties.owner != client_id)
+    {
+        return; // TODO client doesn't own this game
+    }
+    if (game->stage != GameStage::NOT_STARTED)
+    {
+        return; // TODO cannot swap after game has started
+    }
+    if (!game->is_player_in_this_game(req->user_id))
+    {
+        return; // error requested user isn't in this game
+    }
+
+    for (int i = 0; i < game->players.len; i++)
+    {
+        if (game->players[i].first == req->user_id)
+        {
+            game->players[i].second = 1 - game->players[i].second;
+        }
+    }
 }
 
 void RpcServer::LeaveGame(ClientId client_id, LeaveGameRequest *req, LeaveGameResponse *resp)
