@@ -32,6 +32,7 @@ GetGameResponse
 
 message CreateGameRequest
 name string
+owner_name string
 is_self_hosted bool
 
 message CreateGameResponse
@@ -44,6 +45,7 @@ CreateGameResponse
 
 message JoinGameRequest
 game_id uint
+player_name string
 
 message JoinGameResponse
 

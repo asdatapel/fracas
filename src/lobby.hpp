@@ -53,7 +53,7 @@ GameId add_game(ServerData *server_data, GameProperties properties)
     }
 
     server_data->games[next_game_id] = GameState{properties};
-    server_data->games[next_game_id].add_player(properties.owner);
+    server_data->games[next_game_id].add_player(properties.owner, properties.owner_name);
     return next_game_id;
 }
 
@@ -85,8 +85,8 @@ void RpcServer::GetGame(ClientId client_id, GetGameRequest *req, GetGameResponse
         // TODO send NOT_FOUND
         return;
     }
+    
     GameState *game = &server_data->games[req->game_id];
-
     resp->game.id = req->game_id;
     resp->game.name = game->properties.name;
     resp->game.owner = server_data->clients[game->properties.owner].username;
@@ -94,10 +94,9 @@ void RpcServer::GetGame(ClientId client_id, GetGameRequest *req, GetGameResponse
     resp->game.is_self_hosted = game->properties.is_self_hosted;
     for (int i = 0; i < game->players.len; i++)
     {
-        ClientId this_client_id = game->players[i].first;
-        resp->players.push_back({this_client_id,
-                                 server_data->clients[this_client_id].username,
-                                 game->players[i].second == 1});
+        resp->players.push_back({game->players[i].id,
+                                 game->players[i].name,
+                                 game->players[i].team == 1});
     }
 }
 
@@ -109,12 +108,25 @@ void RpcServer::CreateGame(ClientId client_id, CreateGameRequest *req, CreateGam
         return; // client is already in a game
     }
 
-    // TODO validate settings
+    // TODO more validation on the names
+    if (req->name.len == 0)
+    {
+        return; // TODO invalid name
+    }
+    if (req->owner_name.len == 0)
+    {
+        return; // TODO invalid name
+    }
+    if (!req->is_self_hosted)
+    {
+        return; // TODO temporary
+    }
 
     GameProperties game_properties;
     game_properties.owner = client->client_id;
     game_properties.name = req->name;
     game_properties.is_self_hosted = req->is_self_hosted;
+    game_properties.owner_name = req->owner_name;
 
     GameId game_id = add_game(server_data, game_properties);
     if (!game_id)
@@ -135,15 +147,20 @@ void RpcServer::JoinGame(ClientId client_id, JoinGameRequest *req, JoinGameRespo
     {
         return; // client is already in a game
     }
-
     if (server_data->games.count(req->game_id) == 0)
     {
         // TODO send error, game NOT_FOUND
         return;
     }
 
+    // TODO more validation on the name
+    if (req->player_name.len == 0)
+    {
+        return; // TODO invalid name
+    }
+
     GameState *game = &server_data->games[req->game_id];
-    game->add_player(client_id);
+    game->add_player(client_id, req->player_name);
     client->game_id = req->game_id;
 }
 
@@ -159,6 +176,7 @@ void RpcServer::SwapTeam(ClientId client_id, SwapTeamRequest *req, SwapTeamRespo
         // TODO send error, game NOT_FOUND
         return;
     }
+
     GameState *game = &server_data->games[req->game_id];
     if (game->properties.owner != client_id)
     {
@@ -175,9 +193,9 @@ void RpcServer::SwapTeam(ClientId client_id, SwapTeamRequest *req, SwapTeamRespo
 
     for (int i = 0; i < game->players.len; i++)
     {
-        if (game->players[i].first == req->user_id)
+        if (game->players[i].id == req->user_id)
         {
-            game->players[i].second = 1 - game->players[i].second;
+            game->players[i].team = 1 - game->players[i].team;
         }
     }
 }

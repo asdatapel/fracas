@@ -2,11 +2,11 @@
 #include <vector>
 
 struct GameMetadata {
-	uint32_t id; 
-	AllocatedString<64> name; 
-	AllocatedString<64> owner; 
-	bool is_self_hosted; 
-	int32_t num_players; 
+	uint32_t id = {}; 
+	AllocatedString<64> name = {}; 
+	AllocatedString<64> owner = {}; 
+	bool is_self_hosted = false; 
+	int32_t num_players = {}; 
 };
 void append(MessageBuilder *msg, GameMetadata &in) {
 	append(msg, in.id);
@@ -69,7 +69,7 @@ uint32_t read(MessageReader *msg, std::vector<ListGamesRequest> *out) {
 };
 
 struct ListGamesResponse {
-	std::vector<GameMetadata> games; 
+	std::vector<GameMetadata> games = {}; 
 };
 void append(MessageBuilder *msg, ListGamesResponse &in) {
 	append(msg, in.games);
@@ -98,9 +98,9 @@ uint32_t read(MessageReader *msg, std::vector<ListGamesResponse> *out) {
 };
 
 struct Player {
-	uint32_t user_id; 
-	AllocatedString<64> name; 
-	bool team; 
+	uint32_t user_id = {}; 
+	AllocatedString<64> name = {}; 
+	bool team = false; 
 };
 void append(MessageBuilder *msg, Player &in) {
 	append(msg, in.user_id);
@@ -133,7 +133,7 @@ uint32_t read(MessageReader *msg, std::vector<Player> *out) {
 };
 
 struct GetGameRequest {
-	uint32_t game_id; 
+	uint32_t game_id = {}; 
 };
 void append(MessageBuilder *msg, GetGameRequest &in) {
 	append(msg, in.game_id);
@@ -162,8 +162,8 @@ uint32_t read(MessageReader *msg, std::vector<GetGameRequest> *out) {
 };
 
 struct GetGameResponse {
-	GameMetadata game; 
-	std::vector<Player> players; 
+	GameMetadata game = {}; 
+	std::vector<Player> players = {}; 
 };
 void append(MessageBuilder *msg, GetGameResponse &in) {
 	append(msg, in.game);
@@ -194,17 +194,20 @@ uint32_t read(MessageReader *msg, std::vector<GetGameResponse> *out) {
 };
 
 struct CreateGameRequest {
-	AllocatedString<64> name; 
-	bool is_self_hosted; 
+	AllocatedString<64> name = {}; 
+	AllocatedString<64> owner_name = {}; 
+	bool is_self_hosted = false; 
 };
 void append(MessageBuilder *msg, CreateGameRequest &in) {
 	append(msg, in.name);
+	append(msg, in.owner_name);
 	append(msg, in.is_self_hosted);
 };
 uint32_t read(MessageReader *msg, CreateGameRequest *out) {
 	uint32_t len = 0;
 
 	len += read(msg, &out->name);
+	len += read(msg, &out->owner_name);
 	len += read(msg, &out->is_self_hosted);
 
 	return len;
@@ -226,8 +229,8 @@ uint32_t read(MessageReader *msg, std::vector<CreateGameRequest> *out) {
 };
 
 struct CreateGameResponse {
-	uint32_t game_id; 
-	uint32_t owner_id; 
+	uint32_t game_id = {}; 
+	uint32_t owner_id = {}; 
 };
 void append(MessageBuilder *msg, CreateGameResponse &in) {
 	append(msg, in.game_id);
@@ -258,15 +261,18 @@ uint32_t read(MessageReader *msg, std::vector<CreateGameResponse> *out) {
 };
 
 struct JoinGameRequest {
-	uint32_t game_id; 
+	uint32_t game_id = {}; 
+	AllocatedString<64> player_name = {}; 
 };
 void append(MessageBuilder *msg, JoinGameRequest &in) {
 	append(msg, in.game_id);
+	append(msg, in.player_name);
 };
 uint32_t read(MessageReader *msg, JoinGameRequest *out) {
 	uint32_t len = 0;
 
 	len += read(msg, &out->game_id);
+	len += read(msg, &out->player_name);
 
 	return len;
 };
@@ -313,8 +319,8 @@ uint32_t read(MessageReader *msg, std::vector<JoinGameResponse> *out) {
 };
 
 struct SwapTeamRequest {
-	uint32_t game_id; 
-	uint32_t user_id; 
+	uint32_t game_id = {}; 
+	uint32_t user_id = {}; 
 };
 void append(MessageBuilder *msg, SwapTeamRequest &in) {
 	append(msg, in.game_id);

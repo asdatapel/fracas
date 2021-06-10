@@ -488,7 +488,8 @@ struct LobbyPage : MenuPage
 
     Font font;
     RpcClient *rpc_client;
-    uint32_t game_id;
+    uint32_t game_id = 0;
+    uint32_t game_owner_id = 0;
 
     LobbyPage(Assets *assets, RpcClient *rpc_client)
     {
@@ -544,10 +545,10 @@ struct LobbyPage : MenuPage
         draw_centered_text(font, target, String::from("Family 2"), family_2_title_background, .1f, 10, 1);
         draw_rect(target, family_2_panel, {0.f, 1.f, 0.f, .4f});
 
-        auto resp = rpc_client->GetGame({game_id});
+        auto get_game_resp = rpc_client->GetGame({game_id});
         std::vector<List::Item> family_1_list_items;
         std::vector<List::Item> family_2_list_items;
-        for (auto p : resp.players)
+        for (auto p : get_game_resp.players)
         {
             if (!p.team)
                 family_1_list_items.push_back({p.user_id, p.name.len > 0 ? p.name : String::from("Joining...")});
@@ -560,20 +561,19 @@ struct LobbyPage : MenuPage
         family_1_list.update_and_draw(target, input, &font);
         family_2_list.update_and_draw(target, input, &font);
 
-        if (player_selection_group.selected)
+        if (player_selection_group.selected && game_owner_id > 0)
         {
             if (swap_button.update_and_draw(target, input, &font))
             {
-                rpc_client->SwapTeam({
-                    game_id,
-                    ((List *)player_selection_group.selected)->get_selected_id()});
+                rpc_client->SwapTeam({game_id, ((List *)player_selection_group.selected)->get_selected_id()});
             }
         }
     }
 
-    void set_game_id(uint32_t game_id)
+    void set_game(uint32_t game_id, uint32_t game_owner_id)
     {
         this->game_id = game_id;
+        this->game_owner_id = game_owner_id;
     }
 };
 
@@ -588,6 +588,10 @@ struct JoinGamePage : MenuPage
     List game_list;
 
     Rect game_detail_panel;
+
+    Rect user_input_panel;
+    Label username_label;
+    TextBox2<32> username_textbox;
 
     Font font;
     RpcClient *rpc_client;
@@ -615,6 +619,14 @@ struct JoinGamePage : MenuPage
         game_list.rect = add_border(game_list_panel, {25.f, 25.f});
 
         game_detail_panel = add_border({1920 / 2.f, 0.f, 1920 / 2.f, 1080 / 2.f}, {25.f, 25.f});
+
+        user_input_panel = translate(game_detail_panel, {0, game_detail_panel.height + 10.f});
+        user_input_panel.height = 170.f;
+        username_label.rect = add_border(user_input_panel, {25.f, 25.f});
+        username_label.rect.height = 40.f;
+        username_label.text = String::from("Your Name:");
+        username_textbox.rect = translate(username_label.rect, {0, username_label.rect.height + 10.f});
+        username_textbox.rect.height = 70.f;
     }
 
     void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu) override
@@ -643,13 +655,17 @@ struct JoinGamePage : MenuPage
 
         if (game_list.get_selected_id() > 0)
         {
+            draw_rect(target, game_detail_panel, {0.f, 1.f, 0.f, .4f});
+            draw_rect(target, user_input_panel, {0.f, 1.f, 0.f, .4f});
+            username_label.update_and_draw(target, input, &font);
+            username_textbox.update_and_draw(target, input, &font);
+
             if (join_button.update_and_draw(target, input, &font))
             {
-                rpc_client->JoinGame({game_list.get_selected_id()});
-                ((LobbyPage *)menu->lobby)->set_game_id(game_list.get_selected_id());
+                rpc_client->JoinGame({game_list.get_selected_id(), username_textbox.text});
+                ((LobbyPage *)menu->lobby)->set_game(game_list.get_selected_id(), 0);
                 menu->current = menu->lobby;
             }
-            draw_rect(target, game_detail_panel, {0.f, 1.f, 0.f, .4f});
         }
     }
 };
@@ -664,6 +680,8 @@ struct CreateGamePage : MenuPage
     Rect game_settings_panel;
     Label game_name_label;
     TextBox2<32> game_name_text_box;
+    Label user_name_label;
+    TextBox2<32> user_name_text_box;
 
     Font font;
     RpcClient *rpc_client;
@@ -689,9 +707,7 @@ struct CreateGamePage : MenuPage
                                1080 - (title_background.y + title_background.height + 25.f) - 25.f};
 
         Rect game_settings_content = add_border(game_settings_panel, {25.f, 25.f});
-        // auto place_next_option = [](Rect container, Rect *label, Rect *input)->float {
-
-        // };
+        // auto place_next_option = [](Rect container, Rect *label, Rect *input)->float {};
         game_name_label = {{game_settings_content.x,
                             game_settings_content.y,
                             game_settings_content.width,
@@ -699,6 +715,12 @@ struct CreateGamePage : MenuPage
                            String::from("Game Name:")};
         game_name_text_box.rect = translate(game_name_label.rect, {0, game_name_label.rect.height + 10.f});
         game_name_text_box.rect.height = 70.f;
+
+        user_name_label.rect = translate(game_name_text_box.rect, {0, game_name_text_box.rect.height + 10.f});
+        user_name_label.rect.height = 40.f;
+        user_name_label.text = String::from("Your Name:");
+        user_name_text_box.rect = translate(user_name_label.rect, {0, user_name_label.rect.height + 10.f});
+        user_name_text_box.rect.height = 70.f;
     }
 
     void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu) override
@@ -709,9 +731,12 @@ struct CreateGamePage : MenuPage
         }
         if (create_button.update_and_draw(target, input, &font))
         {
-            CreateGameResponse resp = rpc_client->CreateGame({game_name_text_box.text});
-            ((LobbyPage *)menu->lobby)->set_game_id(resp.game_id);
-            menu->current = menu->lobby;
+            CreateGameResponse resp = rpc_client->CreateGame({game_name_text_box.text, user_name_text_box.text, true});
+            if (resp.game_id)
+            {
+                ((LobbyPage *)menu->lobby)->set_game(resp.game_id, resp.owner_id);
+                menu->current = menu->lobby;
+            }
         }
 
         draw_rect(target, title_background, {1.f, 0.f, 1.f, .4f});
@@ -720,6 +745,8 @@ struct CreateGamePage : MenuPage
         draw_rect(target, game_settings_panel, {0.f, 1.f, 0.f, .4f});
         game_name_label.update_and_draw(target, input, &font);
         game_name_text_box.update_and_draw(target, input, &font);
+        user_name_label.update_and_draw(target, input, &font);
+        user_name_text_box.update_and_draw(target, input, &font);
     }
 };
 

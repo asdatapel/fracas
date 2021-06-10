@@ -10,9 +10,9 @@
 struct GameProperties
 {
     ClientId owner;
-
     AllocatedString<64> name = {};
     bool is_self_hosted = false;
+    AllocatedString<64> owner_name;
 };
 
 enum struct GameStage
@@ -31,6 +31,12 @@ enum struct RoundStage
     STEAL,
     END,
 };
+struct PlayerData
+{
+    ClientId id;
+    AllocatedString<64> name;
+    int team;
+};
 struct AnswerState
 {
     bool revealed = false;
@@ -42,7 +48,7 @@ struct GameState
     GameProperties properties;
 
     Array<AllocatedString<32>, 2> family_names = {{}, {}};
-    Array<std::pair<ClientId, int>, MAX_PLAYERS_PER_GAME> players = {};
+    Array<PlayerData, MAX_PLAYERS_PER_GAME> players = {};
 
     GameStage stage = GameStage::NOT_STARTED;
     bool waiting_on_ready = false;
@@ -70,12 +76,17 @@ struct GameState
     uint64_t preempt_timer = 0;
     uint64_t answer_timer = 0;
 
+    int num_players()
+    {
+        return players.len;
+    }
+
     int num_players(int team)
     {
         int count = 0;
         for (int i = 0; i < players.len; i++)
         {
-            if (players[i].second == team)
+            if (players[i].team == team)
             {
                 count++;
             }
@@ -83,16 +94,16 @@ struct GameState
         return count;
     }
 
-    int get_indexed_player(int team, int i)
+    ClientId get_indexed_player(int team, int i)
     {
         int count = 0;
         for (int i = 0; i < players.len; i++)
         {
-            if (players[i].second == team)
+            if (players[i].team == team)
             {
                 if (count == i)
                 {
-                    return players[i].first;
+                    return players[i].id;
                 }
                 count++;
             }
@@ -135,9 +146,9 @@ struct GameState
     {
         for (int i = 0; i < players.len; i++)
         {
-            if (players[i].first == client_id)
+            if (players[i].id == client_id)
             {
-                return players[i].second;
+                return players[i].team;
             }
         }
         return -1;
@@ -198,11 +209,6 @@ struct GameState
         return true;
     };
 
-    int num_players()
-    {
-        return players.len;
-    }
-
     bool is_player_in_this_game(ClientId client_id)
     {
         if (properties.is_self_hosted && properties.owner == client_id)
@@ -212,14 +218,14 @@ struct GameState
         return which_team_is_this_player_in(client_id) >= 0;
     }
 
-    void add_player(ClientId client_id)
+    void add_player(ClientId client_id, AllocatedString<64> name)
     {
         if (is_player_in_this_game(client_id))
         {
             // TODO maybe return error
             return;
         }
-        if (num_players() > MAX_PLAYERS_PER_GAME)
+        if (num_players() >= MAX_PLAYERS_PER_GAME)
         {
             // TODO return error GAME_FULL
             return;
@@ -230,14 +236,14 @@ struct GameState
         {
             next_family = 1;
         }
-        players.append({client_id, next_family});
+        players.append({client_id, name, next_family});
     }
 
     void remove_player(ClientId client_id)
     {
         for (int i = 0; i < players.len; i++)
         {
-            if (players[i].first == client_id)
+            if (players[i].id == client_id)
             {
                 players.shift_delete(i);
             }
@@ -248,11 +254,8 @@ struct GameState
             end_game();
             // MAYBETODO we can switch the owner instead, as long as the game isn't self hosted
         }
+
         if (stage != GameStage::NOT_STARTED && (num_players(0) == 0 || num_players(1) == 0))
-        {
-            end_game();
-        }
-        if (num_players() == 0)
         {
             end_game();
         }

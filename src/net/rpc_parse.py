@@ -11,6 +11,7 @@ objects = in_file.read().split('\n\n')
 
 
 builtins = {'int': 'int32_t', 'uint': 'uint32_t', 'string': "AllocatedString<64>", 'list': "std::vector"}
+defaults = {'int': '0', 'uint': '0', 'bool': 'false', 'string': '{}', 'list': '{}'}
 messages = {}
 rpcs = {}
 
@@ -19,6 +20,11 @@ def to_type(ts):
     if ts[0] == "list":
         return f"{builtins[ts[0]]}<{to_type(ts[1:])}>"
     return builtins[ts[0]] if ts[0] in builtins else ts[0]
+
+def get_default(type):
+    if type in defaults:
+        return defaults[type]
+    return '{}'
 
 
 def parse_message(str):
@@ -40,7 +46,6 @@ def parse_rpc(str):
 
     rpcs[name] = (req, resp)
 
-
 for obj in objects:
     if obj.startswith('message'):
         parse_message(obj)
@@ -55,7 +60,7 @@ messages_text += header + '\n'
 for name in messages:
     struct_def = f"struct {name} {{\n"
     for var in messages[name]:
-        struct_def += f"\t{var[1]} {var[0]}; \n"
+        struct_def += f"\t{var[1]} {var[0]} = {get_default(var[1])}; \n"
     struct_def += f"}};\n"
 
     append_func = f"void append(MessageBuilder *msg, {name} &in) {{\n"
