@@ -57,6 +57,34 @@ GameId add_game(ServerData *server_data, GameProperties properties)
     return next_game_id;
 }
 
+template <size_t N>
+AllocatedString<N> sanitize_name(AllocatedString<N> name)
+{
+    AllocatedString<N> ret;
+    bool last_char_was_whitespace = true;
+    for (int i = 0; i < name.len; i++)
+    {
+        if (!isspace(name.data[i]))
+        {
+            last_char_was_whitespace = false;
+            ret.append(name.data[i]);
+        }
+        else if (name.data[i] == ' ' && !last_char_was_whitespace)
+        {
+            last_char_was_whitespace = true;
+            ret.append(name.data[i]);
+        }
+    }
+
+    // remove trailing space
+    if (ret.len > 0 && ret.data[ret.len - 1] == ' ')
+    {
+        ret.len -= 1;
+    }
+
+    return ret;
+}
+
 void RpcServer::ListGames(ClientId client_id, ListGamesRequest *req, ListGamesResponse *resp)
 {
     uint16_t count = 0;
@@ -109,11 +137,13 @@ void RpcServer::CreateGame(ClientId client_id, CreateGameRequest *req, CreateGam
     }
 
     // TODO more validation on the names
-    if (req->name.len == 0)
+    auto game_name = sanitize_name(req->name);
+    auto owner_name = sanitize_name(req->owner_name);
+    if (game_name.len == 0)
     {
         return; // TODO invalid name
     }
-    if (req->owner_name.len == 0)
+    if (owner_name.len == 0)
     {
         return; // TODO invalid name
     }
@@ -124,9 +154,9 @@ void RpcServer::CreateGame(ClientId client_id, CreateGameRequest *req, CreateGam
 
     GameProperties game_properties;
     game_properties.owner = client->client_id;
-    game_properties.name = req->name;
+    game_properties.name = game_name;
     game_properties.is_self_hosted = req->is_self_hosted;
-    game_properties.owner_name = req->owner_name;
+    game_properties.owner_name = owner_name;
 
     GameId game_id = add_game(server_data, game_properties);
     if (!game_id)
@@ -154,13 +184,14 @@ void RpcServer::JoinGame(ClientId client_id, JoinGameRequest *req, JoinGameRespo
     }
 
     // TODO more validation on the name
-    if (req->player_name.len == 0)
+    auto player_name = sanitize_name(req->player_name);
+    if (player_name.len == 0)
     {
         return; // TODO invalid name
     }
 
     GameState *game = &server_data->games[req->game_id];
-    game->add_player(client_id, req->player_name);
+    game->add_player(client_id, player_name);
     client->game_id = req->game_id;
 }
 
