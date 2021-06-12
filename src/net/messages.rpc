@@ -70,3 +70,12 @@ message LeaveGameResponse
 rpc LeaveGame
 LeaveGameRequest
 LeaveGameResponse
+
+message StartGameRequest
+game_id uint
+
+message StartGameResponse
+
+rpc StartGame
+StartGameRequest
+StartGameResponse

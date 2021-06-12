@@ -248,3 +248,25 @@ void RpcServer::LeaveGame(ClientId client_id, LeaveGameRequest *req, LeaveGameRe
     game->remove_player(client->client_id);
     client->game_id = 0;
 }
+
+void RpcServer::StartGame(ClientId client_id, StartGameRequest *req, StartGameResponse *resp)
+{
+    Client *client = &server_data->clients[client_id];
+    if (!client->game_id)
+    {
+        return; // client is not in a game
+    }
+    if (server_data->games.count(client->game_id) == 0)
+    {
+        // TODO send error INTERNAL_ERROR
+        return;
+    }
+
+    GameState *game = &server_data->games[req->game_id];
+    if (game->properties.owner != client_id)
+    {
+        return; // TODO client doesn't own this game
+    }
+
+    // TODO check that game is ready to start
+}

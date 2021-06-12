@@ -1,12 +1,9 @@
 #pragma once
+#include "base_rpc.hpp"
 #include "generated_messages.hpp"
 
-struct RpcClient {
-	Peer peer;
-	RpcClient(const char *address, uint16_t port) {
-		peer.open(address, port, true);
-	}
-
+struct RpcClient : public BaseRpcClient {
+	using BaseRpcClient::BaseRpcClient;
 	void ListGames(ListGamesRequest &, ListGamesResponse*);
 	ListGamesResponse ListGames(ListGamesRequest);
 
@@ -24,6 +21,9 @@ struct RpcClient {
 
 	void LeaveGame(LeaveGameRequest &, LeaveGameResponse*);
 	LeaveGameResponse LeaveGame(LeaveGameRequest);
+
+	void StartGame(StartGameRequest &, StartGameResponse*);
+	StartGameResponse StartGame(StartGameRequest);
 
 };
 
@@ -96,6 +96,18 @@ void RpcClient::LeaveGame(LeaveGameRequest &req, LeaveGameResponse *resp) {
 LeaveGameResponse RpcClient::LeaveGame(LeaveGameRequest req) {
 	LeaveGameResponse resp;
 	LeaveGame(req, &resp);
+	return resp;
+}
+
+void RpcClient::StartGame(StartGameRequest &req, StartGameResponse *resp) {
+	MessageBuilder out; append(&out, (char) Rpc::StartGame); append(&out, req); out.send(&peer);
+
+	int msg_len; char msg[MAX_MSG_SIZE];while ((msg_len = peer.recieve_msg(msg)) < 0){}
+	MessageReader in(msg, msg_len); read(&in, resp);
+}
+StartGameResponse RpcClient::StartGame(StartGameRequest req) {
+	StartGameResponse resp;
+	StartGame(req, &resp);
 	return resp;
 }
 

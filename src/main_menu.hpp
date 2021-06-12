@@ -501,7 +501,7 @@ struct LobbyPage : MenuPage
             {25.f, 25.f});
         back_button.text = String::from("Back");
         start_game_button.rect = translate(back_button.rect, {0, -(back_button.rect.height + 25.f)});
-        start_game_button.text = String::from("Create");
+        start_game_button.text = String::from("Start");
 
         swap_button.rect = anchor_top_right(
             {0.2f * 1920, 0.2f * 1920 * 9.f / 16.f / 2.f},
@@ -561,11 +561,17 @@ struct LobbyPage : MenuPage
         family_1_list.update_and_draw(target, input, &font);
         family_2_list.update_and_draw(target, input, &font);
 
-        if (player_selection_group.selected && game_owner_id > 0)
+        if (game_owner_id > 0)
         {
-            if (swap_button.update_and_draw(target, input, &font))
+            if (player_selection_group.selected)
             {
-                rpc_client->SwapTeam({game_id, ((List *)player_selection_group.selected)->get_selected_id()});
+                if (swap_button.update_and_draw(target, input, &font))
+                {
+                    rpc_client->SwapTeam({game_id, ((List *)player_selection_group.selected)->get_selected_id()});
+                }
+            }
+            if (start_game_button.update_and_draw(target, input, &font))
+            {
             }
         }
     }

@@ -1,5 +1,53 @@
 import os
 import sys
+from string import Template
+
+message_file_template = Template("""
+#include "net_windows.hpp"
+#include <vector>
+
+$messages
+
+enum struct Rpc : char
+{
+$rpc_enum_values
+};
+""")
+
+message_template = Template("""
+struct $name 
+{
+$members
+};
+void append(MessageBuilder *msg, $name &in)
+{
+$appends
+}
+uint32_t read(MessageReader *msg, $name *out)
+{
+    uint32_t len = 0;
+$reads
+    return len;
+}
+void append(MessageBuilder *msg, std::vector<$name> &in) {
+	append(msg, (uint16_t)in.size());
+	for (auto &it : in){append(msg, it);}
+};
+uint32_t read(MessageReader *msg, std::vector<$name> *out) {
+	uint32_t len = 0;
+
+	uint16_t list_len;
+	len += read(msg, &list_len);
+	for (int i = 0; i < list_len; i++) {
+		$name elem; len += read(msg, &elem); out->push_back(elem);
+	}
+
+	return len;
+};
+""")
+member_template = Template("""  $type $member_name = $default;""")
+append_template = Template("""  append(msg, in.$member);""")
+read_template = Template("""    len += read(msg, &out->$member);""")
 
 if len(sys.argv) != 3:
     print('Wrong number of args')
@@ -10,16 +58,22 @@ in_file = open(sys.argv[1], 'r')
 objects = in_file.read().split('\n\n')
 
 
-builtins = {'int': 'int32_t', 'uint': 'uint32_t', 'string': "AllocatedString<64>", 'list': "std::vector"}
-defaults = {'int': '0', 'uint': '0', 'bool': 'false', 'string': '{}', 'list': '{}'}
+builtins = {'int': 'int32_t', 'uint': 'uint32_t',
+            'string': "AllocatedString<64>", 'list': "std::vector"}
+defaults = {'int': '0', 'uint': '0',
+            'bool': 'false', 'string': '{}', 'list': '{}'}
 messages = {}
 rpcs = {}
 
+class Message:
+    name = ""
+    members = []
 
 def to_type(ts):
     if ts[0] == "list":
         return f"{builtins[ts[0]]}<{to_type(ts[1:])}>"
     return builtins[ts[0]] if ts[0] in builtins else ts[0]
+
 
 def get_default(type):
     if type in defaults:
@@ -46,64 +100,32 @@ def parse_rpc(str):
 
     rpcs[name] = (req, resp)
 
+
 for obj in objects:
     if obj.startswith('message'):
         parse_message(obj)
     if obj.startswith('rpc'):
         parse_rpc(obj)
 
-messages_text = ""
-header = "#include \"net_windows.hpp\"\n"
-header += "#include <vector>\n"
-messages_text += header + '\n'
-
+enums = [rpc + " = 1" if i == 0 else rpc for i, rpc in enumerate(rpcs)]
+message_text = ""
 for name in messages:
-    struct_def = f"struct {name} {{\n"
-    for var in messages[name]:
-        struct_def += f"\t{var[1]} {var[0]} = {get_default(var[1])}; \n"
-    struct_def += f"}};\n"
+    members = [member_template.substitute(
+        {'type': var[1], 'member_name': var[0], 'default': get_default(var[1])}) for var in messages[name]]
+    appends = [append_template.substitute(
+        {'member': var[0]}) for var in messages[name]]
+    reads = [read_template.substitute({'member': var[0]})
+             for var in messages[name]]
 
-    append_func = f"void append(MessageBuilder *msg, {name} &in) {{\n"
-    for var in messages[name]:
-        append_func += f"\tappend(msg, in.{var[0]});\n"
-    append_func += f"}};\n"
+    message_text += message_template.substitute(
+        {'name': name, 'members': "\n".join(members), 'appends': "\n".join(appends), 'reads': "\n".join(reads)})
+messages_text = message_file_template.substitute(
+    {'messages': message_text, 'rpc_enum_values': ",\n".join(enums)})
 
-    read_func = f"uint32_t read(MessageReader *msg, {name} *out) {{\n"
-    read_func += f"\tuint32_t len = 0;\n\n"
-    for var in messages[name]:
-        read_func += f"\tlen += read(msg, &out->{var[0]});\n"
-    read_func += f"\n\treturn len;\n"
-    read_func += f"}};\n"
+server_text = "#pragma once\n#include \"base_rpc.hpp\"\n#include \"generated_messages.hpp\"\n\n"
 
-    list_append_func = f"void append(MessageBuilder *msg, std::vector<{name}> &in) {{\n"
-    list_append_func += "\tappend(msg, (uint16_t)in.size());\n"
-    list_append_func += f"\tfor (auto &it : in){{append(msg, it);}}\n"
-    list_append_func += "};\n"
-
-    list_read_func = f"uint32_t read(MessageReader *msg, std::vector<{name}> *out) {{\n"
-    list_read_func += "\tuint32_t len = 0;\n\n"
-    list_read_func += "\tuint16_t list_len;\n"
-    list_read_func += "\tlen += read(msg, &list_len);\n"
-    list_read_func += "\tfor (int i = 0; i < list_len; i++) {\n"
-    list_read_func += f"\t\t{name} elem; len += read(msg, &elem); out->push_back(elem);\n"
-    list_read_func += "\t}\n\n"
-    list_read_func += "\treturn len;\n"
-    list_read_func += "};\n"
-
-    messages_text += struct_def + append_func + read_func + list_append_func + list_read_func + '\n'
-
-enum_def = "enum struct Rpc : char {\n"
-for i, rpc in enumerate(rpcs):
-    rpc = rpc + " = 1" if i == 0 else rpc
-    enum_def += f"\t{rpc},\n"
-enum_def += "};\n"
-messages_text += enum_def + "\n"
-
-server_text = "#pragma once\n#include \"generated_messages.hpp\"\n\n"
-
-server_def = "struct ServerData;\n"
-server_def += "struct RpcServer {\n"
-server_def += "\tServerData *server_data;\n\n"
+server_def = "struct RpcServer : public BaseRpcServer {\n"
+server_def += "\tusing BaseRpcServer::BaseRpcServer;\n\n"
 server_def += "\tvoid handle_rpc(ClientId, Peer*, char*, int);\n"
 for rpc in rpcs:
     server_def += f"\tvoid {rpc}(ClientId client_id, {rpcs[rpc][0]}*, {rpcs[rpc][1]}*);\n"
@@ -129,13 +151,10 @@ handle_rpc_fun += "\t}\n"
 handle_rpc_fun += "}\n"
 server_text += handle_rpc_fun + "\n"
 
-client_text = "#pragma once\n#include \"generated_messages.hpp\"\n\n"
+client_text = "#pragma once\n#include \"base_rpc.hpp\"\n#include \"generated_messages.hpp\"\n\n"
 
-client_def = "struct RpcClient {\n"
-client_def += "\tPeer peer;\n"
-client_def += "\tRpcClient(const char *address, uint16_t port) {\n"
-client_def += "\t\tpeer.open(address, port, true);\n"
-client_def += "\t}\n\n"
+client_def = "struct RpcClient : public BaseRpcClient {\n"
+client_def += "\tusing BaseRpcClient::BaseRpcClient;\n"
 for rpc in rpcs:
     client_def += f"\tvoid {rpc}({rpcs[rpc][0]} &, {rpcs[rpc][1]}*);\n"
     client_def += f"\t{rpcs[rpc][1]} {rpc}({rpcs[rpc][0]});\n\n"
