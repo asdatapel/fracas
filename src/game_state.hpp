@@ -15,10 +15,10 @@ struct GameProperties
     AllocatedString<64> owner_name;
 };
 
-enum struct GameStage
+enum struct LobbyStage
 {
     NOT_STARTED,
-    MAIN_GAME,
+    IN_GAME,
     ENDED,
     DEAD,
 };
@@ -45,18 +45,12 @@ struct AnswerState
 };
 struct GameState
 {
-    GameProperties properties;
+    AllocatedString<128> question;
+    Array<AnswerState, 8> answers;
 
-    Array<AllocatedString<32>, 2> family_names = {{}, {}};
-    Array<PlayerData, MAX_PLAYERS_PER_GAME> players = {};
-
-    GameStage stage = GameStage::NOT_STARTED;
     bool waiting_on_ready = false;
     int num_ready = 0;
     void (*next_stage)(GameState &) = nullptr;
-
-    AllocatedString<128> question;
-    Array<AnswerState, 8> answers;
 
     int round = -1;
     RoundStage round_stage = RoundStage::START;
@@ -72,9 +66,25 @@ struct GameState
     Array<int, 2> scores;
 
     AllocatedString<128> last_answer;
+};
+struct Lobby
+{
+    GameProperties properties;
+    LobbyStage stage = LobbyStage::NOT_STARTED;
+    GameState game = {};
+
+    Array<AllocatedString<32>, 2> family_names = {{}, {}};
+    Array<PlayerData, MAX_PLAYERS_PER_GAME> players = {};
 
     uint64_t preempt_timer = 0;
     uint64_t answer_timer = 0;
+
+    Lobby() {}
+
+    Lobby(GameProperties properties)
+    {
+        this->properties = properties;
+    }
 
     int num_players()
     {
@@ -113,33 +123,33 @@ struct GameState
 
     std::pair<ClientId, ClientId> faceoff_players()
     {
-        int family1Index = round % num_players(0);
-        int family2Index = round % num_players(1);
+        int family1Index = game.round % num_players(0);
+        int family2Index = game.round % num_players(1);
         return {get_indexed_player(0, family1Index), get_indexed_player(1, family2Index)};
     }
 
     ClientId who_buzzed()
     {
         auto faceoffers = faceoff_players();
-        return buzzing_family == 0 ? faceoffers.first : faceoffers.second;
+        return game.buzzing_family == 0 ? faceoffers.first : faceoffers.second;
     }
 
     ClientId who_didnt_buzz()
     {
         auto faceoffers = faceoff_players();
-        return buzzing_family == 1 ? faceoffers.first : faceoffers.second;
+        return game.buzzing_family == 1 ? faceoffers.first : faceoffers.second;
     }
 
     ClientId who_won_faceoff()
     {
         auto faceoffers = faceoff_players();
-        return faceoff_winning_family == 0 ? faceoffers.first : faceoffers.second;
+        return game.faceoff_winning_family == 0 ? faceoffers.first : faceoffers.second;
     }
 
     ClientId whose_turn()
     {
-        int index = current_players[playing_family] % num_players(playing_family);
-        return get_indexed_player(playing_family, index);
+        int index = game.current_players[game.playing_family] % num_players(game.playing_family);
+        return get_indexed_player(game.playing_family, index);
     }
 
     int which_team_is_this_player_in(ClientId client_id)
@@ -156,11 +166,11 @@ struct GameState
 
     ClientId who_can_answer()
     {
-        if (round_stage == RoundStage::FACEOFF)
+        if (game.round_stage == RoundStage::FACEOFF)
         {
-            if (buzzing_family == -1) // no one has buzzed
+            if (game.buzzing_family == -1) // no one has buzzed
                 return -1;
-            else if (this_round_points == 0 && incorrects == 0) // no one has answered yet
+            else if (game.this_round_points == 0 && game.incorrects == 0) // no one has answered yet
             {
                 // only the buzzer can answer
                 return who_buzzed();
@@ -171,12 +181,12 @@ struct GameState
                 return who_didnt_buzz();
             }
         }
-        else if (round_stage == RoundStage::STEAL)
+        else if (game.round_stage == RoundStage::STEAL)
         {
-            int stealing_family = 1 - playing_family;
+            int stealing_family = 1 - game.playing_family;
             return get_indexed_player(stealing_family, 0); // when stealing, only the head of the family can answer
         }
-        else if (round_stage == RoundStage::PLAY)
+        else if (game.round_stage == RoundStage::PLAY)
         {
             return whose_turn();
         }
@@ -187,10 +197,10 @@ struct GameState
 
     int check_answer()
     {
-        for (int i = 0; i < answers.len; ++i)
+        for (int i = 0; i < game.answers.len; ++i)
         {
-            auto &a = answers[i];
-            if (strcmp(last_answer, answers[i].answer))
+            auto &a = game.answers[i];
+            if (strcmp(game.last_answer, game.answers[i].answer))
             {
                 return i;
             }
@@ -200,9 +210,9 @@ struct GameState
 
     bool are_all_answers_flipped()
     {
-        for (int i = 0; i < answers.len; i++)
+        for (int i = 0; i < game.answers.len; i++)
         {
-            AnswerState &a = answers[i];
+            AnswerState &a = game.answers[i];
             if (a.score != 0 && !a.revealed)
                 return false;
         }
@@ -255,7 +265,7 @@ struct GameState
             // MAYBETODO we can switch the owner instead, as long as the game isn't self hosted
         }
 
-        if (stage != GameStage::NOT_STARTED && (num_players(0) == 0 || num_players(1) == 0))
+        if (stage != LobbyStage::NOT_STARTED && (num_players(0) == 0 || num_players(1) == 0))
         {
             end_game();
         }
@@ -263,15 +273,32 @@ struct GameState
         // TODO broadcast PLAYER_LEFT
     }
 
+    bool ready_to_start()
+    {
+        if (stage != LobbyStage::NOT_STARTED)
+            return false;
+
+        int fam_0_count = num_players(0);
+        int fam_1_count = num_players(1);
+        return fam_0_count > 0 && fam_0_count < MAX_PLAYERS_PER_GAME / 2 &&
+               fam_1_count > 0 && fam_1_count < MAX_PLAYERS_PER_GAME / 2;
+    }
+
+    void start_game()
+    {
+        game = GameState();
+        stage = LobbyStage::IN_GAME;
+    }
+
     bool has_started()
     {
-        return round >= 0;
+        return game.round >= 0;
     }
 
     void end_game()
     {
         // TODO broadcast GAME_ENDED
-        stage = GameStage::ENDED;
+        stage = LobbyStage::ENDED;
     }
 
     // void broadcast(char *msg, int len)

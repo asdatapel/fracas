@@ -63,17 +63,30 @@ struct Peer
         return s != 0;
     }
 
-    void pop_message(uint16_t len)
+    void pop_message()
     {
+        uint16_t len;
+        char *data = read_short(msg_buf, &len);
         received_so_far -= len;
         memcpy(msg_buf, &msg_buf[len], received_so_far);
     }
 
     int recieve_msg(char *dst)
     {
+        if (received_so_far >= 2)
+        {
+            uint16_t expected_len;
+            char *data = read_short(msg_buf, &expected_len);
+
+            if (received_so_far >= expected_len)
+            {
+                memcpy(dst, data, expected_len - 2);
+                return expected_len - 2;
+            }
+        }
+
         int received_this_time = recv(s, msg_buf + received_so_far,
                                       (MAX_MSG_SIZE * 2) - received_so_far, 0);
-
         if (received_this_time == 0)
         {
             s = 0;
@@ -97,20 +110,7 @@ struct Peer
 
         received_so_far += received_this_time;
 
-        if (received_so_far >= 2)
-        {
-            uint16_t expected_len;
-            char *data = read_short(msg_buf, &expected_len);
-
-            if (received_so_far >= expected_len)
-            {
-                memcpy(dst, data, expected_len - 2);
-                pop_message(expected_len);
-                return expected_len - 2;
-            }
-        }
-
-        return 0;
+        return -1;
     }
 
     void send_all(char *msg, uint16_t len)

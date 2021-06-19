@@ -79,3 +79,6 @@ message StartGameResponse
 rpc StartGame
 StartGameRequest
 StartGameResponse
+
+oneway StartGame
+StartGameRequest

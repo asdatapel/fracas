@@ -72,30 +72,29 @@ int main(int argc, char *argv[])
         auto elapsed = now - loop_start_time;
         loop_start_time = now;
 
-        // {
-        //     SOCKET new_socket;
-        //     sockaddr_in client;
-        //     int c = sizeof(sockaddr_in);
-        //     new_socket = accept(s, (sockaddr *)&client, &c);
-        //     if (new_socket == INVALID_SOCKET)
-        //     {
-        //         int err;
-        //         if ((err = WSAGetLastError()) != WSAEWOULDBLOCK)
-        //         {
-        //             printf("accept failed with error code : %d\n", err);
-        //         }
-        //     }
-        //     else
-        //     {
-        //         add_client(new_socket);
-        //     }
-        // }
-
         {
             SOCKET new_socket;
             sockaddr_in client;
             int c = sizeof(sockaddr_in);
-            new_socket = accept(rpc_socket, (sockaddr *)&client, &c);
+            new_socket = accept(s, (sockaddr *)&client, &c);
+            if (new_socket == INVALID_SOCKET)
+            {
+                int err;
+                if ((err = WSAGetLastError()) != WSAEWOULDBLOCK)
+                {
+                    printf("accept failed with error code : %d\n", err);
+                }
+            }
+            else
+            {
+                closesocket(new_socket);
+            }
+        }
+
+        {
+            sockaddr_in client = {};
+            int c = sizeof(sockaddr_in);
+            SOCKET new_socket = accept(rpc_socket, (sockaddr *)&client, &c);
             if (new_socket == INVALID_SOCKET)
             {
                 int err;
@@ -127,16 +126,8 @@ int main(int argc, char *argv[])
             char msg[MAX_MSG_SIZE];
             while ((msg_len = client->peer.recieve_msg(msg)) > 0)
             {
+                client->peer.pop_message();
                 rpc_server.handle_rpc(client->client_id, &client->peer, msg, msg_len);
-                // ClientMessageType msg_type;
-                // char *data = read_byte(msg, (char *)&msg_type);
-                // MessageReader msg(data, msg_len - 1);
-
-                // if (msg_type >= ClientMessageType::INVALID)
-                //     DEBUG_PRINT("There has been an error\n");
-
-                // HandleFunc handle_func = handle_funcs[(uint8_t)msg_type];
-                // handle_func(&msg, client);
             }
         }
         if(client_to_delete)
@@ -144,13 +135,13 @@ int main(int argc, char *argv[])
             server_data.clients.erase(client_to_delete);
         }
         
-        for (auto it : server_data.games)
+        for (auto it : server_data.lobbies)
         {
-            GameState *game = &it.second;
+            Lobby *lobby = &it.second;
             //server_tick(game, elapsed.count());
-            if (game->stage == GameStage::DEAD)
+            if (lobby->stage == LobbyStage::DEAD)
             {
-                server_data.games.erase(it.first);
+                server_data.lobbies.erase(it.first);
             }
         }
 

@@ -250,7 +250,7 @@ struct List : SelectionGroup
     struct Item
     {
         uint32_t id;
-        String name;
+        AllocatedString<32> name;
     };
 
     std::vector<Item> items;
@@ -551,9 +551,9 @@ struct LobbyPage : MenuPage
         for (auto p : get_game_resp.players)
         {
             if (!p.team)
-                family_1_list_items.push_back({p.user_id, p.name.len > 0 ? p.name : String::from("Joining...")});
+                family_1_list_items.push_back({p.user_id, p.name});
             else
-                family_2_list_items.push_back({p.user_id, p.name.len > 0 ? p.name : String::from("Joining...")});
+                family_2_list_items.push_back({p.user_id, p.name});
         }
         family_1_list.refresh(family_1_list_items);
         family_2_list.refresh(family_2_list_items);
@@ -572,6 +572,7 @@ struct LobbyPage : MenuPage
             }
             if (start_game_button.update_and_draw(target, input, &font))
             {
+                rpc_client->StartGame({game_id});
             }
         }
     }

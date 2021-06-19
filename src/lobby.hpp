@@ -9,7 +9,7 @@
 
 struct ServerData
 {
-    std::unordered_map<GameId, GameState> games;
+    std::unordered_map<GameId, Lobby> lobbies;
     std::unordered_map<ClientId, Client> clients;
 };
 
@@ -35,10 +35,10 @@ ClientId add_client(ServerData *server_data, SOCKET s)
 void remove_client(ServerData *server_data, ClientId client_id)
 {
     Client *client = &server_data->clients[client_id];
-    if (client->game_id && server_data->games.count(client->game_id))
+    if (client->game_id && server_data->lobbies.count(client->game_id))
     {
-        GameState &game = server_data->games[client->game_id];
-        game.remove_player(client_id);
+        Lobby &lobby = server_data->lobbies[client->game_id];
+        lobby.remove_player(client_id);
     }
 }
 
@@ -47,13 +47,13 @@ GameId add_game(ServerData *server_data, GameProperties properties)
     static GameId next_game_id = 1;
     next_game_id++;
 
-    if (server_data->games.size() > MAX_GAMES)
+    if (server_data->lobbies.size() > MAX_GAMES)
     {
         return 0;
     }
 
-    server_data->games[next_game_id] = GameState{properties};
-    server_data->games[next_game_id].add_player(properties.owner, properties.owner_name);
+    server_data->lobbies[next_game_id] = Lobby(properties);
+    server_data->lobbies[next_game_id].add_player(properties.owner, properties.owner_name);
     return next_game_id;
 }
 
@@ -85,50 +85,50 @@ AllocatedString<N> sanitize_name(AllocatedString<N> name)
     return ret;
 }
 
-void RpcServer::ListGames(ClientId client_id, ListGamesRequest *req, ListGamesResponse *resp)
+void RpcServer::HandleListGames(ClientId client_id, ListGamesRequest *req, ListGamesResponse *resp)
 {
     uint16_t count = 0;
-    for (auto it : server_data->games)
+    for (auto it : server_data->lobbies)
     {
         GameId game_id = it.first;
-        GameState *game = &it.second;
+        Lobby *lobby = &it.second;
 
-        if (game->stage == GameStage::NOT_STARTED)
+        if (lobby->stage == LobbyStage::NOT_STARTED)
         {
             GameMetadata game_msg;
             game_msg.id = game_id;
-            game_msg.name = game->properties.name;
-            game_msg.owner = server_data->clients[game->properties.owner].username;
-            game_msg.num_players = game->num_players();
-            game_msg.is_self_hosted = game->properties.is_self_hosted;
+            game_msg.name = lobby->properties.name;
+            game_msg.owner = server_data->clients[lobby->properties.owner].username;
+            game_msg.num_players = lobby->num_players();
+            game_msg.is_self_hosted = lobby->properties.is_self_hosted;
             resp->games.push_back(game_msg);
         }
     }
 }
 
-void RpcServer::GetGame(ClientId client_id, GetGameRequest *req, GetGameResponse *resp)
+void RpcServer::HandleGetGame(ClientId client_id, GetGameRequest *req, GetGameResponse *resp)
 {
-    if (server_data->games.count(req->game_id) == 0)
+    if (server_data->lobbies.count(req->game_id) == 0)
     {
         // TODO send NOT_FOUND
         return;
     }
     
-    GameState *game = &server_data->games[req->game_id];
+    Lobby *lobby = &server_data->lobbies[req->game_id];
     resp->game.id = req->game_id;
-    resp->game.name = game->properties.name;
-    resp->game.owner = server_data->clients[game->properties.owner].username;
-    resp->game.num_players = game->num_players();
-    resp->game.is_self_hosted = game->properties.is_self_hosted;
-    for (int i = 0; i < game->players.len; i++)
+    resp->game.name = lobby->properties.name;
+    resp->game.owner = server_data->clients[lobby->properties.owner].username;
+    resp->game.num_players = lobby->num_players();
+    resp->game.is_self_hosted = lobby->properties.is_self_hosted;
+    for (int i = 0; i < lobby->players.len; i++)
     {
-        resp->players.push_back({game->players[i].id,
-                                 game->players[i].name,
-                                 game->players[i].team == 1});
+        resp->players.push_back({lobby->players[i].id,
+                                 lobby->players[i].name,
+                                 lobby->players[i].team == 1});
     }
 }
 
-void RpcServer::CreateGame(ClientId client_id, CreateGameRequest *req, CreateGameResponse *resp)
+void RpcServer::HandleCreateGame(ClientId client_id, CreateGameRequest *req, CreateGameResponse *resp)
 {
     Client *client = &server_data->clients[client_id];
     if (client->game_id)
@@ -164,20 +164,20 @@ void RpcServer::CreateGame(ClientId client_id, CreateGameRequest *req, CreateGam
         // TODO send error message TOO_MANY_GAMES
     }
 
-    GameState *game = &server_data->games[game_id];
+    Lobby *lobby = &server_data->lobbies[game_id];
     resp->game_id = game_id;
     resp->owner_id = client->client_id;
     client->game_id = game_id;
 }
 
-void RpcServer::JoinGame(ClientId client_id, JoinGameRequest *req, JoinGameResponse *resp)
+void RpcServer::HandleJoinGame(ClientId client_id, JoinGameRequest *req, JoinGameResponse *resp)
 {
     Client *client = &server_data->clients[client_id];
     if (client->game_id)
     {
         return; // client is already in a game
     }
-    if (server_data->games.count(req->game_id) == 0)
+    if (server_data->lobbies.count(req->game_id) == 0)
     {
         // TODO send error, game NOT_FOUND
         return;
@@ -190,83 +190,90 @@ void RpcServer::JoinGame(ClientId client_id, JoinGameRequest *req, JoinGameRespo
         return; // TODO invalid name
     }
 
-    GameState *game = &server_data->games[req->game_id];
-    game->add_player(client_id, player_name);
+    Lobby *lobby = &server_data->lobbies[req->game_id];
+    lobby->add_player(client_id, player_name);
     client->game_id = req->game_id;
 }
 
-void RpcServer::SwapTeam(ClientId client_id, SwapTeamRequest *req, SwapTeamResponse *resp)
+void RpcServer::HandleSwapTeam(ClientId client_id, SwapTeamRequest *req, SwapTeamResponse *resp)
 {
     Client *client = &server_data->clients[client_id];
     if (client->game_id != req->game_id)
     {
         return; // client is not in the requested game
     }
-    if (server_data->games.count(req->game_id) == 0)
+    if (server_data->lobbies.count(req->game_id) == 0)
     {
         // TODO send error, game NOT_FOUND
         return;
     }
 
-    GameState *game = &server_data->games[req->game_id];
-    if (game->properties.owner != client_id)
+    Lobby *lobby = &server_data->lobbies[req->game_id];
+    if (lobby->properties.owner != client_id)
     {
         return; // TODO client doesn't own this game
     }
-    if (game->stage != GameStage::NOT_STARTED)
+    if (lobby->stage != LobbyStage::NOT_STARTED)
     {
         return; // TODO cannot swap after game has started
     }
-    if (!game->is_player_in_this_game(req->user_id))
+    if (!lobby->is_player_in_this_game(req->user_id))
     {
         return; // error requested user isn't in this game
     }
 
-    for (int i = 0; i < game->players.len; i++)
+    for (int i = 0; i < lobby->players.len; i++)
     {
-        if (game->players[i].id == req->user_id)
+        if (lobby->players[i].id == req->user_id)
         {
-            game->players[i].team = 1 - game->players[i].team;
+            lobby->players[i].team = 1 - lobby->players[i].team;
         }
     }
 }
 
-void RpcServer::LeaveGame(ClientId client_id, LeaveGameRequest *req, LeaveGameResponse *resp)
+void RpcServer::HandleLeaveGame(ClientId client_id, LeaveGameRequest *req, LeaveGameResponse *resp)
 {
     Client *client = &server_data->clients[client_id];
     if (!client->game_id)
     {
         return; // client is not in a game
     }
-    if (server_data->games.count(client->game_id) == 0)
+    if (server_data->lobbies.count(client->game_id) == 0)
     {
         // TODO send error INTERNAL_ERROR
         return;
     }
 
-    GameState *game = &server_data->games[client->game_id];
-    game->remove_player(client->client_id);
+    Lobby *lobby = &server_data->lobbies[client->game_id];
+    lobby->remove_player(client->client_id);
     client->game_id = 0;
 }
 
-void RpcServer::StartGame(ClientId client_id, StartGameRequest *req, StartGameResponse *resp)
+void RpcServer::HandleStartGame(ClientId client_id, StartGameRequest *req, StartGameResponse *resp)
 {
     Client *client = &server_data->clients[client_id];
-    if (!client->game_id)
-    {
-        return; // client is not in a game
-    }
-    if (server_data->games.count(client->game_id) == 0)
+    if (server_data->lobbies.count(client->game_id) == 0)
     {
         // TODO send error INTERNAL_ERROR
         return;
     }
-
-    GameState *game = &server_data->games[req->game_id];
-    if (game->properties.owner != client_id)
+    Lobby *lobby = &server_data->lobbies[req->game_id];
+    if (lobby->properties.owner != client_id)
     {
         return; // TODO client doesn't own this game
     }
 
     // TODO check that game is ready to start
+    if (!lobby->ready_to_start())
+    {
+        return; // TODO error
+    }
+
+    lobby->start_game();
+    for (int i = 0; i < lobby->players.len; i++)
+    {
+        Peer *peer = &server_data->clients[lobby->players[i].id].peer;
+        StartGame(peer, {req->game_id});
+    }
+
 }

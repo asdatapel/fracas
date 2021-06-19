@@ -12,11 +12,13 @@ struct BaseRpcServer
     }
 };
 
+struct ClientData;
 struct BaseRpcClient
 {
+    ClientData *client_data;
     Peer peer;
     BaseRpcClient(const char *address, uint16_t port)
     {
-        peer.open(address, port, true);
+        peer.open(address, port, false);
     }
 };

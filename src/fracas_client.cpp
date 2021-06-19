@@ -277,30 +277,18 @@ bool init_if_not()
     return true;
 }
 
-bool game_update(const float time_step, InputState *input_state, RenderTarget target)
+struct ClientData
 {
-    if (!init_if_not())
-        return false;
+    MainMenu main_menu;
+    MainPage main;
+    SettingsPage settings;
+    CreateGamePage create;
+    JoinGamePage join;
+    LobbyPage lobby;
 
-    bind(target);
-
-    // if (!MainMenu::update_and_draw(time_step, target, input_state))
-    // {
-    //     return false;
-    // }
-    
-    static RpcClient client("127.0.0.1", 6666);
-
-    static MainMenu main_menu;
-    static MainPage main(&assets);
-    static SettingsPage settings(&assets, &client);
-    static CreateGamePage create(&assets, &client);
-    static JoinGamePage join(&assets, &client);
-    static LobbyPage lobby(&assets, &client);
-    static bool inited = false;
-    if (!inited)
+    ClientData(Assets *assets, RpcClient *client)
+        : main(assets), settings(assets, client), create(assets, client), join(assets, client), lobby(assets, client)
     {
-        inited = true;
         main_menu.main = &main;
         main_menu.settings = &settings;
         main_menu.create = &create;
@@ -308,9 +296,63 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ta
         main_menu.lobby = &lobby;
         main_menu.current = main_menu.main;
     }
-    glDisable(GL_DEPTH_TEST);
-    main_menu.current->update_and_draw(target, input_state, &main_menu);
-    glEnable(GL_DEPTH_TEST);
+};
+
+void RpcClient::HandleStartGame(StartGameRequest *req)
+{
+    client_data->main_menu.current = nullptr;
+}
+
+bool game_update(const float time_step, InputState *input_state, RenderTarget target)
+{
+    if (!init_if_not())
+        return false;
+
+    static RpcClient client("127.0.0.1", 6666);
+    static ClientData client_data(&assets, &client);
+
+    static bool inited = false;
+    if (!inited)
+    {
+        inited = true;
+
+        client.client_data = &client_data;
+    }
+
+    int msg_len;
+    char msg[MAX_MSG_SIZE];
+    if ((msg_len = client.peer.recieve_msg(msg)) > 0)
+    {
+        if (client.handle_rpc(msg, msg_len))
+        {
+            client.peer.pop_message();
+        }
+    }
+
+    if (client_data.main_menu.current)
+    {
+        bind(target);
+
+        { // background
+            static float t = 0;
+            t += time_step;
+            bind_shader(blurred_colors_shader);
+            bind_1f(blurred_colors_shader, UniformId::T, t);
+            bind_2i(blurred_colors_shader, UniformId::RESOLUTION, target.width, target.height);
+            bind_2f(blurred_colors_shader, UniformId::POS, 0, 0);
+            bind_2f(blurred_colors_shader, UniformId::SCALE, target.width, target.height);
+            draw_rect();
+        }
+
+        glDisable(GL_DEPTH_TEST);
+        client_data.main_menu.current->update_and_draw(target, input_state, &client_data.main_menu);
+        glEnable(GL_DEPTH_TEST);
+    }
+    else
+    {
+        clear_bars(target, &scene);
+        draw_scene(&scene, target, input_state);
+    }
 
     // if (animation_wait)
     // {
@@ -328,7 +370,6 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ta
     //         printf("Sent READY\n");
     //     }
     // }
-    
 
     for (int i = 0; i < input_state->key_input.len; i++)
     {
@@ -358,8 +399,6 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ta
             break;
         }
     }
-
- 
 
     static UiContext ui_context;
 
