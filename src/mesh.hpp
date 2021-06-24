@@ -47,10 +47,8 @@ void skip_to_next_line(char **buf, char *end)
         (*buf)++;
 }
 
-Mesh load_obj(const char *filename)
+Mesh load_obj(FileData file, StackAllocator *allocator, StackAllocator *temp_allocator)
 {
-    FileData file = read_entire_file(filename);
-
     int v_count = 0;
     int vt_count = 0;
     int vn_count = 0;
@@ -90,12 +88,13 @@ Mesh load_obj(const char *filename)
         }
     }
 
-    float *v = (float *)malloc(sizeof(float) * 3 * v_count);
-    float *vt = (float *)malloc(sizeof(float) * 2 * vt_count);
-    float *vn = (float *)malloc(sizeof(float) * 3 * vn_count);
-    float *f = (float *)malloc(sizeof(float) * 8 * 3 * f_count);
-    int v_i = 0, vt_i = 0, vn_i = 0, f_i = 0;
+    float *v = (float *)temp_allocator->alloc(sizeof(float) * 3 * v_count);
+    float *vt = (float *)temp_allocator->alloc(sizeof(float) * 2 * vt_count);
+    float *vn = (float *)temp_allocator->alloc(sizeof(float) * 3 * vn_count);
+    int v_i = 0, vt_i = 0, vn_i = 0;
 
+    float *f = (float *)allocator->alloc(sizeof(float) * 8 * 3 * f_count);
+    int f_i = 0;
     buf = file.data;
     buf_end = file.data + file.length;
     while ((token = parse_token(&buf, buf_end)).len)
@@ -152,13 +151,13 @@ Mesh load_obj(const char *filename)
         }
     }
 
-    free(v);
-    free(vn);
-    free(vt);
+    temp_allocator->free(v);
+    temp_allocator->free(vn);
+    temp_allocator->free(vt);
 
     Mesh mesh = {f, 3 * f_count, sizeof(float) * 8 * 3 * f_count};
     mesh.components_count = 3;
-    mesh.components = (Component*)malloc(mesh.components_count * sizeof(Component));
+    mesh.components = (Component*)allocator->alloc(mesh.components_count * sizeof(Component));
     mesh.components[0] = {0, 3, 8};
     mesh.components[1] = {3, 2, 8};
     mesh.components[2] = {5, 3, 8};
@@ -172,12 +171,13 @@ void free_mesh(Mesh mesh)
     free(mesh.components);
 }
 
-Mesh load_obj_extra_uvs(const char *filename1, const char *filename2)
+//TODO modify this to take in two meshes and output new mesh
+Mesh load_obj_extra_uvs(FileData file1, FileData file2, StackAllocator *allocator, StackAllocator *temp_allocator)
 {
-    Mesh mesh1 = load_obj(filename1);
-    Mesh mesh2 = load_obj(filename2);
+    Mesh mesh1 = load_obj(file1, allocator, temp_allocator);
+    Mesh mesh2 = load_obj(file2, allocator, temp_allocator);
 
-    float *f = (float *)malloc(sizeof(float) * 10 * mesh1.verts);
+    float *f = (float *)allocator->alloc(sizeof(float) * 10 * mesh1.verts);
     int f_i = 0;
     for (int i = 0; i < mesh1.verts; i++)
     {
@@ -194,12 +194,12 @@ Mesh load_obj_extra_uvs(const char *filename1, const char *filename2)
         f[f_i++] = mesh2.data[v_i + 4];
     }
 
-    free_mesh(mesh1);
-    free_mesh(mesh2);
+    allocator->free(mesh1.data);
+    allocator->free(mesh2.data);
     
     Mesh mesh = {f, mesh1.verts, sizeof(float) * 10 * mesh1.verts};
     mesh.components_count = 4;
-    mesh.components = (Component*)malloc(mesh.components_count * sizeof(Component));
+    mesh.components = (Component*)allocator->alloc(mesh.components_count * sizeof(Component));
     mesh.components[0] = {0, 3, 10};
     mesh.components[1] = {3, 2, 10};
     mesh.components[2] = {5, 3, 10};

@@ -13,7 +13,7 @@
 #include "net/net.hpp"
 #include "net/generated_rpc_client.hpp"
 #include "platform.hpp"
-#include "scene.hpp"
+#include "scene/scene.hpp"
 #include "ui.hpp"
 
 #include "graphics_opengl.cpp"
@@ -267,9 +267,9 @@ bool init_if_not()
         server.open("127.0.0.1", 6519, false);
 
         assets = load_assets();
-        scene = init_scene(&assets);
+        scene.init(&assets);
         ui_state = ServerMessageType::INVALID;
-        ui_font = load_font(assets.font_files[(int)FontId::RESOURCES_FONTS_ANTON_REGULAR_TTF], 256);
+        ui_font = load_font(assets.font_files[(int)FontId::RESOURCES_FONTS_ANTON_REGULAR_TTF], 256, &assets.temp_allocator);
 
         // MainMenu::init(&assets);
     }
@@ -351,7 +351,7 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ta
     else
     {
         clear_bars(target, &scene);
-        draw_scene(&scene, target, input_state);
+        draw_scene(&scene, target, &assets, input_state);
     }
 
     // if (animation_wait)

@@ -162,3 +162,66 @@ bool strcmp(String str1, String str2)
 {
     return str1.len == str2.len && !strncmp(str1.data, str2.data, str1.len);
 }
+
+
+struct StackAllocator
+{
+    char *beg, *end, *next;
+
+    void init(uint32_t size)
+    {
+        beg = (char *)malloc(size);
+        next = beg;
+        end = beg + size;
+    }
+
+    void reset()
+    {
+        next = beg;
+    }
+
+    char *alloc(uint32_t size)
+    {
+        assert(next + size < end);
+
+        char *ret = next;
+        next += size;
+        return ret;
+    }
+
+    void free(void *loc)
+    {
+        assert(loc >= beg && loc < end);
+
+        if (loc < next)
+        {
+            next = (char*) loc;
+        }
+    }
+};
+
+struct TempAllocation
+{
+    StackAllocator *backing = nullptr;
+    char *data = nullptr;
+    TempAllocation(StackAllocator *backing)
+    {
+        this->backing = backing;
+    }
+    ~TempAllocation()
+    {
+        reset();
+    }
+
+    char *alloc(uint32_t size)
+    {
+        return backing->alloc(size);
+    }
+    void reset()
+    {
+        if (data)
+        {
+            backing->free(data);
+        }
+    }
+};

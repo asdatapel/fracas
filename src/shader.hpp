@@ -7,9 +7,9 @@
 
 struct Shader
 {
-    unsigned int shader_handle;
-    unsigned int uniform_handles[UNIFORM_COUNT];
-    unsigned int tex_units[UNIFORM_COUNT];
+    int shader_handle;
+    int uniform_handles[UNIFORM_COUNT];
+    int tex_units[UNIFORM_COUNT];
 };
 
 Shader load_shader(unsigned int handle)

@@ -229,8 +229,7 @@ int main()
     return 0;
 }
 
-FileData
-read_entire_file(const char *filename)
+FileData read_entire_file(const char *filename)
 {
     FileData res;
 
@@ -264,9 +263,46 @@ read_entire_file(const char *filename)
 
     return res;
 }
+
 void free_file(FileData file)
 {
     free(file.data);
+}
+
+
+FileData read_entire_file(const char *filename, StackAllocator *allocator)
+{
+    FileData res;
+
+    auto file_handle = CreateFileA(
+        filename,
+        GENERIC_READ,
+        FILE_SHARE_READ,
+        NULL,
+        OPEN_EXISTING,
+        NULL,
+        NULL);
+    if (file_handle == INVALID_HANDLE_VALUE)
+    {
+        return {nullptr, 0};
+    }
+
+    LARGE_INTEGER filesize;
+    GetFileSizeEx(file_handle, &filesize);
+
+    res.length = filesize.QuadPart;
+    res.data = allocator->alloc(res.length + 1);
+    res.data[res.length] = '\0';
+
+    DWORD read;
+    ReadFile(
+        file_handle,
+        res.data,
+        res.length,
+        &read,
+        NULL);
+
+    return res;
 }
 
 uint64_t debug_get_cycle_count()

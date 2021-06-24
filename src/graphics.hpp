@@ -92,7 +92,7 @@ void draw_cubemap();
 
 void clear_backbuffer();
 
-static Bitmap parse_bitmap(FileData file_data)
+static Bitmap parse_bitmap(FileData file_data, StackAllocator *allocator)
 {
     assert(file_data.length > 14 + 40); // Header + InfoHeader
     uint32_t pixels_offset = *(uint32_t *)(file_data.data + 10);
@@ -101,7 +101,7 @@ static Bitmap parse_bitmap(FileData file_data)
     bitmap.width = *(uint32_t *)(file_data.data + 18);
     bitmap.height = *(uint32_t *)(file_data.data + 22);
 
-    bitmap.data = (Vec4i *)malloc(sizeof(Vec4i) * bitmap.width * bitmap.height);
+    bitmap.data = (Vec4i *)allocator->alloc(sizeof(Vec4i) * bitmap.width * bitmap.height);
     for (int y = 0; y < bitmap.height; y++)
     {
         for (int x = 0; x < bitmap.width; x++)

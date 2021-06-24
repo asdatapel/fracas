@@ -418,8 +418,8 @@ struct MainPage : MenuPage
 
     MainPage(Assets *assets)
     {
-        title_font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ANTON_REGULAR_TTF], 256);
-        font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_REGULAR_TTF], 64);
+        title_font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ANTON_REGULAR_TTF], 256, &assets->temp_allocator);
+        font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_REGULAR_TTF], 64, &assets->temp_allocator);
 
         exit_button.rect = anchor_bottom_right(
             {0.2f * 1920, 0.2f * 1920 * 9.f / 16.f / 2.f},
@@ -452,7 +452,8 @@ struct MainPage : MenuPage
         if (exit_button.update_and_draw(target, input, &font))
         {
             // TODO need to exit in a cleaner way
-            exit(0);
+            // exit(0);
+            menu->current = nullptr;
         }
         if (settings_button.update_and_draw(target, input, &font))
         {
@@ -493,7 +494,7 @@ struct LobbyPage : MenuPage
 
     LobbyPage(Assets *assets, RpcClient *rpc_client)
     {
-        font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_REGULAR_TTF], 128);
+        font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_REGULAR_TTF], 128, &assets->temp_allocator);
         this->rpc_client = rpc_client;
 
         back_button.rect = anchor_bottom_right(
@@ -605,7 +606,7 @@ struct JoinGamePage : MenuPage
 
     JoinGamePage(Assets *assets, RpcClient *rpc_client)
     {
-        font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_REGULAR_TTF], 128);
+        font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_REGULAR_TTF], 128, &assets->temp_allocator);
         this->rpc_client = rpc_client;
 
         back_button.rect = anchor_bottom_right(
@@ -695,7 +696,7 @@ struct CreateGamePage : MenuPage
 
     CreateGamePage(Assets *assets, RpcClient *rpc_client)
     {
-        font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_REGULAR_TTF], 128);
+        font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_REGULAR_TTF], 128, &assets->temp_allocator);
         this->rpc_client = rpc_client;
 
         back_button.rect = anchor_bottom_right(
@@ -773,7 +774,7 @@ struct SettingsPage : MenuPage
 
     SettingsPage(Assets *assets, RpcClient *rpc_client)
     {
-        font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_REGULAR_TTF], 128);
+        font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_REGULAR_TTF], 128, &assets->temp_allocator);
         this->rpc_client = rpc_client;
 
         back_button.rect = anchor_bottom_right(

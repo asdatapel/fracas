@@ -1,0 +1,379 @@
+entities:
+- name: backboard
+  position:
+    x: 0.0
+    y: 4.6122260093688965
+    z: -5.1365065574646
+  ref: BACKBOARD
+  rotation:
+    x: 0.0
+    y: 0.0
+    z: -0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: bar_1
+  position:
+    x: -1.9561108350753784
+    y: 6.520179271697998
+    z: -4.771345138549805
+  ref: BAR
+  rotation:
+    x: 0.0
+    y: 0.0
+    z: -0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: bar_2
+  position:
+    x: 2.0486836433410645
+    y: 6.520179271697998
+    z: -4.771345138549805
+  ref: BAR
+  rotation:
+    x: 0.0
+    y: 0.0
+    z: -0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: bar_3
+  position:
+    x: -1.9561108350753784
+    y: 5.720179080963135
+    z: -4.771345138549805
+  ref: BAR
+  rotation:
+    x: 0.0
+    y: 0.0
+    z: -0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: bar_4
+  position:
+    x: 2.0486836433410645
+    y: 5.720179080963135
+    z: -4.771345138549805
+  ref: BAR
+  rotation:
+    x: 0.0
+    y: 0.0
+    z: -0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: bar_5
+  position:
+    x: -1.9561108350753784
+    y: 4.92017936706543
+    z: -4.771345138549805
+  ref: BAR
+  rotation:
+    x: 0.0
+    y: 0.0
+    z: -0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: bar_6
+  position:
+    x: 2.0486836433410645
+    y: 4.92017936706543
+    z: -4.771345138549805
+  ref: BAR
+  rotation:
+    x: 0.0
+    y: 0.0
+    z: -0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: bar_7
+  position:
+    x: -1.9561108350753784
+    y: 4.120179176330566
+    z: -4.771345138549805
+  ref: BAR
+  rotation:
+    x: 0.0
+    y: 0.0
+    z: -0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: bar_8
+  position:
+    x: 2.0486836433410645
+    y: 4.120179176330566
+    z: -4.771345138549805
+  ref: BAR
+  rotation:
+    x: 0.0
+    y: 0.0
+    z: -0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: big_screen
+  position:
+    x: 0.04873977601528168
+    y: 9.362839698791504
+    z: -4.462497711181641
+  ref: SCORE_SCREEN
+  rotation:
+    x: 0.0
+    y: 1.570796251296997
+    z: 0.0
+  scale:
+    x: 2.3891496658325195
+    y: 2.3891496658325195
+    z: 2.3891496658325195
+- name: faceoff_table
+  position:
+    x: 0.5358971953392029
+    y: 0.0
+    z: 0.9680118560791016
+  ref: FACEOFF_TABLE
+  rotation:
+    x: 0.0
+    y: -1.570796251296997
+    z: 0.0
+  scale:
+    x: 0.7800225019454956
+    y: 0.7800225019454956
+    z: 0.7800225019454956
+- name: family_1_1
+  position:
+    x: -6.733233451843262
+    y: 0.0
+    z: 10.58320426940918
+  ref: PERSON_PLACEHOLDER
+  rotation:
+    x: 0.0
+    y: -0.0967416912317276
+    z: 0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: family_1_1.001
+  position:
+    x: -6.632992744445801
+    y: 0.0
+    z: 9.55026626586914
+  ref: PERSON_PLACEHOLDER
+  rotation:
+    x: 0.0
+    y: -0.0967416912317276
+    z: 0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: family_1_1.002
+  position:
+    x: -6.544620513916016
+    y: 0.0
+    z: 8.639631271362305
+  ref: PERSON_PLACEHOLDER
+  rotation:
+    x: 0.0
+    y: -0.0967416912317276
+    z: 0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: family_1_1.003
+  position:
+    x: -6.427394866943359
+    y: 0.0
+    z: 7.4316792488098145
+  ref: PERSON_PLACEHOLDER
+  rotation:
+    x: 0.0
+    y: -0.0967416912317276
+    z: 0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: family_1_1.004
+  position:
+    x: -6.29443359375
+    y: 0.0
+    z: 6.061573505401611
+  ref: PERSON_PLACEHOLDER
+  rotation:
+    x: 0.0
+    y: -0.0967416912317276
+    z: 0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: family_1_1.005
+  position:
+    x: 6.092796802520752
+    y: 0.0
+    z: 6.021862030029297
+  ref: PERSON_PLACEHOLDER
+  rotation:
+    x: 0.0
+    y: 0.07521571964025497
+    z: 0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: family_1_1.006
+  position:
+    x: 6.195313930511475
+    y: 0.0
+    z: 7.382261276245117
+  ref: PERSON_PLACEHOLDER
+  rotation:
+    x: 0.0
+    y: 0.07521571964025497
+    z: 0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: family_1_1.007
+  position:
+    x: 6.270638942718506
+    y: 0.0
+    z: 8.381828308105469
+  ref: PERSON_PLACEHOLDER
+  rotation:
+    x: 0.0
+    y: 0.07521571964025497
+    z: 0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: family_1_1.008
+  position:
+    x: 6.361441135406494
+    y: 0.0
+    z: 9.586771965026855
+  ref: PERSON_PLACEHOLDER
+  rotation:
+    x: 0.0
+    y: 0.07521571964025497
+    z: 0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: family_1_1.009
+  position:
+    x: 6.475975513458252
+    y: 0.0
+    z: 11.106648445129395
+  ref: PERSON_PLACEHOLDER
+  rotation:
+    x: 0.0
+    y: 0.07521571964025497
+    z: 0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: family_1_table
+  position:
+    x: -4.003035068511963
+    y: 0.0
+    z: 10.509258270263672
+  ref: LONG_TABLE
+  rotation:
+    x: 0.0
+    y: -1.6675379276275635
+    z: 0.0
+  scale:
+    x: 0.8935742378234863
+    y: 0.8935742378234863
+    z: 0.8935742378234863
+- name: family_2_table
+  position:
+    x: 3.652860403060913
+    y: 0.0
+    z: 6.072872161865234
+  ref: LONG_TABLE
+  rotation:
+    x: 0.0
+    y: -4.637173652648926
+    z: 0.0
+  scale:
+    x: 0.9266097545623779
+    y: 0.9266097545623779
+    z: 0.9266097545623779
+- name: host
+  position:
+    x: -0.049291133880615234
+    y: 0.0
+    z: -0.5399055480957031
+  ref: PERSON_PLACEHOLDER
+  rotation:
+    x: 0.0
+    y: 0.0
+    z: -0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: left_score_screen
+  position:
+    x: -5.361120700836182
+    y: 5.245311737060547
+    z: -4.43592643737793
+  ref: SCORE_SCREEN
+  rotation:
+    x: 0.0
+    y: 1.570796251296997
+    z: 0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: right_score_screen
+  position:
+    x: 5.472818851470947
+    y: 5.245311737060547
+    z: -4.435927867889404
+  ref: SCORE_SCREEN
+  rotation:
+    x: 0.0
+    y: 1.570796251296997
+    z: 0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+- name: room
+  position:
+    x: 0.0
+    y: 0.0
+    z: -0.0
+  ref: ROOM
+  rotation:
+    x: 0.0
+    y: 0.0
+    z: -0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0

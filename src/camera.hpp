@@ -52,31 +52,32 @@ struct Camera
         float dir_y = sin(glm::radians(y_rot));
         float dir_z = sin(glm::radians(x_rot)) * cos(glm::radians(y_rot));
 
+        float speed_f = 0.05f;
+
         if (input->keys[(int)Keys::W])
         {
-            pos_x += dir_x * 0.01f;
-            pos_y += dir_y * 0.01f;
-            pos_z += dir_z * 0.01f;
+            pos_x += dir_x * speed_f;
+            pos_y += dir_y * speed_f;
+            pos_z += dir_z * speed_f;
         }
         if (input->keys[(int)Keys::S])
         {
-            pos_x -= dir_x * 0.01f;
-            pos_y -= dir_y * 0.01f;
-            pos_z -= dir_z * 0.01f;
+            pos_x -= dir_x * speed_f;
+            pos_y -= dir_y * speed_f;
+            pos_z -= dir_z * speed_f;
         }
         if (input->keys[(int)Keys::A])
         {
-
-            pos_x -= (dir_y * 0 - dir_z * 1.f) * 0.01f;
-            pos_y -= (dir_z * 0 - dir_x * 0.f) * 0.01f;
-            pos_z -= (dir_x * 1.f - dir_y * 0.f) * 0.01f;
+            pos_x -= (dir_y * 0 - dir_z * 1.f) * speed_f;
+            pos_y -= (dir_z * 0 - dir_x * 0.f) * speed_f;
+            pos_z -= (dir_x * 1.f - dir_y * 0.f) * speed_f;
         }
         if (input->keys[(int)Keys::D])
         {
 
-            pos_x += (dir_y * 0 - dir_z * 1.f) * 0.01f;
-            pos_y += (dir_z * 0 - dir_x * 0.f) * 0.01f;
-            pos_z += (dir_x * 1.f - dir_y * 0.f) * 0.01f;
+            pos_x += (dir_y * 0 - dir_z * 1.f) * speed_f;
+            pos_y += (dir_z * 0 - dir_x * 0.f) * speed_f;
+            pos_z += (dir_x * 1.f - dir_y * 0.f) * speed_f;
         }
 
         view = glm::lookAt(glm::vec3{pos_x, pos_y, pos_z}, glm::vec3{pos_x, pos_y, pos_z} + glm::vec3{dir_x, dir_y, dir_z}, {0.f, 1.f, 0.f});

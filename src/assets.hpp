@@ -14,14 +14,22 @@ struct Assets
     VertexBuffer vertex_buffers[MESH_COUNT];
 
     FileData font_files[FONT_ASSET_COUNT];
+
+    StackAllocator allocator;
+    StackAllocator temp_allocator;
 };
 
 Assets load_assets()
 {
     Assets assets;
+    assets.allocator.init(1024 * 1024 * 1024);    // 1gb
+    assets.temp_allocator.init(1024 * 1024 * 50); // 50 mb
+
     for (int i = 0; i < TEXTURE_ASSET_COUNT; i++)
     {
-        assets.textures[i] = to_texture(parse_bitmap(read_entire_file(TEXTURE_FILES[i])), true);
+        FileData tex_file = read_entire_file(TEXTURE_FILES[i], &assets.temp_allocator);
+        assets.textures[i] = to_texture(parse_bitmap(tex_file, &assets.allocator), true);
+        assets.temp_allocator.free(tex_file.data);
     }
     for (int i = 0; i < MATERIAL_COUNT; i++)
     {
@@ -38,19 +46,23 @@ Assets load_assets()
         MeshDefinition def = MESH_DEFINITIONS[i];
         if (def.multiple_uvs)
         {
-            assets.meshes[i] = load_obj_extra_uvs(OBJ_FILES[(int)def.objs[0]], OBJ_FILES[(int)def.objs[1]]);
+            FileData mesh_file1 = read_entire_file(OBJ_FILES[(int)def.objs[0]], &assets.allocator);
+            FileData mesh_file2 = read_entire_file(OBJ_FILES[(int)def.objs[1]], &assets.allocator);
+            assets.meshes[i] = load_obj_extra_uvs(mesh_file1, mesh_file2, &assets.allocator, &assets.temp_allocator);
         }
         else
         {
-            assets.meshes[i] = load_obj(OBJ_FILES[(int)def.objs[0]]);
+            FileData mesh_file = read_entire_file(OBJ_FILES[(int)def.objs[0]], &assets.allocator);
+            assets.meshes[i] = load_obj(mesh_file, &assets.allocator, &assets.temp_allocator);
         }
         assets.vertex_buffers[i] = upload_vertex_buffer(assets.meshes[i]);
     }
 
     for (int i = 0; i < FONT_ASSET_COUNT; i++)
     {
-        assets.font_files[i] = read_entire_file(FONT_FILES[i]);
+        assets.font_files[i] = read_entire_file(FONT_FILES[i], &assets.allocator);
     }
 
+    assets.temp_allocator.reset();
     return assets;
 }

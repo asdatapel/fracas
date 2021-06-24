@@ -392,9 +392,12 @@ void bind_texture(Shader shader, UniformId uniform_id, Texture texture)
         gl_tex_type = GL_TEXTURE_CUBE_MAP;
         break;
     }
-    glUniform1i(shader.uniform_handles[(int)uniform_id], shader.tex_units[(int)uniform_id]);
-    glActiveTexture(GL_TEXTURE0 + shader.tex_units[(int)uniform_id]);
-    glBindTexture(gl_tex_type, texture.gl_reference);
+    if (shader.uniform_handles[(int)uniform_id] != -1)
+    {
+        glUniform1i(shader.uniform_handles[(int)uniform_id], shader.tex_units[(int)uniform_id]);
+        glActiveTexture(GL_TEXTURE0 + shader.tex_units[(int)uniform_id]);
+        glBindTexture(gl_tex_type, texture.gl_reference);
+    }
 }
 
 void draw(RenderTarget target, Shader shader, VertexBuffer buf)
@@ -554,7 +557,8 @@ Texture filter_env_map(Texture src, int size)
 
 Texture generate_brdf_lut(int size)
 {
-    auto new_float_tex = [](int width, int height, bool mipmaps = false) {
+    auto new_float_tex = [](int width, int height, bool mipmaps = false)
+    {
         Texture tex;
         tex.width = width;
         tex.height = height;

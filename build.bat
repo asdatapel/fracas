@@ -1,5 +1,7 @@
 @echo off
 
+python .\pipeline\assets.py
+python .\pipeline\scene.py
 python .\src\net\rpc_parse.py .\src\net\messages.rpc .\src\net
 if not exist build mkdir build
 pushd src

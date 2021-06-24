@@ -27,7 +27,7 @@ struct Font
   Character characters[NUM_CHARS_IN_FONT];
 };
 
-Font load_font(FileData file, float size)
+Font load_font(FileData file, float size, StackAllocator *tmp_allocator)
 {
   Font font;
   font.font_size_px = size;
@@ -45,12 +45,15 @@ Font load_font(FileData file, float size)
   stbtt_GetFontBoundingBox(&stb_font, &x0, &y0, &x1, &y1);
   font.baseline = size + (y0 * stb_scale);
 
-  unsigned char *bitmap = (unsigned char *)malloc(2048 * 2048);
   int bitmap_width = 2048, bitmap_height = 2048;
+  unsigned char *bitmap = (unsigned char *)tmp_allocator->alloc(bitmap_width * bitmap_height);
   stbtt_bakedchar cdata[96];
-  int success = stbtt_BakeFontBitmap((unsigned char *)file.data, 0, size, bitmap, bitmap_width, bitmap_height, 32, 96, cdata); // no guarantee this fits!
-  font.atlas = to_single_channel_texture(bitmap, bitmap_width, bitmap_height, true);
+  int success = stbtt_BakeFontBitmap((unsigned char *)file.data, 0, size,
+                                     bitmap, bitmap_width, bitmap_height,
+                                     32, 96, cdata); // no guarantee this fits!
+  assert(success);
 
+  font.atlas = to_single_channel_texture(bitmap, bitmap_width, bitmap_height, true);
   for (int i = 32; i < NUM_CHARS_IN_FONT; i++)
   {
     float x = 0;
@@ -62,8 +65,6 @@ Font load_font(FileData file, float size)
     font.characters[i].uv = {q.s0, q.t1, q.s1 - q.s0, q.t0 - q.t1};
     font.characters[i].advance = x;
   }
-
-  free(bitmap);
 
   return font;
 }
@@ -135,8 +136,8 @@ void draw_centered_text(const Font &font, RenderTarget target, String text, Rect
   float border_x = border * sub_target.width;
   float border_y = border * sub_target.height;
 
-  float width = sub_target.width  - (border_x * 2);
-  float height = sub_target.height  - (border_y * 2);
+  float width = sub_target.width - (border_x * 2);
+  float height = sub_target.height - (border_y * 2);
 
   float text_width = get_text_width(font, text, scale);
   float text_height = get_single_line_height(font, text, scale * aspect_ratio);
