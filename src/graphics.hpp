@@ -13,6 +13,7 @@
 #include "mesh.hpp"
 #include "platform.hpp"
 #include "shader.hpp"
+#include "graphics/framebuffer.hpp"
 
 // TODO move this to the asset loading system
 Shader basic_shader;
@@ -33,26 +34,6 @@ struct Bitmap
     Vec4i *data;
 };
 
-struct Texture
-{
-    enum struct Type
-    {
-        _2D,
-        CUBEMAP,
-    };
-    Type type;
-    unsigned int gl_reference;
-    int width, height;
-};
-
-struct RenderTarget
-{
-    uint32_t width, height;
-    unsigned int gl_fbo;
-    unsigned int gl_depth_buffer;
-    Texture color_tex;
-};
-
 struct VertexBuffer
 {
     unsigned int vao;
@@ -63,18 +44,12 @@ struct VertexBuffer
 
 RenderTarget init_graphics(RenderTarget target);
 
-Texture to_texture(Bitmap bitmap, bool mipmaps = true);
-Texture to_texture(float *data, int width, int height);
-void gen_mips(Texture tex);
-Texture to_single_channel_texture(uint8_t *data, int width, int height, bool mipmaps);
 Texture hdri_to_cubemap(Texture hdri, int size);
 Texture convolve_irradiance_map(Texture src, int size);
 Texture filter_env_map(Texture src, int size);
 Texture generate_brdf_lut(int size);
 VertexBuffer upload_vertex_buffer(Mesh mesh);
-RenderTarget new_render_target(uint32_t width, uint32_t height, bool depth = false);
 
-void bind(RenderTarget target);
 void bind_shader(Shader shader);
 void bind_1f(Shader shader, UniformId uniform_id, float val);
 void bind_2i(Shader shader, UniformId uniform_id, int i1, int i2);
@@ -89,8 +64,6 @@ void draw_rect(RenderTarget target, Rect rect, Color color);
 void draw_textured_rect(RenderTarget target, Rect rect, Color color, Texture tex);
 void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture tex);
 void draw_cubemap();
-
-void clear_backbuffer();
 
 const int MAX_LIGHTS = 10;
 struct PointLight

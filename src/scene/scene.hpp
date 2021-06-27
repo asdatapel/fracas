@@ -7,19 +7,66 @@
 #include "../assets.hpp"
 #include "../camera.hpp"
 #include "../graphics.hpp"
+#include "../graphics/framebuffer.hpp"
 #include "../material.hpp"
 #include <scene_def.hpp>
 
 const char *debug_hdr = "resources/hdri/Newport_Loft_Ref.hdr";
-Texture load_hdri(const char *file)
+Texture2D load_hdri(const char *file)
 {
     int width, height, components;
     stbi_set_flip_vertically_on_load(true);
     float *hdri = stbi_loadf(debug_hdr, &width, &height, &components, 0);
-    Texture tex = to_texture(hdri, width, height);
+
+    Texture2D tex(width, height, TextureFormat::RGB16F, true);
+    tex.upload(hdri, true);
+
     stbi_image_free(hdri);
 
     return tex;
+}
+
+StandardPbrEnvMaterial create_env_mat()
+{
+    RenderTarget temp_target(0, 0, TextureFormat::NONE, TextureFormat::NONE);
+
+    Texture hdri_tex = load_hdri(debug_hdr);
+    Texture unfiltered_cubemap = hdri_to_cubemap(hdri_tex, 1024);
+
+    // bind_shader(rect_to_cubemap_shader);
+    // bind_mat4(rect_to_cubemap_shader, UniformId::PROJECTION, captureProjection);
+    // bind_texture(rect_to_cubemap_shader, UniformId::EQUIRECTANGULAR_MAP, hdri);
+
+    // glViewport(0, 0, target.width, target.height);
+    // glBindFramebuffer(GL_FRAMEBUFFER, temp_fbo);
+    // for (unsigned int i = 0; i < 6; ++i)
+    // {
+    //     bind_mat4(rect_to_cubemap_shader, UniformId::VIEW, captureViews[i]);
+    //     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, target.gl_ref, 0);
+    //     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    //     glBindVertexArray(cube_vao);
+    //     glDrawArrays(GL_TRIANGLES, 0, 36);
+    // }
+
+    // target.gen_mipmaps();
+
+    Texture irradiance_map = convolve_irradiance_map(unfiltered_cubemap, 32);
+    Texture env_map = filter_env_map(unfiltered_cubemap, 512);
+
+    Texture2D brdf_lut = Texture2D(512, 512, TextureFormat::RGB16F, false);
+    temp_target.change_color_target(brdf_lut);
+    temp_target.clear();
+    temp_target.bind();
+    bind_shader(brdf_lut_shader);
+    draw_rect();
+
+    StandardPbrEnvMaterial env_mat;
+    env_mat.texture_array[0] = irradiance_map;
+    env_mat.texture_array[1] = env_map;
+    env_mat.texture_array[2] = brdf_lut;
+
+    return env_mat;
 }
 
 struct Bar
@@ -68,12 +115,7 @@ struct Scene
         {
             Texture hdri_tex = load_hdri(debug_hdr);
             unfiltered_cubemap = hdri_to_cubemap(hdri_tex, 1024);
-            Texture irradiance_map = convolve_irradiance_map(unfiltered_cubemap, 32);
-            Texture env_map = filter_env_map(unfiltered_cubemap, 512);
-            Texture brdf_lut = generate_brdf_lut(512);
-            env_mat.texture_array[0] = irradiance_map;
-            env_mat.texture_array[1] = env_map;
-            env_mat.texture_array[2] = brdf_lut;
+            env_mat = create_env_mat();
         }
 
         // setup bespoke materials for answer bars and score board
@@ -88,9 +130,10 @@ struct Scene
             bars[7].entity = &entities[(int)EntityDefId::BAR_8];
             for (int i = 0; i < 8; i++)
             {
-                bars[i].target = new_render_target(1024, 1024, false);
+                bars[i].target = RenderTarget(1024, 1024, TextureFormat::RGBA8, TextureFormat::NONE);
                 Material *base_material = bars[i].entity->material;
                 bars[i].material = AllocatedMaterial<StandardPbrMaterial::N + 1>::from(base_material);
+
                 bars[i].material.append(bars[i].target.color_tex, UniformId::OVERLAY_TEXTURE);
                 bars[i].entity->material = &bars[i].material;
             }
@@ -105,7 +148,7 @@ struct Scene
 
             for (int i = 0; i < 3; i++)
             {
-                score_targets[i] = new_render_target(1024, 1024, false);
+                score_targets[i] = RenderTarget(1024, 1024, TextureFormat::RGBA8, TextureFormat::NONE);
 
                 Material *base_material = entities[(int)EntityDefId::LEFT_SCORE_SCREEN].material;
                 score_materials[i] = AllocatedMaterial<StandardPbrMaterial::N + 1>::from(base_material);
@@ -149,7 +192,7 @@ struct Scene
 
         // static float t = 0.f;
         // t += 0.01f;
-        // entities[(int)EntityDefId::COLLECTION].position.y = 
+        // entities[(int)EntityDefId::COLLECTION].position.y =
         //     EntityDefs[(int)EntityDefId::COLLECTION].position.y + sinf(t);
         // entities[(int)EntityDefId::COLLECTION].rotation = {0, 0, 0};
 
@@ -158,8 +201,8 @@ struct Scene
         for (int i = 0; i < LIGHT_DEF_COUNT && i < 10; i++)
         {
             const LightDef *def = &LightDefs[i];
-            Vec3f parent_pos =  entities[(int)def->parent].position;
-            Vec3f parent_rot =  entities[(int)def->parent].rotation;
+            Vec3f parent_pos = entities[(int)def->parent].position;
+            Vec3f parent_rot = entities[(int)def->parent].rotation;
             SpotLight light;
             light.position = {parent_pos.x, parent_pos.y, parent_pos.z};
             light.direction = glm::quat({parent_rot.x, parent_rot.y, parent_rot.z}) * glm::vec3(0, -1, 0);
@@ -226,8 +269,8 @@ struct Scene
         }
 
         {
-            bind(score_targets[0]);
-            clear_backbuffer();
+            score_targets[0].bind();
+            score_targets[0].clear();
 
             String strs[5] = {
                 String::from("hellp"),
@@ -250,8 +293,8 @@ struct Scene
                 draw_centered_text(font, target, strs[t], sub_target, target_border, text_scale, aspect_ratio);
             }
 
-            gen_mips(score_targets[0].color_tex);
-            bind(target);
+            score_targets[0].color_tex.gen_mipmaps();
+            target.bind();
         }
 
         for (int i = 0; i < entities.size(); i++)
@@ -284,8 +327,8 @@ struct Scene
 void draw_bar_overlay(RenderTarget previous_target, Scene *scene, int index, String answer, int score)
 {
     RenderTarget target = scene->bars[index].target;
-    bind(target);
-    clear_backbuffer();
+    target.bind();
+    target.clear();
 
     float aspect_ratio = 2.f;
     float text_scale = 4.f;
@@ -330,8 +373,8 @@ void draw_bar_overlay(RenderTarget previous_target, Scene *scene, int index, Str
         draw_textured_rect(target, rect, {}, num_tex);
     }
 
-    gen_mips(target.color_tex);
-    bind(previous_target);
+    target.color_tex.gen_mipmaps();
+    previous_target.bind();
 }
 
 void clear_bars(RenderTarget previous_target, Scene *scene)

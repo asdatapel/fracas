@@ -10,9 +10,6 @@ const int LIGHTS_BUFFER_BINDING = 0;
 
 RenderTarget main_target;
 
-unsigned int temp_fbo;
-unsigned int temp_rbo;
-
 unsigned int screen_quad_vao;
 unsigned int screen_quad_vbo;
 float screen_quad_verts[] = {
@@ -136,11 +133,10 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
     glViewport(0, 0, width, height);
     glClearColor(powf(.392f, 2.2f), powf(.584f, 2.2f), powf(.929f, 2.2f), 0.0f);
 
-    main_target = {width, height};
-    main_target.gl_fbo = 0;
+    main_target = {width, height, 0};
 
-    glGenFramebuffers(1, &temp_fbo);
-    glGenRenderbuffers(1, &temp_rbo);
+    // glGenFramebuffers(1, &temp_fbo);
+    // glGenRenderbuffers(1, &temp_rbo);
 
     glEnable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
@@ -190,136 +186,6 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
     return main_target;
 }
 
-void clear_backbuffer()
-{
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-
-Texture to_texture(Bitmap bitmap, bool mipmaps)
-{
-    Texture tex;
-    tex.type = Texture::Type::_2D;
-    tex.width = bitmap.width;
-    tex.height = bitmap.height;
-
-    glGenTextures(1, &tex.gl_reference);
-    glBindTexture(GL_TEXTURE_2D, tex.gl_reference);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, bitmap.width, bitmap.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void *)bitmap.data);
-
-    if (mipmaps)
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-    return tex;
-}
-
-Texture to_single_channel_texture(uint8_t *data, int width, int height, bool mipmaps)
-{
-    Texture tex;
-    tex.type = Texture::Type::_2D;
-    tex.width = width;
-    tex.height = height;
-
-    glGenTextures(1, &tex.gl_reference);
-    glBindTexture(GL_TEXTURE_2D, tex.gl_reference);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex.width, tex.height, 0, GL_RED, GL_UNSIGNED_BYTE, data);
-
-    if (mipmaps)
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-    return tex;
-}
-
-Texture to_texture(float *data, int width, int height)
-{
-    Texture tex;
-    tex.type = Texture::Type::_2D;
-    tex.width = width;
-    tex.height = height;
-
-    glGenTextures(1, &tex.gl_reference);
-    glBindTexture(GL_TEXTURE_2D, tex.gl_reference);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    return tex;
-}
-
-Texture new_tex(int width, int height, bool mipmaps = false)
-{
-    Texture tex;
-    tex.type = Texture::Type::_2D;
-    tex.width = width;
-    tex.height = height;
-
-    glGenTextures(1, &tex.gl_reference);
-    glBindTexture(GL_TEXTURE_2D, tex.gl_reference);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RG, GL_UNSIGNED_BYTE, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
-
-    return tex;
-}
-
-Texture new_cubemap_tex(int square_width, bool mipmaps = false)
-{
-    Texture tex;
-    tex.type = Texture::Type::CUBEMAP;
-    tex.width = square_width;
-    tex.height = square_width;
-
-    glGenTextures(1, &tex.gl_reference);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, tex.gl_reference);
-
-    for (unsigned int i = 0; i < 6; ++i)
-    {
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, square_width, square_width, 0, GL_RGB, GL_FLOAT, nullptr);
-    }
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, mipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
-
-    if (mipmaps)
-        glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
-
-    return tex;
-}
-
-void gen_mips(Texture tex)
-{
-    glBindTexture(GL_TEXTURE_2D, tex.gl_reference);
-    glGenerateMipmap(GL_TEXTURE_2D);
-}
-
-void gen_cubemap_mips(Texture cubemap)
-{
-    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap.gl_reference);
-    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
-}
-
 VertexBuffer upload_vertex_buffer(Mesh mesh)
 {
     VertexBuffer ret;
@@ -340,24 +206,6 @@ VertexBuffer upload_vertex_buffer(Mesh mesh)
     }
 
     return ret;
-}
-
-RenderTarget new_render_target(uint32_t width, uint32_t height, bool depth)
-{
-    RenderTarget target{width, height};
-    glGenFramebuffers(1, &target.gl_fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, target.gl_fbo);
-
-    target.color_tex = new_tex(width, height, true);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, target.color_tex.gl_reference, 0);
-
-    return target;
-}
-
-void bind(RenderTarget target)
-{
-    glBindFramebuffer(GL_FRAMEBUFFER, target.gl_fbo);
-    glViewport(0, 0, target.width, target.height);
 }
 
 void bind_shader(Shader shader)
@@ -392,21 +240,11 @@ void bind_mat4(Shader shader, UniformId uniform_id, glm::mat4 mat)
 
 void bind_texture(Shader shader, UniformId uniform_id, Texture texture)
 {
-    GLenum gl_tex_type = GL_TEXTURE_2D;
-    switch (texture.type)
-    {
-    case (Texture::Type::_2D):
-        gl_tex_type = GL_TEXTURE_2D;
-        break;
-    case (Texture::Type::CUBEMAP):
-        gl_tex_type = GL_TEXTURE_CUBE_MAP;
-        break;
-    }
     if (shader.uniform_handles[(int)uniform_id] != -1)
     {
         glUniform1i(shader.uniform_handles[(int)uniform_id], shader.tex_units[(int)uniform_id]);
         glActiveTexture(GL_TEXTURE0 + shader.tex_units[(int)uniform_id]);
-        glBindTexture(gl_tex_type, texture.gl_reference);
+        texture.bind();
     }
 }
 
@@ -420,49 +258,6 @@ void draw(RenderTarget target, Shader shader, VertexBuffer buf)
     glDrawArrays(GL_TRIANGLES, 0, buf.vert_count);
 }
 
-Texture hdri_to_cubemap(Texture hdri, int size)
-{
-    Texture target = new_cubemap_tex(size, true);
-
-    glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-    glm::mat4 captureViews[] =
-        {
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
-
-    bind_shader(rect_to_cubemap_shader);
-    bind_mat4(rect_to_cubemap_shader, UniformId::PROJECTION, captureProjection);
-    bind_texture(rect_to_cubemap_shader, UniformId::EQUIRECTANGULAR_MAP, hdri);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, temp_fbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, temp_rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, target.width, target.height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, temp_rbo);
-
-    glViewport(0, 0, target.width, target.height);
-    glBindFramebuffer(GL_FRAMEBUFFER, temp_fbo);
-    for (unsigned int i = 0; i < 6; ++i)
-    {
-        bind_mat4(rect_to_cubemap_shader, UniformId::VIEW, captureViews[i]);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, target.gl_reference, 0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glBindVertexArray(cube_vao);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    glViewport(0, 0, 1920, 1080);
-
-    gen_cubemap_mips(target);
-    return target;
-}
-
 void draw_cubemap()
 {
     glDepthFunc(GL_LEQUAL);
@@ -471,139 +266,6 @@ void draw_cubemap()
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
     glDepthFunc(GL_LESS);
-}
-
-Texture convolve_irradiance_map(Texture src, int size)
-{
-    Texture target = new_cubemap_tex(size);
-
-    glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-    glm::mat4 captureViews[] =
-        {
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
-
-    glBindFramebuffer(GL_FRAMEBUFFER, temp_fbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, temp_rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, target.width, target.height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, temp_rbo);
-
-    bind_shader(irradiance_shader);
-    bind_mat4(irradiance_shader, UniformId::PROJECTION, captureProjection);
-    bind_texture(irradiance_shader, UniformId::ENV_MAP, src);
-
-    glViewport(0, 0, target.width, target.height);
-    for (unsigned int i = 0; i < 6; ++i)
-    {
-        bind_mat4(irradiance_shader, UniformId::VIEW, captureViews[i]);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, target.gl_reference, 0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glBindVertexArray(cube_vao);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    glViewport(0, 0, 1920, 1080);
-
-    return target;
-}
-
-Texture filter_env_map(Texture src, int size)
-{
-    Texture ret = new_cubemap_tex(size, true);
-
-    glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
-    glm::mat4 captureViews[] =
-        {
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
-            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
-
-    bind_shader(env_filter_shader);
-    bind_mat4(env_filter_shader, UniformId::PROJECTION, captureProjection);
-    bind_texture(env_filter_shader, UniformId::ENV_MAP, src);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, temp_fbo);
-    unsigned int maxMipLevels = 9; // assuming 512x512 texture
-    for (unsigned int mip = 0; mip < maxMipLevels; ++mip)
-    {
-        // reisze framebuffer according to mip-level size.
-        unsigned int mipWidth = size * powf(0.5, mip);
-        unsigned int mipHeight = size * powf(0.5, mip);
-        glBindRenderbuffer(GL_RENDERBUFFER, temp_rbo);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);
-        glViewport(0, 0, mipWidth, mipHeight);
-
-        float roughness = (float)mip / (float)(maxMipLevels - 1);
-        bind_1f(env_filter_shader, UniformId::ROUGHNESS, roughness);
-        for (unsigned int i = 0; i < 6; ++i)
-        {
-            bind_mat4(env_filter_shader, UniformId::VIEW, captureViews[i]);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                   GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, ret.gl_reference, mip);
-
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            glBindVertexArray(cube_vao);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    glViewport(0, 0, 1920, 1080);
-
-    return ret;
-}
-
-Texture generate_brdf_lut(int size)
-{
-    auto new_float_tex = [](int width, int height, bool mipmaps = false)
-    {
-        Texture tex;
-        tex.width = width;
-        tex.height = height;
-
-        glGenTextures(1, &tex.gl_reference);
-        glBindTexture(GL_TEXTURE_2D, tex.gl_reference);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, width, height, 0, GL_RGB, GL_FLOAT, 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
-
-        return tex;
-    };
-
-    Texture target = new_float_tex(size, size, false);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, temp_fbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, temp_rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, target.width, target.height);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, target.gl_reference, 0);
-
-    glViewport(0, 0, target.width, target.height);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    bind_shader(brdf_lut_shader);
-    glBindVertexArray(screen_quad_vao);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    glViewport(0, 0, 1920, 1080);
-
-    return target;
 }
 
 void draw_rect(RenderTarget target, Rect rect, Color color)
@@ -635,7 +297,7 @@ void draw_textured_rect(RenderTarget target, Rect rect, Color color, Texture tex
     bind_4f(textured_shader, UniformId::COLOR, color.r, color.g, color.b, color.a);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, tex.gl_reference);
+    tex.bind();
 
     glBindVertexArray(screen_quad_vao);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -664,14 +326,89 @@ void update_lights(LightUniformBlock lights)
         int buf_index = SpotLight::SIZE * i;
         glBufferSubData(GL_UNIFORM_BUFFER, buf_index, 12,
                         glm::value_ptr(lights.spot_lights[i].position));
-        glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 16, 12, 
+        glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 16, 12,
                         glm::value_ptr(lights.spot_lights[i].direction));
-        glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 32, 12, 
+        glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 32, 12,
                         glm::value_ptr(lights.spot_lights[i].color));
-        glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 44, 4, 
+        glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 44, 4,
                         &lights.spot_lights[i].inner_angle);
-        glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 48, 4, 
+        glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 48, 4,
                         &lights.spot_lights[i].outer_angle);
     }
     glBufferSubData(GL_UNIFORM_BUFFER, 10 * SpotLight::SIZE, 4, &lights.num_lights);
 };
+
+void render_to_cubemap(RenderTarget target, Shader shader, Cubemap cubemap, uint32_t mip_level = 0)
+{
+    static const glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+    static const glm::mat4 captureViews[] =
+        {
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+            glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
+
+    bind_mat4(shader, UniformId::PROJECTION, captureProjection);
+
+    target.bind();
+    for (unsigned int i = 0; i < 6; ++i)
+    {
+        bind_mat4(shader, UniformId::VIEW, captureViews[i]);
+        target.change_color_target(cubemap.get_face(i), mip_level);
+
+        target.clear();
+
+        glBindVertexArray(cube_vao);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
+}
+
+Texture hdri_to_cubemap(Texture hdri, int size)
+{
+    Cubemap cubemap(size, size, TextureFormat::RGB16F, true);
+    RenderTarget temp_target(size, size, TextureFormat::RGBA8, TextureFormat::NONE);
+
+    bind_shader(rect_to_cubemap_shader);
+    bind_texture(rect_to_cubemap_shader, UniformId::EQUIRECTANGULAR_MAP, hdri);
+
+    render_to_cubemap(temp_target, rect_to_cubemap_shader, cubemap);
+    cubemap.gen_mipmaps();
+
+    return cubemap;
+}
+
+Texture convolve_irradiance_map(Texture src, int size)
+{
+    Cubemap cubemap(size, size, TextureFormat::RGB16F, true);
+    RenderTarget temp_target(size, size, TextureFormat::RGBA8, TextureFormat::NONE);
+
+    bind_shader(irradiance_shader);
+    bind_texture(irradiance_shader, UniformId::ENV_MAP, src);
+
+    render_to_cubemap(temp_target, irradiance_shader, cubemap);
+    cubemap.gen_mipmaps();
+
+    return cubemap;
+}
+
+Texture filter_env_map(Texture src, int size)
+{
+    Cubemap cubemap(size, size, TextureFormat::RGB16F, true);
+    RenderTarget temp_target(size, size, TextureFormat::RGBA8, TextureFormat::NONE);
+
+    bind_shader(env_filter_shader);
+    bind_texture(env_filter_shader, UniformId::ENV_MAP, src);
+
+    unsigned int max_mip_levels = 9; // assuming 512x512 texture
+    for (unsigned int mip = 0; mip < max_mip_levels; ++mip)
+    {
+        float roughness = (float)mip / (float)(max_mip_levels - 1);
+        bind_1f(env_filter_shader, UniformId::ROUGHNESS, roughness);
+
+        render_to_cubemap(temp_target, env_filter_shader, cubemap, mip);
+    }
+
+    return cubemap;
+}

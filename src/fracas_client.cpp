@@ -22,6 +22,7 @@
 
 Peer server;
 
+RenderTarget target;
 Assets assets;
 Scene scene;
 Font ui_font;
@@ -266,6 +267,7 @@ bool init_if_not()
         init_net();
         server.open("127.0.0.1", 6519, false);
 
+        target = RenderTarget(1920, 1080, TextureFormat::RGB16F, TextureFormat::DEPTH24);
         assets = load_assets();
         scene.init(&assets);
         ui_state = ServerMessageType::INVALID;
@@ -303,7 +305,7 @@ void RpcClient::HandleStartGame(StartGameRequest *req)
     client_data->main_menu.current = nullptr;
 }
 
-bool game_update(const float time_step, InputState *input_state, RenderTarget target)
+bool game_update(const float time_step, InputState *input_state, RenderTarget main_target)
 {
     if (!init_if_not())
         return false;
@@ -329,9 +331,10 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ta
         }
     }
 
+    target.bind();
+    target.clear();
     if (client_data.main_menu.current)
     {
-        bind(target);
 
         { // background
             static float t = 0;
@@ -353,6 +356,11 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ta
         clear_bars(target, &scene);
         scene.update_and_draw(target, &assets, input_state);
     }
+
+    glDisable(GL_DEPTH_TEST);
+    main_target.bind();
+    draw_textured_rect(main_target, {0, 0, 1920, 1080}, {}, target.color_tex);
+    glEnable(GL_DEPTH_TEST);
 
     // if (animation_wait)
     // {

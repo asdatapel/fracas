@@ -23,7 +23,7 @@ struct Font
   float descent;
   float baseline;
 
-  Texture atlas;
+  Texture2D atlas;
   Character characters[NUM_CHARS_IN_FONT];
 };
 
@@ -53,7 +53,8 @@ Font load_font(FileData file, float size, StackAllocator *tmp_allocator)
                                      32, 96, cdata); // no guarantee this fits!
   assert(success);
 
-  font.atlas = to_single_channel_texture(bitmap, bitmap_width, bitmap_height, true);
+  font.atlas = Texture2D(bitmap_width, bitmap_height, TextureFormat::RED, true);
+  font.atlas.upload(bitmap, true);
   for (int i = 32; i < NUM_CHARS_IN_FONT; i++)
   {
     float x = 0;

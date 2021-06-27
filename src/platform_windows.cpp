@@ -212,7 +212,7 @@ int main()
         //printf("loop time: %lldms\n", (std::chrono::high_resolution_clock::now() - loop_start_time).count() / 1000000);
         loop_start_time = std::chrono::high_resolution_clock::now();
 
-        clear_backbuffer();
+        target.clear();
 
         fill_input_state(window, &input_state);
         glfwPollEvents();

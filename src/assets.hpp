@@ -22,13 +22,18 @@ struct Assets
 Assets load_assets()
 {
     Assets assets;
-    assets.allocator.init(1024 * 1024 * 1024 * 2);    // 2gb
-    assets.temp_allocator.init(1024 * 1024 * 50); // 50 mb
+    assets.allocator.init(1024 * 1024 * 1024 * 2); // 2gb
+    assets.temp_allocator.init(1024 * 1024 * 50);  // 50 mb
 
     for (int i = 0; i < TEXTURE_ASSET_COUNT; i++)
     {
         FileData tex_file = read_entire_file(TEXTURE_FILES[i], &assets.temp_allocator);
-        assets.textures[i] = to_texture(parse_bitmap(tex_file, &assets.allocator), true);
+        Bitmap bmp = parse_bitmap(tex_file, &assets.allocator);
+
+        Texture2D tex(bmp.width, bmp.height, TextureFormat::SRGB8_ALPHA8, true);
+        tex.upload((uint8_t *)bmp.data, true);
+        assets.textures[i] = tex;
+
         assets.temp_allocator.free(tex_file.data);
     }
     for (int i = 0; i < MATERIAL_COUNT; i++)
