@@ -17,6 +17,28 @@ uniform samplerCube irradiance;
 uniform samplerCube env_map;
 uniform sampler2D   brdf;  
 
+#section light_uniforms
+const int MAX_LIGHTS = 10;
+// TODO needs better attenuation
+struct PointLight
+{
+  vec3 pos;
+  vec3 color;
+};
+struct SpotLight
+{
+  vec3 pos;
+  vec3 direction;
+  vec3 color;
+  float inner_angle;
+  float outer_angle;
+};
+layout (std140, binding = 0) uniform lights
+{
+    SpotLight spot_lights[MAX_LIGHTS];
+    uint num_lights;
+};
+
 #section pbr
 // everything in this section is from
 // https://learnopengl.com/PBR/Lighting
@@ -56,38 +78,65 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 {
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(max(1.0 - cosTheta, 0.0), 5.0);
 }
-vec3 fresnelSchlick(float cosTheta, vec3 f0)
+vec3 FresnelSchlick(float cosTheta, vec3 f0)
 {
     return f0 + (1.0 - f0) * pow(max(1.0 - cosTheta, 0.0), 5.0);
 }
 
-
-vec3 PbrLight(vec3 albedo, float roughness, float metal, vec3 n, vec3 V, vec3 f0, vec3 light_pos, vec3 light_color)
+vec3 CalculatePointLight(vec3 to_eye, vec3 to_light, float to_light_dist, 
+                         vec3 halfway, PointLight light)
 {
-    vec3 l = normalize(light_pos - frag_world_pos);
-    vec3 h = normalize(V + l);
-    float distance    = length(light_pos - frag_world_pos);
-    float attenuation = 1.0 / (distance * distance);
-    vec3 radiance     = light_color * attenuation;        
+    float attenuation = 1.0 / (to_light_dist * to_light_dist); // TODO needs better attenuation
+    vec3  radiance    = light.color * attenuation;  
+    return radiance;
+}
+
+vec3 CalculateSpotLight(vec3 to_eye, vec3 to_light, float to_light_dist, 
+                        vec3 halfway, SpotLight light)
+{
+    float min_cos = cos(light.outer_angle);
+    float max_cos = cos(light.inner_angle);
+    float spotlight_coefficient = smoothstep(min_cos, max_cos, dot(light.direction, -to_light));
+
+    float attenuation = 1.0 / (to_light_dist * to_light_dist); // TODO needs better attenuation
+    return spotlight_coefficient * light.color * attenuation;
+}
+
+vec3 PbrLight(vec3 position, vec3 normal, vec3 camera, vec3 albedo,
+              float roughness, float metal, SpotLight light)
+{
+    vec3  to_eye        = normalize(camera - position);
+    vec3  to_light      = normalize(light.pos - position);
+    float to_light_dist = length(light.pos - position);
+    vec3  halfway       = normalize(to_eye + to_light);
+    vec3 radiance       = CalculateSpotLight(to_eye, to_light, to_light_dist, halfway, light);
     
-    float ndf = DistributionGGX(n, h, roughness);        
-    float g   = GeometrySmith(n, V, l, roughness);      
-    vec3 f    = fresnelSchlick(max(dot(h, V), 0.0), f0);       
+    vec3 f0   = vec3(0.04); 
+    f0        = mix(f0, albedo, metal);
+    float ndf = DistributionGGX(normal, halfway, roughness);        
+    float g   = GeometrySmith(normal, to_eye, to_light, roughness);      
+    vec3 f    = FresnelSchlick(max(dot(halfway, to_eye), 0.0), f0);       
     
     vec3 kS = f;
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metal;	  
     
     vec3 numerator    = ndf * g * f;
-    float denominator = 4.0 * max(dot(n, V), 0.0) * max(dot(n, l), 0.0);
+    float denominator = 4.0 * max(dot(normal, to_eye), 0.0) * max(dot(normal, to_light), 0.0);
     vec3 specular     = numerator / max(denominator, 0.001);  
         
-    float NdotL = max(dot(n, l), 0.0);    
+    float NdotL = max(dot(normal, to_light), 0.0);    
     return (kD * albedo / PI + specular) * radiance * NdotL;             
 }
 
-vec3 PbrAmbient(samplerCube irradiance, samplerCube env_map, sampler2D brdf, vec3 albedo, float roughness, float metal, float ao, vec3 n, vec3 V, vec3 f0)
+vec3 PbrAmbient(samplerCube irradiance, samplerCube env_map, sampler2D brdf, vec3 albedo, float roughness, float metal, float ao)
 {
+    vec3 n = normalize(frag_normal);
+    vec3 V = normalize(camera_position - frag_world_pos);
+
+    vec3 f0 = vec3(0.04); 
+    f0      = mix(f0, albedo, metal);
+
     vec3 R = reflect(-V, n);   
     vec3 F = FresnelSchlickRoughness(max(dot(n, V), 0.0), f0, roughness);
     vec3 ambient_kS = F;
@@ -101,6 +150,6 @@ vec3 PbrAmbient(samplerCube irradiance, samplerCube env_map, sampler2D brdf, vec
     vec2 envBRDF  = texture(brdf, vec2(max(dot(n, V), 0.0), roughness)).rg;
     vec3 ambient_specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
     
-    ao = sqrt(ao); // blender ao too strong
+    ao = sqrt(ao); // blender ao is too strong
     return (ambient_kD * ambient_diffuse + ambient_specular) * ao; 
 }

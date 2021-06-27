@@ -22,7 +22,7 @@ struct Assets
 Assets load_assets()
 {
     Assets assets;
-    assets.allocator.init(1024 * 1024 * 1024);    // 1gb
+    assets.allocator.init(1024 * 1024 * 1024 * 2);    // 2gb
     assets.temp_allocator.init(1024 * 1024 * 50); // 50 mb
 
     for (int i = 0; i < TEXTURE_ASSET_COUNT; i++)

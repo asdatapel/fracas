@@ -7,8 +7,6 @@
 #include "graphics.hpp"
 #include "platform.hpp"
 
-
-
 struct Camera
 {
     glm::mat4 view;
@@ -22,6 +20,13 @@ struct Camera
     float pos_x = 0.f;
     float pos_y = 0.f;
     float pos_z = 1.f;
+
+    Vec3f get_dir()
+    {
+        return {cos(glm::radians(x_rot)) * cos(glm::radians(y_rot)),
+                sin(glm::radians(y_rot)),
+                sin(glm::radians(x_rot)) * cos(glm::radians(y_rot))};
+    }
 
     void update(RenderTarget target, InputState *input)
     {
@@ -81,7 +86,7 @@ struct Camera
         }
 
         view = glm::lookAt(glm::vec3{pos_x, pos_y, pos_z}, glm::vec3{pos_x, pos_y, pos_z} + glm::vec3{dir_x, dir_y, dir_z}, {0.f, 1.f, 0.f});
-        perspective = glm::perspective(glm::radians(90.f), (float)target.width / (float)target.height, 0.01f, 100.0f);
+        perspective = glm::perspective(glm::radians(60.f), (float)target.width / (float)target.height, 0.01f, 100.0f);
     }
 };
 

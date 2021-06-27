@@ -50,10 +50,6 @@ struct Scene
     // TODO remove
     VertexBuffer x_verts;
     StandardPbrMaterial x_mat;
-    VertexBuffer bar_verts;
-    StandardPbrMaterial bar_mat;
-    VertexBuffer test_verts;
-    StandardPbrMaterial test_mat;
 
     void init(Assets *assets)
     {
@@ -125,130 +121,165 @@ struct Scene
         x_verts = assets->vertex_buffers[(int)MeshId::X2];
         x_mat = assets->materials[(int)MaterialId::X2];
     }
+
+    void update_and_draw(RenderTarget target, Assets *assets, InputState *input)
+    {
+        camera.update(target, input);
+
+        // SpotLight head_light;
+        // Vec3f head_light_pos = entities[(int)EntityDefId::FAMILY_1_1_002].position;
+        // head_light.position = {head_light_pos.x, head_light_pos.y + 2.f, head_light_pos.z};
+        // head_light.direction = glm::normalize(glm::vec3(cosf(t), -0.15, sinf(t)));
+        // head_light.color = glm::vec3(20.f, 16.5f + (cosf(t) / 2.f), 12 + sinf(t * 3.f) / 2.f);
+        // head_light.outer_angle = glm::radians(30.f);
+        // head_light.inner_angle = 0.f;
+        // SpotLight board_light;
+        // board_light.position = {camera.pos_x, camera.pos_y + 1.f, camera.pos_z};
+        // Vec3f camera_dir = camera.get_dir();
+        // board_light.direction = {camera_dir.x, camera_dir.y, camera_dir.z};
+        // board_light.color = {100, 0, 0};
+        // board_light.outer_angle = glm::radians(30.f);
+        // board_light.inner_angle = glm::radians(5.f);
+
+        // LightUniformBlock all_lights;
+        // all_lights.num_lights = 1;
+        // all_lights.spot_lights[0] = head_light;
+        // all_lights.spot_lights[1] = board_light;
+        // update_lights(all_lights);
+
+        // static float t = 0.f;
+        // t += 0.01f;
+        // entities[(int)EntityDefId::COLLECTION].position.y = 
+        //     EntityDefs[(int)EntityDefId::COLLECTION].position.y + sinf(t);
+        // entities[(int)EntityDefId::COLLECTION].rotation = {0, 0, 0};
+
+        LightUniformBlock all_lights;
+        all_lights.num_lights = 0;
+        for (int i = 0; i < LIGHT_DEF_COUNT && i < 10; i++)
+        {
+            const LightDef *def = &LightDefs[i];
+            Vec3f parent_pos =  entities[(int)def->parent].position;
+            Vec3f parent_rot =  entities[(int)def->parent].rotation;
+            SpotLight light;
+            light.position = {parent_pos.x, parent_pos.y, parent_pos.z};
+            light.direction = glm::quat({parent_rot.x, parent_rot.y, parent_rot.z}) * glm::vec3(0, -1, 0);
+            // light.direction.x = -sinf(parent_rot.x);
+            // light.direction.y = -cosf(parent_rot.y)*cosf(parent_rot.x);
+            // light.direction.z = -sinf(parent_rot.y)*cosf(parent_rot.x);
+            light.color = {def->color.x, def->color.y, def->color.z};
+            light.outer_angle = def->outer_angle;
+            light.inner_angle = def->inner_angle;
+
+            all_lights.spot_lights[i] = light;
+            all_lights.num_lights++;
+        }
+        update_lights(all_lights);
+
+        for (int i = 0; i < input->key_input.len; i++)
+        {
+            if (input->key_input[i] >= Keys::NUM_1 && input->key_input[i] <= Keys::NUM_8)
+            {
+                Bar *targetted_bar = &bars[(int)input->key_input[i] - (int)Keys::NUM_1];
+                targetted_bar->animation_t += 0.001f;
+            }
+        }
+        for (int i = 0; i < 8; i++)
+        {
+            Bar *bar = &bars[i];
+            if (bar->animation_t > 0.f)
+            {
+                bar->animation_t += 0.01f;
+            }
+            float rotation = (powf(bar->animation_t * 4, 2) * 90.f);
+            if (rotation < 0.f)
+            {
+                rotation = 0.f;
+            }
+            if (rotation > 180.f)
+            {
+                rotation = 180.f;
+            }
+
+            bar->entity->rotation.x = glm::radians(rotation);
+        }
+
+        float speed_denoms[3] = {2, 2.75, 2.15};
+        for (int i = 0; i < 3; i++)
+        {
+            float t = 0.f;
+            t += 0.01f;
+            glm::vec3 initial_pos = {-1 + i, 0, 5};
+            glm::quat initial_rot({(i * .5f), .1f + (i * .1f), -0.5f + (i * 1.4f)});
+            glm::vec3 target_pos = {i - 1, 0.f, 0.f};
+            glm::quat target_rot({glm::radians(90.f), 0.f, 0.f});
+            float actual_t = 1.f - powf(glm::clamp(t / 2, 0.f, 1.f), speed_denoms[i]);
+            glm::vec3 actual_pos = initial_pos + ((target_pos - initial_pos) * actual_t);
+            glm::quat actual_rot = glm::normalize(initial_rot + ((target_rot - initial_rot) * actual_t));
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), actual_pos) * glm::toMat4(actual_rot);
+
+            bind_shader(threed_shader);
+            bind_camera(threed_shader, camera);
+            bind_mat4(threed_shader, UniformId::MODEL, model);
+            bind_material(threed_shader, x_mat);
+            bind_material(threed_shader, env_mat);
+            draw(target, threed_shader, x_verts);
+        }
+
+        {
+            bind(score_targets[0]);
+            clear_backbuffer();
+
+            String strs[5] = {
+                String::from("hellp"),
+                String::from("khgjkh"),
+                String::from("yertyerty"),
+                String::from("nvcbnp"),
+                String::from("hesdfg"),
+            };
+
+            static int t = 0;
+            t = (t + 1) % 5;
+
+            float aspect_ratio = 2.f;
+            float text_scale = 4.f;
+            {
+                float target_border = 0.05f;
+                Rect sub_target = {0, 0,
+                                   .8f * target.width,
+                                   .5f * target.height};
+                draw_centered_text(font, target, strs[t], sub_target, target_border, text_scale, aspect_ratio);
+            }
+
+            gen_mips(score_targets[0].color_tex);
+            bind(target);
+        }
+
+        for (int i = 0; i < entities.size(); i++)
+        {
+            Entity &e = entities[i];
+
+            glm::vec3 rot(e.rotation.x, e.rotation.y, e.rotation.z);
+            glm::vec3 pos(e.position.x, e.position.y, e.position.z);
+            glm::vec3 scale(e.scale.x, e.scale.y, e.scale.z);
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) *
+                              glm::scale(glm::mat4(1.f), scale) *
+                              glm::toMat4(glm::quat(rot));
+
+            bind_shader(bar_shader);
+            bind_camera(bar_shader, camera);
+            bind_mat4(bar_shader, UniformId::MODEL, model);
+            bind_material(bar_shader, env_mat);
+            bind_material(bar_shader, *e.material);
+            draw(target, bar_shader, e.vert_buffer);
+        }
+
+        bind_shader(cubemap_shader);
+        bind_mat4(cubemap_shader, UniformId::PROJECTION, camera.perspective);
+        bind_mat4(cubemap_shader, UniformId::VIEW, camera.view);
+        bind_texture(cubemap_shader, UniformId::ENV_MAP, unfiltered_cubemap);
+        draw_cubemap();
+    }
 };
-
-void draw_scene(Scene *scene, RenderTarget target, Assets *assets, InputState *input)
-{
-    scene->camera.update(target, input);
-
-    for (int i = 0; i < input->key_input.len; i++)
-    {
-        if (input->key_input[i] >= Keys::NUM_1 && input->key_input[i] <= Keys::NUM_8)
-        {
-            Bar *targetted_bar = &scene->bars[(int)input->key_input[i] - (int)Keys::NUM_1];
-            targetted_bar->animation_t += 0.001f;
-        }
-    }
-    for (int i = 0; i < 8; i++)
-    {
-        Bar *bar = &scene->bars[i];
-        if (bar->animation_t > 0.f)
-        {
-            bar->animation_t += 0.01f;
-        }
-        float rotation = (powf(bar->animation_t * 4, 2) * 90.f);
-        if (rotation < 0.f)
-        {
-            rotation= 0.f;
-        }
-        if (rotation> 180.f)
-        {
-            rotation= 180.f;
-        }
-
-        bar->entity->rotation.x = glm::radians(rotation);
-        // glm::mat4 model = glm::rotate(glm::translate(glm::mat4(1.0f), {x, y, 0.f}), glm::radians(bar_rot), glm::vec3{1.f, 0.f, 0.f});
-
-        
-        
-    }
-
-    float speed_denoms[3] = {2, 2.75, 2.15};
-    for (int i = 0; i < 3; i++)
-    {
-        float t = 0.f;
-        t += 0.01f;
-        glm::vec3 initial_pos = {-1 + i, 0, 5};
-        glm::quat initial_rot({(i * .5f), .1f + (i * .1f), -0.5f + (i * 1.4f)});
-        glm::vec3 target_pos = {i - 1, 0.f, 0.f};
-        glm::quat target_rot({glm::radians(90.f), 0.f, 0.f});
-        float actual_t = 1.f - powf(glm::clamp(t / 2, 0.f, 1.f), speed_denoms[i]);
-        glm::vec3 actual_pos = initial_pos + ((target_pos - initial_pos) * actual_t);
-        glm::quat actual_rot = glm::normalize(initial_rot + ((target_rot - initial_rot) * actual_t));
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), actual_pos) * glm::toMat4(actual_rot);
-
-        bind_shader(threed_shader);
-        bind_camera(threed_shader, scene->camera);
-        bind_mat4(threed_shader, UniformId::MODEL, model);
-        bind_material(threed_shader, scene->x_mat);
-        bind_material(threed_shader, scene->env_mat);
-        draw(target, threed_shader, scene->x_verts);
-    }
-
-    // static float t = 0.f;
-    // t += 0.01f;
-    // glm::mat4 model = glm::rotate(glm::translate(glm::mat4(1.0f), {0.f, 2.f, 0.f}), glm::radians(t), glm::vec3{0.f, 1.f, 0.f});
-    // bind_shader(threed_shader);
-    // bind_camera(threed_shader, scene->camera);
-    // bind_mat4(threed_shader, UniformId::MODEL, model);
-    // bind_material(threed_shader, scene->env_mat);
-    // bind_material(threed_shader, scene->test_mat);
-    // draw(target, threed_shader, scene->test_verts);
-
-    {
-        bind(scene->score_targets[0]);
-        clear_backbuffer();
-
-        String strs[5] = {
-            String::from("hellp"),
-            String::from("khgjkh"),
-            String::from("yertyerty"),
-            String::from("nvcbnp"),
-            String::from("hesdfg"),
-        };
-
-        static int t = 0;
-        t = (t + 1) % 5;
-
-        float aspect_ratio = 2.f;
-        float text_scale = 4.f;
-        {
-            float target_border = 0.05f;
-            Rect sub_target = {0, 0,
-                               .8f * target.width,
-                               .5f * target.height};
-            draw_centered_text(scene->font, target, strs[t], sub_target, target_border, text_scale, aspect_ratio);
-        }
-
-        gen_mips(scene->score_targets[0].color_tex);
-        bind(target);
-    }
-
-    for (int i = 0; i < scene->entities.size(); i++)
-    {
-        Entity &e = scene->entities[i];
-
-        glm::vec3 rot(e.rotation.x, e.rotation.y, e.rotation.z);
-        glm::vec3 pos(e.position.x, e.position.y, e.position.z);
-        glm::vec3 scale(e.scale.x, e.scale.y, e.scale.z);
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) *
-                          glm::scale(glm::mat4(1.f), scale) *
-                          glm::toMat4(glm::quat(rot));
-
-        bind_shader(bar_shader);
-        bind_camera(bar_shader, scene->camera);
-        bind_mat4(bar_shader, UniformId::MODEL, model);
-        bind_material(bar_shader, scene->env_mat);
-        bind_material(bar_shader, *e.material);
-        draw(target, bar_shader, e.vert_buffer);
-    }
-
-    bind_shader(cubemap_shader);
-    bind_mat4(cubemap_shader, UniformId::PROJECTION, scene->camera.perspective);
-    bind_mat4(cubemap_shader, UniformId::VIEW, scene->camera.view);
-    bind_texture(cubemap_shader, UniformId::ENV_MAP, scene->unfiltered_cubemap);
-    draw_cubemap();
-}
 
 void draw_bar_overlay(RenderTarget previous_target, Scene *scene, int index, String answer, int score)
 {

@@ -351,7 +351,7 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ta
     else
     {
         clear_bars(target, &scene);
-        draw_scene(&scene, target, &assets, input_state);
+        scene.update_and_draw(target, &assets, input_state);
     }
 
     // if (animation_wait)

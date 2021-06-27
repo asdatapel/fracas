@@ -53,7 +53,8 @@ def build_json():
         
     return json.dumps(dict, indent=4, sort_keys=True)
 
-
+      #  if obj.type == 'LIGHT':
+#obj.data.color
 def build_yaml():
     dict = {}
     dict["entities"] = []
@@ -66,7 +67,19 @@ def build_yaml():
             entity["position"] = swizzled_vec(obj.location)
             entity["rotation"] = swizzled_vec(obj.rotation_euler)
             entity["scale"] = swizzled_scale_vec(obj.scale)
-            dict["entities"].append(entity)
+            
+            for chld in obj.children:
+                if chld.type == 'LIGHT':
+                    entity['light'] = {
+                        'color'   : {"x":chld.color[0], "y": chld.color[1], "z":chld.color[2]},
+                        'position': swizzled_vec(chld.location),
+                        'rotation': swizzled_vec(chld.rotation_euler),
+                        'outer_angle': chld.data.spot_size / 2,
+                        'inner_angle': (chld.data.spot_size / 2) * (1 - chld.data.spot_blend),
+                    }
+            
+            dict["entities"].append(entity)        
+            
         
     return yaml.dump(dict)
 
@@ -133,4 +146,4 @@ if __name__ == "__main__":
     register()
 
     #test call
-    #bpy.ops.dropper.scene_text('INVOKE_DEFAULT')
+    bpy.ops.dropper.scene_text('INVOKE_DEFAULT')

@@ -92,6 +92,33 @@ void draw_cubemap();
 
 void clear_backbuffer();
 
+const int MAX_LIGHTS = 10;
+struct PointLight
+{
+    glm::vec3 position;
+    glm::vec3 color;
+
+    const static int SIZE = 32;
+};
+struct SpotLight
+{
+    glm::vec3 position;
+    glm::vec3 direction;
+    glm::vec3 color;
+    float inner_angle;
+    float outer_angle;
+    
+    const static int SIZE = 64;
+};
+struct LightUniformBlock
+{
+    SpotLight spot_lights[MAX_LIGHTS];
+    uint32_t num_lights;
+
+    const static int SIZE = (SpotLight::SIZE * 10) + 4;
+};
+void update_lights(LightUniformBlock lights);
+
 static Bitmap parse_bitmap(FileData file_data, StackAllocator *allocator)
 {
     assert(file_data.length > 14 + 40); // Header + InfoHeader

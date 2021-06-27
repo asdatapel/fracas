@@ -8,7 +8,7 @@ entities:
   rotation:
     x: 0.0
     y: 0.0
-    z: -0.0
+    z: 0.0
   scale:
     x: 1.0
     y: 1.0
@@ -161,7 +161,7 @@ entities:
   ref: PERSON_PLACEHOLDER
   rotation:
     x: 0.0
-    y: -0.0967416912317276
+    y: 0.0
     z: 0.0
   scale:
     x: 1.0
@@ -175,7 +175,7 @@ entities:
   ref: PERSON_PLACEHOLDER
   rotation:
     x: 0.0
-    y: -0.0967416912317276
+    y: 0.0
     z: 0.0
   scale:
     x: 1.0
@@ -189,7 +189,7 @@ entities:
   ref: PERSON_PLACEHOLDER
   rotation:
     x: 0.0
-    y: -0.0967416912317276
+    y: 0.0
     z: 0.0
   scale:
     x: 1.0
@@ -203,7 +203,7 @@ entities:
   ref: PERSON_PLACEHOLDER
   rotation:
     x: 0.0
-    y: -0.0967416912317276
+    y: 0.0
     z: 0.0
   scale:
     x: 1.0
@@ -217,7 +217,7 @@ entities:
   ref: PERSON_PLACEHOLDER
   rotation:
     x: 0.0
-    y: -0.0967416912317276
+    y: 0.0
     z: 0.0
   scale:
     x: 1.0
@@ -231,7 +231,7 @@ entities:
   ref: PERSON_PLACEHOLDER
   rotation:
     x: 0.0
-    y: 0.07521571964025497
+    y: 0.0
     z: 0.0
   scale:
     x: 1.0
@@ -245,7 +245,7 @@ entities:
   ref: PERSON_PLACEHOLDER
   rotation:
     x: 0.0
-    y: 0.07521571964025497
+    y: 0.0
     z: 0.0
   scale:
     x: 1.0
@@ -259,7 +259,7 @@ entities:
   ref: PERSON_PLACEHOLDER
   rotation:
     x: 0.0
-    y: 0.07521571964025497
+    y: 0.0
     z: 0.0
   scale:
     x: 1.0
@@ -273,7 +273,7 @@ entities:
   ref: PERSON_PLACEHOLDER
   rotation:
     x: 0.0
-    y: 0.07521571964025497
+    y: 0.0
     z: 0.0
   scale:
     x: 1.0
@@ -287,7 +287,7 @@ entities:
   ref: PERSON_PLACEHOLDER
   rotation:
     x: 0.0
-    y: 0.07521571964025497
+    y: 0.0
     z: 0.0
   scale:
     x: 1.0
@@ -349,6 +349,93 @@ entities:
     x: 1.0
     y: 1.0
     z: 1.0
+- light:
+    color:
+      x: 2000.0
+      y: 836.9195461273193
+      z: 363.80645632743835
+    inner_angle: 0.3337942263919169
+    outer_angle: 0.39269909262657166
+    position:
+      x: 0.0
+      y: 0.0
+      z: -0.0
+    rotation:
+      x: 0.0
+      y: 0.0
+      z: -0.0
+  name: light
+  position:
+    x: 0.0
+    y: 17.11452865600586
+    z: 10.409683227539062
+  ref: UV_SPHERE
+  rotation:
+    x: 0.08199752122163773
+    y: -5.901936317543813e-17
+    z: -1.3108667002456526e-17
+  scale:
+    x: 0.4101906418800354
+    y: 0.4101906418800354
+    z: 0.4101906418800354
+- light:
+    color:
+      x: 1000.0
+      y: 941.7462348937988
+      z: 903.8422703742981
+    inner_angle: 0.3337942263919169
+    outer_angle: 0.39269909262657166
+    position:
+      x: 0.0
+      y: 0.0
+      z: -0.0
+    rotation:
+      x: 0.0
+      y: 0.0
+      z: -0.0
+  name: light.001
+  position:
+    x: 0.0
+    y: 17.11452865600586
+    z: 6.638193607330322
+  ref: UV_SPHERE
+  rotation:
+    x: 0.08199752122163773
+    y: -6.26457957727645e-17
+    z: 0.3419213891029358
+  scale:
+    x: 0.4101906418800354
+    y: 0.4101906418800354
+    z: 0.4101906418800354
+- light:
+    color:
+      x: 1000.0
+      y: 815.542995929718
+      z: 704.0254473686218
+    inner_angle: 0.3337942263919169
+    outer_angle: 0.39269909262657166
+    position:
+      x: 0.0
+      y: 0.0
+      z: -0.0
+    rotation:
+      x: 0.0
+      y: 0.0
+      z: -0.0
+  name: light.002
+  position:
+    x: 0.0
+    y: 17.11452865600586
+    z: 14.899286270141602
+  ref: UV_SPHERE
+  rotation:
+    x: 0.08199751377105713
+    y: -5.999285549473953e-17
+    z: -0.18039341270923615
+  scale:
+    x: 0.4101906418800354
+    y: 0.4101906418800354
+    z: 0.4101906418800354
 - name: right_score_screen
   position:
     x: 5.472818851470947
@@ -367,7 +454,7 @@ entities:
   position:
     x: 0.0
     y: 0.0
-    z: -0.0
+    z: 0.0
   ref: ROOM
   rotation:
     x: 0.0

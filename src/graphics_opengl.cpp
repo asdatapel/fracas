@@ -6,6 +6,8 @@
 #include "platform.hpp"
 #include "math.hpp"
 
+const int LIGHTS_BUFFER_BINDING = 0;
+
 RenderTarget main_target;
 
 unsigned int temp_fbo;
@@ -66,6 +68,8 @@ float cube_verts[] = {
     -1.0f, 1.0f, 1.0f,  // bottom-left
     -1.0f, 1.0f, -1.0f, // top-left
 };
+
+unsigned int lights_ubo_buffer;
 
 static void check_shader_error(unsigned int shader, const char *name)
 {
@@ -176,6 +180,12 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
     irradiance_shader = load_shader(create_shader_program("resources/shaders/irradiance"));
     env_filter_shader = load_shader(create_shader_program("resources/shaders/env_filter"));
     brdf_lut_shader = load_shader(create_shader_program("resources/shaders/brdf_lut"));
+
+    // setup uniform buffers
+    glGenBuffers(1, &lights_ubo_buffer);
+    glBindBuffer(GL_UNIFORM_BUFFER, lights_ubo_buffer);
+    glBufferData(GL_UNIFORM_BUFFER, LightUniformBlock::SIZE, NULL, GL_STATIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, LIGHTS_BUFFER_BINDING, lights_ubo_buffer);
 
     return main_target;
 }
@@ -645,3 +655,23 @@ void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture 
     glBindVertexArray(screen_quad_vao);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
+
+void update_lights(LightUniformBlock lights)
+{
+    glBindBuffer(GL_UNIFORM_BUFFER, lights_ubo_buffer);
+    for (int i = 0; i < lights.num_lights; i++)
+    {
+        int buf_index = SpotLight::SIZE * i;
+        glBufferSubData(GL_UNIFORM_BUFFER, buf_index, 12,
+                        glm::value_ptr(lights.spot_lights[i].position));
+        glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 16, 12, 
+                        glm::value_ptr(lights.spot_lights[i].direction));
+        glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 32, 12, 
+                        glm::value_ptr(lights.spot_lights[i].color));
+        glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 44, 4, 
+                        &lights.spot_lights[i].inner_angle);
+        glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 48, 4, 
+                        &lights.spot_lights[i].outer_angle);
+    }
+    glBufferSubData(GL_UNIFORM_BUFFER, 10 * SpotLight::SIZE, 4, &lights.num_lights);
+};
