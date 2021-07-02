@@ -22,7 +22,6 @@
 
 Peer server;
 
-RenderTarget target;
 Assets assets;
 Scene scene;
 Font ui_font;
@@ -267,7 +266,6 @@ bool init_if_not()
         init_net();
         server.open("127.0.0.1", 6519, false);
 
-        target = RenderTarget(1920, 1080, TextureFormat::RGB16F, TextureFormat::DEPTH24);
         assets = load_assets();
         scene.init(&assets);
         ui_state = ServerMessageType::INVALID;
@@ -317,7 +315,6 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
     if (!inited)
     {
         inited = true;
-
         client.client_data = &client_data;
     }
 
@@ -331,36 +328,28 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
         }
     }
 
-    target.bind();
-    target.clear();
     if (client_data.main_menu.current)
     {
-
         { // background
             static float t = 0;
             t += time_step;
             bind_shader(blurred_colors_shader);
             bind_1f(blurred_colors_shader, UniformId::T, t);
-            bind_2i(blurred_colors_shader, UniformId::RESOLUTION, target.width, target.height);
+            bind_2i(blurred_colors_shader, UniformId::RESOLUTION, main_target.width, main_target.height);
             bind_2f(blurred_colors_shader, UniformId::POS, 0, 0);
-            bind_2f(blurred_colors_shader, UniformId::SCALE, target.width, target.height);
+            bind_2f(blurred_colors_shader, UniformId::SCALE, main_target.width, main_target.height);
             draw_rect();
         }
 
         glDisable(GL_DEPTH_TEST);
-        client_data.main_menu.current->update_and_draw(target, input_state, &client_data.main_menu);
+        client_data.main_menu.current->update_and_draw(main_target, input_state, &client_data.main_menu);
         glEnable(GL_DEPTH_TEST);
     }
     else
     {
-        clear_bars(target, &scene);
-        scene.update_and_draw(target, &assets, input_state);
+        clear_bars(main_target, &scene);
+        scene.update_and_draw(main_target, &assets, input_state);
     }
-
-    glDisable(GL_DEPTH_TEST);
-    main_target.bind();
-    draw_textured_rect(main_target, {0, 0, 1920, 1080}, {}, target.color_tex);
-    glEnable(GL_DEPTH_TEST);
 
     // if (animation_wait)
     // {

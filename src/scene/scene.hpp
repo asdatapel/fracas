@@ -26,33 +26,10 @@ Texture2D load_hdri(const char *file)
     return tex;
 }
 
-StandardPbrEnvMaterial create_env_mat()
+StandardPbrEnvMaterial create_env_mat(RenderTarget temp_target, Texture unfiltered_cubemap)
 {
-    RenderTarget temp_target(0, 0, TextureFormat::NONE, TextureFormat::NONE);
-
-    Texture hdri_tex = load_hdri(debug_hdr);
-    Texture unfiltered_cubemap = hdri_to_cubemap(hdri_tex, 1024);
-
-    // bind_shader(rect_to_cubemap_shader);
-    // bind_mat4(rect_to_cubemap_shader, UniformId::PROJECTION, captureProjection);
-    // bind_texture(rect_to_cubemap_shader, UniformId::EQUIRECTANGULAR_MAP, hdri);
-
-    // glViewport(0, 0, target.width, target.height);
-    // glBindFramebuffer(GL_FRAMEBUFFER, temp_fbo);
-    // for (unsigned int i = 0; i < 6; ++i)
-    // {
-    //     bind_mat4(rect_to_cubemap_shader, UniformId::VIEW, captureViews[i]);
-    //     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, target.gl_ref, 0);
-    //     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    //     glBindVertexArray(cube_vao);
-    //     glDrawArrays(GL_TRIANGLES, 0, 36);
-    // }
-
-    // target.gen_mipmaps();
-
-    Texture irradiance_map = convolve_irradiance_map(unfiltered_cubemap, 32);
-    Texture env_map = filter_env_map(unfiltered_cubemap, 512);
+    Texture irradiance_map = convolve_irradiance_map(temp_target, unfiltered_cubemap, 32);
+    Texture env_map = filter_env_map(temp_target, unfiltered_cubemap, 512);
 
     Texture2D brdf_lut = Texture2D(512, 512, TextureFormat::RGB16F, false);
     temp_target.change_color_target(brdf_lut);
@@ -109,13 +86,15 @@ struct Scene
             e.position = EntityDefs[i].position;
             e.rotation = EntityDefs[i].rotation;
             e.scale = EntityDefs[i].scale;
+            e.shader = &threed_shader;
         }
 
         // setup env material
         {
+            RenderTarget temp_target(0, 0, TextureFormat::NONE, TextureFormat::NONE);
             Texture hdri_tex = load_hdri(debug_hdr);
-            unfiltered_cubemap = hdri_to_cubemap(hdri_tex, 1024);
-            env_mat = create_env_mat();
+            unfiltered_cubemap = hdri_to_cubemap(temp_target, hdri_tex, 1024);
+            env_mat = create_env_mat(temp_target, unfiltered_cubemap);
         }
 
         // setup bespoke materials for answer bars and score board
@@ -136,6 +115,7 @@ struct Scene
 
                 bars[i].material.append(bars[i].target.color_tex, UniformId::OVERLAY_TEXTURE);
                 bars[i].entity->material = &bars[i].material;
+                bars[i].entity->shader = &bar_shader;
             }
             bars[0].num_tex = assets->textures[(int)TextureAssetId::BAR_NUM_1_BMP];
             bars[1].num_tex = assets->textures[(int)TextureAssetId::BAR_NUM_2_BMP];
@@ -155,8 +135,11 @@ struct Scene
                 score_materials[i].append(score_targets[i].color_tex, UniformId::OVERLAY_TEXTURE);
             }
             entities[(int)EntityDefId::LEFT_SCORE_SCREEN].material = &score_materials[0];
+            entities[(int)EntityDefId::LEFT_SCORE_SCREEN].shader = &bar_shader;
             entities[(int)EntityDefId::RIGHT_SCORE_SCREEN].material = &score_materials[1];
-            entities[(int)EntityDefId::RIGHT_SCORE_SCREEN].material = &score_materials[2];
+            entities[(int)EntityDefId::RIGHT_SCORE_SCREEN].shader = &bar_shader;
+            entities[(int)EntityDefId::BIG_SCREEN].material = &score_materials[2];
+            entities[(int)EntityDefId::RIGHT_SCORE_SCREEN].shader = &bar_shader;
         }
 
         font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ANTON_REGULAR_TTF], 128, &assets->temp_allocator);
@@ -165,51 +148,28 @@ struct Scene
         x_mat = assets->materials[(int)MaterialId::X2];
     }
 
-    void update_and_draw(RenderTarget target, Assets *assets, InputState *input)
+    void update_and_draw(RenderTarget backbuffer, Assets *assets, InputState *input)
     {
-        camera.update(target, input);
+        //TODO check backbuffer resize
 
-        // SpotLight head_light;
-        // Vec3f head_light_pos = entities[(int)EntityDefId::FAMILY_1_1_002].position;
-        // head_light.position = {head_light_pos.x, head_light_pos.y + 2.f, head_light_pos.z};
-        // head_light.direction = glm::normalize(glm::vec3(cosf(t), -0.15, sinf(t)));
-        // head_light.color = glm::vec3(20.f, 16.5f + (cosf(t) / 2.f), 12 + sinf(t * 3.f) / 2.f);
-        // head_light.outer_angle = glm::radians(30.f);
-        // head_light.inner_angle = 0.f;
-        // SpotLight board_light;
-        // board_light.position = {camera.pos_x, camera.pos_y + 1.f, camera.pos_z};
-        // Vec3f camera_dir = camera.get_dir();
-        // board_light.direction = {camera_dir.x, camera_dir.y, camera_dir.z};
-        // board_light.color = {100, 0, 0};
-        // board_light.outer_angle = glm::radians(30.f);
-        // board_light.inner_angle = glm::radians(5.f);
+        static RenderTarget hdr_target(1920, 1080, TextureFormat::RGB16F, TextureFormat::DEPTH24);
+        hdr_target.bind();
+        hdr_target.clear();
+        camera.update(hdr_target, input);
 
-        // LightUniformBlock all_lights;
-        // all_lights.num_lights = 1;
-        // all_lights.spot_lights[0] = head_light;
-        // all_lights.spot_lights[1] = board_light;
-        // update_lights(all_lights);
-
-        // static float t = 0.f;
-        // t += 0.01f;
-        // entities[(int)EntityDefId::COLLECTION].position.y =
-        //     EntityDefs[(int)EntityDefId::COLLECTION].position.y + sinf(t);
-        // entities[(int)EntityDefId::COLLECTION].rotation = {0, 0, 0};
-
+        static float t = 0.f;
+        t += 0.01f;
         LightUniformBlock all_lights;
         all_lights.num_lights = 0;
         for (int i = 0; i < LIGHT_DEF_COUNT && i < 10; i++)
         {
             const LightDef *def = &LightDefs[i];
-            Vec3f parent_pos = entities[(int)def->parent].position;
-            Vec3f parent_rot = entities[(int)def->parent].rotation;
+            Vec3f pos = entities[(int)def->parent].position;
+            Vec3f rot = entities[(int)def->parent].rotation;
             SpotLight light;
-            light.position = {parent_pos.x, parent_pos.y, parent_pos.z};
-            light.direction = glm::quat({parent_rot.x, parent_rot.y, parent_rot.z}) * glm::vec3(0, -1, 0);
-            // light.direction.x = -sinf(parent_rot.x);
-            // light.direction.y = -cosf(parent_rot.y)*cosf(parent_rot.x);
-            // light.direction.z = -sinf(parent_rot.y)*cosf(parent_rot.x);
-            light.color = {def->color.x, def->color.y, def->color.z};
+            light.position = {pos.x, pos.y, pos.z};
+            light.direction = glm::quat({rot.x, rot.y, rot.z}) * glm::vec3(0, -1, 0);
+            light.color = glm::vec3{def->color.x, def->color.y, def->color.z} * (sinf(t) / 2 + 0.5f);
             light.outer_angle = def->outer_angle;
             light.inner_angle = def->inner_angle;
 
@@ -265,7 +225,7 @@ struct Scene
             bind_mat4(threed_shader, UniformId::MODEL, model);
             bind_material(threed_shader, x_mat);
             bind_material(threed_shader, env_mat);
-            draw(target, threed_shader, x_verts);
+            draw(hdr_target, threed_shader, x_verts);
         }
 
         {
@@ -288,13 +248,13 @@ struct Scene
             {
                 float target_border = 0.05f;
                 Rect sub_target = {0, 0,
-                                   .8f * target.width,
-                                   .5f * target.height};
-                draw_centered_text(font, target, strs[t], sub_target, target_border, text_scale, aspect_ratio);
+                                   .8f * score_targets[0].width,
+                                   .5f * score_targets[0].height};
+                draw_centered_text(font, score_targets[0], strs[t], sub_target, target_border, text_scale, aspect_ratio);
             }
 
             score_targets[0].color_tex.gen_mipmaps();
-            target.bind();
+            hdr_target.bind();
         }
 
         for (int i = 0; i < entities.size(); i++)
@@ -313,7 +273,11 @@ struct Scene
             bind_mat4(bar_shader, UniformId::MODEL, model);
             bind_material(bar_shader, env_mat);
             bind_material(bar_shader, *e.material);
-            draw(target, bar_shader, e.vert_buffer);
+            if (e.material->num_textures == StandardPbrMaterial::N)
+            {
+                bind_1i(bar_shader, UniformId::OVERLAY_TEXTURE, -1);
+            }
+            draw(hdr_target, *e.shader, e.vert_buffer);
         }
 
         bind_shader(cubemap_shader);
@@ -321,6 +285,77 @@ struct Scene
         bind_mat4(cubemap_shader, UniformId::VIEW, camera.view);
         bind_texture(cubemap_shader, UniformId::ENV_MAP, unfiltered_cubemap);
         draw_cubemap();
+
+        ////////////////////////
+        // bloom and tonemapping
+        ////////////////////////
+
+        glDisable(GL_DEPTH_TEST);
+        static float exposure = 1;
+        if (input->keys[(int)Keys::UP])
+            exposure += 0.01f;
+        if (input->keys[(int)Keys::DOWN])
+            exposure -= 0.01f;
+
+        static RenderTarget brightpass_target(hdr_target.width, hdr_target.height, TextureFormat::RGB16F, TextureFormat::NONE);
+        brightpass_target.bind();
+        brightpass_target.clear();
+        bind_shader(brightpass_shader);
+        bind_1f(brightpass_shader, UniformId::EXPOSURE, exposure);
+        bind_texture(brightpass_shader, UniformId::TEX, hdr_target.color_tex);
+        draw_rect();
+        brightpass_target.color_tex.gen_mipmaps();
+
+        BIG TODO
+        downscale, and then blur AT THE TARGET RESOLUTION
+        static RenderTarget horizontal_blur_target(hdr_target.width, hdr_target.height, TextureFormat::RGB16F, TextureFormat::NONE);
+        static RenderTarget vertical_blur_target(hdr_target.width, hdr_target.height, TextureFormat::RGB16F, TextureFormat::NONE);
+        for (int mip_level = 1; mip_level <= 4; mip_level++)
+        {
+
+            // TODO this cant be good 
+            // TODO this cant be good 
+            // TODO this cant be good 
+            // TODO this cant be good 
+            // TODO this cant be good 
+            // TODO this cant be good 
+            // TODO this cant be good 
+            // TODO this cant be good 
+            // TODO this cant be good 
+            // TODO this cant be good 
+            // TODO this cant be good 
+            // TODO this cant be good 
+            // TODO this cant be good 
+            // TODO this cant be good 
+            for (int i = 0; i < 10; i++)
+            {
+                horizontal_blur_target.bind();
+                horizontal_blur_target.change_mip_level(mip_level);
+                horizontal_blur_target.clear();
+                bind_shader(blur_shader);
+                bind_1f(blur_shader, UniformId::LOD, mip_level);
+                bind_1i(blur_shader, UniformId::HORIZONTAL, 1);
+                bind_texture(blur_shader, UniformId::HIGHLIGHT, i == 0 ? brightpass_target.color_tex : vertical_blur_target.color_tex);
+                draw_rect();
+                vertical_blur_target.bind();
+                vertical_blur_target.change_mip_level(mip_level);
+                vertical_blur_target.clear();
+                bind_shader(blur_shader);
+                bind_1f(blur_shader, UniformId::LOD, mip_level);
+                bind_1i(blur_shader, UniformId::HORIZONTAL, 0);
+                bind_texture(blur_shader, UniformId::HIGHLIGHT, horizontal_blur_target.color_tex);
+                draw_rect();
+            }
+        }
+
+        backbuffer.bind();
+        bind_shader(tonemap_shader);
+        //printf("%f\n", t);
+        bind_1f(tonemap_shader, UniformId::EXPOSURE, exposure);
+        bind_texture(tonemap_shader, UniformId::BASE, hdr_target.color_tex);
+        bind_texture(tonemap_shader, UniformId::BLOOM, vertical_blur_target.color_tex);
+        draw_rect();
+        glEnable(GL_DEPTH_TEST);
     }
 };
 

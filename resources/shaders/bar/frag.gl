@@ -136,9 +136,6 @@ void main()
     vec3 color = light_out + ambient;
     //color += text_albedo.a; // want text to glow a little
 	
-    color = color / (color + vec3(1));
-    color = pow(color, vec3(1.0/2.2)); 
-
     FragColor = vec4(color, 1.0);
     // FragColor = vec4(frag_uv, 0, 1.0);
 } 

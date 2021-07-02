@@ -27,6 +27,9 @@ Shader cubemap_shader;
 Shader irradiance_shader;
 Shader env_filter_shader;
 Shader brdf_lut_shader;
+Shader tonemap_shader;
+Shader brightpass_shader;
+Shader blur_shader;
 
 struct Bitmap
 {
@@ -44,14 +47,9 @@ struct VertexBuffer
 
 RenderTarget init_graphics(RenderTarget target);
 
-Texture hdri_to_cubemap(Texture hdri, int size);
-Texture convolve_irradiance_map(Texture src, int size);
-Texture filter_env_map(Texture src, int size);
-Texture generate_brdf_lut(int size);
-VertexBuffer upload_vertex_buffer(Mesh mesh);
-
 void bind_shader(Shader shader);
 void bind_1f(Shader shader, UniformId uniform_id, float val);
+void bind_1i(Shader shader, UniformId uniform_id, int val);
 void bind_2i(Shader shader, UniformId uniform_id, int i1, int i2);
 void bind_2f(Shader shader, UniformId uniform_id, float f1, float f2);
 void bind_4f(Shader shader, UniformId uniform_id, float f1, float f2, float f3, float f4);
@@ -64,6 +62,11 @@ void draw_rect(RenderTarget target, Rect rect, Color color);
 void draw_textured_rect(RenderTarget target, Rect rect, Color color, Texture tex);
 void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture tex);
 void draw_cubemap();
+
+Texture hdri_to_cubemap(RenderTarget target, Texture hdri, int size);
+Texture convolve_irradiance_map(RenderTarget target, Texture src, int size);
+Texture filter_env_map(RenderTarget target, Texture src, int size);
+VertexBuffer upload_vertex_buffer(Mesh mesh);
 
 const int MAX_LIGHTS = 10;
 struct PointLight

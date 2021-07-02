@@ -1,0 +1,22 @@
+#version 330 core
+out vec4 FragColor;
+
+uniform sampler2D base;
+uniform sampler2D bloom;
+uniform float exposure;
+
+in vec2 frag_uv;
+
+void main()
+{
+    vec3 color = texture(base, frag_uv).rgb;
+    color += textureLod(bloom, frag_uv, 1).rgb;
+    color += textureLod(bloom, frag_uv, 2).rgb / 2;
+    color += textureLod(bloom, frag_uv, 3).rgb / 3;
+    color += textureLod(bloom, frag_uv, 4).rgb / 4;
+    
+    color = vec3(1.0) - exp(-color * exposure);
+    color = pow(color, vec3(1.0/2.2)); 
+
+    FragColor = vec4(color, 1);
+} 

@@ -22,6 +22,7 @@ import bpy
 import json
 import yaml
 from bpy_extras.io_utils import axis_conversion
+import mathutils
 
 def write_data(context, filepath, format):
     print("writing scene data...")
@@ -53,8 +54,6 @@ def build_json():
         
     return json.dumps(dict, indent=4, sort_keys=True)
 
-      #  if obj.type == 'LIGHT':
-#obj.data.color
 def build_yaml():
     dict = {}
     dict["entities"] = []
@@ -64,14 +63,15 @@ def build_yaml():
             entity = {"name": obj.name}
             entity["ref"] = clean_ref_name(obj.instance_collection.library.filepath)
             
-            entity["position"] = swizzled_vec(obj.location)
+            entity["position"] = pickle_vec(axis_rotated_vec(obj.location))
             entity["rotation"] = swizzled_vec(obj.rotation_euler)
-            entity["scale"] = swizzled_scale_vec(obj.scale)
+            entity["scale"] = pickle_abs_vec(axis_rotated_vec(obj.scale))
             
             for chld in obj.children:
                 if chld.type == 'LIGHT':
+                    energy = chld.data.energy
                     entity['light'] = {
-                        'color'   : {"x":chld.color[0], "y": chld.color[1], "z":chld.color[2]},
+                        'color'   : {"x":chld.data.color[0] * energy, "y": chld.data.color[1] * energy, "z":chld.data.color[2] * energy},
                         'position': swizzled_vec(chld.location),
                         'rotation': swizzled_vec(chld.rotation_euler),
                         'outer_angle': chld.data.spot_size / 2,
@@ -88,6 +88,16 @@ def clean_ref_name(name):
     name = name[len(prefix):] if name.startswith(prefix) else name
     return name[:-6].upper()
 
+def axis_rotated_vec(vec):
+    m = axis_conversion(from_forward='Y', 
+        from_up='Z',
+        to_forward='-Z',
+        to_up='Y')
+    return m @ vec
+def pickle_vec(vec):
+    return  {"x":vec.x, "y": vec.y, "z": vec.z}
+def pickle_abs_vec(vec):
+    return  {"x":abs(vec.x), "y": abs(vec.y), "z": abs(vec.z)}
 def swizzled_vec(vec):
     return {"x": vec.x, "y": vec.z, "z": -vec.y}
 def swizzled_scale_vec(vec):

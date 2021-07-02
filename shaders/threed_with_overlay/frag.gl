@@ -18,16 +18,16 @@ uniform sampler2D overlay_texture;
 #include consts  
 #include pbr
 
+
 void main()
 {
-
     vec3 main_albedo = texture(albedo_texture, frag_main_uv).rgb;
     vec4 text_albedo = texture(overlay_texture, frag_text_uv);
     vec3 albedo      = mix(main_albedo, vec3(text_albedo * 5), text_albedo.a);
     float main_metal = texture(metal_texture, frag_main_uv).x;
     float metal      = mix(main_metal, 0, text_albedo.a);
-    float main_roughness = max(texture(roughness_texture, frag_main_uv).x, 0.001); // zero roughness bad
-    float roughness      = mix(main_roughness, 0.1 + (0.9 - text_albedo.g), text_albedo.a);
+    float roughness = max(texture(roughness_texture, frag_main_uv).x, 0.001); // zero roughness bad
+    // float roughness      = mix(main_roughness, 0.1 + (0.9 - text_albedo.g), text_albedo.a);
     vec3 normal = texture(normal_texture, frag_main_uv).xyz;
     vec3 emit = texture(emit_texture, frag_main_uv).rgb;
     float ao = texture(ao_texture, frag_main_uv).x;
@@ -35,15 +35,11 @@ void main()
     normal = normalize(frag_normal);
     vec3 light_out = {0, 0, 0};
     for (int i = 0; i < num_lights; i++){
-        light_out += PbrLight(frag_world_pos, normal, camera_position, albedo, roughness, metal, spot_lights[i]); 
+        vec3 this_light_out = PbrLight(frag_world_pos, normal, camera_position, albedo, roughness, metal, spot_lights[i]); 
+        light_out += this_light_out;
     }
     vec3 ambient = PbrAmbient(irradiance, env_map, brdf, albedo, roughness, metal, ao);
 
-    vec3 color = light_out + ambient + emit;
-	
-    color = color / (color + vec3(1));
-    color = pow(color, vec3(1.0/2.2)); 
-
+    vec3 color = light_out + ambient + (emit * 10);
     FragColor = vec4(color, 1.0);
-    
 } 

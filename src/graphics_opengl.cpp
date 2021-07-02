@@ -135,9 +135,6 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
 
     main_target = {width, height, 0};
 
-    // glGenFramebuffers(1, &temp_fbo);
-    // glGenRenderbuffers(1, &temp_rbo);
-
     glEnable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -176,7 +173,10 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
     irradiance_shader = load_shader(create_shader_program("resources/shaders/irradiance"));
     env_filter_shader = load_shader(create_shader_program("resources/shaders/env_filter"));
     brdf_lut_shader = load_shader(create_shader_program("resources/shaders/brdf_lut"));
-
+    tonemap_shader = load_shader(create_shader_program("resources2/shaders/tonemap"));
+    brightpass_shader = load_shader(create_shader_program("resources2/shaders/brightpass"));
+    blur_shader = load_shader(create_shader_program("resources2/shaders/blur"));
+    
     // setup uniform buffers
     glGenBuffers(1, &lights_ubo_buffer);
     glBindBuffer(GL_UNIFORM_BUFFER, lights_ubo_buffer);
@@ -216,6 +216,11 @@ void bind_shader(Shader shader)
 void bind_1f(Shader shader, UniformId uniform_id, float val)
 {
     glUniform1f(shader.uniform_handles[(int)uniform_id], val);
+}
+
+void bind_1i(Shader shader, UniformId uniform_id, int val)
+{
+    glUniform1i(shader.uniform_handles[(int)uniform_id], val);
 }
 
 void bind_2i(Shader shader, UniformId uniform_id, int i1, int i2)
@@ -365,38 +370,35 @@ void render_to_cubemap(RenderTarget target, Shader shader, Cubemap cubemap, uint
     }
 }
 
-Texture hdri_to_cubemap(Texture hdri, int size)
+Texture hdri_to_cubemap(RenderTarget target, Texture hdri, int size)
 {
     Cubemap cubemap(size, size, TextureFormat::RGB16F, true);
-    RenderTarget temp_target(size, size, TextureFormat::RGBA8, TextureFormat::NONE);
 
     bind_shader(rect_to_cubemap_shader);
     bind_texture(rect_to_cubemap_shader, UniformId::EQUIRECTANGULAR_MAP, hdri);
 
-    render_to_cubemap(temp_target, rect_to_cubemap_shader, cubemap);
+    render_to_cubemap(target, rect_to_cubemap_shader, cubemap);
     cubemap.gen_mipmaps();
 
     return cubemap;
 }
 
-Texture convolve_irradiance_map(Texture src, int size)
+Texture convolve_irradiance_map(RenderTarget target, Texture src, int size)
 {
     Cubemap cubemap(size, size, TextureFormat::RGB16F, true);
-    RenderTarget temp_target(size, size, TextureFormat::RGBA8, TextureFormat::NONE);
 
     bind_shader(irradiance_shader);
     bind_texture(irradiance_shader, UniformId::ENV_MAP, src);
 
-    render_to_cubemap(temp_target, irradiance_shader, cubemap);
+    render_to_cubemap(target, irradiance_shader, cubemap);
     cubemap.gen_mipmaps();
 
     return cubemap;
 }
 
-Texture filter_env_map(Texture src, int size)
+Texture filter_env_map(RenderTarget target, Texture src, int size)
 {
     Cubemap cubemap(size, size, TextureFormat::RGB16F, true);
-    RenderTarget temp_target(size, size, TextureFormat::RGBA8, TextureFormat::NONE);
 
     bind_shader(env_filter_shader);
     bind_texture(env_filter_shader, UniformId::ENV_MAP, src);
@@ -407,7 +409,7 @@ Texture filter_env_map(Texture src, int size)
         float roughness = (float)mip / (float)(max_mip_levels - 1);
         bind_1f(env_filter_shader, UniformId::ROUGHNESS, roughness);
 
-        render_to_cubemap(temp_target, env_filter_shader, cubemap, mip);
+        render_to_cubemap(target, env_filter_shader, cubemap, mip);
     }
 
     return cubemap;

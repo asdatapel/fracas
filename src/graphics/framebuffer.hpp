@@ -47,7 +47,7 @@ struct RenderTarget
     {
         // TODO possible leak here, if the original color_tex isn't cleaned up somewhere else
         color_tex = new_color_tex;
-        
+
         width = color_tex.width * powf(0.5, mip_level);
         height = color_tex.height * powf(0.5, mip_level);
 
@@ -55,7 +55,16 @@ struct RenderTarget
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, color_tex.gl_type, color_tex.gl_ref, mip_level);
     }
 
-    void clear (Color color = {.9f, .2f, .3f, 0.f})
+    void change_mip_level(uint32_t mip_level)
+    {
+        width = color_tex.width * powf(0.5, mip_level);
+        height = color_tex.height * powf(0.5, mip_level);
+
+        bind();
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, color_tex.gl_type, color_tex.gl_ref, mip_level);
+    }
+
+    void clear(Color color = {.9f, .2f, .3f, 0.f})
     {
         bind();
 
@@ -68,7 +77,7 @@ struct RenderTarget
         glBindFramebuffer(GL_FRAMEBUFFER, gl_fbo);
         glViewport(0, 0, width, height);
     }
-    
+
     void destroy()
     {
         glDeleteFramebuffers(1, &gl_fbo);

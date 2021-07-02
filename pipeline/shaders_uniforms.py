@@ -3,7 +3,7 @@ import sys
 
 all_uniforms = {}
 shader_files = ["\\".join([root, f]) for root,dirs,files in os.walk("resources/shaders") for f in files if f.endswith(".gl")]
-shader_files += ["\\".join([root, f]) for root,dirs,files in os.walk("./shaders") for f in files if f.endswith(".lib")]
+shader_files += ["\\".join([root, f]) for root,dirs,files in os.walk("./shaders") for f in files if f.endswith(".lib") or f.endswith(".gl")]
 for filename in shader_files:
     file = open(filename, 'r')
     split_lines = [line.split() for line in file if line.startswith("uniform")]
