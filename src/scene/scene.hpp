@@ -8,6 +8,7 @@
 #include "../camera.hpp"
 #include "../graphics.hpp"
 #include "../graphics/framebuffer.hpp"
+#include "../graphics/bloomer.hpp"
 #include "../material.hpp"
 #include <scene_def.hpp>
 
@@ -289,7 +290,6 @@ struct Scene
         ////////////////////////
         // bloom and tonemapping
         ////////////////////////
-
         glDisable(GL_DEPTH_TEST);
         static float exposure = 1;
         if (input->keys[(int)Keys::UP])
@@ -297,63 +297,15 @@ struct Scene
         if (input->keys[(int)Keys::DOWN])
             exposure -= 0.01f;
 
-        static RenderTarget brightpass_target(hdr_target.width, hdr_target.height, TextureFormat::RGB16F, TextureFormat::NONE);
-        brightpass_target.bind();
-        brightpass_target.clear();
-        bind_shader(brightpass_shader);
-        bind_1f(brightpass_shader, UniformId::EXPOSURE, exposure);
-        bind_texture(brightpass_shader, UniformId::TEX, hdr_target.color_tex);
-        draw_rect();
-        brightpass_target.color_tex.gen_mipmaps();
+        static Bloomer bloomer(hdr_target.width, hdr_target.height);
+        bloomer.do_bloom(hdr_target);
 
-        BIG TODO
-        downscale, and then blur AT THE TARGET RESOLUTION
-        static RenderTarget horizontal_blur_target(hdr_target.width, hdr_target.height, TextureFormat::RGB16F, TextureFormat::NONE);
-        static RenderTarget vertical_blur_target(hdr_target.width, hdr_target.height, TextureFormat::RGB16F, TextureFormat::NONE);
-        for (int mip_level = 1; mip_level <= 4; mip_level++)
-        {
-
-            // TODO this cant be good 
-            // TODO this cant be good 
-            // TODO this cant be good 
-            // TODO this cant be good 
-            // TODO this cant be good 
-            // TODO this cant be good 
-            // TODO this cant be good 
-            // TODO this cant be good 
-            // TODO this cant be good 
-            // TODO this cant be good 
-            // TODO this cant be good 
-            // TODO this cant be good 
-            // TODO this cant be good 
-            // TODO this cant be good 
-            for (int i = 0; i < 10; i++)
-            {
-                horizontal_blur_target.bind();
-                horizontal_blur_target.change_mip_level(mip_level);
-                horizontal_blur_target.clear();
-                bind_shader(blur_shader);
-                bind_1f(blur_shader, UniformId::LOD, mip_level);
-                bind_1i(blur_shader, UniformId::HORIZONTAL, 1);
-                bind_texture(blur_shader, UniformId::HIGHLIGHT, i == 0 ? brightpass_target.color_tex : vertical_blur_target.color_tex);
-                draw_rect();
-                vertical_blur_target.bind();
-                vertical_blur_target.change_mip_level(mip_level);
-                vertical_blur_target.clear();
-                bind_shader(blur_shader);
-                bind_1f(blur_shader, UniformId::LOD, mip_level);
-                bind_1i(blur_shader, UniformId::HORIZONTAL, 0);
-                bind_texture(blur_shader, UniformId::HIGHLIGHT, horizontal_blur_target.color_tex);
-                draw_rect();
-            }
-        }
-
-        backbuffer.bind();
         bind_shader(tonemap_shader);
         //printf("%f\n", t);
         bind_1f(tonemap_shader, UniformId::EXPOSURE, exposure);
         bind_texture(tonemap_shader, UniformId::BASE, hdr_target.color_tex);
-        bind_texture(tonemap_shader, UniformId::BLOOM, vertical_blur_target.color_tex);
+        bind_texture(tonemap_shader, UniformId::BLOOM, bloomer.get_final().color_tex);
+        backbuffer.bind();
         draw_rect();
         glEnable(GL_DEPTH_TEST);
     }

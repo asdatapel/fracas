@@ -174,7 +174,6 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
     env_filter_shader = load_shader(create_shader_program("resources/shaders/env_filter"));
     brdf_lut_shader = load_shader(create_shader_program("resources/shaders/brdf_lut"));
     tonemap_shader = load_shader(create_shader_program("resources2/shaders/tonemap"));
-    brightpass_shader = load_shader(create_shader_program("resources2/shaders/brightpass"));
     blur_shader = load_shader(create_shader_program("resources2/shaders/blur"));
     
     // setup uniform buffers

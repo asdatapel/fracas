@@ -28,7 +28,6 @@ Shader irradiance_shader;
 Shader env_filter_shader;
 Shader brdf_lut_shader;
 Shader tonemap_shader;
-Shader brightpass_shader;
 Shader blur_shader;
 
 struct Bitmap
