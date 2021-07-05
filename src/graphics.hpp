@@ -29,6 +29,7 @@ Shader env_filter_shader;
 Shader brdf_lut_shader;
 Shader tonemap_shader;
 Shader blur_shader;
+Shader threed_with_planar_shader;
 
 struct Bitmap
 {

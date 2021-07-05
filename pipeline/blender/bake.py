@@ -1,9 +1,7 @@
 import bpy
 
-def do(filepath):
+def do(filepath, img_size):
     bpy.context.scene.render.engine = 'CYCLES'
-    
-    img_size = 2048
     
     metal_input = 4
     roughness_input = 7
@@ -106,6 +104,8 @@ def do(filepath):
                 
 class MyProperties(bpy.types.PropertyGroup):
     directory : bpy.props.StringProperty(maxlen=1024, subtype='DIR_PATH', options={'HIDDEN', 'SKIP_SAVE'})
+    tex_size : bpy.props.IntProperty(name='size', min=64, max=5096, default = 256)
+    
 
 
 class BakePbr(bpy.types.Operator):
@@ -118,7 +118,7 @@ class BakePbr(bpy.types.Operator):
         my_props = context.scene.my_props
         
         filepath_full = bpy.path.abspath(my_props.directory)
-        return do(filepath_full)
+        return do(filepath_full, my_props.tex_size)
     
 class Panel(bpy.types.Panel):
     bl_idname = "view3d.bake_pbr_panel"
@@ -133,6 +133,7 @@ class Panel(bpy.types.Panel):
         my_props = context.scene.my_props
         
         layout.prop(my_props, "directory")
+        layout.prop(my_props, "tex_size")
         layout.operator("view3d.bake_pbr", text="Bake")
         
             

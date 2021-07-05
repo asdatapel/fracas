@@ -69,6 +69,10 @@ struct Scene
 
     RenderTarget score_targets[3];
     AllocatedMaterial<StandardPbrMaterial::N + 1> score_materials[3];
+    RenderTarget floor_target;
+    AllocatedMaterial<StandardPbrMaterial::N + 1> floor_material;
+    Camera flipped_camera;
+
 
     std::array<Bar, 8> bars;
 
@@ -98,7 +102,7 @@ struct Scene
             env_mat = create_env_mat(temp_target, unfiltered_cubemap);
         }
 
-        // setup bespoke materials for answer bars and score board
+        // setup bespoke materials
         {
             bars[0].entity = &entities[(int)EntityDefId::BAR_1];
             bars[1].entity = &entities[(int)EntityDefId::BAR_2];
@@ -141,6 +145,14 @@ struct Scene
             entities[(int)EntityDefId::RIGHT_SCORE_SCREEN].shader = &bar_shader;
             entities[(int)EntityDefId::BIG_SCREEN].material = &score_materials[2];
             entities[(int)EntityDefId::RIGHT_SCORE_SCREEN].shader = &bar_shader;
+
+            Entity *floor = &entities[(int)EntityDefId::FLOOR];
+            floor_target = RenderTarget(1280, 720, TextureFormat::RGB16F, TextureFormat::DEPTH24);
+            Material *base_material = floor->material;
+            floor_material = AllocatedMaterial<StandardPbrMaterial::N + 1>::from(base_material);
+            floor_material.append(floor_target.color_tex, UniformId::REFLECTION_TEXTURE);
+            floor->material = &floor_material;
+            floor->shader = &threed_with_planar_shader;
         }
 
         font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ANTON_REGULAR_TTF], 128, &assets->temp_allocator);
@@ -149,14 +161,89 @@ struct Scene
         x_mat = assets->materials[(int)MaterialId::X2];
     }
 
+    RenderTarget do_floor()
+    {
+        Entity *floor = &entities[(int)EntityDefId::FLOOR];
+
+        Vec3f plane_normal = {0, 1, 0};
+        float plane_d = floor->position.y;
+
+        floor_target.clear();
+        floor_target.bind();
+
+        flipped_camera = camera;
+        flipped_camera.y_rot *= -1;
+        flipped_camera.pos_y = (2 * plane_d) - flipped_camera.pos_y;
+        flipped_camera.update_transforms(floor_target);
+
+        static float t = 0.f;
+        t += 0.01f;
+        LightUniformBlock all_lights;
+        all_lights.num_lights = 0;
+        for (int i = 0; i < LIGHT_DEF_COUNT && i < 10; i++)
+        {
+            const LightDef *def = &LightDefs[i];
+            Vec3f pos = entities[(int)def->parent].position;
+            Vec3f rot = entities[(int)def->parent].rotation;
+            SpotLight light;
+            light.position = {pos.x, pos.y, pos.z};
+            light.direction = glm::quat({rot.x, rot.y, rot.z}) * glm::vec3(0, -1, 0);
+            light.color = glm::vec3{def->color.x, def->color.y, def->color.z} * (sinf(t) / 2 + 0.5f);
+            light.outer_angle = def->outer_angle;
+            light.inner_angle = def->inner_angle;
+
+            all_lights.spot_lights[i] = light;
+            all_lights.num_lights++;
+        }
+        update_lights(all_lights);
+
+        for (int i = 0; i < entities.size(); i++)
+        {
+            Entity &e = entities[i];
+
+            glm::vec3 rot(e.rotation.x, e.rotation.y, e.rotation.z);
+            glm::vec3 pos(e.position.x, e.position.y, e.position.z);
+            glm::vec3 scale(e.scale.x, e.scale.y, e.scale.z);
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) *
+                              glm::scale(glm::mat4(1.f), scale) *
+                              glm::toMat4(glm::quat(rot));
+
+            bind_shader(*e.shader);
+
+            // TODO HACK
+            if (e.shader == &threed_with_planar_shader)
+            {
+                bind_mat4(*e.shader, UniformId::REFLECTED_PROJECTION, flipped_camera.perspective * flipped_camera.view * model);
+            }
+
+            bind_camera(*e.shader, flipped_camera);
+            bind_mat4(*e.shader, UniformId::MODEL, model);
+            bind_material(*e.shader, env_mat);
+            bind_material(*e.shader, *e.material);
+            draw(floor_target, *e.shader, e.vert_buffer);
+        }
+
+        bind_shader(cubemap_shader);
+        bind_mat4(cubemap_shader, UniformId::PROJECTION, camera.perspective);
+        bind_mat4(cubemap_shader, UniformId::VIEW, camera.view);
+        bind_texture(cubemap_shader, UniformId::ENV_MAP, unfiltered_cubemap);
+        draw_cubemap();
+
+        return floor_target;
+    }
+
     void update_and_draw(RenderTarget backbuffer, Assets *assets, InputState *input)
     {
         //TODO check backbuffer resize
 
         static RenderTarget hdr_target(1920, 1080, TextureFormat::RGB16F, TextureFormat::DEPTH24);
+        camera.update(hdr_target, input);
+
+        RenderTarget floor_reflection = do_floor();
+        floor_reflection.color_tex.gen_mipmaps();
+        
         hdr_target.bind();
         hdr_target.clear();
-        camera.update(hdr_target, input);
 
         static float t = 0.f;
         t += 0.01f;
@@ -269,15 +356,11 @@ struct Scene
                               glm::scale(glm::mat4(1.f), scale) *
                               glm::toMat4(glm::quat(rot));
 
-            bind_shader(bar_shader);
-            bind_camera(bar_shader, camera);
-            bind_mat4(bar_shader, UniformId::MODEL, model);
-            bind_material(bar_shader, env_mat);
-            bind_material(bar_shader, *e.material);
-            if (e.material->num_textures == StandardPbrMaterial::N)
-            {
-                bind_1i(bar_shader, UniformId::OVERLAY_TEXTURE, -1);
-            }
+            bind_shader(*e.shader);
+            bind_camera(*e.shader, camera);
+            bind_mat4(*e.shader, UniformId::MODEL, model);
+            bind_material(*e.shader, env_mat);
+            bind_material(*e.shader, *e.material);
             draw(hdr_target, *e.shader, e.vert_buffer);
         }
 

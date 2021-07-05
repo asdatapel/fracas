@@ -32,8 +32,6 @@ void main()
     }
     vec3 ambient = PbrAmbient(irradiance, env_map, brdf, albedo, roughness, metal, ao);
 
-    vec3 color = light_out + ambient + (emit * 3);
-
+    vec3 color = light_out + ambient + (emit * 10);
     FragColor = vec4(color, 1.0);
-    //FragColor = vec4(emit, 1.0);
 } 

@@ -175,6 +175,7 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
     brdf_lut_shader = load_shader(create_shader_program("resources/shaders/brdf_lut"));
     tonemap_shader = load_shader(create_shader_program("resources2/shaders/tonemap"));
     blur_shader = load_shader(create_shader_program("resources2/shaders/blur"));
+    threed_with_planar_shader = load_shader(create_shader_program("resources2/shaders/threed_with_planar"));
     
     // setup uniform buffers
     glGenBuffers(1, &lights_ubo_buffer);
