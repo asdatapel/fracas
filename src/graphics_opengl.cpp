@@ -340,7 +340,7 @@ void update_lights(LightUniformBlock lights)
         glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 48, 4,
                         &lights.spot_lights[i].outer_angle);
     }
-    glBufferSubData(GL_UNIFORM_BUFFER, 10 * SpotLight::SIZE, 4, &lights.num_lights);
+    glBufferSubData(GL_UNIFORM_BUFFER, MAX_LIGHTS * SpotLight::SIZE, 4, &lights.num_lights);
 };
 
 void render_to_cubemap(RenderTarget target, Shader shader, Cubemap cubemap, uint32_t mip_level = 0)

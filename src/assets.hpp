@@ -1,73 +1,315 @@
 #pragma once
 
+#include <array>
+#include <map>
+#include <unordered_map>
+#include <vector>
+
 #include <asset_definitions.hpp>
+
 #include "font.hpp"
 #include "graphics.hpp"
 #include "material.hpp"
+#include "yaml_parser.hpp"
+#include "scene/entity.hpp"
+
+struct Temp
+{
+    StackAllocator *allocator;
+    char *data = nullptr;
+
+    Temp(Memory mem)
+    {
+        allocator = mem.temp;
+        data = mem.temp->next;
+    }
+    ~Temp()
+    {
+        allocator->free(data);
+    }
+
+    static Temp start(Memory mem)
+    {
+        return Temp(mem);
+    }
+};
+
+struct Collection
+{
+    std::vector<Entity> entities;
+};
 
 struct Assets
 {
-    Texture textures[TEXTURE_ASSET_COUNT];
-    StandardPbrMaterial materials[MATERIAL_COUNT];
+    const std::array<String, StandardPbrMaterial::N> STANDARD_MATERIAL_FILES = {
+        String::from("\\diffuse.bmp"),
+        String::from("\\normal.bmp"),
+        String::from("\\metal.bmp"),
+        String::from("\\roughness.bmp"),
+        String::from("\\emit.bmp"),
+        String::from("\\ao.bmp"),
+    };
 
-    Mesh meshes[MESH_COUNT];
-    VertexBuffer vertex_buffers[MESH_COUNT];
+    // TODO don't use a map, somehow
+    std::map<String, VertexBuffer> meshes;
+    std::map<String, Texture> textures;
+    std::map<String, Collection> collections;
+
+    std::vector<Entity> entities;
+    std::unordered_map<std::string, int> entity_names;
+
+    std::array<Texture, 8> bar_num_textures;
 
     FileData font_files[FONT_ASSET_COUNT];
-
-    StackAllocator allocator;
-    StackAllocator temp_allocator;
-};
-
-Assets load_assets()
-{
-    Assets assets;
-    assets.allocator.init(1024 * 1024 * 1024 * 2); // 2gb
-    assets.temp_allocator.init(1024 * 1024 * 50);  // 50 mb
-
-    for (int i = 0; i < TEXTURE_ASSET_COUNT; i++)
+    VertexBuffer load_mesh(String filepath, Memory mem)
     {
-        FileData tex_file = read_entire_file(TEXTURE_FILES[i], &assets.temp_allocator);
-        Bitmap bmp = parse_bitmap(tex_file, &assets.allocator);
+        if (meshes.count(filepath) > 0)
+        {
+            return meshes[filepath];
+        }
 
+        auto t = Temp::start(mem);
+
+        char *filepath_chars = filepath.to_char_array(mem.temp);
+        FileData file = read_entire_file(filepath_chars, mem.allocator);
+        Mesh mesh = load_fmesh(file, mem.allocator, mem.temp);
+        VertexBuffer buf = upload_vertex_buffer(mesh);
+        meshes[filepath] = buf;
+
+        return buf;
+    }
+
+    Texture load_texture(String filepath, Memory mem)
+    {
+        if (textures.count(filepath) > 0)
+        {
+            return textures[filepath];
+        }
+
+        auto t = Temp::start(mem);
+
+        char *filepath_chars = filepath.to_char_array(mem.temp);
+        FileData file = read_entire_file(filepath_chars, mem.allocator);
+        if (!file.length)
+        {
+            // TODO return default texture
+            return Texture{};
+        }
+
+        Bitmap bmp = parse_bitmap(file, mem.temp);
         Texture2D tex(bmp.width, bmp.height, TextureFormat::SRGB8_ALPHA8, true);
         tex.upload((uint8_t *)bmp.data, true);
-        assets.textures[i] = tex;
+        textures[filepath] = tex;
 
-        assets.temp_allocator.free(tex_file.data);
-    }
-    for (int i = 0; i < MATERIAL_COUNT; i++)
-    {
-        assets.materials[i].texture_array[0] = assets.textures[(int)MATERIAL_DEFINITIONS[i][0]];
-        assets.materials[i].texture_array[1] = assets.textures[(int)MATERIAL_DEFINITIONS[i][1]];
-        assets.materials[i].texture_array[2] = assets.textures[(int)MATERIAL_DEFINITIONS[i][2]];
-        assets.materials[i].texture_array[3] = assets.textures[(int)MATERIAL_DEFINITIONS[i][3]];
-        assets.materials[i].texture_array[4] = assets.textures[(int)MATERIAL_DEFINITIONS[i][4]];
-        assets.materials[i].texture_array[5] = assets.textures[(int)MATERIAL_DEFINITIONS[i][5]];
+        return tex;
     }
 
-    for (int i = 0; i < MESH_COUNT; i++)
+    void init(Memory mem)
     {
-        MeshDefinition def = MESH_DEFINITIONS[i];
-        if (def.multiple_uvs)
+        load_scene(String::from("C:\\Users\\Asda\\Desktop\\test\\"),
+                   String::from("set.fobj"),
+                   mem);
+
+        for (int i = 0; i < FONT_ASSET_COUNT; i++)
         {
-            FileData mesh_file1 = read_entire_file(OBJ_FILES[(int)def.objs[0]], &assets.allocator);
-            FileData mesh_file2 = read_entire_file(OBJ_FILES[(int)def.objs[1]], &assets.allocator);
-            assets.meshes[i] = load_obj_extra_uvs(mesh_file1, mesh_file2, &assets.allocator, &assets.temp_allocator);
+            font_files[i] = read_entire_file(FONT_FILES[i], mem.allocator);
         }
-        else
+
+        const String bar_numbers[] = {
+            String::from("resources/images/bar_numbers/num_1.bmp"),
+            String::from("resources/images/bar_numbers/num_2.bmp"),
+            String::from("resources/images/bar_numbers/num_3.bmp"),
+            String::from("resources/images/bar_numbers/num_4.bmp"),
+            String::from("resources/images/bar_numbers/num_5.bmp"),
+            String::from("resources/images/bar_numbers/num_6.bmp"),
+            String::from("resources/images/bar_numbers/num_7.bmp"),
+            String::from("resources/images/bar_numbers/num_8.bmp"),
+        };
+
+        for (int i = 0; i < bar_num_textures.size(); i++)
         {
-            FileData mesh_file = read_entire_file(OBJ_FILES[(int)def.objs[0]], &assets.allocator);
-            assets.meshes[i] = load_obj(mesh_file, &assets.allocator, &assets.temp_allocator);
+            bar_num_textures[i] = load_texture(bar_numbers[i], mem);
         }
-        assets.vertex_buffers[i] = upload_vertex_buffer(assets.meshes[i]);
     }
 
-    for (int i = 0; i < FONT_ASSET_COUNT; i++)
+    Collection *load_collection(String folder, String filename, Memory mem)
     {
-        assets.font_files[i] = read_entire_file(FONT_FILES[i], &assets.allocator);
+        auto dict_to_vec = [](YamlDictElem *dict, Memory mem)
+        {
+            Vec3f vec;
+            vec.x = atof(((YamlLiteral *)dict->get(String::from("x")))->value.to_char_array(mem.temp));
+            vec.y = atof(((YamlLiteral *)dict->get(String::from("y")))->value.to_char_array(mem.temp));
+            vec.z = atof(((YamlLiteral *)dict->get(String::from("z")))->value.to_char_array(mem.temp));
+
+            return vec;
+        };
+
+        auto t = Temp::start(mem);
+
+        String filepath = folder.concat(filename, mem.temp);
+        if (collections.count(filepath) > 0)
+        {
+            return &collections[filepath];
+        }
+
+        FileData file = read_entire_file(filepath.to_char_array(mem.temp), mem.temp);
+        assert(file.length > 0);
+
+        Collection collection;
+
+        YamlDictElem *main = YamlParser(file).parse(mem.temp);
+        YamlListElem *objects = (YamlListElem *)main->get(String::from("objects"));
+        YamlListElem *obj_elem = objects;
+        while (obj_elem)
+        {
+            Entity e = {};
+
+            YamlDictElem *obj = (YamlDictElem *)obj_elem->value;
+            String name = ((YamlLiteral *)obj->get(String::from("name")))->value;
+            String type = ((YamlLiteral *)obj->get(String::from("type")))->value;
+            if (strcmp(String::from("MESH"), type))
+            {
+                String data = ((YamlLiteral *)obj->get(String::from("data")))->value;
+                VertexBuffer buf = load_mesh(folder.concat(data, mem.temp), mem);
+
+                StandardPbrMaterial *material = (StandardPbrMaterial *)mem.allocator->alloc(sizeof(StandardPbrMaterial));
+                new (material) StandardPbrMaterial();
+                for (int i = 0; i < STANDARD_MATERIAL_FILES.size(); i++)
+                {
+                    String material_name = ((YamlLiteral *)obj->get(String::from("material")))->value;
+                    String texture_path = folder.concat(material_name, mem.temp).concat(STANDARD_MATERIAL_FILES[i], mem.temp);
+                    material->textures[i] = load_texture(texture_path, mem);
+                }
+
+                e.vert_buffer = buf;
+                e.material = material;
+                e.shader = &threed_shader;
+            }
+            else if (strcmp(String::from("LIGHT"), type))
+            {
+                YamlDictElem *light = (YamlDictElem *)obj->get(String::from("light"));
+                YamlDictElem *color = (YamlDictElem *)light->get(String::from("color"));
+
+                e.spot_light.color = dict_to_vec(color, mem);
+                e.spot_light.inner_angle = atof(((YamlLiteral *)light->get(String::from("inner_angle")))->value.to_char_array(mem.temp));
+                e.spot_light.outer_angle = atof(((YamlLiteral *)light->get(String::from("outer_angle")))->value.to_char_array(mem.temp));
+            }
+
+            YamlDictElem *position = (YamlDictElem *)obj->get(String::from("position"));
+            YamlDictElem *rotation = (YamlDictElem *)obj->get(String::from("rotation"));
+            YamlDictElem *scale = (YamlDictElem *)obj->get(String::from("scale"));
+            e.position = dict_to_vec(position, mem);
+            e.rotation = dict_to_vec(rotation, mem);
+            e.scale = dict_to_vec(scale, mem);
+            collection.entities.push_back(e);
+
+            obj_elem = obj_elem->next;
+        }
+
+        collections[filepath] = collection;
+        return &collections[filepath];
     }
 
-    assets.temp_allocator.reset();
-    return assets;
-}
+    void load_scene(String folder, String filename, Memory mem)
+    {
+        auto dict_to_vec = [](YamlDictElem *dict, Memory mem)
+        {
+            Vec3f vec;
+            vec.x = atof(((YamlLiteral *)dict->get(String::from("x")))->value.to_char_array(mem.temp));
+            vec.y = atof(((YamlLiteral *)dict->get(String::from("y")))->value.to_char_array(mem.temp));
+            vec.z = atof(((YamlLiteral *)dict->get(String::from("z")))->value.to_char_array(mem.temp));
+
+            return vec;
+        };
+
+        auto string_to_string = [](String mine)
+        {
+            return std::string(mine.data, mine.len);
+        };
+
+        char *filepath = folder.concat(filename, mem.temp).to_char_array(mem.temp);
+        FileData file = read_entire_file(filepath, mem.temp);
+
+        YamlDictElem *main = YamlParser(file).parse(mem.temp);
+        YamlListElem *objects = (YamlListElem *)main->get(String::from("objects"));
+
+        YamlListElem *obj_elem = objects;
+        while (obj_elem)
+        {
+            YamlDictElem *obj = (YamlDictElem *)obj_elem->value;
+            String name = ((YamlLiteral *)obj->get(String::from("name")))->value;
+            String type = ((YamlLiteral *)obj->get(String::from("type")))->value;
+            if (strcmp(String::from("COLLECTION"), type))
+            {
+                String collection_name = ((YamlLiteral *)obj->get(String::from("collection")))->value;
+                String collection_folder = folder.concat(collection_name, mem.temp).concat(String::from("\\"), mem.temp);
+                Collection *collection = load_collection(collection_folder, collection_name.concat(String::from(".fobj"), mem.temp), mem);
+
+                YamlDictElem *position_str = (YamlDictElem *)obj->get(String::from("position"));
+                YamlDictElem *rotation_str = (YamlDictElem *)obj->get(String::from("rotation"));
+                YamlDictElem *scale_str = (YamlDictElem *)obj->get(String::from("scale"));
+                Vec3f position = dict_to_vec(position_str, mem);
+                Vec3f rotation = dict_to_vec(rotation_str, mem);
+                Vec3f scale = dict_to_vec(scale_str, mem);
+
+                for (int i = 0; i < collection->entities.size(); i++)
+                {
+                    Entity source_e = collection->entities[i];
+                    glm::vec3 e_position = glm::vec3{position.x, position.y, position.z} +
+                                           glm::rotate(glm::quat(glm::vec3{rotation.x, rotation.y, rotation.z}), glm::vec3{source_e.position.x, source_e.position.y, source_e.position.z});
+                    glm::vec3 e_rotation = glm::vec3{rotation.x, rotation.y, rotation.z} + glm::vec3{source_e.rotation.x, source_e.rotation.y, source_e.rotation.z};
+                    glm::vec3 e_scale = glm::vec3{scale.x, scale.y, scale.z} * glm::vec3{source_e.scale.x, source_e.scale.y, source_e.scale.z};
+
+                    Entity new_entity = source_e;
+                    new_entity.position = {e_position.x, e_position.y, e_position.z};
+                    new_entity.rotation = {e_rotation.x, e_rotation.y, e_rotation.z};
+                    new_entity.scale = {e_scale.x, e_scale.y, e_scale.z};
+
+                    entity_names[string_to_string(name)] = entities.size();
+                    entities.push_back(new_entity);
+                }
+            }
+            else
+            {
+                Entity e = {};
+                if (strcmp(String::from("MESH"), type))
+                {
+                    String data = ((YamlLiteral *)obj->get(String::from("data")))->value;
+                    VertexBuffer buf = load_mesh(folder.concat(data, mem.temp), mem);
+
+                    StandardPbrMaterial *material = (StandardPbrMaterial *)mem.allocator->alloc(sizeof(StandardPbrMaterial));
+                    new (material) StandardPbrMaterial();
+                    for (int i = 0; i < STANDARD_MATERIAL_FILES.size(); i++)
+                    {
+                        String material_name = ((YamlLiteral *)obj->get(String::from("material")))->value;
+                        String texture_path = folder.concat(material_name, mem.temp).concat(STANDARD_MATERIAL_FILES[i], mem.temp);
+                        material->textures[i] = load_texture(texture_path, mem);
+                    }
+
+                    e.vert_buffer = buf;
+                    e.material = material;
+                    e.shader = &threed_shader;
+                }
+                else if (strcmp(String::from("LIGHT"), type))
+                {
+                    YamlDictElem *light = (YamlDictElem *)obj->get(String::from("light"));
+                    YamlDictElem *color = (YamlDictElem *)light->get(String::from("color"));
+
+                    e.spot_light.color = dict_to_vec(color, mem);
+                    e.spot_light.inner_angle = atof(((YamlLiteral *)light->get(String::from("inner_angle")))->value.to_char_array(mem.temp));
+                    e.spot_light.outer_angle = atof(((YamlLiteral *)light->get(String::from("outer_angle")))->value.to_char_array(mem.temp));
+                }
+
+                YamlDictElem *position = (YamlDictElem *)obj->get(String::from("position"));
+                YamlDictElem *rotation = (YamlDictElem *)obj->get(String::from("rotation"));
+                YamlDictElem *scale = (YamlDictElem *)obj->get(String::from("scale"));
+                e.position = dict_to_vec(position, mem);
+                e.rotation = dict_to_vec(rotation, mem);
+                e.scale = dict_to_vec(scale, mem);
+                entities.push_back(e);
+            }
+
+            obj_elem = obj_elem->next;
+        }
+    }
+};

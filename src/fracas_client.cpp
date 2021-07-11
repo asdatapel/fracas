@@ -26,6 +26,10 @@ Assets assets;
 Scene scene;
 Font ui_font;
 
+StackAllocator allocator;
+StackAllocator temp;
+Memory memory{&allocator, &temp};
+
 float animation_wait = 0.f;
 
 // game data
@@ -266,10 +270,12 @@ bool init_if_not()
         init_net();
         server.open("127.0.0.1", 6519, false);
 
-        assets = load_assets();
-        scene.init(&assets);
+        allocator.init(1024 * 1024 * 1024 * 2);         // 2gb
+        temp.init(1024 * 1024 * 50);                    // 50 mb
+        assets.init(memory);
+        scene.init(&assets, memory);
         ui_state = ServerMessageType::INVALID;
-        ui_font = load_font(assets.font_files[(int)FontId::RESOURCES_FONTS_ANTON_REGULAR_TTF], 256, &assets.temp_allocator);
+        ui_font = load_font(assets.font_files[(int)FontId::RESOURCES_FONTS_ANTON_REGULAR_TTF], 256, memory.temp);
 
         // MainMenu::init(&assets);
     }
@@ -286,8 +292,12 @@ struct ClientData
     JoinGamePage join;
     LobbyPage lobby;
 
-    ClientData(Assets *assets, RpcClient *client)
-        : main(assets), settings(assets, client), create(assets, client), join(assets, client), lobby(assets, client)
+    ClientData(Assets *assets, RpcClient *client, Memory memory)
+        : main(assets, memory),
+          settings(assets, client, memory),
+          create(assets, client, memory),
+          join(assets, client, memory),
+          lobby(assets, client, memory)
     {
         main_menu.main = &main;
         main_menu.settings = &settings;
@@ -309,12 +319,13 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
         return false;
 
     static RpcClient client("127.0.0.1", 6666);
-    static ClientData client_data(&assets, &client);
+    static ClientData client_data(&assets, &client, memory);
 
     static bool inited = false;
     if (!inited)
     {
         inited = true;
+
         client.client_data = &client_data;
     }
 
@@ -330,6 +341,7 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
 
     if (client_data.main_menu.current)
     {
+        main_target.bind();
         { // background
             static float t = 0;
             t += time_step;
@@ -347,8 +359,7 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
     }
     else
     {
-        clear_bars(main_target, &scene);
-        scene.update_and_draw(main_target, &assets, input_state);
+        scene.update_and_draw(main_target, input_state);
     }
 
     // if (animation_wait)

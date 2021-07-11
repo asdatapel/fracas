@@ -68,7 +68,7 @@ Texture convolve_irradiance_map(RenderTarget target, Texture src, int size);
 Texture filter_env_map(RenderTarget target, Texture src, int size);
 VertexBuffer upload_vertex_buffer(Mesh mesh);
 
-const int MAX_LIGHTS = 10;
+const int MAX_LIGHTS = 50;
 struct PointLight
 {
     glm::vec3 position;
@@ -91,7 +91,7 @@ struct LightUniformBlock
     SpotLight spot_lights[MAX_LIGHTS];
     uint32_t num_lights;
 
-    const static int SIZE = (SpotLight::SIZE * 10) + 4;
+    const static int SIZE = (SpotLight::SIZE * MAX_LIGHTS) + 4;
 };
 void update_lights(LightUniformBlock lights);
 

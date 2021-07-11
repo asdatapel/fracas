@@ -157,7 +157,7 @@ Mesh load_obj(FileData file, StackAllocator *allocator, StackAllocator *temp_all
 
     Mesh mesh = {f, 3 * f_count, sizeof(float) * 8 * 3 * f_count};
     mesh.components_count = 3;
-    mesh.components = (Component*)allocator->alloc(mesh.components_count * sizeof(Component));
+    mesh.components = (Component *)allocator->alloc(mesh.components_count * sizeof(Component));
     mesh.components[0] = {0, 3, 8};
     mesh.components[1] = {3, 2, 8};
     mesh.components[2] = {5, 3, 8};
@@ -196,14 +196,37 @@ Mesh load_obj_extra_uvs(FileData file1, FileData file2, StackAllocator *allocato
 
     allocator->free(mesh1.data);
     allocator->free(mesh2.data);
-    
+
     Mesh mesh = {f, mesh1.verts, sizeof(float) * 10 * mesh1.verts};
     mesh.components_count = 4;
-    mesh.components = (Component*)allocator->alloc(mesh.components_count * sizeof(Component));
+    mesh.components = (Component *)allocator->alloc(mesh.components_count * sizeof(Component));
     mesh.components[0] = {0, 3, 10};
     mesh.components[1] = {3, 2, 10};
     mesh.components[2] = {5, 3, 10};
     mesh.components[3] = {8, 2, 10};
+
+    return mesh;
+}
+
+Mesh load_fmesh(FileData file, StackAllocator *allocator, StackAllocator *temp_allocator)
+{
+    float multiple_uvs = *(float *)file.data;
+    int stride =  multiple_uvs ? 10 : 8;
+    int data_length = file.length - sizeof(float);
+
+    float *f = (float *)allocator->alloc(data_length);
+    int vert_count = data_length / (sizeof(float) * stride);
+
+    memcpy(f, file.data + sizeof(float), data_length);
+
+    Mesh mesh = {f, vert_count, (uint64_t)data_length};
+    mesh.components_count = multiple_uvs ? 4 : 3;
+    mesh.components = (Component *)allocator->alloc(mesh.components_count * sizeof(Component));
+    mesh.components[0] = {0, 3, stride};
+    mesh.components[1] = {3, 2, stride};
+    mesh.components[2] = {5, 3, stride};
+    if (multiple_uvs)
+        mesh.components[3] = {8, 2, stride};
 
     return mesh;
 }

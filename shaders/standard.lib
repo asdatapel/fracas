@@ -18,7 +18,7 @@ uniform samplerCube env_map;
 uniform sampler2D   brdf;  
 
 #section light_uniforms
-const int MAX_LIGHTS = 10;
+const int MAX_LIGHTS = 50;
 // TODO needs better attenuation
 struct PointLight
 {

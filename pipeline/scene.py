@@ -34,7 +34,7 @@ def to_enum(v):
     return v.upper().replace('/', '_').replace('.', '_')
 
 
-file = open('models/wip/set.txt', 'r')
+file = open('resources/models/set.yaml', 'r')
 entities = {}
 lights = {}
 for v in yaml.load(file)['entities']:

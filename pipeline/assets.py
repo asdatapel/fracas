@@ -30,6 +30,8 @@ class Mesh:
 
 for dir in os.listdir("resources/models"):
     full_dir = "resources/models/" + dir
+    if not os.path.isdir(full_dir):
+        continue
     files = [f for f in os.listdir(full_dir)]
 
     m = Material()
