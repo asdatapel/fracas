@@ -60,6 +60,11 @@ def to_fmesh(obj):
                     uv = layer.data[loop_idx]
                     data.append(uv.uv[0])
                     data.append(uv.uv[1])
+            
+            tangent = mesh.loops[loop_idx]
+            data.append(tangent[0])
+            data.append(tangent[1])
+            data.append(tangent[2])
                     
 
     return data

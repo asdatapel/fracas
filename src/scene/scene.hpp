@@ -76,6 +76,9 @@ struct Scene
     RenderTarget floor_target;
     AllocatedMaterial<StandardPbrMaterial::N + 1> floor_material;
 
+    int uv_sphere_id;
+    int brick_id;
+
     void init(Assets *assets, Memory mem)
     {
         this->entities = assets->entities;
@@ -140,6 +143,11 @@ struct Scene
 
                 floor->material = &floor_material;
                 floor->shader = &threed_with_planar_shader;
+            }
+
+            {
+                uv_sphere_id = assets->entity_names["uv_sphere"];
+                brick_id = assets->entity_names["bricks"];
             }
         }
 
@@ -220,6 +228,7 @@ struct Scene
         camera.update(hdr_target, input);
 
         clear_bars(hdr_target);
+        
         RenderTarget floor_reflection = do_floor();
         floor_reflection.color_tex.gen_mipmaps();
 
@@ -274,7 +283,7 @@ struct Scene
             {
                 rotation = 180.f;
             }
-            
+
             entities[bar->entity_id].rotation.x = glm::radians(rotation);
         }
         // float speed_denoms[3] = {2, 2.75, 2.15};
@@ -311,7 +320,9 @@ struct Scene
             {
                 SpotLight light;
                 light.position = {e.position.x, e.position.y, e.position.z};
-                light.direction = glm::quat({e.rotation.x, e.rotation.y, e.rotation.z}) * glm::vec3(0, -1, 0);
+                light.direction = glm::rotate(glm::quat(glm::vec3{e.rotation.x, e.rotation.y, e.rotation.z}), glm::vec3(0, -1, 0));
+                // light.direction = glm::normalize(glm::quat(glm::vec3{e.rotation.x, e.rotation.y, e.rotation.z}) * glm::vec3(0, -1, 0));
+                //light.direction = glm::quat({glm::degrees(e.rotation.x), glm::degrees(e.rotation.y), glm::degrees(e.rotation.z)}) * glm::vec3(0, -1, 0);
                 light.color = glm::vec3{e.spot_light.color.x, e.spot_light.color.y, e.spot_light.color.z};
                 light.outer_angle = e.spot_light.outer_angle;
                 light.inner_angle = e.spot_light.inner_angle;
@@ -334,19 +345,67 @@ struct Scene
                                   glm::scale(glm::mat4(1.f), scale) *
                                   glm::toMat4(glm::quat(rot));
 
-                bind_shader(*e.shader);
-                bind_camera(*e.shader, camera);
-                bind_mat4(*e.shader, UniformId::MODEL, model);
-                bind_material(*e.shader, env_mat);
-                bind_material(*e.shader, *e.material);
+                Shader shader = *e.shader;
+                if (i == brick_id)
+                {
+                    static glm::vec3 pos = {0, 2, 0};
+                    float spd = 0.05f;
+                    if (input->keys[(int)Keys::RIGHT])
+                    {
+                        pos.x += spd;
+                    }
+                    if (input->keys[(int)Keys::LEFT])
+                    {
+                        pos.x -= spd;
+                    }
+                    if (input->keys[(int)Keys::DOWN])
+                    {
+                        pos.z += spd;
+                    }
+                    if (input->keys[(int)Keys::UP])
+                    {
+                        pos.z -= spd;
+                    }
+                    shader = threed_with_normals_shader;
+                    static float t = 0.f;
+                    t += 0.01f;
+                    rot = glm::vec3(glm::radians(-90.0), glm::radians(45.0), e.rotation.z);
+                    model = glm::translate(glm::mat4(1.0f), pos) *
+                            glm::scale(glm::mat4(1.f), scale) *
+                            glm::toMat4(glm::quat(rot));
+                }
+                bind_shader(shader);
+                bind_camera(shader, camera);
+                bind_mat4(shader, UniformId::MODEL, model);
+                bind_material(shader, env_mat);
+                bind_material(shader, *e.material);
 
                 // TODO HACK
                 if (i == floor_id)
                 {
-                    bind_mat4(*e.shader, UniformId::REFLECTED_PROJECTION, flipped_camera.perspective * flipped_camera.view * model);
+                    bind_mat4(shader, UniformId::REFLECTED_PROJECTION, flipped_camera.perspective * flipped_camera.view * model);
                 }
 
-                draw(hdr_target, *e.shader, e.vert_buffer);
+                draw(hdr_target, shader, e.vert_buffer);
+            }
+            else
+            {
+
+                glm::vec3 rot(e.rotation.x, e.rotation.y, e.rotation.z);
+                glm::vec3 pos(e.position.x, e.position.y, e.position.z);
+                glm::vec3 scale(e.scale.x / 3, e.scale.y / 3, e.scale.z / 3);
+                glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) *
+                                  glm::scale(glm::mat4(1.f), scale) *
+                                  glm::toMat4(glm::quat(rot));
+
+                Entity &uv_sphere = entities[uv_sphere_id];
+
+                bind_shader(*uv_sphere.shader);
+                bind_camera(*uv_sphere.shader, camera);
+                bind_mat4(*uv_sphere.shader, UniformId::MODEL, model);
+                bind_material(*uv_sphere.shader, env_mat);
+                bind_material(*uv_sphere.shader, *uv_sphere.material);
+                draw(hdr_target, *uv_sphere.shader, uv_sphere.vert_buffer);
             }
         }
 
@@ -363,10 +422,10 @@ struct Scene
         ////////////////////////
         glDisable(GL_DEPTH_TEST);
         static float exposure = 1;
-        if (input->keys[(int)Keys::UP])
-            exposure += 0.01f;
-        if (input->keys[(int)Keys::DOWN])
-            exposure -= 0.01f;
+        // if (input->keys[(int)Keys::UP])
+        //     exposure += 0.01f;
+        // if (input->keys[(int)Keys::DOWN])
+        //     exposure -= 0.01f;
 
         static Bloomer bloomer(hdr_target.width, hdr_target.height);
         bloomer.do_bloom(hdr_target);

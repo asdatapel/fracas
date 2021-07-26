@@ -1,15 +1,28 @@
 in order:
+ - rendering
+    - use normals
+    - dynamic text on tables, screens, entrances
+    - env map generation
+    - translucent materials
+    - fix board text size
+    - characters models + animation
+    - moving lights
+    - volumetrics
+    - add distortion to floor
+    - buy baking plugin
+    - get more models in
+    - ingame ui
+    - perf: profiling
+    - perf: combine uniform maps
+    - signed distance fields for text
+    - improve menu background
+ - test on laptop
  - server preempts (so it doesn't wait on READY forever)
  - server timer for answers
- - cool graphics
-    - get more models in
-    - combine uniform maps
-    - signed distance fields for text
  - parse question spreadsheet
  - simple answer checking mechanism
  - ui layouting
  - complex answer checking mechanism
  - fill out server messages to contain more info (family names, etc)
- - lobbies
  - avatar pics + fun stuff like a celebration emoji effect
  - change references to pointers

@@ -211,7 +211,7 @@ Mesh load_obj_extra_uvs(FileData file1, FileData file2, StackAllocator *allocato
 Mesh load_fmesh(FileData file, StackAllocator *allocator, StackAllocator *temp_allocator)
 {
     float multiple_uvs = *(float *)file.data;
-    int stride =  multiple_uvs ? 10 : 8;
+    int stride = multiple_uvs ? 10 : 8;
     int data_length = file.length - sizeof(float);
 
     float *f = (float *)allocator->alloc(data_length);
@@ -228,5 +228,47 @@ Mesh load_fmesh(FileData file, StackAllocator *allocator, StackAllocator *temp_a
     if (multiple_uvs)
         mesh.components[3] = {8, 2, stride};
 
+    return mesh;
+}
+
+Mesh load_fmesh_with_tangents(FileData file, StackAllocator *allocator, StackAllocator *temp_allocator)
+{
+
+    int file_stride = 14;
+    int file_data_length = file.length - sizeof(float);
+    
+    int vert_count = file_data_length / (sizeof(float) * file_stride);
+    int stride = file_stride ; // additional space for tangent
+    int data_length = vert_count * (sizeof(float) * stride);
+    float *f = (float *)allocator->alloc(data_length);
+
+    for (int i = 0; i < vert_count; i++)
+    {
+        float *file_data_pos = ((float*)file.data) + 1 + (i * file_stride);
+        float *data_pos = &f[i * stride];
+        memcpy(data_pos, file_data_pos, sizeof(float) * file_stride);
+
+        Vec3f normal = {data_pos[3], data_pos[4], data_pos[5]};
+        
+//     float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+//     tangent1.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+//     tangent1.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+//     tangent1.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+
+//     bitangent1.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+//     bitangent1.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+//     bitangent1.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+    }
+
+    Mesh mesh = {f, vert_count, (uint64_t)data_length};
+    mesh.components_count = 5;
+    mesh.components = (Component *)allocator->alloc(mesh.components_count * sizeof(Component));
+    mesh.components[0] = {0, 3, stride};
+    mesh.components[1] = {3, 2, stride};
+    mesh.components[2] = {5, 3, stride};
+    mesh.components[3] = {8, 3, stride};
+    mesh.components[4] = {11, 3, stride};
+    
     return mesh;
 }

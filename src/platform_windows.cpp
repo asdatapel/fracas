@@ -143,6 +143,12 @@ void key_input_callback(GLFWwindow *window, int key, int scancode, int action, i
     case GLFW_KEY_DOWN:
         append_if_press(Keys::DOWN);
         break;
+    case GLFW_KEY_LEFT:
+        append_if_press(Keys::LEFT);
+        break;
+    case GLFW_KEY_RIGHT:
+        append_if_press(Keys::RIGHT);
+        break;
     }
 }
 

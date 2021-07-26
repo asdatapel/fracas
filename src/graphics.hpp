@@ -30,6 +30,7 @@ Shader brdf_lut_shader;
 Shader tonemap_shader;
 Shader blur_shader;
 Shader threed_with_planar_shader;
+Shader threed_with_normals_shader;
 
 struct Bitmap
 {
