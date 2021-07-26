@@ -95,7 +95,7 @@ struct Camera
         float dir_z = sin(glm::radians(x_rot)) * cos(glm::radians(y_rot));
 
         view = glm::lookAt(glm::vec3{pos_x, pos_y, pos_z}, glm::vec3{pos_x, pos_y, pos_z} + glm::vec3{dir_x, dir_y, dir_z}, {0.f, 1.f, 0.f});
-        perspective = glm::perspective(glm::radians(60.f), (float)target.width / (float)target.height, 0.01f, 100.0f);
+        perspective = glm::perspective(glm::radians(45.f), (float)target.width / (float)target.height, 0.01f, 100.0f);
     }
 };
 

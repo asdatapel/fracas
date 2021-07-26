@@ -24,6 +24,8 @@ enum struct Keys
     C,
     UP,
     DOWN,
+    LEFT,
+    RIGHT,
     INVALID
 };
 

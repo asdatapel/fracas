@@ -72,7 +72,14 @@ struct Assets
 
         char *filepath_chars = filepath.to_char_array(mem.temp);
         FileData file = read_entire_file(filepath_chars, mem.allocator);
-        Mesh mesh = load_fmesh(file, mem.allocator, mem.temp);
+        Mesh mesh;
+        if (strcmp(filepath, String::from("C:\\Users\\Asda\\Desktop\\test\\bricks\\Plane.fmesh")))
+        {
+            mesh = load_fmesh_with_tangents(file, mem.allocator, mem.temp);
+        }
+        else {
+            mesh = load_fmesh(file, mem.allocator, mem.temp);
+        } 
         VertexBuffer buf = upload_vertex_buffer(mesh);
         meshes[filepath] = buf;
 
@@ -97,7 +104,7 @@ struct Assets
         }
 
         Bitmap bmp = parse_bitmap(file, mem.temp);
-        Texture2D tex(bmp.width, bmp.height, TextureFormat::SRGB8_ALPHA8, true);
+        Texture2D tex(bmp.width, bmp.height, TextureFormat::RGBA8, true);
         tex.upload((uint8_t *)bmp.data, true);
         textures[filepath] = tex;
 

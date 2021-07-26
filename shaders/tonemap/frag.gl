@@ -7,17 +7,60 @@ uniform float exposure;
 
 in vec2 frag_uv;
 
+// void main()
+// {
+//     vec3 hdr_color = texture(base, frag_uv).rgb;
+//     vec3 bloom_color = texture(bloom, frag_uv).rgb;
+//     vec3 color = mix(hdr_color, bloom_color, 0.1);
+
+//     //tonemap
+//     color = vec3(1.0) - exp(-color * exposure);
+
+//     // gamma correct
+//     color = pow(color, vec3(1.0/2.2)); 
+
+//     FragColor = vec4(color, 1);
+// } 
+
+float A = 0.15;
+float B = 0.50;
+float C = 0.10;
+float D = 0.20;
+float E = 0.02;
+float F = 0.30;
+float W = 11.2;
+
+// http://filmicworlds.com/blog/filmic-tonemapping-operators/
+vec3 Uncharted2Tonemap(vec3 x)
+{
+   return ((x*(A*x+C*B)+D*E)/(x*(A*x+B)+D*F))-E/F;
+}
+
 void main()
 {
     vec3 hdr_color = texture(base, frag_uv).rgb;
     vec3 bloom_color = texture(bloom, frag_uv).rgb;
     vec3 color = mix(hdr_color, bloom_color, 0.1);
+    color *= exposure;  // Hardcoded Exposure Adjustment
 
-    //tonemap
-    color = vec3(1.0) - exp(-color * exposure);
+   float ExposureBias = 2.0f;
+   vec3 curr = Uncharted2Tonemap(ExposureBias*color);
 
-    // gamma correct
-    color = pow(color, vec3(1.0/2.2)); 
+   vec3 whiteScale = 1.0f/Uncharted2Tonemap(vec3(W));
+   color = curr*whiteScale;
+      
+   vec3 retColor = pow(color,vec3(1/2.2));
+   FragColor = vec4(retColor,1);
+}
 
-    FragColor = vec4(color, 1);
-} 
+// void main()
+// {
+//     vec3 hdr_color = texture(base, frag_uv).rgb;
+//     vec3 bloom_color = texture(bloom, frag_uv).rgb;
+//     vec3 color = mix(hdr_color, bloom_color, 0.1);
+
+//     color *= exposure;  // Hardcoded Exposure Adjustment
+//     vec3 x = max(vec3(0), color-0.004);
+//     vec3 retColor = (x*(6.2*x+.5))/(x*(6.2*x+1.7)+0.06);
+//     FragColor = vec4(retColor, 1);
+// }
