@@ -39,7 +39,7 @@ void main()
         vec3 this_light_out = PbrLight(frag_world_pos, normal, camera_position, albedo, roughness, metal, spot_lights[i]); 
         light_out += this_light_out;
     }
-    vec3 ambient = PbrAmbient(irradiance, env_map, brdf, albedo, roughness, metal, ao);
+    vec3 ambient = PbrAmbient(irradiance, env_map, brdf, normal, albedo, roughness, metal, ao);
 
     vec3 color = light_out + ambient + (emit * 10);
     FragColor = vec4(color, 1.0);

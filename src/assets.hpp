@@ -104,7 +104,7 @@ struct Assets
         }
 
         Bitmap bmp = parse_bitmap(file, mem.temp);
-        Texture2D tex(bmp.width, bmp.height, TextureFormat::RGBA8, true);
+        Texture2D tex(bmp.width, bmp.height, TextureFormat::SRGB8_ALPHA8, true);
         tex.upload((uint8_t *)bmp.data, true);
         textures[filepath] = tex;
 

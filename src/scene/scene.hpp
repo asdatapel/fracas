@@ -228,6 +228,7 @@ struct Scene
         camera.update(hdr_target, input);
 
         clear_bars(hdr_target);
+        
         RenderTarget floor_reflection = do_floor();
         floor_reflection.color_tex.gen_mipmaps();
 
