@@ -2,7 +2,7 @@
 
 #include <stb/stb_truetype.hpp>
 
-#include "graphics.hpp"
+#include "graphics/graphics.hpp"
 #include "platform.hpp"
 #include "util.hpp"
 

@@ -6,7 +6,7 @@
 
 #include "../assets.hpp"
 #include "../camera.hpp"
-#include "../graphics.hpp"
+#include "../graphics/graphics.hpp"
 #include "../graphics/framebuffer.hpp"
 #include "../graphics/bloomer.hpp"
 #include "../material.hpp"

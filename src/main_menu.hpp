@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "graphics.hpp"
+#include "graphics/graphics.hpp"
 #include "net/generated_rpc_client.hpp"
 
 bool in_rect(Vec2f point, Rect rect, Rect mask = {})

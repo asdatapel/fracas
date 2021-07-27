@@ -8,7 +8,7 @@
 #include <asset_definitions.hpp>
 
 #include "font.hpp"
-#include "graphics.hpp"
+#include "graphics/graphics.hpp"
 #include "material.hpp"
 #include "yaml_parser.hpp"
 #include "scene/entity.hpp"

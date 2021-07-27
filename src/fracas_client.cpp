@@ -16,7 +16,7 @@
 #include "scene/scene.hpp"
 #include "ui.hpp"
 
-#include "graphics_opengl.cpp"
+#include "graphics/graphics_opengl.cpp"
 #include "platform_windows.cpp"
 #include "net/net.cpp"
 

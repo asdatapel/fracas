@@ -8,9 +8,9 @@
 #include <GLFW/glfw3.h>
 #include <windows.h>
 
-#include "fracas_client.hpp"
-#include "graphics.hpp"
+#include "graphics/graphics.hpp"
 #include "platform.hpp"
+#include "fracas_client.hpp"
 
 const static int FRAME_RATE_HZ = 60;
 const static long long FRAME_TIME_NS = 1000000000 / FRAME_RATE_HZ;

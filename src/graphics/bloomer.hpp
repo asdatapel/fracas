@@ -1,7 +1,7 @@
 #pragma once
 
 #include "framebuffer.hpp"
-#include "../graphics.hpp"
+#include "graphics.hpp"
 
 struct Bloomer
 {
