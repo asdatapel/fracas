@@ -41,13 +41,18 @@ struct Collection
 
 struct Assets
 {
-    const std::array<String, StandardPbrMaterial::N> STANDARD_MATERIAL_FILES = {
-        String::from("\\diffuse.bmp"),
-        String::from("\\normal.bmp"),
-        String::from("\\metal.bmp"),
-        String::from("\\roughness.bmp"),
-        String::from("\\emit.bmp"),
-        String::from("\\ao.bmp"),
+    struct TextureDefinition
+    {
+        String filename;
+        TextureFormat format;
+    };
+    const std::array<TextureDefinition, StandardPbrMaterial::N> STANDARD_MATERIAL_FILES = {
+        TextureDefinition{String::from("\\diffuse.bmp"), TextureFormat::SRGB8_ALPHA8},
+        TextureDefinition{String::from("\\normal.bmp"), TextureFormat::RGBA8},
+        TextureDefinition{String::from("\\metal.bmp"), TextureFormat::SRGB8_ALPHA8},
+        TextureDefinition{String::from("\\roughness.bmp"), TextureFormat::SRGB8_ALPHA8},
+        TextureDefinition{String::from("\\emit.bmp"), TextureFormat::SRGB8_ALPHA8},
+        TextureDefinition{String::from("\\ao.bmp"), TextureFormat::SRGB8_ALPHA8},
     };
 
     // TODO don't use a map, somehow
@@ -72,21 +77,14 @@ struct Assets
 
         char *filepath_chars = filepath.to_char_array(mem.temp);
         FileData file = read_entire_file(filepath_chars, mem.allocator);
-        Mesh mesh;
-        if (strcmp(filepath, String::from("C:\\Users\\Asda\\Desktop\\test\\bricks\\Plane.fmesh")))
-        {
-            mesh = load_fmesh_with_tangents(file, mem.allocator, mem.temp);
-        }
-        else {
-            mesh = load_fmesh(file, mem.allocator, mem.temp);
-        } 
+        Mesh mesh = load_fmesh(file, mem);
         VertexBuffer buf = upload_vertex_buffer(mesh);
         meshes[filepath] = buf;
 
         return buf;
     }
 
-    Texture load_texture(String filepath, Memory mem)
+    Texture load_texture(String filepath, TextureFormat format, Memory mem)
     {
         if (textures.count(filepath) > 0)
         {
@@ -104,7 +102,7 @@ struct Assets
         }
 
         Bitmap bmp = parse_bitmap(file, mem.temp);
-        Texture2D tex(bmp.width, bmp.height, TextureFormat::SRGB8_ALPHA8, true);
+        Texture2D tex(bmp.width, bmp.height, format, true);
         tex.upload((uint8_t *)bmp.data, true);
         textures[filepath] = tex;
 
@@ -135,7 +133,7 @@ struct Assets
 
         for (int i = 0; i < bar_num_textures.size(); i++)
         {
-            bar_num_textures[i] = load_texture(bar_numbers[i], mem);
+            bar_num_textures[i] = load_texture(bar_numbers[i], TextureFormat::RGBA8, mem);
         }
     }
 
@@ -184,8 +182,8 @@ struct Assets
                 for (int i = 0; i < STANDARD_MATERIAL_FILES.size(); i++)
                 {
                     String material_name = ((YamlLiteral *)obj->get(String::from("material")))->value;
-                    String texture_path = folder.concat(material_name, mem.temp).concat(STANDARD_MATERIAL_FILES[i], mem.temp);
-                    material->textures[i] = load_texture(texture_path, mem);
+                    String texture_path = folder.concat(material_name, mem.temp).concat(STANDARD_MATERIAL_FILES[i].filename, mem.temp);
+                    material->textures[i] = load_texture(texture_path, STANDARD_MATERIAL_FILES[i].format, mem);
                 }
 
                 e.vert_buffer = buf;
@@ -289,8 +287,8 @@ struct Assets
                     for (int i = 0; i < STANDARD_MATERIAL_FILES.size(); i++)
                     {
                         String material_name = ((YamlLiteral *)obj->get(String::from("material")))->value;
-                        String texture_path = folder.concat(material_name, mem.temp).concat(STANDARD_MATERIAL_FILES[i], mem.temp);
-                        material->textures[i] = load_texture(texture_path, mem);
+                        String texture_path = folder.concat(material_name, mem.temp).concat(STANDARD_MATERIAL_FILES[i].filename, mem.temp);
+                        material->textures[i] = load_texture(texture_path, STANDARD_MATERIAL_FILES[i].format, mem);
                     }
 
                     e.vert_buffer = buf;

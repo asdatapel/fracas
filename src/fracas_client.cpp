@@ -270,8 +270,9 @@ bool init_if_not()
         init_net();
         server.open("127.0.0.1", 6519, false);
 
-        allocator.init(1024 * 1024 * 1024 * 2);         // 2gb
-        temp.init(1024 * 1024 * 50);                    // 50 mb
+        allocator.init(1024ull
+         * 1024 * 1024 * 2);         // 2gb
+        temp.init(1024 * 1024 * 50);                       // 50 mb
         assets.init(memory);
         scene.init(&assets, memory);
         ui_state = ServerMessageType::INVALID;

@@ -2,7 +2,7 @@
 
 #include <array>
 
-#include "../stb/stb_image.hpp"
+#include <stb/stb_image.hpp>
 
 #include "../assets.hpp"
 #include "../camera.hpp"
@@ -131,7 +131,6 @@ struct Scene
                 screen->material = &score_materials[i];
                 screen->shader = &bar_shader;
             }
-
             {
                 floor_id = assets->entity_names["floor"];
                 Entity *floor = &entities[floor_id];
@@ -144,10 +143,15 @@ struct Scene
                 floor->material = &floor_material;
                 floor->shader = &threed_with_planar_shader;
             }
+            {
+                brick_id = assets->entity_names["bricks"];
+                Entity *bricks = &entities[brick_id];
+                bricks->shader = &threed_with_normals_shader;
 
+                bricks->position = {0, 3.5, 0};
+            }
             {
                 uv_sphere_id = assets->entity_names["uv_sphere"];
-                brick_id = assets->entity_names["bricks"];
             }
         }
 
@@ -228,7 +232,7 @@ struct Scene
         camera.update(hdr_target, input);
 
         clear_bars(hdr_target);
-        
+
         RenderTarget floor_reflection = do_floor();
         floor_reflection.color_tex.gen_mipmaps();
 
@@ -286,6 +290,30 @@ struct Scene
 
             entities[bar->entity_id].rotation.x = glm::radians(rotation);
         }
+
+        {
+            Entity *bricks = &entities[brick_id];
+
+            float spd = 0.05f;
+            if (input->keys[(int)Keys::RIGHT])
+            {
+                bricks->position.x += spd;
+            }
+            if (input->keys[(int)Keys::LEFT])
+            {
+                bricks->position.x -= spd;
+            }
+            if (input->keys[(int)Keys::DOWN])
+            {
+                bricks->position.z += spd;
+            }
+            if (input->keys[(int)Keys::UP])
+            {
+                bricks->position.z -= spd;
+            }
+            bricks->rotation = {glm::radians(-90.0), glm::radians(45.0), bricks->rotation.z};
+        }
+
         // float speed_denoms[3] = {2, 2.75, 2.15};
         // for (int i = 0; i < 3; i++)
         // {
@@ -321,8 +349,6 @@ struct Scene
                 SpotLight light;
                 light.position = {e.position.x, e.position.y, e.position.z};
                 light.direction = glm::rotate(glm::quat(glm::vec3{e.rotation.x, e.rotation.y, e.rotation.z}), glm::vec3(0, -1, 0));
-                // light.direction = glm::normalize(glm::quat(glm::vec3{e.rotation.x, e.rotation.y, e.rotation.z}) * glm::vec3(0, -1, 0));
-                //light.direction = glm::quat({glm::degrees(e.rotation.x), glm::degrees(e.rotation.y), glm::degrees(e.rotation.z)}) * glm::vec3(0, -1, 0);
                 light.color = glm::vec3{e.spot_light.color.x, e.spot_light.color.y, e.spot_light.color.z};
                 light.outer_angle = e.spot_light.outer_angle;
                 light.inner_angle = e.spot_light.inner_angle;
@@ -346,34 +372,6 @@ struct Scene
                                   glm::toMat4(glm::quat(rot));
 
                 Shader shader = *e.shader;
-                if (i == brick_id)
-                {
-                    static glm::vec3 pos = {0, 2, 0};
-                    float spd = 0.05f;
-                    if (input->keys[(int)Keys::RIGHT])
-                    {
-                        pos.x += spd;
-                    }
-                    if (input->keys[(int)Keys::LEFT])
-                    {
-                        pos.x -= spd;
-                    }
-                    if (input->keys[(int)Keys::DOWN])
-                    {
-                        pos.z += spd;
-                    }
-                    if (input->keys[(int)Keys::UP])
-                    {
-                        pos.z -= spd;
-                    }
-                    shader = threed_with_normals_shader;
-                    static float t = 0.f;
-                    t += 0.01f;
-                    rot = glm::vec3(glm::radians(-90.0), glm::radians(45.0), e.rotation.z);
-                    model = glm::translate(glm::mat4(1.0f), pos) *
-                            glm::scale(glm::mat4(1.f), scale) *
-                            glm::toMat4(glm::quat(rot));
-                }
                 bind_shader(shader);
                 bind_camera(shader, camera);
                 bind_mat4(shader, UniformId::MODEL, model);

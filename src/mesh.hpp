@@ -165,12 +165,6 @@ Mesh load_obj(FileData file, StackAllocator *allocator, StackAllocator *temp_all
     return mesh;
 }
 
-void free_mesh(Mesh mesh)
-{
-    free(mesh.data);
-    free(mesh.components);
-}
-
 //TODO modify this to take in two meshes and output new mesh
 Mesh load_obj_extra_uvs(FileData file1, FileData file2, StackAllocator *allocator, StackAllocator *temp_allocator)
 {
@@ -208,20 +202,32 @@ Mesh load_obj_extra_uvs(FileData file1, FileData file2, StackAllocator *allocato
     return mesh;
 }
 
-Mesh load_fmesh(FileData file, StackAllocator *allocator, StackAllocator *temp_allocator)
+template <typename T>
+struct Buffer
 {
-    float multiple_uvs = *(float *)file.data;
+    T *data;
+    int length;
+
+    static Buffer<T> from_char_array(char *data, int length)
+    {
+        return Buffer{(T *)data, length / (int)sizeof(T)};
+    }
+};
+
+// v1: pos, uv, normal, one optional uv
+Mesh load_fmesh_v1(Buffer<float> buffer, Memory mem)
+{
+    int data_length = (buffer.length - 1) * sizeof(float);
+    float *f = (float *)mem.allocator->alloc(data_length);
+    memcpy(f, buffer.data + 1, data_length);
+
+    float multiple_uvs = buffer.data[0];
     int stride = multiple_uvs ? 10 : 8;
-    int data_length = file.length - sizeof(float);
-
-    float *f = (float *)allocator->alloc(data_length);
-    int vert_count = data_length / (sizeof(float) * stride);
-
-    memcpy(f, file.data + sizeof(float), data_length);
+    int vert_count = (buffer.length - 1) / stride;
 
     Mesh mesh = {f, vert_count, (uint64_t)data_length};
     mesh.components_count = multiple_uvs ? 4 : 3;
-    mesh.components = (Component *)allocator->alloc(mesh.components_count * sizeof(Component));
+    mesh.components = (Component *)mem.allocator->alloc(mesh.components_count * sizeof(Component));
     mesh.components[0] = {0, 3, stride};
     mesh.components[1] = {3, 2, stride};
     mesh.components[2] = {5, 3, stride};
@@ -231,44 +237,46 @@ Mesh load_fmesh(FileData file, StackAllocator *allocator, StackAllocator *temp_a
     return mesh;
 }
 
-Mesh load_fmesh_with_tangents(FileData file, StackAllocator *allocator, StackAllocator *temp_allocator)
+
+// v2: pos, uv, normal, tangent, bitangent
+Mesh load_fmesh_v2(Buffer<float> buffer, Memory mem)
 {
+    float *data = buffer.data;
 
-    int file_stride = 14;
-    int file_data_length = file.length - sizeof(float);
-    
-    int vert_count = file_data_length / (sizeof(float) * file_stride);
-    int stride = file_stride ; // additional space for tangent
-    int data_length = vert_count * (sizeof(float) * stride);
-    float *f = (float *)allocator->alloc(data_length);
-
-    for (int i = 0; i < vert_count; i++)
+    Mesh mesh;
+    mesh.components_count = *data++;
+    mesh.components = (Component *)mem.allocator->alloc(mesh.components_count * sizeof(Component));
+    int stride = *data++;
+    int offset = 0;
+    for (int i = 0; i < mesh.components_count; i++)
     {
-        float *file_data_pos = ((float*)file.data) + 1 + (i * file_stride);
-        float *data_pos = &f[i * stride];
-        memcpy(data_pos, file_data_pos, sizeof(float) * file_stride);
-
-        Vec3f normal = {data_pos[3], data_pos[4], data_pos[5]};
-        
-//     float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
-
-//     tangent1.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
-//     tangent1.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
-//     tangent1.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
-
-//     bitangent1.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
-//     bitangent1.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
-//     bitangent1.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+        int length = *data++;
+        mesh.components[i] = {offset, length, stride};
+        offset += length;
     }
 
-    Mesh mesh = {f, vert_count, (uint64_t)data_length};
-    mesh.components_count = 5;
-    mesh.components = (Component *)allocator->alloc(mesh.components_count * sizeof(Component));
-    mesh.components[0] = {0, 3, stride};
-    mesh.components[1] = {3, 2, stride};
-    mesh.components[2] = {5, 3, stride};
-    mesh.components[3] = {8, 3, stride};
-    mesh.components[4] = {11, 3, stride};
-    
+    int vertex_data_length = buffer.length - (data - buffer.data);
+
+    mesh.verts = vertex_data_length / stride;
+    mesh.buf_size = vertex_data_length * sizeof(float);
+    mesh.data = (float *)mem.allocator->alloc(mesh.buf_size);
+    memcpy(mesh.data, data, mesh.buf_size);
+
     return mesh;
+}
+
+Mesh load_fmesh(FileData file, Memory mem)
+{
+    Buffer<float> buffer = Buffer<float>::from_char_array(file.data, file.length);
+    float file_version = buffer.data[0];
+    if (file_version == 2)
+    {
+        buffer.data++;
+        buffer.length--;
+        return load_fmesh_v2(buffer, mem);
+    }
+    else
+    {
+        return load_fmesh_v1(buffer, mem);
+    }
 }

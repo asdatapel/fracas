@@ -1,7 +1,7 @@
-src/glad/*
-src/glfw/*
-src/KHR/*
-src/glm/*
+thirdparty/glad/*
+thirdparty/glfw/*
+thirdparty/KHR/*
+thirdparty/glm/*
 build/*
 generated/* 
 resources2/*
