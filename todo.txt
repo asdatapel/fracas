@@ -1,6 +1,5 @@
 in order:
  - rendering
-    - use normals
     - dynamic text on tables, screens, entrances
     - env map generation
     - translucent materials
