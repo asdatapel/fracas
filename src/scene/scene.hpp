@@ -53,7 +53,8 @@ struct Scene
     StandardPbrEnvMaterial env_mat;
 
     Camera camera;
-    std::vector<Entity> entities;
+    // std::vector<Entity> entities;
+    FreeList<Entity> entities;
 
     Font font;
 
@@ -81,7 +82,12 @@ struct Scene
 
     void init(Assets *assets, Memory mem)
     {
-        this->entities = assets->entities;
+        entities.init(mem.allocator, 1024);
+        for (int i = 0; i < assets->entities.size(); i++)
+        {
+            entities.push_back(assets->entities[i]);
+        }
+
         // setup env material
         {
             RenderTarget temp_target(0, 0, TextureFormat::NONE, TextureFormat::NONE);
@@ -102,7 +108,7 @@ struct Scene
             bars[7].entity_id = assets->entity_names["bar_8"];
             for (int i = 0; i < bars.size(); i++)
             {
-                Entity *bar = &entities[bars[i].entity_id];
+                Entity *bar = &entities.data[bars[i].entity_id].value;
 
                 Material *base_material = bar->material;
                 bars[i].target = RenderTarget(1024, 1024, TextureFormat::RGBA8, TextureFormat::NONE);
@@ -121,7 +127,7 @@ struct Scene
             };
             for (int i = 0; i < 3; i++)
             {
-                Entity *screen = &entities[screens_entity_ids[i]];
+                Entity *screen = &entities.data[screens_entity_ids[i]].value;
 
                 Material *base_material = screen->material;
                 score_targets[i] = RenderTarget(1024, 1024, TextureFormat::RGBA8, TextureFormat::NONE);
@@ -133,7 +139,7 @@ struct Scene
             }
             {
                 floor_id = assets->entity_names["floor"];
-                Entity *floor = &entities[floor_id];
+                Entity *floor = &entities.data[floor_id].value;
 
                 Material *base_material = floor->material;
                 floor_target = RenderTarget(1280, 720, TextureFormat::RGB16F, TextureFormat::DEPTH24);
@@ -145,10 +151,10 @@ struct Scene
             }
             {
                 brick_id = assets->entity_names["bricks"];
-                Entity *bricks = &entities[brick_id];
+                Entity *bricks = &entities.data[brick_id].value;
                 bricks->shader = &threed_with_normals_shader;
 
-                bricks->position = {0, 3.5, 0};
+                bricks->transform.position = {0, 3.5, 0};
             }
             {
                 uv_sphere_id = assets->entity_names["uv_sphere"];
@@ -160,10 +166,10 @@ struct Scene
 
     RenderTarget do_floor()
     {
-        Entity *floor = &entities[floor_id];
+        Entity *floor = &entities.data[floor_id].value;
 
         Vec3f plane_normal = {0, 1, 0};
-        float plane_d = floor->position.y;
+        float plane_d = floor->transform.position.y;
 
         floor_target.clear();
         floor_target.bind();
@@ -175,43 +181,49 @@ struct Scene
 
         LightUniformBlock all_lights;
         all_lights.num_lights = 0;
-        for (int i = 0; i < entities.size() && all_lights.num_lights < MAX_LIGHTS; i++)
+        for (int i = 0; i < entities.size && all_lights.num_lights < MAX_LIGHTS; i++)
         {
-            Entity &e = entities[i];
-            if (!e.shader)
+            if (entities.data[i].assigned)
             {
-                SpotLight light;
-                light.position = {e.position.x, e.position.y, e.position.z};
-                light.direction = glm::quat({e.rotation.x, e.rotation.y, e.rotation.z}) * glm::vec3(0, -1, 0);
-                light.color = glm::vec3{e.spot_light.color.x, e.spot_light.color.y, e.spot_light.color.z};
-                light.outer_angle = e.spot_light.outer_angle;
-                light.inner_angle = e.spot_light.inner_angle;
+                Entity &e = entities.data[i].value;
+                if (e.type == EntityType::LIGHT)
+                {
+                    SpotLight light;
+                    light.position = {e.transform.position.x, e.transform.position.y, e.transform.position.z};
+                    light.direction = glm::quat({e.transform.rotation.x, e.transform.rotation.y, e.transform.rotation.z}) * glm::vec3(0, -1, 0);
+                    light.color = glm::vec3{e.spot_light.color.x, e.spot_light.color.y, e.spot_light.color.z};
+                    light.outer_angle = e.spot_light.outer_angle;
+                    light.inner_angle = e.spot_light.inner_angle;
 
-                all_lights.spot_lights[all_lights.num_lights] = light;
-                all_lights.num_lights++;
+                    all_lights.spot_lights[all_lights.num_lights] = light;
+                    all_lights.num_lights++;
+                }
             }
         }
         update_lights(all_lights);
 
-        for (int i = 0; i < entities.size(); i++)
+        for (int i = 0; i < entities.size; i++)
         {
-            Entity &e = entities[i];
-
-            if (e.shader)
+            if (entities.data[i].assigned)
             {
-                glm::vec3 rot(e.rotation.x, e.rotation.y, e.rotation.z);
-                glm::vec3 pos(e.position.x, e.position.y, e.position.z);
-                glm::vec3 scale(e.scale.x, e.scale.y, e.scale.z);
-                glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) *
-                                  glm::scale(glm::mat4(1.f), scale) *
-                                  glm::toMat4(glm::quat(rot));
+                Entity &e = entities.data[i].value;
 
-                bind_shader(*e.shader);
-                bind_camera(*e.shader, flipped_camera);
-                bind_mat4(*e.shader, UniformId::MODEL, model);
-                bind_material(*e.shader, env_mat);
-                bind_material(*e.shader, *e.material);
-                draw(floor_target, *e.shader, e.vert_buffer);
+                if (e.type == EntityType::MESH)
+                {
+                    glm::vec3 rot(e.transform.rotation.x, e.transform.rotation.y, e.transform.rotation.z);
+                    glm::vec3 pos(e.transform.position.x, e.transform.position.y, e.transform.position.z);
+                    glm::vec3 scale(e.transform.scale.x, e.transform.scale.y, e.transform.scale.z);
+                    glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) *
+                                      glm::scale(glm::mat4(1.f), scale) *
+                                      glm::toMat4(glm::quat(rot));
+
+                    bind_shader(*e.shader);
+                    bind_camera(*e.shader, flipped_camera);
+                    bind_mat4(*e.shader, UniformId::MODEL, model);
+                    bind_material(*e.shader, env_mat);
+                    bind_material(*e.shader, *e.material);
+                    draw(floor_target, *e.shader, e.vert_buffer);
+                }
             }
         }
 
@@ -249,7 +261,8 @@ struct Scene
             };
 
             static int t = 0;
-            t = (t + 1) % 5;
+            t++;
+            int idx = (t / 5) % 5;
 
             float aspect_ratio = 2.f;
             float text_scale = 4.f;
@@ -258,7 +271,7 @@ struct Scene
                 Rect sub_target = {0, 0,
                                    .8f * score_targets[0].width,
                                    .5f * score_targets[0].height};
-                draw_centered_text(font, score_targets[0], strs[t], sub_target, target_border, text_scale, aspect_ratio);
+                draw_centered_text(font, score_targets[0], strs[idx], sub_target, target_border, text_scale, aspect_ratio);
             }
 
             score_targets[0].color_tex.gen_mipmaps();
@@ -288,30 +301,30 @@ struct Scene
                 rotation = 180.f;
             }
 
-            entities[bar->entity_id].rotation.x = glm::radians(rotation);
+            entities.data[bar->entity_id].value.transform.rotation.x = glm::radians(rotation);
         }
 
         {
-            Entity *bricks = &entities[brick_id];
+            Entity *bricks = &entities.data[brick_id].value;
 
             float spd = 0.05f;
             if (input->keys[(int)Keys::RIGHT])
             {
-                bricks->position.x += spd;
+                bricks->transform.position.x += spd;
             }
             if (input->keys[(int)Keys::LEFT])
             {
-                bricks->position.x -= spd;
+                bricks->transform.position.x -= spd;
             }
             if (input->keys[(int)Keys::DOWN])
             {
-                bricks->position.z += spd;
+                bricks->transform.position.z += spd;
             }
             if (input->keys[(int)Keys::UP])
             {
-                bricks->position.z -= spd;
+                bricks->transform.position.z -= spd;
             }
-            bricks->rotation = {glm::radians(-90.0), glm::radians(45.0), bricks->rotation.z};
+            bricks->transform.rotation = {glm::radians(-90.0), glm::radians(45.0), bricks->transform.rotation.z};
         }
 
         // float speed_denoms[3] = {2, 2.75, 2.15};
@@ -341,69 +354,74 @@ struct Scene
 
         LightUniformBlock all_lights;
         all_lights.num_lights = 0;
-        for (int i = 0; i < entities.size() && all_lights.num_lights < MAX_LIGHTS; i++)
+        for (int i = 0; i < entities.size && all_lights.num_lights < MAX_LIGHTS; i++)
         {
-            Entity &e = entities[i];
-            if (!e.shader)
+            if (entities.data[i].assigned)
             {
-                SpotLight light;
-                light.position = {e.position.x, e.position.y, e.position.z};
-                light.direction = glm::rotate(glm::quat(glm::vec3{e.rotation.x, e.rotation.y, e.rotation.z}), glm::vec3(0, -1, 0));
-                light.color = glm::vec3{e.spot_light.color.x, e.spot_light.color.y, e.spot_light.color.z};
-                light.outer_angle = e.spot_light.outer_angle;
-                light.inner_angle = e.spot_light.inner_angle;
-                all_lights.spot_lights[all_lights.num_lights] = light;
-                all_lights.num_lights++;
+                Entity &e = entities.data[i].value;
+                if (e.type == EntityType::LIGHT)
+                {
+                    SpotLight light;
+                    light.position = {e.transform.position.x, e.transform.position.y, e.transform.position.z};
+                    light.direction = glm::rotate(glm::quat(glm::vec3{e.transform.rotation.x, e.transform.rotation.y, e.transform.rotation.z}), glm::vec3(0, -1, 0));
+                    light.color = glm::vec3{e.spot_light.color.x, e.spot_light.color.y, e.spot_light.color.z};
+                    light.outer_angle = e.spot_light.outer_angle;
+                    light.inner_angle = e.spot_light.inner_angle;
+                    all_lights.spot_lights[all_lights.num_lights] = light;
+                    all_lights.num_lights++;
+                }
             }
         }
         update_lights(all_lights);
 
-        for (int i = 0; i < entities.size(); i++)
+        for (int i = 0; i < entities.size; i++)
         {
-            Entity &e = entities[i];
-
-            if (e.shader)
+            if (entities.data[i].assigned)
             {
-                glm::vec3 rot(e.rotation.x, e.rotation.y, e.rotation.z);
-                glm::vec3 pos(e.position.x, e.position.y, e.position.z);
-                glm::vec3 scale(e.scale.x, e.scale.y, e.scale.z);
-                glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) *
-                                  glm::scale(glm::mat4(1.f), scale) *
-                                  glm::toMat4(glm::quat(rot));
+                Entity &e = entities.data[i].value;
 
-                Shader shader = *e.shader;
-                bind_shader(shader);
-                bind_camera(shader, camera);
-                bind_mat4(shader, UniformId::MODEL, model);
-                bind_material(shader, env_mat);
-                bind_material(shader, *e.material);
-
-                // TODO HACK
-                if (i == floor_id)
+                if (e.type == EntityType::MESH)
                 {
-                    bind_mat4(shader, UniformId::REFLECTED_PROJECTION, flipped_camera.perspective * flipped_camera.view * model);
+                    glm::vec3 rot(e.transform.rotation.x, e.transform.rotation.y, e.transform.rotation.z);
+                    glm::vec3 pos(e.transform.position.x, e.transform.position.y, e.transform.position.z);
+                    glm::vec3 scale(e.transform.scale.x, e.transform.scale.y, e.transform.scale.z);
+                    glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) *
+                                      glm::scale(glm::mat4(1.f), scale) *
+                                      glm::toMat4(glm::quat(rot));
+
+                    Shader shader = *e.shader;
+                    bind_shader(shader);
+                    bind_camera(shader, camera);
+                    bind_mat4(shader, UniformId::MODEL, model);
+                    bind_material(shader, env_mat);
+                    bind_material(shader, *e.material);
+
+                    // TODO HACK
+                    if (i == floor_id)
+                    {
+                        bind_mat4(shader, UniformId::REFLECTED_PROJECTION, flipped_camera.perspective * flipped_camera.view * model);
+                    }
+
+                    draw(hdr_target, shader, e.vert_buffer);
                 }
+                else if (e.type == EntityType::LIGHT)
+                {
+                    glm::vec3 rot(e.transform.rotation.x, e.transform.rotation.y, e.transform.rotation.z);
+                    glm::vec3 pos(e.transform.position.x, e.transform.position.y, e.transform.position.z);
+                    glm::vec3 scale(e.transform.scale.x / 3, e.transform.scale.y / 3, e.transform.scale.z / 3);
+                    glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) *
+                                      glm::scale(glm::mat4(1.f), scale) *
+                                      glm::toMat4(glm::quat(rot));
 
-                draw(hdr_target, shader, e.vert_buffer);
-            }
-            else
-            {
+                    Entity &uv_sphere = entities.data[uv_sphere_id].value;
 
-                glm::vec3 rot(e.rotation.x, e.rotation.y, e.rotation.z);
-                glm::vec3 pos(e.position.x, e.position.y, e.position.z);
-                glm::vec3 scale(e.scale.x / 3, e.scale.y / 3, e.scale.z / 3);
-                glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) *
-                                  glm::scale(glm::mat4(1.f), scale) *
-                                  glm::toMat4(glm::quat(rot));
-
-                Entity &uv_sphere = entities[uv_sphere_id];
-
-                bind_shader(*uv_sphere.shader);
-                bind_camera(*uv_sphere.shader, camera);
-                bind_mat4(*uv_sphere.shader, UniformId::MODEL, model);
-                bind_material(*uv_sphere.shader, env_mat);
-                bind_material(*uv_sphere.shader, *uv_sphere.material);
-                draw(hdr_target, *uv_sphere.shader, uv_sphere.vert_buffer);
+                    bind_shader(*uv_sphere.shader);
+                    bind_camera(*uv_sphere.shader, camera);
+                    bind_mat4(*uv_sphere.shader, UniformId::MODEL, model);
+                    bind_material(*uv_sphere.shader, env_mat);
+                    bind_material(*uv_sphere.shader, *uv_sphere.material);
+                    draw(hdr_target, *uv_sphere.shader, uv_sphere.vert_buffer);
+                }
             }
         }
 

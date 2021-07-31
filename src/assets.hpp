@@ -186,6 +186,7 @@ struct Assets
                     material->textures[i] = load_texture(texture_path, STANDARD_MATERIAL_FILES[i].format, mem);
                 }
 
+                e.type = EntityType::MESH;
                 e.vert_buffer = buf;
                 e.material = material;
                 e.shader = &threed_shader;
@@ -195,6 +196,7 @@ struct Assets
                 YamlDictElem *light = (YamlDictElem *)obj->get(String::from("light"));
                 YamlDictElem *color = (YamlDictElem *)light->get(String::from("color"));
 
+                e.type = EntityType::LIGHT;
                 e.spot_light.color = dict_to_vec(color, mem);
                 e.spot_light.inner_angle = atof(((YamlLiteral *)light->get(String::from("inner_angle")))->value.to_char_array(mem.temp));
                 e.spot_light.outer_angle = atof(((YamlLiteral *)light->get(String::from("outer_angle")))->value.to_char_array(mem.temp));
@@ -203,9 +205,9 @@ struct Assets
             YamlDictElem *position = (YamlDictElem *)obj->get(String::from("position"));
             YamlDictElem *rotation = (YamlDictElem *)obj->get(String::from("rotation"));
             YamlDictElem *scale = (YamlDictElem *)obj->get(String::from("scale"));
-            e.position = dict_to_vec(position, mem);
-            e.rotation = dict_to_vec(rotation, mem);
-            e.scale = dict_to_vec(scale, mem);
+            e.transform.position = dict_to_vec(position, mem);
+            e.transform.rotation = dict_to_vec(rotation, mem);
+            e.transform.scale = dict_to_vec(scale, mem);
             collection.entities.push_back(e);
 
             obj_elem = obj_elem->next;
@@ -260,15 +262,16 @@ struct Assets
                 for (int i = 0; i < collection->entities.size(); i++)
                 {
                     Entity source_e = collection->entities[i];
+                    Transform source_transform = source_e.transform;
                     glm::vec3 e_position = glm::vec3{position.x, position.y, position.z} +
-                                           glm::rotate(glm::quat(glm::vec3{rotation.x, rotation.y, rotation.z}), glm::vec3{source_e.position.x, source_e.position.y, source_e.position.z});
-                    glm::vec3 e_rotation = glm::vec3{rotation.x, rotation.y, rotation.z} + glm::vec3{source_e.rotation.x, source_e.rotation.y, source_e.rotation.z};
-                    glm::vec3 e_scale = glm::vec3{scale.x, scale.y, scale.z} * glm::vec3{source_e.scale.x, source_e.scale.y, source_e.scale.z};
+                                           glm::rotate(glm::quat(glm::vec3{rotation.x, rotation.y, rotation.z}), glm::vec3{source_transform.position.x, source_transform.position.y, source_transform.position.z});
+                    glm::vec3 e_rotation = glm::vec3{rotation.x, rotation.y, rotation.z} + glm::vec3{source_transform.rotation.x, source_transform.rotation.y, source_transform.rotation.z};
+                    glm::vec3 e_scale = glm::vec3{scale.x, scale.y, scale.z} * glm::vec3{source_transform.scale.x, source_transform.scale.y, source_transform.scale.z};
 
                     Entity new_entity = source_e;
-                    new_entity.position = {e_position.x, e_position.y, e_position.z};
-                    new_entity.rotation = {e_rotation.x, e_rotation.y, e_rotation.z};
-                    new_entity.scale = {e_scale.x, e_scale.y, e_scale.z};
+                    new_entity.transform.position = {e_position.x, e_position.y, e_position.z};
+                    new_entity.transform.rotation = {e_rotation.x, e_rotation.y, e_rotation.z};
+                    new_entity.transform.scale = {e_scale.x, e_scale.y, e_scale.z};
 
                     entity_names[string_to_string(name)] = entities.size();
                     entities.push_back(new_entity);
@@ -291,6 +294,7 @@ struct Assets
                         material->textures[i] = load_texture(texture_path, STANDARD_MATERIAL_FILES[i].format, mem);
                     }
 
+                    e.type = EntityType::MESH;
                     e.vert_buffer = buf;
                     e.material = material;
                     e.shader = &threed_shader;
@@ -300,6 +304,7 @@ struct Assets
                     YamlDictElem *light = (YamlDictElem *)obj->get(String::from("light"));
                     YamlDictElem *color = (YamlDictElem *)light->get(String::from("color"));
 
+                    e.type = EntityType::LIGHT;
                     e.spot_light.color = dict_to_vec(color, mem);
                     e.spot_light.inner_angle = atof(((YamlLiteral *)light->get(String::from("inner_angle")))->value.to_char_array(mem.temp));
                     e.spot_light.outer_angle = atof(((YamlLiteral *)light->get(String::from("outer_angle")))->value.to_char_array(mem.temp));
@@ -308,9 +313,9 @@ struct Assets
                 YamlDictElem *position = (YamlDictElem *)obj->get(String::from("position"));
                 YamlDictElem *rotation = (YamlDictElem *)obj->get(String::from("rotation"));
                 YamlDictElem *scale = (YamlDictElem *)obj->get(String::from("scale"));
-                e.position = dict_to_vec(position, mem);
-                e.rotation = dict_to_vec(rotation, mem);
-                e.scale = dict_to_vec(scale, mem);
+                e.transform.position = dict_to_vec(position, mem);
+                e.transform.rotation = dict_to_vec(rotation, mem);
+                e.transform.scale = dict_to_vec(scale, mem);
                 entities.push_back(e);
             }
 
