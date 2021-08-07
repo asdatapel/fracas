@@ -119,26 +119,23 @@ bool do_button(Uiid me, UiContext *context, RenderTarget target, InputState *inp
         reset_if_me(me, context->hot);
     }
 
-    for (int i = 0; i < input->mouse_input.len; i++)
+    if (input->mouse_down_event)
     {
-        if (input->mouse_input[i].down)
+        if (me == context->hot)
         {
-            if (me == context->hot)
+            context->focus_started = me;
+        }
+    }
+    if (input->mouse_up_event)
+    {
+        if (me == context->hot)
+        {
+            if (context->focus_started == me)
             {
-                context->focus_started = me;
+                context->active = me;
             }
         }
-        else
-        {
-            if (me == context->hot)
-            {
-                if (context->focus_started == me)
-                {
-                    context->active = me;
-                }
-            }
-            reset_if_me(me, context->focus_started);
-        }
+        reset_if_me(me, context->focus_started);
     }
 
     Color light = lighten(color, .3f);
@@ -187,7 +184,6 @@ void do_label(Uiid me, UiContext *context, RenderTarget target, InputState *inpu
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
-
 
 float get_standard_border(RenderTarget target)
 {
@@ -275,25 +271,22 @@ void do_selectable(UiContext2 *context, InputState *input, Uiid me, Rect rect, R
         reset_if_me(me, context->hot);
     }
 
-    for (int i = 0; i < input->mouse_input.len; i++)
+    if (input->mouse_down_event)
     {
-        if (input->mouse_input[i].down && context->hot == me)
+        start_focus(context, input, me);
+    }
+    if (input->mouse_up_event)
+    {
+        if (context->hot != me)
         {
-            start_focus(context, input, me);
+            reset_active(me, context);
         }
-        if (!input->mouse_input[i].down)
+        else if (context->focus_started == me)
         {
-            if (context->hot != me)
-            {
-                reset_active(me, context);
-            }
-            else if (context->focus_started == me)
-            {
-                context->active = me;
-            }
+            context->active = me;
+        }
 
-            reset_if_me(me, context->focus_started);
-        }
+        reset_if_me(me, context->focus_started);
     }
 }
 
@@ -321,16 +314,13 @@ void do_draggable(UiContext2 *context, InputState *input, Uiid me, Rect rect, Re
         reset_if_me(me, context->hot);
     }
 
-    for (int i = 0; i < input->mouse_input.len; i++)
+    if (input->mouse_down_event)
     {
-        if (input->mouse_input[i].down && context->hot == me)
-        {
-            start_focus(context, input, me);
-        }
-        if (!input->mouse_input[i].down)
-        {
-            reset_if_me(me, context->focus_started);
-        }
+        start_focus(context, input, me);
+    }
+    if (input->mouse_up_event)
+    {
+        reset_if_me(me, context->focus_started);
     }
 }
 
@@ -385,7 +375,7 @@ void do_text_box(TextBox<N> *me, UiContext2 *context, RenderTarget target, Input
     Color color = me->color;
     Color highlight = darken(color, .1f);
     highlight.a = 1.f;
- 
+
     if (context->active == me)
     {
         color = highlight;

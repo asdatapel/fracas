@@ -5,23 +5,6 @@
 #include "graphics/graphics.hpp"
 #include "net/generated_rpc_client.hpp"
 
-bool in_rect(Vec2f point, Rect rect, Rect mask = {})
-{
-    if (mask.width == 0 || mask.height == 0)
-    {
-        mask = rect;
-    }
-
-    return point.x > rect.x &&
-           point.x < rect.x + rect.width &&
-           point.y > rect.y &&
-           point.y < rect.y + rect.height &&
-           point.x > mask.x &&
-           point.x < mask.x + mask.width &&
-           point.y > mask.y &&
-           point.y < mask.y + mask.height;
-}
-
 struct Selectable
 {
     bool hot = false;
@@ -36,37 +19,35 @@ struct Selectable
         Selectable ret = prev;
         ret.just_selected = false;
         ret.hot = in_rect({(float)input->mouse_x, (float)input->mouse_y}, rect, mask);
-        for (int i = 0; i < input->mouse_input.len; i++)
-        {
-            if (input->mouse_input[i].down)
-            {
-                if (ret.hot)
-                {
-                    ret.focus_started = true;
-                    if (!on_up)
-                    {
-                        ret.selected = true;
-                        ret.just_selected = true;
-                    }
-                }
-                else if (exclusive)
-                {
-                    ret.selected = false;
-                }
-            }
-            else
-            {
-                if (ret.hot)
-                {
-                    if (ret.focus_started)
-                    {
-                        ret.selected = true;
-                        ret.just_selected = true;
-                    }
-                }
 
-                ret.focus_started = false;
+        if (input->mouse_down_event)
+        {
+            if (ret.hot)
+            {
+                ret.focus_started = true;
+                if (!on_up)
+                {
+                    ret.selected = true;
+                    ret.just_selected = true;
+                }
             }
+            else if (exclusive)
+            {
+                ret.selected = false;
+            }
+        }
+        if (input->mouse_up_event)
+        {
+            if (ret.hot)
+            {
+                if (ret.focus_started)
+                {
+                    ret.selected = true;
+                    ret.just_selected = true;
+                }
+            }
+
+            ret.focus_started = false;
         }
 
         return ret;

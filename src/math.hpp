@@ -186,3 +186,27 @@ struct Rect
     float x, y;
     float width, height;
 };
+
+bool in_rect(Vec2f point, Rect rect, Rect mask = {})
+{
+    if (mask.width == 0 || mask.height == 0)
+    {
+        mask = rect;
+    }
+
+    return point.x > rect.x &&
+           point.x < rect.x + rect.width &&
+           point.y > rect.y &&
+           point.y < rect.y + rect.height &&
+           point.x > mask.x &&
+           point.x < mask.x + mask.width &&
+           point.y > mask.y &&
+           point.y < mask.y + mask.height;
+}
+
+struct Transform
+{
+    Vec3f position;
+    Vec3f rotation;
+    Vec3f scale;
+};

@@ -44,11 +44,17 @@ void fill_input_state(GLFWwindow *window, InputState *state)
     // reset per frame data
     state->text_input = {};
     state->key_input = {};
-    state->mouse_input = {};
+    state->mouse_down_event = false;
+    state->mouse_up_event = false;
+    state->scrollwheel_count = 0;
 
+    double mouse_x;
+    double mouse_y;
     state->prev_mouse_x = state->mouse_x;
     state->prev_mouse_y = state->mouse_y;
-    glfwGetCursorPos(window, &state->mouse_x, &state->mouse_y);
+    glfwGetCursorPos(window, &mouse_x, &mouse_y);
+    state->mouse_x = mouse_x;
+    state->mouse_y = mouse_y;
 }
 
 void character_input_callback(GLFWwindow *window, unsigned int codepoint)
@@ -65,7 +71,8 @@ void key_input_callback(GLFWwindow *window, int key, int scancode, int action, i
 {
     InputState *input_state = static_cast<GlfwState *>(glfwGetWindowUserPointer(window))->input_state;
 
-    auto append_if_press = [&](Keys k) {
+    auto append_if_press = [&](Keys k)
+    {
         input_state->keys[(int)k] = (action == GLFW_PRESS || action == GLFW_REPEAT);
         if (action == GLFW_PRESS || action == GLFW_REPEAT)
             input_state->key_input.append(k);
@@ -161,10 +168,21 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
     case (GLFW_MOUSE_BUTTON_LEFT):
     {
         input_state->mouse_left = action == GLFW_PRESS;
-        input_state->mouse_input.append({action == GLFW_PRESS});
+
+        if (action == GLFW_PRESS)
+            input_state->mouse_down_event = true;
+        else
+            input_state->mouse_up_event = true;
     }
     break;
     }
+}
+
+void scroll_callback(GLFWwindow* window, double x_offset, double y_offset)
+{
+    InputState *input_state = static_cast<GlfwState *>(glfwGetWindowUserPointer(window))->input_state;
+
+    input_state->scrollwheel_count += y_offset;
 }
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
@@ -210,6 +228,7 @@ int main()
     glfwSetCharCallback(window, character_input_callback);
     glfwSetKeyCallback(window, key_input_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
+    glfwSetScrollCallback(window, scroll_callback);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     auto loop_start_time = std::chrono::high_resolution_clock::now();
@@ -274,7 +293,6 @@ void free_file(FileData file)
 {
     free(file.data);
 }
-
 
 FileData read_entire_file(const char *filename, StackAllocator *allocator)
 {

@@ -12,14 +12,32 @@ struct Camera
     glm::mat4 view;
     glm::mat4 perspective;
 
+    float pos_x = 0.f;
+    float pos_y = 0.f;
+    float pos_z = 1.f;
+
+    void update_from_transform(RenderTarget target, Transform transform)
+    {
+        pos_x = transform.position.x;
+        pos_y = transform.position.y;
+        pos_z = transform.position.z;
+
+        glm::vec3 dir = glm::rotate(
+            glm::quat(glm::vec3{transform.rotation.x, transform.rotation.y, transform.rotation.z}),
+            glm::vec3(0, 0, -1));
+
+        view = glm::lookAt(glm::vec3{pos_x, pos_y, pos_z}, glm::vec3{pos_x, pos_y, pos_z} + dir, {0.f, 1.f, 0.f});
+        perspective = glm::perspective(glm::radians(45.f), (float)target.width / (float)target.height, 0.01f, 100.0f);
+    }
+};
+
+struct EditorCamera : Camera
+{
+
     float x_rot = 0.f;
     float y_rot = 0.f;
     float last_mouse_x = -1;
     float last_mouse_y = -1;
-
-    float pos_x = 0.f;
-    float pos_y = 0.f;
-    float pos_z = 1.f;
 
     Vec3f get_dir()
     {

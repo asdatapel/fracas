@@ -10,6 +10,9 @@ const int LIGHTS_BUFFER_BINDING = 0;
 
 RenderTarget main_target;
 
+unsigned int immediate_quad_vao;
+unsigned int immediate_quad_vbo;
+
 unsigned int screen_quad_vao;
 unsigned int screen_quad_vbo;
 float screen_quad_verts[] = {
@@ -140,6 +143,13 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
     glFrontFace(GL_CCW);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
+    glGenVertexArrays(1, &immediate_quad_vao);
+    glGenBuffers(1, &immediate_quad_vbo);
+    glBindVertexArray(immediate_quad_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, immediate_quad_vbo);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
+
     glGenVertexArrays(1, &screen_quad_vao);
     glGenBuffers(1, &screen_quad_vbo);
     glBindVertexArray(screen_quad_vao);
@@ -175,7 +185,8 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
     blur_shader = load_shader(create_shader_program("resources2/shaders/blur"));
     threed_with_planar_shader = load_shader(create_shader_program("resources2/shaders/threed_with_planar"));
     threed_with_normals_shader = load_shader(create_shader_program("resources2/shaders/threed_with_overlay_normals"));
-    
+    twod_shader = load_shader(create_shader_program("resources2/shaders/twod"));
+
     // setup uniform buffers
     glGenBuffers(1, &lights_ubo_buffer);
     glBindBuffer(GL_UNIFORM_BUFFER, lights_ubo_buffer);
@@ -412,4 +423,59 @@ Texture filter_env_map(RenderTarget target, Texture src, int size)
     }
 
     return cubemap;
+}
+
+void debug_begin_immediate()
+{
+    bind_shader(twod_shader);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+}
+
+void debug_end_immediate()
+{
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
+}
+
+void debug_draw_immediate(RenderTarget target, Vec2f v1, Vec2f v2, Vec2f v3, Vec2f v4, Color color)
+{
+    auto to_gl = [](float c, float d)
+    {
+        return c / (d / 2) - 1;
+    };
+    float vert_data[8] = {
+        to_gl(v1.x, target.width),
+        -to_gl(v1.y, target.height),
+        to_gl(v2.x, target.width),
+        -to_gl(v2.y, target.height),
+        to_gl(v4.x, target.width),
+        -to_gl(v4.y, target.height),
+        to_gl(v3.x, target.width),
+        -to_gl(v3.y, target.height),
+    };
+
+    bind_4f(twod_shader, UniformId::COLOR, color.r, color.g, color.b, color.a);
+    glBindBuffer(GL_ARRAY_BUFFER, immediate_quad_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vert_data), &vert_data, GL_DYNAMIC_DRAW);
+    glBindVertexArray(immediate_quad_vao);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
+void debug_draw_immediate(RenderTarget target, Vec2f v1, Vec2f v2, Vec2f v3, Color color)
+{
+    debug_draw_immediate(target, v1, v2, v3, v3, color);
+}
+
+void start_scissor(RenderTarget target, Rect rect)
+{
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(rect.x, target.height - (rect.y + rect.height), rect.width, rect.height);
+}
+
+void end_scissor()
+{
+    glDisable(GL_SCISSOR_TEST);
 }

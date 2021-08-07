@@ -31,6 +31,7 @@ Shader tonemap_shader;
 Shader blur_shader;
 Shader threed_with_planar_shader;
 Shader threed_with_normals_shader;
+Shader twod_shader;
 
 struct Bitmap
 {
@@ -57,12 +58,20 @@ void bind_4f(Shader shader, UniformId uniform_id, float f1, float f2, float f3, 
 void bind_mat4(Shader shader, UniformId uniform_id, glm::mat4 mat);
 void bind_texture(Shader shader, UniformId uniform_id, Texture texture);
 
+void debug_begin_immediate();
+void debug_end_immediate();
+void debug_draw_immediate(RenderTarget target, Vec2f v1, Vec2f v2, Vec2f v3, Vec2f v4, Color color);
+void debug_draw_immediate(RenderTarget target, Vec2f v1, Vec2f v2, Vec2f v3, Color color);
+
 void draw(RenderTarget target, Shader shader, VertexBuffer buf);
 void draw_rect();
 void draw_rect(RenderTarget target, Rect rect, Color color);
 void draw_textured_rect(RenderTarget target, Rect rect, Color color, Texture tex);
 void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture tex);
 void draw_cubemap();
+
+void start_scissor(RenderTarget target, Rect rect);
+void end_scissor();
 
 Texture hdri_to_cubemap(RenderTarget target, Texture hdri, int size);
 Texture convolve_irradiance_map(RenderTarget target, Texture src, int size);
@@ -84,7 +93,7 @@ struct SpotLight
     glm::vec3 color;
     float inner_angle;
     float outer_angle;
-    
+
     const static int SIZE = 64;
 };
 struct LightUniformBlock

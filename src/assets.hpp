@@ -208,6 +208,8 @@ struct Assets
             e.transform.position = dict_to_vec(position, mem);
             e.transform.rotation = dict_to_vec(rotation, mem);
             e.transform.scale = dict_to_vec(scale, mem);
+
+            e.debug_tag.name = string_to_allocated_string<64>(name);
             collection.entities.push_back(e);
 
             obj_elem = obj_elem->next;
@@ -274,6 +276,7 @@ struct Assets
                     new_entity.transform.scale = {e_scale.x, e_scale.y, e_scale.z};
 
                     entity_names[string_to_string(name)] = entities.size();
+                    new_entity.debug_tag.name = string_to_allocated_string<64>(name.concat(source_e.debug_tag.name, mem.temp));
                     entities.push_back(new_entity);
                 }
             }
@@ -316,6 +319,7 @@ struct Assets
                 e.transform.position = dict_to_vec(position, mem);
                 e.transform.rotation = dict_to_vec(rotation, mem);
                 e.transform.scale = dict_to_vec(scale, mem);
+                e.debug_tag.name = string_to_allocated_string<64>(name);
                 entities.push_back(e);
             }
 

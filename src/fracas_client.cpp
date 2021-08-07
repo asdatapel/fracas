@@ -7,6 +7,7 @@
 
 #include "assets.hpp"
 #include "camera.hpp"
+#include "debug_ui.hpp"
 #include "font.hpp"
 #include "mesh.hpp"
 #include "main_menu.hpp"
@@ -14,26 +15,13 @@
 #include "net/generated_rpc_client.hpp"
 #include "platform.hpp"
 #include "scene/scene.hpp"
+#include "editor.hpp"
 #include "ui.hpp"
 
 #include "graphics/graphics_opengl.cpp"
 #include "platform_windows.cpp"
 #include "net/net.cpp"
 
-Peer server;
-
-Assets assets;
-Scene scene;
-Font ui_font;
-
-StackAllocator allocator;
-StackAllocator temp;
-Memory memory{&allocator, &temp};
-
-float animation_wait = 0.f;
-
-// game data
-ServerMessageType ui_state;
 
 // JoinGameMessage join_game_message;
 // DescribeGameMessage describe_game_message;
@@ -260,6 +248,22 @@ void handle_LIST_GAMES(MessageReader *msg)
 //     // handleEND_ROUND,             // END_ROUND
 // };
 
+Peer server;
+
+Assets assets;
+Scene scene;
+Editor editor;
+Font ui_font;
+
+StackAllocator allocator;
+StackAllocator temp;
+Memory memory{&allocator, &temp};
+
+float animation_wait = 0.f;
+
+// game data
+ServerMessageType ui_state;
+
 bool init_if_not()
 {
     static bool initted = false;
@@ -270,13 +274,14 @@ bool init_if_not()
         init_net();
         server.open("127.0.0.1", 6519, false);
 
-        allocator.init(1024ull
-         * 1024 * 1024 * 2);         // 2gb
-        temp.init(1024 * 1024 * 50);                       // 50 mb
+        allocator.init(1024ull * 1024 * 1024 * 2); // 2gb
+        temp.init(1024 * 1024 * 50);               // 50 mb
         assets.init(memory);
         scene.init(&assets, memory);
         ui_state = ServerMessageType::INVALID;
-        ui_font = load_font(assets.font_files[(int)FontId::RESOURCES_FONTS_ANTON_REGULAR_TTF], 256, memory.temp);
+        ui_font = load_font(assets.font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_LIGHT_TTF], 32, memory.temp);
+
+        imm_init(&assets, memory);
 
         // MainMenu::init(&assets);
     }
@@ -343,7 +348,7 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
     if (client_data.main_menu.current)
     {
         main_target.bind();
-        
+
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         { // background
             static float t = 0;
@@ -364,7 +369,7 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
     }
     else
     {
-        scene.update_and_draw(main_target, input_state);
+        editor.update_and_draw(&scene, main_target, input_state, memory);
     }
 
     // if (animation_wait)

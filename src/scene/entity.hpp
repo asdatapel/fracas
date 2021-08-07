@@ -2,6 +2,7 @@
 
 #include "../util.hpp"
 #include "../math.hpp"
+#include "../camera.hpp"
 
 enum struct EntityType
 {
@@ -11,11 +12,9 @@ enum struct EntityType
     CAMERA,
 };
 
-struct Transform
+struct DebugTag
 {
-    Vec3f position;
-    Vec3f rotation;
-    Vec3f scale;
+    AllocatedString<32> name;
 };
 
 struct SpotLightDef
@@ -28,6 +27,7 @@ struct SpotLightDef
 struct Entity
 {
     EntityType type = EntityType::UNKNOWN;
+    DebugTag debug_tag;
 
     VertexBuffer vert_buffer;
     Material *material = nullptr;
@@ -36,6 +36,8 @@ struct Entity
     Transform transform;
 
     SpotLightDef spot_light;
+
+    Camera camera;
 };
 
 template <typename T>

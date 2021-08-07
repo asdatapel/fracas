@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <algorithm>
 #include <stdint.h>
 
 #define DEBUG_PRINT printf
@@ -185,7 +186,7 @@ struct String
     }
 
     template <size_t N>
-    void operator=(const AllocatedString<N> &str2)
+    void operator=(AllocatedString<N> &str2)
     {
         data = str2.data;
         len = str2.len;
@@ -230,4 +231,13 @@ struct String
 bool strcmp(String str1, String str2)
 {
     return str1.len == str2.len && !strncmp(str1.data, str2.data, str1.len);
+}
+
+template <uint16_t N>
+AllocatedString<N> string_to_allocated_string(String str)
+{
+    AllocatedString<N> ret;
+    ret.len = std::min(str.len, N);
+    memcpy(ret.data, str.data, ret.len);
+    return ret;
 }

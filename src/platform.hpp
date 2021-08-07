@@ -53,12 +53,16 @@ struct InputState
     
     Array<char, 128> text_input;
     Array<Keys, 128> key_input;
-    Array<MouseEvent, 128> mouse_input;
+    // Array<MouseEvent, 128> mouse_input;
     
-    double mouse_x;
-    double mouse_y;
-    double prev_mouse_x;
-    double prev_mouse_y;
+    bool mouse_down_event;
+    bool mouse_up_event;
+    float mouse_x;
+    float mouse_y;
+    float prev_mouse_x;
+    float prev_mouse_y;
+
+    double scrollwheel_count;
 };
 
 struct FileData
