@@ -74,6 +74,8 @@ void imm_begin(RenderTarget target, InputState *input)
 {
     state.target = target;
     state.input = input;
+    
+    state.current_window = 0;
 
     state.button_y_offset = 10.f;
 }

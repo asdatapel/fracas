@@ -187,6 +187,12 @@ struct Rect
     float width, height;
 };
 
+Vec2f normalize(Vec2f v)
+{
+    float len = sqrt(v.x * v.x + v.y * v.y);
+    return {v.x / len, v.y / len};
+}
+
 bool in_rect(Vec2f point, Rect rect, Rect mask = {})
 {
     if (mask.width == 0 || mask.height == 0)

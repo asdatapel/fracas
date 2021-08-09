@@ -10,6 +10,7 @@ enum struct EntityType
     MESH,
     LIGHT,
     CAMERA,
+    SPLINE,
 };
 
 struct DebugTag
@@ -18,6 +19,13 @@ struct DebugTag
 };
 
 struct SpotLightDef
+{
+    Vec3f color;
+    float outer_angle;
+    float inner_angle;
+};
+
+struct SPLINE
 {
     Vec3f color;
     float outer_angle;
