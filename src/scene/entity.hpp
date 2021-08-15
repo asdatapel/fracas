@@ -25,11 +25,9 @@ struct SpotLightDef
     float inner_angle;
 };
 
-struct SPLINE
+struct Spline3
 {
-    Vec3f color;
-    float outer_angle;
-    float inner_angle;
+    Array<Vec3f, 4> points;
 };
 
 struct Entity
@@ -46,6 +44,8 @@ struct Entity
     SpotLightDef spot_light;
 
     Camera camera;
+
+    Spline3 spline;
 };
 
 template <typename T>

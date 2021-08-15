@@ -179,6 +179,11 @@ struct Vec2f
 struct Vec3f
 {
     float x, y, z;
+
+    Vec2f xy()
+    {
+        return {x, y};
+    }
 };
 
 struct Rect
@@ -191,6 +196,12 @@ Vec2f normalize(Vec2f v)
 {
     float len = sqrt(v.x * v.x + v.y * v.y);
     return {v.x / len, v.y / len};
+}
+
+Vec3f normalize(Vec3f v)
+{
+    float len = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+    return {v.x / len, v.y / len, v.z / len};
 }
 
 bool in_rect(Vec2f point, Rect rect, Rect mask = {})

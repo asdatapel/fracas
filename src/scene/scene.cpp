@@ -341,29 +341,6 @@ void Scene::update_and_draw(RenderTarget backbuffer, InputState *input, Camera *
         entities.data[bar->entity_id].value.transform.rotation.x = glm::radians(rotation);
     }
 
-    {
-        Entity *bricks = &entities.data[brick_id].value;
-
-        float spd = 0.05f;
-        if (input->keys[(int)Keys::RIGHT])
-        {
-            bricks->transform.position.x += spd;
-        }
-        if (input->keys[(int)Keys::LEFT])
-        {
-            bricks->transform.position.x -= spd;
-        }
-        if (input->keys[(int)Keys::DOWN])
-        {
-            bricks->transform.position.z += spd;
-        }
-        if (input->keys[(int)Keys::UP])
-        {
-            bricks->transform.position.z -= spd;
-        }
-        bricks->transform.rotation = {glm::radians(-90.0), glm::radians(45.0), bricks->transform.rotation.z};
-    }
-
     // float speed_denoms[3] = {2, 2.75, 2.15};
     // for (int i = 0; i < 3; i++)
     // {
