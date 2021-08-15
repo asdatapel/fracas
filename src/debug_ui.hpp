@@ -19,6 +19,7 @@ struct ImmWindow
 struct UiState
 {
     RenderTarget target;
+    Camera camera_3d;
     InputState *input;
     Font font;
 
@@ -70,10 +71,13 @@ void imm_init(Assets *assets, Memory mem)
     state.font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_LIGHT_TTF], 24, mem.temp);
 }
 
-void imm_begin(RenderTarget target, InputState *input)
+void imm_begin(RenderTarget target, Camera camera_3d, InputState *input)
 {
     state.target = target;
+    state.camera_3d = camera_3d;
     state.input = input;
+
+    state.current_window = 0;
 
     state.button_y_offset = 10.f;
 }
@@ -542,4 +546,58 @@ void imm_num_input(float *val)
 
     window.next_elem_pos.y += rect.height + gap;
     window.last_height += rect.height + gap;
+}
+
+bool imm_3d_point(Vec3f *p)
+{
+    auto ndc_to_screen = [](RenderTarget target, Vec3f p)
+    {
+        return Vec3f{(p.x + 1) * 0.5f * state.target.width, ((1 - p.y) * .5f * state.target.height), p.z};
+    };
+    auto screen_to_world = [](RenderTarget target, Camera *camera, Vec3f p, float w)
+    {
+        glm::vec4 gl_screen = {p.x / (target.width / 2.f) - 1, -p.y / (target.height / 2.f) + 1, p.z, w};
+        glm::vec4 unprojects = glm::inverse(camera->perspective * camera->view) * gl_screen;
+        unprojects /= unprojects.w;
+
+        return Vec3f{unprojects.x, unprojects.y, unprojects.z};
+    };
+
+    ImmId me = (ImmId)(uint64_t)p;
+
+    glm::vec4 p_ndc = state.camera_3d.perspective * state.camera_3d.view * glm::vec4(p->x, p->y, p->z, 1.f);
+    if (p_ndc.w > 0)
+    {
+        p_ndc /= p_ndc.w;
+        Vec3f p_screen = ndc_to_screen(state.target, {p_ndc.x, p_ndc.y, p_ndc.z});
+
+        Rect view_rect = {p_screen.x - 5, p_screen.y - 5, 10, 10};
+        Rect interactive_rect = {p_screen.x - 15, p_screen.y - 15, 30, 30};
+        imm_hot(me, interactive_rect);
+        bool hot = state.hot == me;
+        imm_select(me, hot);
+        imm_start_selection(me, hot);
+        bool selection_started = state.selection_started == me;
+
+        if (selection_started)
+        {
+            Vec2f change = {
+                change.x = state.input->mouse_x - state.input->prev_mouse_x,
+                change.y = state.input->mouse_y - state.input->prev_mouse_y};
+            *p = screen_to_world(
+                state.target,
+                &state.camera_3d,
+                {p_screen.x + change.x, p_screen.y + change.y, p_screen.z},
+                p_ndc.w);
+        }
+
+        Color color = {1, 0, 0, 1};
+        if (selection_started)
+        {
+            color = lighten(color, 0.3f);
+        }
+        draw_rect(state.target, view_rect, color);
+    }
+
+    return state.selected == me;
 }
