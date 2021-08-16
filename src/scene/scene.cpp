@@ -118,20 +118,20 @@ void clear_bars(Scene *scene, RenderTarget previous_target)
     }
 }
 
-RenderTarget do_floor(Scene *scene, int camera_entity_id)
+RenderTarget do_floor(Scene *scene, Camera *camera)
 {
     Entity *floor = &scene->entities.data[scene->floor_id].value;
-
-    Vec3f plane_normal = {0, 1, 0};
     float plane_d = floor->transform.position.y;
 
-    scene->floor_target.clear();
-    scene->floor_target.bind();
+    // http://khayyam.kaplinski.com/2011/09/reflective-water-with-glsl-part-i.html
+    glm::mat4 reflection_mat = {1, 0, 0, 0,             //
+                                0, -1, 0, -2 * plane_d, //
+                                0, 0, 1, 0,             //
+                                0, 0, 0, 1};
 
-    Transform flipped_camera_transform = scene->entities.data[camera_entity_id].value.transform;
-    flipped_camera_transform.rotation.y *= -1;
-    flipped_camera_transform.position.y = (2 * plane_d) - flipped_camera_transform.position.y;
-    scene->flipped_camera.update_from_transform(scene->floor_target, flipped_camera_transform);
+    scene->flipped_camera = *camera;
+    scene->flipped_camera.view = reflection_mat * camera->view * reflection_mat;
+    scene->flipped_camera.pos_y = (2 * plane_d) - camera->pos_y;
 
     LightUniformBlock all_lights;
     all_lights.num_lights = 0;
@@ -155,6 +155,9 @@ RenderTarget do_floor(Scene *scene, int camera_entity_id)
         }
     }
     update_lights(all_lights);
+
+    scene->floor_target.clear();
+    scene->floor_target.bind();
 
     for (int i = 0; i < scene->entities.size; i++)
     {
@@ -282,7 +285,7 @@ void Scene::update_and_draw(RenderTarget backbuffer, InputState *input, Camera *
 
     clear_bars(this, hdr_target);
 
-    RenderTarget floor_reflection;// = do_floor(this, camera);
+    RenderTarget floor_reflection = do_floor(this, camera);
     floor_reflection.color_tex.gen_mipmaps();
 
     {
@@ -476,5 +479,7 @@ void Scene::update_and_draw(RenderTarget backbuffer, InputState *input, Camera *
     bind_texture(tonemap_shader, UniformId::BLOOM, bloomer.get_final().color_tex);
     backbuffer.bind();
     draw_rect();
+
+    draw_textured_rect(backbuffer, {400, 0, 200, 200}, {}, floor_target.color_tex);
     glEnable(GL_DEPTH_TEST);
 }
