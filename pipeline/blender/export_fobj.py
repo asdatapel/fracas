@@ -16,6 +16,8 @@ import yaml
 
 from bpy_extras.io_utils import axis_conversion
 
+VERSION = 2
+
 def axis_rotated_vec(vec):
     m = axis_conversion(from_forward='Y', 
         from_up='Z',
@@ -31,13 +33,21 @@ def swizzled_vec(vec):
 def swizzled_scale_vec(vec):
     return {"x": abs(vec.x), "y": abs(vec.z), "z": abs(vec.y)}
 
-def to_fmesh(obj):    
+def to_fmesh(obj):
     mesh = obj.data
     mesh.calc_loop_triangles()
     mesh.calc_normals_split()
+    mesh.calc_tangents()
+    
+    components = [3, 2, 3, 3, 3] + [2 for i in range(len(mesh.uv_layers) - 1)]
     
     data = array('f')
-    data.append(1 if (len(mesh.uv_layers) > 1) else 0)
+    data.append(VERSION)
+    data.append(5 + (len(mesh.uv_layers) - 1)) # num components
+    data.append(sum(components))
+    for c in components:
+        data.append(c)
+    
     for i, tri in enumerate(mesh.loop_triangles):
         for i, (vert_idx, loop_idx) in enumerate(zip(tri.vertices, tri.loops)):
             vert = mesh.vertices[vert_idx].co
@@ -55,17 +65,22 @@ def to_fmesh(obj):
             data.append(normal[2])
             data.append(-normal[1])
             
+            tangent = mesh.loops[loop_idx].tangent
+            data.append(tangent[0])
+            data.append(tangent[2])
+            data.append(-tangent[1])
+            
+            bitangent = mesh.loops[loop_idx].bitangent
+            data.append(bitangent[0])
+            data.append(bitangent[2])
+            data.append(-bitangent[1])
+            
+            
             if (len(mesh.uv_layers) > 1):
                 for layer in mesh.uv_layers[1:]:
                     uv = layer.data[loop_idx]
                     data.append(uv.uv[0])
                     data.append(uv.uv[1])
-            
-            tangent = mesh.loops[loop_idx]
-            data.append(tangent[0])
-            data.append(tangent[1])
-            data.append(tangent[2])
-                    
 
     return data
 

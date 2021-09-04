@@ -32,6 +32,7 @@ Shader blur_shader;
 Shader threed_with_planar_shader;
 Shader threed_with_normals_shader;
 Shader twod_shader;
+Shader threed_skinning_shader;
 
 struct Bitmap
 {

@@ -186,6 +186,7 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
     threed_with_planar_shader = load_shader(create_shader_program("resources2/shaders/threed_with_planar"));
     threed_with_normals_shader = load_shader(create_shader_program("resources2/shaders/threed_with_overlay_normals"));
     twod_shader = load_shader(create_shader_program("resources2/shaders/twod"));
+    threed_skinning_shader = load_shader(create_shader_program("resources2/shaders/threed_skinning"));
 
     // setup uniform buffers
     glGenBuffers(1, &lights_ubo_buffer);

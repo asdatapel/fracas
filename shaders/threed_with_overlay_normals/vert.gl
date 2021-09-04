@@ -9,7 +9,7 @@ layout (location = 0) in vec3 pos;
 layout (location = 1) in vec2 main_uv;
 layout (location = 2) in vec3 normal;
 layout (location = 3) in vec3 tangent;
-layout (location = 3) in vec3 bitangent;
+layout (location = 4) in vec3 bitangent;
 
 out vec3 frag_world_pos;
 out vec2 frag_main_uv;

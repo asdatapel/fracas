@@ -1,5 +1,7 @@
 #include "scene.hpp"
 
+#include <string>
+
 #include <stb/stb_image.hpp>
 
 #include "../assets.hpp"
@@ -270,11 +272,19 @@ void Scene::init(Assets *assets, Memory mem)
             bricks->transform.position = {0, 3.5, 0};
         }
         {
+            icosahedron_id = assets->entity_names["icosahedron"] - 1;
+            Entity *icosahedron = &entities.data[icosahedron_id].value;
+            icosahedron->shader = &threed_skinning_shader;
+        }
+        {
             uv_sphere_id = assets->entity_names["uv_sphere"];
         }
     }
 
     font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ANTON_REGULAR_TTF], 128, mem.temp);
+
+    FileData anim_file = read_entire_file("C:\\Users\\Asda\\Desktop\\test\\anim\\anim.fanim", mem.temp);
+    anim = parse_animation(anim_file, mem);
 }
 
 void Scene::update_and_draw(RenderTarget backbuffer, InputState *input, Camera *camera)
@@ -430,6 +440,34 @@ void Scene::update_and_draw(RenderTarget backbuffer, InputState *input, Camera *
                 {
                     bind_mat4(shader, UniformId::REFLECTED_PROJECTION, flipped_camera.perspective * flipped_camera.view * model);
                 }
+                else if (i == icosahedron_id)
+                {
+                    static float debug_t = 0.f;
+                    debug_t += 0.01f;
+                    anim.update(debug_t);
+
+                    std::array<glm::vec3, 14> bone_positions;
+
+                    bind_shader(threed_skinning_shader);
+                    for (int i = 0; i < anim.num_bones; i++)
+                    {
+                        // BoneState bs = interpolate_bone(bones[i], debug_t);
+                        // // Vec3f final_pos = {bs.position.x - bone_rest_positions[i].x,
+                        // //                    bs.position.y - bone_rest_positions[i].y,
+                        // //                    bs.position.z - bone_rest_positions[i].z};
+                        // // bone_positions[i] = {final_pos.x, final_pos.y, final_pos.z};
+
+                        // glm::mat4 local_transform = glm::translate(glm::mat4(1.0), {bs.position.x, bs.position.y, bs.position.z}) * glm::toMat4(bs.rotation);
+                        // glm::mat4 transform = local_transform;
+
+                        glm::mat4 transform = anim.mats[i];
+                        std::string uniform_name = std::string("bone_transforms[") + std::to_string(i) + std::string("]");
+                        int handle = glGetUniformLocation(threed_skinning_shader.shader_handle, uniform_name.c_str());
+                        glUniformMatrix4fv(handle, 1, false, &transform[0][0]);
+                        
+                    }
+                    // glUniform3fv(threed_skinning_shader.uniform_handles[(int)UniformId::BONE_POSITIONS], bone_positions.size(), (float *)bone_positions.data());
+                }
 
                 draw(hdr_target, shader, e.vert_buffer);
             }
@@ -479,7 +517,5 @@ void Scene::update_and_draw(RenderTarget backbuffer, InputState *input, Camera *
     bind_texture(tonemap_shader, UniformId::BLOOM, bloomer.get_final().color_tex);
     backbuffer.bind();
     draw_rect();
-
-    draw_textured_rect(backbuffer, {400, 0, 200, 200}, {}, floor_target.color_tex);
     glEnable(GL_DEPTH_TEST);
 }

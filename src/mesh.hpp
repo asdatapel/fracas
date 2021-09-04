@@ -237,7 +237,6 @@ Mesh load_fmesh_v1(Buffer<float> buffer, Memory mem)
     return mesh;
 }
 
-
 // v2: pos, uv, normal, tangent, bitangent
 Mesh load_fmesh_v2(Buffer<float> buffer, Memory mem)
 {
@@ -270,6 +269,12 @@ Mesh load_fmesh(FileData file, Memory mem)
     Buffer<float> buffer = Buffer<float>::from_char_array(file.data, file.length);
     float file_version = buffer.data[0];
     if (file_version == 2)
+    {
+        buffer.data++;
+        buffer.length--;
+        return load_fmesh_v2(buffer, mem);
+    }
+    else if (file_version == 3)
     {
         buffer.data++;
         buffer.length--;

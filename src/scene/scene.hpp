@@ -2,6 +2,8 @@
 
 #include <array>
 
+#include "../animation.hpp"
+
 struct Scene
 {
     Texture unfiltered_cubemap;
@@ -29,12 +31,15 @@ struct Scene
     AllocatedMaterial<StandardPbrMaterial::N + 1> floor_material;
 
     int uv_sphere_id;
+    int icosahedron_id;
     int brick_id;
 
     Font font;
 
     void init(Assets *assets, Memory mem);
     void update_and_draw(RenderTarget backbuffer, InputState *input, Camera *camera);
+
+    Animation anim;
 };
 
 #include "scene.cpp"

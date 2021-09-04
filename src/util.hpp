@@ -38,7 +38,7 @@ struct StackAllocator
 
         if (loc < next)
         {
-            next = (char*) loc;
+            next = (char *)loc;
         }
     }
 };
@@ -49,6 +49,20 @@ struct Memory
     StackAllocator *temp;
 };
 
+template <typename T>
+struct RefArray
+{
+    RefArray() = default;
+
+    T &operator[](int i)
+    {
+        assert(i < len);
+        return data[i];
+    }
+
+    T *data;
+    size_t len = 0;
+};
 
 template <typename T, size_t N>
 struct Array
@@ -106,11 +120,10 @@ struct Array
     const static size_t MAX_LEN = N;
 };
 
-
 template <size_t N>
 struct AllocatedString
 {
-    AllocatedString(){} 
+    AllocatedString() {}
 
     template <size_t N2>
     void operator=(const AllocatedString<N2> &str2)
@@ -169,18 +182,17 @@ struct AllocatedString
     static const uint16_t MAX_LEN = N;
 };
 
-
 struct String
 {
     char *data = nullptr;
     uint16_t len = 0;
 
-    String(){}
+    String() {}
 
     template <size_t N>
     String(AllocatedString<N> &str2)
     {
-        
+
         data = str2.data;
         len = str2.len;
     }
@@ -191,7 +203,7 @@ struct String
         data = str2.data;
         len = str2.len;
     }
-    
+
     template <size_t N>
     static String from(const char (&str)[N])
     {
@@ -223,7 +235,8 @@ struct String
     //     return len == o.len && !strncmp(data, o.data, len);
     // }
 
-    bool operator<(const String &o) const {
+    bool operator<(const String &o) const
+    {
         return len < o.len || strncmp(data, o.data, len) < 0;
     }
 };
