@@ -4,31 +4,6 @@
 #include "spline.hpp"
 #include "animation.hpp"
 
-void animation(RenderTarget target, InputState *input)
-{
-    // static float debug_t = 0.f;
-    // debug_t += 0.005f;
-
-    // std::array<glm::vec3, 14> bone_positions;
-
-    // for (int i = 0; i < bones.size(); i++)
-    // {
-    //     BoneState bs = interpolate_bone(bones[i], debug_t);
-    //     // Vec3f final_pos = {bs.position.x - bone_rest_positions[i].x,
-    //     //                    bs.position.y - bone_rest_positions[i].y,
-    //     //                    bs.position.z - bone_rest_positions[i].z};
-    //     // bone_positions[i] = {final_pos.x, final_pos.y, final_pos.z};
-
-    //     imm_3d_point(&bs.position);
-
-    //     // std::string uniform_name = std::string("bone_positions[") + std::to_string(i) + std::string("]");
-    //     // int handle = glGetUniformLocation(threed_skinning_shader.shader_handle, uniform_name.c_str());
-    //     // glUniform3f(handle, bone_positions[i].x, bone_positions[i].y, bone_positions[i].z);
-    // }
-
-    // glUniform3fv(threed_skinning_shader.uniform_handles[(int)UniformId::BONE_POSITIONS], bone_positions.size() * 3, (float *)bone_positions.data());
-}
-
 struct Editor
 {
     EditorCamera debug_camera;
@@ -70,7 +45,6 @@ struct Editor
         }
         scene->update_and_draw(backbuffer, input, selected_camera ? &selected_camera->camera : &debug_camera);
         debug_ui(scene, backbuffer, input, mem);
-        animation(backbuffer, input);
     }
 
     void debug_ui(Scene *scene, RenderTarget target, InputState *input, Memory mem)
