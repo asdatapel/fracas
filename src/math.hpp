@@ -227,3 +227,13 @@ struct Transform
     Vec3f rotation;
     Vec3f scale;
 };
+
+float lerp(float a, float b, float t)
+{
+    return (1 - t) * a + t * b;
+}
+
+Vec3f lerp(Vec3f a, Vec3f b, float t)
+{
+    return {lerp(a.x, b.x, t), lerp(a.y, b.y, t), lerp(a.z, b.z, t)};
+}

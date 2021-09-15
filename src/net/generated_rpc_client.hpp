@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "base_rpc.hpp"
@@ -9,29 +8,78 @@ struct RpcClient : public BaseRpcClient
     using BaseRpcClient::BaseRpcClient;
     bool handle_rpc(char*, int);
 
-    void HandleStartGame(StartGameRequest*);
+
+    void ListGames(ListGamesRequest);
+
+    void GetGame(GetGameRequest);
+
+    void CreateGame(CreateGameRequest);
+
+    void JoinGame(JoinGameRequest);
+
+    void SwapTeam(SwapTeamRequest);
+
+    void LeaveGame(LeaveGameRequest);
+
+    void StartGame(StartGameRequest);
 
 
-    void ListGames(ListGamesRequest &, ListGamesResponse*);
-    ListGamesResponse ListGames(ListGamesRequest);
 
-    void GetGame(GetGameRequest &, GetGameResponse*);
-    GetGameResponse GetGame(GetGameRequest);
+    ListGamesResponse *get_ListGames_msg();
+    bool got_ListGames_msg = false;
+    ListGamesResponse ListGames_msg;
 
-    void CreateGame(CreateGameRequest &, CreateGameResponse*);
-    CreateGameResponse CreateGame(CreateGameRequest);
+    GetGameResponse *get_GetGame_msg();
+    bool got_GetGame_msg = false;
+    GetGameResponse GetGame_msg;
 
-    void JoinGame(JoinGameRequest &, JoinGameResponse*);
-    JoinGameResponse JoinGame(JoinGameRequest);
+    CreateGameResponse *get_CreateGame_msg();
+    bool got_CreateGame_msg = false;
+    CreateGameResponse CreateGame_msg;
 
-    void SwapTeam(SwapTeamRequest &, SwapTeamResponse*);
-    SwapTeamResponse SwapTeam(SwapTeamRequest);
+    JoinGameResponse *get_JoinGame_msg();
+    bool got_JoinGame_msg = false;
+    JoinGameResponse JoinGame_msg;
 
-    void LeaveGame(LeaveGameRequest &, LeaveGameResponse*);
-    LeaveGameResponse LeaveGame(LeaveGameRequest);
+    Empty *get_SwapTeam_msg();
+    bool got_SwapTeam_msg = false;
+    Empty SwapTeam_msg;
 
-    void StartGame(StartGameRequest &, StartGameResponse*);
-    StartGameResponse StartGame(StartGameRequest);
+    LeaveGameResponse *get_LeaveGame_msg();
+    bool got_LeaveGame_msg = false;
+    LeaveGameResponse LeaveGame_msg;
+
+    StartGameResponse *get_StartGame_msg();
+    bool got_StartGame_msg = false;
+    StartGameResponse StartGame_msg;
+
+    GameStartedMessage *get_GameStarted_msg();
+    bool got_GameStarted_msg = false;
+    GameStartedMessage GameStarted_msg;
+
+    Empty *get_InGameStartRound_msg();
+    bool got_InGameStartRound_msg = false;
+    Empty InGameStartRound_msg;
+
+    Empty *get_InGameStartFaceoff_msg();
+    bool got_InGameStartFaceoff_msg = false;
+    Empty InGameStartFaceoff_msg;
+
+    Empty *get_InGameAskQuestion_msg();
+    bool got_InGameAskQuestion_msg = false;
+    Empty InGameAskQuestion_msg;
+
+    Empty *get_InGamePromptPassOrPlay_msg();
+    bool got_InGamePromptPassOrPlay_msg = false;
+    Empty InGamePromptPassOrPlay_msg;
+
+    Empty *get_InGameAnswer_msg();
+    bool got_InGameAnswer_msg = false;
+    Empty InGameAnswer_msg;
+
+    Empty *get_InGameFlipAnswer_msg();
+    bool got_InGameFlipAnswer_msg = false;
+    Empty InGameFlipAnswer_msg;
 
 };
 
@@ -41,11 +89,103 @@ bool RpcClient::handle_rpc(char *data, int msg_len)
     data = read_byte(data, (char *)&rpc_type);
     MessageReader in(data, msg_len - 1);
     switch(rpc_type) {
-    case Rpc::OnewayStartGame:
+
+        case Rpc::ListGames:
         {
-            StartGameRequest req;
-            read(&in, &req);
-            HandleStartGame(&req);
+            ListGames_msg = {};
+            read(&in, &ListGames_msg);
+            got_ListGames_msg = true;
+        }
+        break;
+        case Rpc::GetGame:
+        {
+            GetGame_msg = {};
+            read(&in, &GetGame_msg);
+            got_GetGame_msg = true;
+        }
+        break;
+        case Rpc::CreateGame:
+        {
+            CreateGame_msg = {};
+            read(&in, &CreateGame_msg);
+            got_CreateGame_msg = true;
+        }
+        break;
+        case Rpc::JoinGame:
+        {
+            JoinGame_msg = {};
+            read(&in, &JoinGame_msg);
+            got_JoinGame_msg = true;
+        }
+        break;
+        case Rpc::SwapTeam:
+        {
+            SwapTeam_msg = {};
+            read(&in, &SwapTeam_msg);
+            got_SwapTeam_msg = true;
+        }
+        break;
+        case Rpc::LeaveGame:
+        {
+            LeaveGame_msg = {};
+            read(&in, &LeaveGame_msg);
+            got_LeaveGame_msg = true;
+        }
+        break;
+        case Rpc::StartGame:
+        {
+            StartGame_msg = {};
+            read(&in, &StartGame_msg);
+            got_StartGame_msg = true;
+        }
+        break;
+        case Rpc::GameStarted:
+        {
+            GameStarted_msg = {};
+            read(&in, &GameStarted_msg);
+            got_GameStarted_msg = true;
+        }
+        break;
+        case Rpc::InGameStartRound:
+        {
+            InGameStartRound_msg = {};
+            read(&in, &InGameStartRound_msg);
+            got_InGameStartRound_msg = true;
+        }
+        break;
+        case Rpc::InGameStartFaceoff:
+        {
+            InGameStartFaceoff_msg = {};
+            read(&in, &InGameStartFaceoff_msg);
+            got_InGameStartFaceoff_msg = true;
+        }
+        break;
+        case Rpc::InGameAskQuestion:
+        {
+            InGameAskQuestion_msg = {};
+            read(&in, &InGameAskQuestion_msg);
+            got_InGameAskQuestion_msg = true;
+        }
+        break;
+        case Rpc::InGamePromptPassOrPlay:
+        {
+            InGamePromptPassOrPlay_msg = {};
+            read(&in, &InGamePromptPassOrPlay_msg);
+            got_InGamePromptPassOrPlay_msg = true;
+        }
+        break;
+        case Rpc::InGameAnswer:
+        {
+            InGameAnswer_msg = {};
+            read(&in, &InGameAnswer_msg);
+            got_InGameAnswer_msg = true;
+        }
+        break;
+        case Rpc::InGameFlipAnswer:
+        {
+            InGameFlipAnswer_msg = {};
+            read(&in, &InGameFlipAnswer_msg);
+            got_InGameFlipAnswer_msg = true;
         }
         break;
         default:
@@ -56,163 +196,152 @@ bool RpcClient::handle_rpc(char *data, int msg_len)
 }
 
 
-void RpcClient::ListGames(ListGamesRequest &req, ListGamesResponse *resp)
+void RpcClient::ListGames(ListGamesRequest req)
 {
     MessageBuilder out;
     append(&out, (char) Rpc::ListGames);
     append(&out, req); out.send(&peer);
-    
-    int msg_len; char msg[MAX_MSG_SIZE];
-    while ((msg_len = peer.recieve_msg(msg)) < 0){}
-    
-    if (msg_len > 0 && msg[0] == (char) Rpc::ListGames){
-        peer.pop_message();
-        MessageReader in(msg + 1, msg_len - 1);
-        read(&in, resp);
-    }
-}
-ListGamesResponse RpcClient::ListGames(ListGamesRequest req) 
-{
-    ListGamesResponse resp;
-    ListGames(req, &resp);
-    return resp;
 }
 
-
-void RpcClient::GetGame(GetGameRequest &req, GetGameResponse *resp)
+void RpcClient::GetGame(GetGameRequest req)
 {
     MessageBuilder out;
     append(&out, (char) Rpc::GetGame);
     append(&out, req); out.send(&peer);
-    
-    int msg_len; char msg[MAX_MSG_SIZE];
-    while ((msg_len = peer.recieve_msg(msg)) < 0){}
-    
-    if (msg_len > 0 && msg[0] == (char) Rpc::GetGame){
-        peer.pop_message();
-        MessageReader in(msg + 1, msg_len - 1);
-        read(&in, resp);
-    }
-}
-GetGameResponse RpcClient::GetGame(GetGameRequest req) 
-{
-    GetGameResponse resp;
-    GetGame(req, &resp);
-    return resp;
 }
 
-
-void RpcClient::CreateGame(CreateGameRequest &req, CreateGameResponse *resp)
+void RpcClient::CreateGame(CreateGameRequest req)
 {
     MessageBuilder out;
     append(&out, (char) Rpc::CreateGame);
     append(&out, req); out.send(&peer);
-    
-    int msg_len; char msg[MAX_MSG_SIZE];
-    while ((msg_len = peer.recieve_msg(msg)) < 0){}
-    
-    if (msg_len > 0 && msg[0] == (char) Rpc::CreateGame){
-        peer.pop_message();
-        MessageReader in(msg + 1, msg_len - 1);
-        read(&in, resp);
-    }
-}
-CreateGameResponse RpcClient::CreateGame(CreateGameRequest req) 
-{
-    CreateGameResponse resp;
-    CreateGame(req, &resp);
-    return resp;
 }
 
-
-void RpcClient::JoinGame(JoinGameRequest &req, JoinGameResponse *resp)
+void RpcClient::JoinGame(JoinGameRequest req)
 {
     MessageBuilder out;
     append(&out, (char) Rpc::JoinGame);
     append(&out, req); out.send(&peer);
-    
-    int msg_len; char msg[MAX_MSG_SIZE];
-    while ((msg_len = peer.recieve_msg(msg)) < 0){}
-    
-    if (msg_len > 0 && msg[0] == (char) Rpc::JoinGame){
-        peer.pop_message();
-        MessageReader in(msg + 1, msg_len - 1);
-        read(&in, resp);
-    }
-}
-JoinGameResponse RpcClient::JoinGame(JoinGameRequest req) 
-{
-    JoinGameResponse resp;
-    JoinGame(req, &resp);
-    return resp;
 }
 
-
-void RpcClient::SwapTeam(SwapTeamRequest &req, SwapTeamResponse *resp)
+void RpcClient::SwapTeam(SwapTeamRequest req)
 {
     MessageBuilder out;
     append(&out, (char) Rpc::SwapTeam);
     append(&out, req); out.send(&peer);
-    
-    int msg_len; char msg[MAX_MSG_SIZE];
-    while ((msg_len = peer.recieve_msg(msg)) < 0){}
-    
-    if (msg_len > 0 && msg[0] == (char) Rpc::SwapTeam){
-        peer.pop_message();
-        MessageReader in(msg + 1, msg_len - 1);
-        read(&in, resp);
-    }
-}
-SwapTeamResponse RpcClient::SwapTeam(SwapTeamRequest req) 
-{
-    SwapTeamResponse resp;
-    SwapTeam(req, &resp);
-    return resp;
 }
 
-
-void RpcClient::LeaveGame(LeaveGameRequest &req, LeaveGameResponse *resp)
+void RpcClient::LeaveGame(LeaveGameRequest req)
 {
     MessageBuilder out;
     append(&out, (char) Rpc::LeaveGame);
     append(&out, req); out.send(&peer);
-    
-    int msg_len; char msg[MAX_MSG_SIZE];
-    while ((msg_len = peer.recieve_msg(msg)) < 0){}
-    
-    if (msg_len > 0 && msg[0] == (char) Rpc::LeaveGame){
-        peer.pop_message();
-        MessageReader in(msg + 1, msg_len - 1);
-        read(&in, resp);
-    }
-}
-LeaveGameResponse RpcClient::LeaveGame(LeaveGameRequest req) 
-{
-    LeaveGameResponse resp;
-    LeaveGame(req, &resp);
-    return resp;
 }
 
-
-void RpcClient::StartGame(StartGameRequest &req, StartGameResponse *resp)
+void RpcClient::StartGame(StartGameRequest req)
 {
     MessageBuilder out;
     append(&out, (char) Rpc::StartGame);
     append(&out, req); out.send(&peer);
-    
-    int msg_len; char msg[MAX_MSG_SIZE];
-    while ((msg_len = peer.recieve_msg(msg)) < 0){}
-    
-    if (msg_len > 0 && msg[0] == (char) Rpc::StartGame){
-        peer.pop_message();
-        MessageReader in(msg + 1, msg_len - 1);
-        read(&in, resp);
-    }
 }
-StartGameResponse RpcClient::StartGame(StartGameRequest req) 
+
+
+
+ListGamesResponse *RpcClient::get_ListGames_msg()
 {
-    StartGameResponse resp;
-    StartGame(req, &resp);
-    return resp;
+    auto msg = got_ListGames_msg ? &ListGames_msg : nullptr;
+    got_ListGames_msg = false;
+    return msg;
+}
+
+GetGameResponse *RpcClient::get_GetGame_msg()
+{
+    auto msg = got_GetGame_msg ? &GetGame_msg : nullptr;
+    got_GetGame_msg = false;
+    return msg;
+}
+
+CreateGameResponse *RpcClient::get_CreateGame_msg()
+{
+    auto msg = got_CreateGame_msg ? &CreateGame_msg : nullptr;
+    got_CreateGame_msg = false;
+    return msg;
+}
+
+JoinGameResponse *RpcClient::get_JoinGame_msg()
+{
+    auto msg = got_JoinGame_msg ? &JoinGame_msg : nullptr;
+    got_JoinGame_msg = false;
+    return msg;
+}
+
+Empty *RpcClient::get_SwapTeam_msg()
+{
+    auto msg = got_SwapTeam_msg ? &SwapTeam_msg : nullptr;
+    got_SwapTeam_msg = false;
+    return msg;
+}
+
+LeaveGameResponse *RpcClient::get_LeaveGame_msg()
+{
+    auto msg = got_LeaveGame_msg ? &LeaveGame_msg : nullptr;
+    got_LeaveGame_msg = false;
+    return msg;
+}
+
+StartGameResponse *RpcClient::get_StartGame_msg()
+{
+    auto msg = got_StartGame_msg ? &StartGame_msg : nullptr;
+    got_StartGame_msg = false;
+    return msg;
+}
+
+GameStartedMessage *RpcClient::get_GameStarted_msg()
+{
+    auto msg = got_GameStarted_msg ? &GameStarted_msg : nullptr;
+    got_GameStarted_msg = false;
+    return msg;
+}
+
+Empty *RpcClient::get_InGameStartRound_msg()
+{
+    auto msg = got_InGameStartRound_msg ? &InGameStartRound_msg : nullptr;
+    got_InGameStartRound_msg = false;
+    return msg;
+}
+
+Empty *RpcClient::get_InGameStartFaceoff_msg()
+{
+    auto msg = got_InGameStartFaceoff_msg ? &InGameStartFaceoff_msg : nullptr;
+    got_InGameStartFaceoff_msg = false;
+    return msg;
+}
+
+Empty *RpcClient::get_InGameAskQuestion_msg()
+{
+    auto msg = got_InGameAskQuestion_msg ? &InGameAskQuestion_msg : nullptr;
+    got_InGameAskQuestion_msg = false;
+    return msg;
+}
+
+Empty *RpcClient::get_InGamePromptPassOrPlay_msg()
+{
+    auto msg = got_InGamePromptPassOrPlay_msg ? &InGamePromptPassOrPlay_msg : nullptr;
+    got_InGamePromptPassOrPlay_msg = false;
+    return msg;
+}
+
+Empty *RpcClient::get_InGameAnswer_msg()
+{
+    auto msg = got_InGameAnswer_msg ? &InGameAnswer_msg : nullptr;
+    got_InGameAnswer_msg = false;
+    return msg;
+}
+
+Empty *RpcClient::get_InGameFlipAnswer_msg()
+{
+    auto msg = got_InGameFlipAnswer_msg ? &InGameFlipAnswer_msg : nullptr;
+    got_InGameFlipAnswer_msg = false;
+    return msg;
 }
 

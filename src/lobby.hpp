@@ -87,7 +87,7 @@ AllocatedString<N> sanitize_name(AllocatedString<N> name)
 
 void RpcServer::HandleListGames(ClientId client_id, ListGamesRequest *req, ListGamesResponse *resp)
 {
-    uint16_t count = 0;
+    
     for (auto it : server_data->lobbies)
     {
         GameId game_id = it.first;
@@ -195,7 +195,7 @@ void RpcServer::HandleJoinGame(ClientId client_id, JoinGameRequest *req, JoinGam
     client->game_id = req->game_id;
 }
 
-void RpcServer::HandleSwapTeam(ClientId client_id, SwapTeamRequest *req, SwapTeamResponse *resp)
+void RpcServer::HandleSwapTeam(ClientId client_id, SwapTeamRequest *req, Empty *resp)
 {
     Client *client = &server_data->clients[client_id];
     if (client->game_id != req->game_id)
@@ -273,7 +273,7 @@ void RpcServer::HandleStartGame(ClientId client_id, StartGameRequest *req, Start
     for (int i = 0; i < lobby->players.len; i++)
     {
         Peer *peer = &server_data->clients[lobby->players[i].id].peer;
-        StartGame(peer, {req->game_id});
+        GameStarted(peer, {req->game_id});
     }
 
 }

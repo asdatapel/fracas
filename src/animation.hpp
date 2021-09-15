@@ -14,10 +14,6 @@ struct Bone
 
     glm::mat4 interpolate(float frame)
     {
-        auto lerp = [](float a, float b, float t)
-        {
-            return (1 - t) * a + t * b;
-        };
         auto lerp_quat = [](glm::quat a, glm::quat b, float t)
         {
             return (1 - t) * a + t * b;

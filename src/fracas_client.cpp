@@ -314,16 +314,6 @@ struct ClientData
     }
 };
 
-void RpcClient::HandleStartGame(StartGameRequest *req)
-{
-    client_data->main_menu.current = nullptr;
-}
-
-void RpcClient::HandleStartGame(StartGameRequest *req)
-{
-    client_data->main_menu.current = nullptr;
-}
-
 bool game_update(const float time_step, InputState *input_state, RenderTarget main_target)
 {
     if (!init_if_not())

@@ -1,3 +1,5 @@
+message Empty
+
 message GameMetadata
 id uint
 name string
@@ -10,9 +12,7 @@ message ListGamesRequest
 message ListGamesResponse
 games list GameMetadata
 
-rpc ListGames
-ListGamesRequest
-ListGamesResponse
+server ListGames ListGamesRequest ListGamesResponse
 
 message Player
 user_id uint
@@ -26,9 +26,7 @@ message GetGameResponse
 game GameMetadata
 players list Player
 
-rpc GetGame
-GetGameRequest
-GetGameResponse
+server GetGame GetGameRequest GetGameResponse
 
 message CreateGameRequest
 name string
@@ -39,9 +37,7 @@ message CreateGameResponse
 game_id uint
 owner_id uint
 
-rpc CreateGame
-CreateGameRequest
-CreateGameResponse
+server CreateGame CreateGameRequest CreateGameResponse
 
 message JoinGameRequest
 game_id uint
@@ -49,36 +45,40 @@ player_name string
 
 message JoinGameResponse
 
-rpc JoinGame
-JoinGameRequest
-JoinGameResponse
+server JoinGame JoinGameRequest JoinGameResponse
 
 message SwapTeamRequest
 game_id uint
 user_id uint
 
-message SwapTeamResponse
-
-rpc SwapTeam
-SwapTeamRequest
-SwapTeamResponse
+server SwapTeam SwapTeamRequest
 
 message LeaveGameRequest
 
 message LeaveGameResponse
 
-rpc LeaveGame
-LeaveGameRequest
-LeaveGameResponse
+server LeaveGame LeaveGameRequest LeaveGameResponse
 
 message StartGameRequest
 game_id uint
 
 message StartGameResponse
 
-rpc StartGame
-StartGameRequest
-StartGameResponse
+server StartGame StartGameRequest StartGameResponse
 
-oneway StartGame
-StartGameRequest
+message GameStartedMessage
+game_id uint
+
+client GameStarted GameStartedMessage
+
+client InGameStartRound
+
+client InGameStartFaceoff
+
+client InGameAskQuestion
+
+client InGamePromptPassOrPlay
+
+client InGameAnswer
+
+client InGameFlipAnswer

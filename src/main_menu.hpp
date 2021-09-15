@@ -527,18 +527,21 @@ struct LobbyPage : MenuPage
         draw_centered_text(font, target, String::from("Family 2"), family_2_title_background, .1f, 10, 1);
         draw_rect(target, family_2_panel, {0.f, 1.f, 0.f, .4f});
 
-        auto get_game_resp = rpc_client->GetGame({game_id});
-        std::vector<List::Item> family_1_list_items;
-        std::vector<List::Item> family_2_list_items;
-        for (auto p : get_game_resp.players)
+        rpc_client->GetGame({game_id});
+        if (auto get_game_resp = rpc_client->get_GetGame_msg())
         {
-            if (!p.team)
-                family_1_list_items.push_back({p.user_id, p.name});
-            else
-                family_2_list_items.push_back({p.user_id, p.name});
+            std::vector<List::Item> family_1_list_items;
+            std::vector<List::Item> family_2_list_items;
+            for (auto p : get_game_resp->players)
+            {
+                if (!p.team)
+                    family_1_list_items.push_back({p.user_id, p.name});
+                else
+                    family_2_list_items.push_back({p.user_id, p.name});
+            }
+            family_1_list.refresh(family_1_list_items);
+            family_2_list.refresh(family_2_list_items);
         }
-        family_1_list.refresh(family_1_list_items);
-        family_2_list.refresh(family_2_list_items);
 
         family_1_list.update_and_draw(target, input, &font);
         family_2_list.update_and_draw(target, input, &font);
@@ -631,14 +634,17 @@ struct JoinGamePage : MenuPage
         draw_rect(target, game_list_panel, {0.f, 1.f, 0.f, .4f});
         {
             ListGamesRequest req;
-            ListGamesResponse resp;
-            rpc_client->ListGames(req, &resp);
-            std::vector<List::Item> game_list_items;
-            for (auto g : resp.games)
+            rpc_client->ListGames(req);
+
+            if (auto resp = rpc_client->get_ListGames_msg())
             {
-                game_list_items.push_back({g.id, g.name});
+                std::vector<List::Item> game_list_items;
+                for (auto g : resp->games)
+                {
+                    game_list_items.push_back({g.id, g.name});
+                }
+                game_list.refresh(game_list_items);
             }
-            game_list.refresh(game_list_items);
         }
         game_list.update_and_draw(target, input, &font);
 
@@ -720,10 +726,13 @@ struct CreateGamePage : MenuPage
         }
         if (create_button.update_and_draw(target, input, &font))
         {
-            CreateGameResponse resp = rpc_client->CreateGame({game_name_text_box.text, user_name_text_box.text, true});
-            if (resp.game_id)
+            rpc_client->CreateGame({game_name_text_box.text, user_name_text_box.text, true});
+        }
+        if (CreateGameResponse *resp = rpc_client->get_CreateGame_msg())
+        {
+            if (resp->game_id)
             {
-                ((LobbyPage *)menu->lobby)->set_game(resp.game_id, resp.owner_id);
+                ((LobbyPage *)menu->lobby)->set_game(resp->game_id, resp->owner_id);
                 menu->current = menu->lobby;
             }
         }

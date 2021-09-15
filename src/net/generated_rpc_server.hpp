@@ -13,12 +13,24 @@ struct RpcServer : public BaseRpcServer
     void HandleGetGame(ClientId client_id, GetGameRequest*, GetGameResponse*);
     void HandleCreateGame(ClientId client_id, CreateGameRequest*, CreateGameResponse*);
     void HandleJoinGame(ClientId client_id, JoinGameRequest*, JoinGameResponse*);
-    void HandleSwapTeam(ClientId client_id, SwapTeamRequest*, SwapTeamResponse*);
+    void HandleSwapTeam(ClientId client_id, SwapTeamRequest*, Empty*);
     void HandleLeaveGame(ClientId client_id, LeaveGameRequest*, LeaveGameResponse*);
     void HandleStartGame(ClientId client_id, StartGameRequest*, StartGameResponse*);
 
 
-    void StartGame(Peer *, StartGameRequest);
+    void GameStarted(Peer *, GameStartedMessage);
+
+    void InGameStartRound(Peer *, Empty);
+
+    void InGameStartFaceoff(Peer *, Empty);
+
+    void InGameAskQuestion(Peer *, Empty);
+
+    void InGamePromptPassOrPlay(Peer *, Empty);
+
+    void InGameAnswer(Peer *, Empty);
+
+    void InGameFlipAnswer(Peer *, Empty);
 
 };
 
@@ -30,90 +42,140 @@ void RpcServer::handle_rpc(ClientId client_id, Peer *peer, char *data, int msg_l
     MessageBuilder out;
     switch(rpc_type) {
     case Rpc::ListGames:
-        {
-            ListGamesRequest req;
-            ListGamesResponse resp;
-            read(&in, &req);
-            HandleListGames(client_id, &req, &resp);
-            append(&out, (char)Rpc::ListGames);
-            append(&out, resp);
-            out.send(peer);
-        }
-        break;
+    {
+        ListGamesRequest req;
+        ListGamesResponse resp;
+        read(&in, &req);
+        HandleListGames(client_id, &req, &resp);
+        append(&out, (char)Rpc::ListGames);
+        append(&out, resp);
+        out.send(peer);
+    }
+    break;
     case Rpc::GetGame:
-        {
-            GetGameRequest req;
-            GetGameResponse resp;
-            read(&in, &req);
-            HandleGetGame(client_id, &req, &resp);
-            append(&out, (char)Rpc::GetGame);
-            append(&out, resp);
-            out.send(peer);
-        }
-        break;
+    {
+        GetGameRequest req;
+        GetGameResponse resp;
+        read(&in, &req);
+        HandleGetGame(client_id, &req, &resp);
+        append(&out, (char)Rpc::GetGame);
+        append(&out, resp);
+        out.send(peer);
+    }
+    break;
     case Rpc::CreateGame:
-        {
-            CreateGameRequest req;
-            CreateGameResponse resp;
-            read(&in, &req);
-            HandleCreateGame(client_id, &req, &resp);
-            append(&out, (char)Rpc::CreateGame);
-            append(&out, resp);
-            out.send(peer);
-        }
-        break;
+    {
+        CreateGameRequest req;
+        CreateGameResponse resp;
+        read(&in, &req);
+        HandleCreateGame(client_id, &req, &resp);
+        append(&out, (char)Rpc::CreateGame);
+        append(&out, resp);
+        out.send(peer);
+    }
+    break;
     case Rpc::JoinGame:
-        {
-            JoinGameRequest req;
-            JoinGameResponse resp;
-            read(&in, &req);
-            HandleJoinGame(client_id, &req, &resp);
-            append(&out, (char)Rpc::JoinGame);
-            append(&out, resp);
-            out.send(peer);
-        }
-        break;
+    {
+        JoinGameRequest req;
+        JoinGameResponse resp;
+        read(&in, &req);
+        HandleJoinGame(client_id, &req, &resp);
+        append(&out, (char)Rpc::JoinGame);
+        append(&out, resp);
+        out.send(peer);
+    }
+    break;
     case Rpc::SwapTeam:
-        {
-            SwapTeamRequest req;
-            SwapTeamResponse resp;
-            read(&in, &req);
-            HandleSwapTeam(client_id, &req, &resp);
-            append(&out, (char)Rpc::SwapTeam);
-            append(&out, resp);
-            out.send(peer);
-        }
-        break;
+    {
+        SwapTeamRequest req;
+        Empty resp;
+        read(&in, &req);
+        HandleSwapTeam(client_id, &req, &resp);
+        append(&out, (char)Rpc::SwapTeam);
+        append(&out, resp);
+        out.send(peer);
+    }
+    break;
     case Rpc::LeaveGame:
-        {
-            LeaveGameRequest req;
-            LeaveGameResponse resp;
-            read(&in, &req);
-            HandleLeaveGame(client_id, &req, &resp);
-            append(&out, (char)Rpc::LeaveGame);
-            append(&out, resp);
-            out.send(peer);
-        }
-        break;
+    {
+        LeaveGameRequest req;
+        LeaveGameResponse resp;
+        read(&in, &req);
+        HandleLeaveGame(client_id, &req, &resp);
+        append(&out, (char)Rpc::LeaveGame);
+        append(&out, resp);
+        out.send(peer);
+    }
+    break;
     case Rpc::StartGame:
-        {
-            StartGameRequest req;
-            StartGameResponse resp;
-            read(&in, &req);
-            HandleStartGame(client_id, &req, &resp);
-            append(&out, (char)Rpc::StartGame);
-            append(&out, resp);
-            out.send(peer);
-        }
-        break;
+    {
+        StartGameRequest req;
+        StartGameResponse resp;
+        read(&in, &req);
+        HandleStartGame(client_id, &req, &resp);
+        append(&out, (char)Rpc::StartGame);
+        append(&out, resp);
+        out.send(peer);
+    }
+    break;
+    default:
+        assert(false);
     }
 }
 
 
-void RpcServer::StartGame(Peer *peer, StartGameRequest req)
+void RpcServer::GameStarted(Peer *peer, GameStartedMessage req)
 {
     MessageBuilder out;
-    append(&out, (char) Rpc::OnewayStartGame);
+    append(&out, (char) Rpc::GameStarted);
+    append(&out, req); out.send(peer);
+}
+
+
+void RpcServer::InGameStartRound(Peer *peer, Empty req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::InGameStartRound);
+    append(&out, req); out.send(peer);
+}
+
+
+void RpcServer::InGameStartFaceoff(Peer *peer, Empty req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::InGameStartFaceoff);
+    append(&out, req); out.send(peer);
+}
+
+
+void RpcServer::InGameAskQuestion(Peer *peer, Empty req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::InGameAskQuestion);
+    append(&out, req); out.send(peer);
+}
+
+
+void RpcServer::InGamePromptPassOrPlay(Peer *peer, Empty req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::InGamePromptPassOrPlay);
+    append(&out, req); out.send(peer);
+}
+
+
+void RpcServer::InGameAnswer(Peer *peer, Empty req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::InGameAnswer);
+    append(&out, req); out.send(peer);
+}
+
+
+void RpcServer::InGameFlipAnswer(Peer *peer, Empty req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::InGameFlipAnswer);
     append(&out, req); out.send(peer);
 }
 

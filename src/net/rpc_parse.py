@@ -63,8 +63,7 @@ member_template = Template("""    $type $member_name = $default;""")
 append_template = Template("""    append(msg, in.$member);""")
 read_template = Template("""    len += read(msg, &out->$member);""")
 
-client_file_template = Template("""
-#pragma once
+client_file_template = Template("""#pragma once
 
 #include "base_rpc.hpp"
 #include "generated_messages.hpp"
@@ -74,9 +73,9 @@ struct RpcClient : public BaseRpcClient
     using BaseRpcClient::BaseRpcClient;
     bool handle_rpc(char*, int);
 
-$rpc_handler_decls
+$server_rpc_decls
 
-$callable_rpc_decls
+$client_recv_decls
 };
 
 bool RpcClient::handle_rpc(char *data, int msg_len)
@@ -85,7 +84,7 @@ bool RpcClient::handle_rpc(char *data, int msg_len)
     data = read_byte(data, (char *)&rpc_type);
     MessageReader in(data, msg_len - 1);
     switch(rpc_type) {
-$handle_rpc_cases
+$rpc_cases
         default:
         return false;
     }
@@ -93,42 +92,40 @@ $handle_rpc_cases
     return true;
 }
 
-$callable_rpc_defs
+$server_rpc_defs
+
+$client_recv_defs
 """)
-client_rpc_handler_decl_template = Template("""    void Handle$name($req*);""")
-client_rpc_case_template = Template(
-    """    case Rpc::Oneway$name:
+client_server_rpc_decl_template = Template("""
+    void ${rpc}($req);
+""")
+client_recv_decl_template = Template("""
+    $msg_type *get_${rpc}_msg();
+    bool got_${rpc}_msg = false;
+    $msg_type ${rpc}_msg;
+""")
+client_rpc_case_template = Template("""
+        case Rpc::${rpc}:
         {
-            $req req;
-            read(&in, &req);
-            Handle$name(&req);
+            ${rpc}_msg = {};
+            read(&in, &${rpc}_msg);
+            got_${rpc}_msg = true;
         }
         break;""")
-client_callable_rpc_template = Template("""
-    void $name($req &, $resp*);
-    $resp $name($req);
-""")
-client_callable_rpc_def_template = Template("""
-void RpcClient::$name($req &req, $resp *resp)
+client_server_rpc_def_template = Template("""
+void RpcClient::${rpc}($req req)
 {
     MessageBuilder out;
-    append(&out, (char) Rpc::$name);
+    append(&out, (char) Rpc::${rpc});
     append(&out, req); out.send(&peer);
-    
-    int msg_len; char msg[MAX_MSG_SIZE];
-    while ((msg_len = peer.recieve_msg(msg)) < 0){}
-    
-    if (msg_len > 0 && msg[0] == (char) Rpc::$name){
-        peer.pop_message();
-        MessageReader in(msg + 1, msg_len - 1);
-        read(&in, resp);
-    }
 }
-$resp RpcClient::$name($req req) 
+""")
+client_recv_def_template = Template("""
+$msg_type *RpcClient::get_${rpc}_msg()
 {
-    $resp resp;
-    $name(req, &resp);
-    return resp;
+    auto msg = got_${rpc}_msg ? &${rpc}_msg : nullptr;
+    got_${rpc}_msg = false;
+    return msg;
 }
 """)
 
@@ -157,6 +154,8 @@ void RpcServer::handle_rpc(ClientId client_id, Peer *peer, char *data, int msg_l
     MessageBuilder out;
     switch(rpc_type) {
 $handle_rpc_cases
+    default:
+        assert(false);
     }
 }
 
@@ -166,16 +165,16 @@ server_rpc_handler_decl_template = Template(
     """    void Handle$name(ClientId client_id, $req*, $resp*);""")
 server_rpc_case_template = Template(
     """    case Rpc::$name:
-        {
-            $req req;
-            $resp resp;
-            read(&in, &req);
-            Handle$name(client_id, &req, &resp);
-            append(&out, (char)Rpc::$name);
-            append(&out, resp);
-            out.send(peer);
-        }
-        break;""")
+    {
+        $req req;
+        $resp resp;
+        read(&in, &req);
+        Handle$name(client_id, &req, &resp);
+        append(&out, (char)Rpc::$name);
+        append(&out, resp);
+        out.send(peer);
+    }
+    break;""")
 server_callable_rpc_template = Template("""
     void $name(Peer *, $req);
 """)
@@ -183,7 +182,7 @@ server_callable_rpc_def_template = Template("""
 void RpcServer::$name(Peer *peer, $req req)
 {
     MessageBuilder out;
-    append(&out, (char) Rpc::Oneway$name);
+    append(&out, (char) Rpc::$name);
     append(&out, req); out.send(peer);
 }
 """)
@@ -238,28 +237,16 @@ class Rpc:
         self.resp_type = resp_type
 
     def parse(str):
-        lines = str.splitlines()
-        name = lines[0].split(' ')[1]
-        req = lines[1]
-        resp = lines[2]
+        pieces = str.split()
+        name = pieces[1]
+        req = "Empty"
+        resp = "Empty"
+        if len(pieces) > 2:
+            req = pieces[2]
+        if len(pieces) > 3:
+            resp = pieces[3]
 
         return Rpc(name, req, resp)
-
-
-class Oneway:
-    name = ""
-    req_type = ""
-
-    def __init__(self, name, req_type):
-        self.name = name
-        self.req_type = req_type
-
-    def parse(str):
-        lines = str.splitlines()
-        name = lines[0].split(' ')[1]
-        req = lines[1]
-
-        return Oneway(name, req)
 
 
 if len(sys.argv) != 3:
@@ -269,14 +256,14 @@ in_file = open(sys.argv[1], 'r')
 objects = in_file.read().split('\n\n')
 
 messages = [Message.parse(obj) for obj in objects if obj.startswith('message')]
-rpcs = [Rpc.parse(obj) for obj in objects if obj.startswith('rpc')]
-oneways = [Oneway.parse(obj) for obj in objects if obj.startswith('oneway')]
+server_rpcs = [Rpc.parse(obj) for obj in objects if obj.startswith('server')]
+client_rpcs = [Rpc.parse(obj) for obj in objects if obj.startswith('client')]
 
 message_enums = ['\t' + (m.name + " = 1" if i == 0 else m.name)
-                for i, m in enumerate(messages)]
-rpc_enums = ['\t' + (rpc.name + " = 1" if i == 0 else rpc.name)
-             for i, rpc in enumerate(rpcs)]
-oneway_enums = ['\tOneway' + ow.name for i, ow in enumerate(oneways)]
+                 for i, m in enumerate(messages)]
+server_rpc_enums = ['\t' + (rpc.name + " = 1" if i == 0 else rpc.name)
+                    for i, rpc in enumerate(server_rpcs)]
+client_rpc_enums = ['\t' + rpc.name for rpc in client_rpcs]
 message_text = ""
 for msg in messages:
     members = [member_template.substitute(
@@ -290,41 +277,49 @@ for msg in messages:
         {'name': msg.name, 'members': "\n".join(members), 'appends': "\n".join(appends), 'reads': "\n".join(reads)})
 
 messages_text = message_file_template.substitute(
-    {'messages': message_text, 'message_enum_values': ",\n".join(message_enums),  'rpc_enum_values': ",\n".join(rpc_enums + oneway_enums)})
+    {'messages': message_text, 'message_enum_values': ",\n".join(message_enums),  'rpc_enum_values': ",\n".join(server_rpc_enums + client_rpc_enums)})
 
 
-client_rpc_handler_decls = [client_rpc_handler_decl_template.substitute(
-    {'name': ow.name, 'req': ow.req_type})
-    for ow in oneways]
+client_server_rpc_decls = [client_server_rpc_decl_template.substitute(
+    {'rpc': rpc.name, 'req': rpc.req_type})
+    for rpc in server_rpcs]
+client_recv_decls = [client_recv_decl_template.substitute(
+    {'rpc': rpc.name, 'msg_type': rpc.resp_type})
+    for rpc in server_rpcs] + [client_recv_decl_template.substitute(
+        {'rpc': rpc.name, 'msg_type': rpc.req_type})
+    for rpc in client_rpcs]
 client_rpc_cases = [client_rpc_case_template.substitute(
-    {'name': ow.name, 'req': ow.req_type})
-    for ow in oneways]
-client_callable_rpc_decls = [client_callable_rpc_template.substitute(
-    {'name': rpc.name, 'req': rpc.req_type, 'resp': rpc.resp_type})
-    for rpc in rpcs]
-client_callable_rpc_defs = [client_callable_rpc_def_template.substitute(
-    {'client_name': 'RpcServer', 'name': rpc.name, 'req': rpc.req_type, 'resp': rpc.resp_type})
-    for rpc in rpcs]
+    {'rpc': rpc.name}) for rpc in server_rpcs] + [client_rpc_case_template.substitute(
+        {'rpc': rpc.name}) for rpc in client_rpcs]
+client_server_rpc_defs = [client_server_rpc_def_template.substitute(
+    {'rpc': rpc.name, 'req': rpc.req_type})
+    for rpc in server_rpcs]
+client_client_recv_defs = [client_recv_def_template.substitute(
+    {'rpc': rpc.name, 'msg_type': rpc.resp_type})
+    for rpc in server_rpcs] + [client_recv_def_template.substitute(
+        {'rpc': rpc.name, 'msg_type': rpc.req_type})
+    for rpc in client_rpcs]
 client_text = client_file_template.substitute({
-    'rpc_handler_decls': "\n".join(client_rpc_handler_decls),
-    'handle_rpc_cases': "\n".join(client_rpc_cases),
-    'callable_rpc_decls': "".join(client_callable_rpc_decls),
-    'callable_rpc_defs': "\n".join(client_callable_rpc_defs),
+    'server_rpc_decls': "".join(client_server_rpc_decls),
+    'client_recv_decls': "".join(client_recv_decls),
+    'rpc_cases': "".join(client_rpc_cases),
+    'server_rpc_defs': "".join(client_server_rpc_defs),
+    'client_recv_defs': "".join(client_client_recv_defs),
 })
 
 
 server_rpc_handler_decls = [server_rpc_handler_decl_template.substitute(
     {'name': rpc.name, 'req': rpc.req_type, 'resp': rpc.resp_type})
-    for rpc in rpcs]
+    for rpc in server_rpcs]
 server_rpc_cases = [server_rpc_case_template.substitute(
     {'name': rpc.name, 'req': rpc.req_type, 'resp': rpc.resp_type})
-    for rpc in rpcs]
+    for rpc in server_rpcs]
 server_callable_rpc_decls = [server_callable_rpc_template.substitute(
     {'name': ow.name, 'req': ow.req_type})
-    for ow in oneways]
+    for ow in client_rpcs]
 server_callable_rpc_defs = [server_callable_rpc_def_template.substitute(
     {'name': ow.name, 'req': ow.req_type})
-    for ow in oneways]
+    for ow in client_rpcs]
 server_text = server_file_template.substitute({
     'rpc_handler_decls': "\n".join(server_rpc_handler_decls),
     'handle_rpc_cases': "\n".join(server_rpc_cases),

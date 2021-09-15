@@ -5,7 +5,8 @@
 
 enum struct Message : char
 {
-	GameMetadata = 1,
+	Empty = 1,
+	GameMetadata,
 	ListGamesRequest,
 	ListGamesResponse,
 	Player,
@@ -16,13 +17,52 @@ enum struct Message : char
 	JoinGameRequest,
 	JoinGameResponse,
 	SwapTeamRequest,
-	SwapTeamResponse,
 	LeaveGameRequest,
 	LeaveGameResponse,
 	StartGameRequest,
-	StartGameResponse
+	StartGameResponse,
+	GameStartedMessage
 };
 
+
+struct Empty 
+{
+
+};
+void append(MessageBuilder *msg, Empty &in)
+{
+
+}
+uint32_t read(MessageReader *msg, Empty *out)
+{
+    uint32_t len = 0;
+
+
+    return len;
+}
+void append(MessageBuilder *msg, std::vector<Empty> &in)
+{
+	append(msg, (uint16_t)in.size());
+	for (auto &it : in)
+    {
+        append(msg, it);
+    }
+};
+uint32_t read(MessageReader *msg, std::vector<Empty> *out)
+{
+	uint32_t len = 0;
+
+	uint16_t list_len;
+	len += read(msg, &list_len);
+	for (int i = 0; i < list_len; i++)
+    {
+		Empty elem;
+        len += read(msg, &elem);
+        out->push_back(elem);
+	}
+
+	return len;
+};
 
 struct GameMetadata 
 {
@@ -489,45 +529,6 @@ uint32_t read(MessageReader *msg, std::vector<SwapTeamRequest> *out)
 	return len;
 };
 
-struct SwapTeamResponse 
-{
-
-};
-void append(MessageBuilder *msg, SwapTeamResponse &in)
-{
-
-}
-uint32_t read(MessageReader *msg, SwapTeamResponse *out)
-{
-    uint32_t len = 0;
-
-
-    return len;
-}
-void append(MessageBuilder *msg, std::vector<SwapTeamResponse> &in)
-{
-	append(msg, (uint16_t)in.size());
-	for (auto &it : in)
-    {
-        append(msg, it);
-    }
-};
-uint32_t read(MessageReader *msg, std::vector<SwapTeamResponse> *out)
-{
-	uint32_t len = 0;
-
-	uint16_t list_len;
-	len += read(msg, &list_len);
-	for (int i = 0; i < list_len; i++)
-    {
-		SwapTeamResponse elem;
-        len += read(msg, &elem);
-        out->push_back(elem);
-	}
-
-	return len;
-};
-
 struct LeaveGameRequest 
 {
 
@@ -684,6 +685,45 @@ uint32_t read(MessageReader *msg, std::vector<StartGameResponse> *out)
 	return len;
 };
 
+struct GameStartedMessage 
+{
+    uint32_t game_id = {};
+};
+void append(MessageBuilder *msg, GameStartedMessage &in)
+{
+    append(msg, in.game_id);
+}
+uint32_t read(MessageReader *msg, GameStartedMessage *out)
+{
+    uint32_t len = 0;
+
+    len += read(msg, &out->game_id);
+    return len;
+}
+void append(MessageBuilder *msg, std::vector<GameStartedMessage> &in)
+{
+	append(msg, (uint16_t)in.size());
+	for (auto &it : in)
+    {
+        append(msg, it);
+    }
+};
+uint32_t read(MessageReader *msg, std::vector<GameStartedMessage> *out)
+{
+	uint32_t len = 0;
+
+	uint16_t list_len;
+	len += read(msg, &list_len);
+	for (int i = 0; i < list_len; i++)
+    {
+		GameStartedMessage elem;
+        len += read(msg, &elem);
+        out->push_back(elem);
+	}
+
+	return len;
+};
+
 
 enum struct Rpc : char
 {
@@ -694,5 +734,11 @@ enum struct Rpc : char
 	SwapTeam,
 	LeaveGame,
 	StartGame,
-	OnewayStartGame
+	GameStarted,
+	InGameStartRound,
+	InGameStartFaceoff,
+	InGameAskQuestion,
+	InGamePromptPassOrPlay,
+	InGameAnswer,
+	InGameFlipAnswer
 };
