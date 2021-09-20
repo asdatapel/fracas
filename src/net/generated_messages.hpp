@@ -739,6 +739,12 @@ enum struct Rpc : char
 	InGameStartFaceoff,
 	InGameAskQuestion,
 	InGamePromptPassOrPlay,
+	InGamePlayerBuzzed,
+	InGamePromptForAnswer,
+	InGameStartPlay,
 	InGameAnswer,
-	InGameFlipAnswer
+	InGameFlipAnswer,
+	InGameEggghhhh,
+	InGameEndRound,
+	InGameEndGame
 };

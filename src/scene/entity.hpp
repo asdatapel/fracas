@@ -12,6 +12,27 @@ enum struct EntityType
     CAMERA,
     SPLINE,
 };
+String to_string(EntityType type)
+{
+    switch (type)
+    {
+    case (EntityType::UNKNOWN):
+        return "UNKNOWN";
+        break;
+    case (EntityType::MESH):
+        return "MESH";
+        break;
+    case (EntityType::LIGHT):
+        return "LIGHT";
+        break;
+    case (EntityType::CAMERA):
+        return "CAMERA";
+        break;
+    case (EntityType::SPLINE):
+        return "SPLINE";
+        break;
+    }
+}
 
 struct DebugTag
 {

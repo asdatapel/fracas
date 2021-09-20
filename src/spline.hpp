@@ -216,10 +216,10 @@ void draw_spline(Spline3 &spline, RenderTarget target, InputState *input, Memory
         {
             if (imm_3d_point(&spline.points[i]))
             {
-                imm_window(String::from("Node Deets"), {0, target.height - 200.f, 300, 200});
+                imm_window("Node Deets", {0, target.height - 200.f, 300, 200});
 
                 Vec3f temp = spline.points[i];
-                imm_label(String::from("Position"));
+                imm_label("Position");
                 imm_num_input(&temp.x);
                 imm_num_input(&temp.y);
                 imm_num_input(&temp.z);

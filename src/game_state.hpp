@@ -338,7 +338,7 @@ struct Lobby
 //         if (game.clients[i].username.len)
 //             buf_pos = append_string(buf_pos, game.clients[i].username);
 //         else
-//             buf_pos = append_string(buf_pos, String::from("Joining..."));
+//             buf_pos = append_string(buf_pos, "Joining...");
 //     }
 
 //     return buf_pos;
@@ -527,10 +527,10 @@ struct Lobby
 
 //     game.last_answer.len = 0;
 
-//     game.question = String::from("What is the answer?");
-//     game.answers.append({false, 15, String::from("answer1")});
-//     game.answers.append({false, 15, String::from("answer2")});
-//     game.answers.append({false, 15, String::from("answer3")});
+//     game.question = "What is the answer?";
+//     game.answers.append({false, 15, "answer1"});
+//     game.answers.append({false, 15, "answer2"});
+//     game.answers.append({false, 15, "answer3"});
 
 //     build_and_broadcast_msg(game, construct_msg_start_round);
 
@@ -773,7 +773,7 @@ struct Lobby
 //         game.playing_family = game.faceoff_winning_family;
 
 //         auto construct_msg_player_said_play = [](GameState &game, char *buf_pos) {
-//             return construct_msg_player_said_something(game, buf_pos, String::from("Play!"));
+//             return construct_msg_player_said_something(game, buf_pos, "Play!");
 //         };
 //         build_and_broadcast_msg(game, construct_msg_player_said_play);
 //     }
@@ -782,7 +782,7 @@ struct Lobby
 //         game.playing_family = 1 - game.faceoff_winning_family;
 
 //         auto construct_msg_player_said_pass = [](GameState &game, char *buf_pos) {
-//             return construct_msg_player_said_something(game, buf_pos, String::from("Pass!"));
+//             return construct_msg_player_said_something(game, buf_pos, "Pass!");
 //         };
 //         build_and_broadcast_msg(game, construct_msg_player_said_pass);
 //     }

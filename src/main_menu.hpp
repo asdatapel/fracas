@@ -405,20 +405,20 @@ struct MainPage : MenuPage
         exit_button.rect = anchor_bottom_right(
             {0.2f * 1920, 0.2f * 1920 * 9.f / 16.f / 2.f},
             {25.f, 25.f});
-        exit_button.text = String::from("Exit");
+        exit_button.text = "Exit";
         settings_button.rect = translate(exit_button.rect, {0, -(exit_button.rect.height + 25.f)});
-        settings_button.text = String::from("Settings");
+        settings_button.text = "Settings";
         join_button.rect = translate(settings_button.rect, {0, -(settings_button.rect.height + 25.f)});
-        join_button.text = String::from("Join Game");
+        join_button.text = "Join Game";
         create_button.rect = translate(join_button.rect, {0, -(join_button.rect.height + 25.f)});
-        create_button.text = String::from("Create Game");
+        create_button.text = "Create Game";
     }
 
     void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu) override
     {
         {
-            String title_text_1 = String::from("FAMILY");
-            String title_text_2 = String::from("FEUD");
+            String title_text_1 = "FAMILY";
+            String title_text_2 = "FEUD";
 
             float want_width = 0.6f * target.width;
             float max_width = 0.6f * 1920;
@@ -481,14 +481,14 @@ struct LobbyPage : MenuPage
         back_button.rect = anchor_bottom_right(
             {0.2f * 1920, 0.2f * 1920 * 9.f / 16.f / 2.f},
             {25.f, 25.f});
-        back_button.text = String::from("Back");
+        back_button.text = "Back";
         start_game_button.rect = translate(back_button.rect, {0, -(back_button.rect.height + 25.f)});
-        start_game_button.text = String::from("Start");
+        start_game_button.text = "Start";
 
         swap_button.rect = anchor_top_right(
             {0.2f * 1920, 0.2f * 1920 * 9.f / 16.f / 2.f},
             {25.f, 25.f});
-        swap_button.text = String::from("Swap Team");
+        swap_button.text = "Swap Team";
 
         Rect left_panels = add_border({0, 0, 1920 / 3.f, 1080}, {25.f, 25.f});
         family_1_title_background = {left_panels.x, left_panels.y, left_panels.width, 100.f};
@@ -520,11 +520,11 @@ struct LobbyPage : MenuPage
         }
 
         draw_rect(target, family_1_title_background, {1.f, 0.f, 1.f, .4f});
-        draw_centered_text(font, target, String::from("Family 1"), family_1_title_background, .1f, 10, 1);
+        draw_centered_text(font, target, "Family 1", family_1_title_background, .1f, 10, 1);
         draw_rect(target, family_1_panel, {0.f, 1.f, 0.f, .4f});
 
         draw_rect(target, family_2_title_background, {1.f, 0.f, 1.f, .4f});
-        draw_centered_text(font, target, String::from("Family 2"), family_2_title_background, .1f, 10, 1);
+        draw_centered_text(font, target, "Family 2", family_2_title_background, .1f, 10, 1);
         draw_rect(target, family_2_panel, {0.f, 1.f, 0.f, .4f});
 
         rpc_client->GetGame({game_id});
@@ -596,10 +596,10 @@ struct JoinGamePage : MenuPage
         back_button.rect = anchor_bottom_right(
             {0.2f * 1920, 0.2f * 1920 * 9.f / 16.f / 2.f},
             {25.f, 25.f});
-        back_button.text = String::from("Back");
+        back_button.text = "Back";
         join_button.rect = back_button.rect;
         join_button.rect.y -= back_button.rect.height + 25.f;
-        join_button.text = String::from("Join");
+        join_button.text = "Join";
 
         Rect left_panels = add_border({0, 0, 1920 / 2.f, 1080 / 2.f}, {25.f, 25.f});
         title_background = {left_panels.x, left_panels.y, left_panels.width, 100.f};
@@ -616,7 +616,7 @@ struct JoinGamePage : MenuPage
         user_input_panel.height = 170.f;
         username_label.rect = add_border(user_input_panel, {25.f, 25.f});
         username_label.rect.height = 40.f;
-        username_label.text = String::from("Your Name:");
+        username_label.text = "Your Name:";
         username_textbox.rect = translate(username_label.rect, {0, username_label.rect.height + 10.f});
         username_textbox.rect.height = 70.f;
     }
@@ -629,7 +629,7 @@ struct JoinGamePage : MenuPage
         }
 
         draw_rect(target, title_background, {1.f, 0.f, 1.f, .4f});
-        draw_centered_text(font, target, String::from("Select Game"), title_background, .1f, 10, 1);
+        draw_centered_text(font, target, "Select Game", title_background, .1f, 10, 1);
 
         draw_rect(target, game_list_panel, {0.f, 1.f, 0.f, .4f});
         {
@@ -689,9 +689,9 @@ struct CreateGamePage : MenuPage
         back_button.rect = anchor_bottom_right(
             {0.2f * 1920, 0.2f * 1920 * 9.f / 16.f / 2.f},
             {25.f, 25.f});
-        back_button.text = String::from("Back");
+        back_button.text = "Back";
         create_button.rect = translate(back_button.rect, {0, -(back_button.rect.height + 25.f)});
-        create_button.text = String::from("Create");
+        create_button.text = "Create";
 
         Rect left_panels = add_border({0, 0, 1920 / 2.f, 1080 / 2.f}, {25.f, 25.f});
         title_background = {left_panels.x, left_panels.y, left_panels.width, 100.f};
@@ -707,13 +707,13 @@ struct CreateGamePage : MenuPage
                             game_settings_content.y,
                             game_settings_content.width,
                             40.f},
-                           String::from("Game Name:")};
+                           "Game Name:"};
         game_name_text_box.rect = translate(game_name_label.rect, {0, game_name_label.rect.height + 10.f});
         game_name_text_box.rect.height = 70.f;
 
         user_name_label.rect = translate(game_name_text_box.rect, {0, game_name_text_box.rect.height + 10.f});
         user_name_label.rect.height = 40.f;
-        user_name_label.text = String::from("Your Name:");
+        user_name_label.text = "Your Name:";
         user_name_text_box.rect = translate(user_name_label.rect, {0, user_name_label.rect.height + 10.f});
         user_name_text_box.rect.height = 70.f;
     }
@@ -738,7 +738,7 @@ struct CreateGamePage : MenuPage
         }
 
         draw_rect(target, title_background, {1.f, 0.f, 1.f, .4f});
-        draw_centered_text(font, target, String::from("New Game"), title_background, .1f, 10, 1);
+        draw_centered_text(font, target, "New Game", title_background, .1f, 10, 1);
 
         draw_rect(target, game_settings_panel, {0.f, 1.f, 0.f, .4f});
         game_name_label.update_and_draw(target, input, &font);
@@ -770,9 +770,9 @@ struct SettingsPage : MenuPage
         back_button.rect = anchor_bottom_right(
             {0.2f * 1920, 0.2f * 1920 * 9.f / 16.f / 2.f},
             {25.f, 25.f});
-        back_button.text = String::from("Back");
+        back_button.text = "Back";
         create_button.rect = translate(back_button.rect, {0, -(back_button.rect.height + 25.f)});
-        create_button.text = String::from("Create");
+        create_button.text = "Create";
 
         Rect left_panels = add_border({0, 0, 1920 / 2.f, 1080 / 2.f}, {25.f, 25.f});
         title_background = {left_panels.x, left_panels.y, left_panels.width, 100.f};
@@ -796,7 +796,7 @@ struct SettingsPage : MenuPage
         }
 
         draw_rect(target, title_background, {1.f, 0.f, 1.f, .4f});
-        draw_centered_text(font, target, String::from("New Game"), title_background, .1f, 10, 1);
+        draw_centered_text(font, target, "New Game", title_background, .1f, 10, 1);
 
         draw_rect(target, game_settings_panel, {0.f, 1.f, 0.f, .4f});
         server_ip_address_text_box.update_and_draw(target, input, &font);

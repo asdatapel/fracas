@@ -261,13 +261,13 @@ void imm_label(String text)
 
 bool imm_button(ImmId me, String text)
 {
-    bool triggered = false;
+    ImmWindow &window = state.windows[state.current_window];
 
-    Rect rect = {100, state.button_y_offset, 150, 40};
-    float border = 7;
+    Rect rect = {window.next_elem_pos.x, window.next_elem_pos.y,
+                 window.content_rect.width, 30};
+
+    float border = 5;
     float text_scale = (rect.height - (2 * border)) / state.font.font_size_px;
-    rect.width = get_text_width(state.font, text, text_scale) + (2 * border);
-    rect = align_right(rect);
 
     imm_hot(me, rect);
     bool hot = state.hot == me;
@@ -356,13 +356,15 @@ bool imm_button(ImmId me, String text)
 
     debug_end_immediate();
 
+    bool triggered = false;
     if (state.selected == me)
     {
         triggered = true;
         state.selected = 0;
     }
 
-    state.button_y_offset += rect.height + 10;
+    window.next_elem_pos.y += rect.height + gap;
+    window.last_height += rect.height + gap;
     return triggered;
 }
 

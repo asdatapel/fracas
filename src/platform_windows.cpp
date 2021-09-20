@@ -156,6 +156,42 @@ void key_input_callback(GLFWwindow *window, int key, int scancode, int action, i
     case GLFW_KEY_RIGHT:
         append_if_press(Keys::RIGHT);
         break;
+    case GLFW_KEY_F1:
+        append_if_press(Keys::F1);
+        break;
+    case GLFW_KEY_F2:
+        append_if_press(Keys::F2);
+        break;
+    case GLFW_KEY_F3:
+        append_if_press(Keys::F3);
+        break;
+    case GLFW_KEY_F4:
+        append_if_press(Keys::F4);
+        break;
+    case GLFW_KEY_F5:
+        append_if_press(Keys::F5);
+        break;
+    case GLFW_KEY_F6:
+        append_if_press(Keys::F6);
+        break;
+    case GLFW_KEY_F7:
+        append_if_press(Keys::F7);
+        break;
+    case GLFW_KEY_F8:
+        append_if_press(Keys::F8);
+        break;
+    case GLFW_KEY_F9:
+        append_if_press(Keys::F9);
+        break;
+    case GLFW_KEY_F10:
+        append_if_press(Keys::F10);
+        break;
+    case GLFW_KEY_F11:
+        append_if_press(Keys::F11);
+        break;
+    case GLFW_KEY_F12:
+        append_if_press(Keys::F12);
+        break;
     }
 }
 
@@ -178,7 +214,7 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
     }
 }
 
-void scroll_callback(GLFWwindow* window, double x_offset, double y_offset)
+void scroll_callback(GLFWwindow *window, double x_offset, double y_offset)
 {
     InputState *input_state = static_cast<GlfwState *>(glfwGetWindowUserPointer(window))->input_state;
 
@@ -286,9 +322,12 @@ FileData read_entire_file(const char *filename)
         &read,
         NULL);
 
+    CloseHandle(file_handle);
+
     return res;
 }
 
+// BIG TODO: actually use this
 void free_file(FileData file)
 {
     free(file.data);
@@ -326,7 +365,37 @@ FileData read_entire_file(const char *filename, StackAllocator *allocator)
         &read,
         NULL);
 
+    CloseHandle(file_handle);
+
     return res;
+}
+
+void write_file(const char *filename, String data)
+{
+    auto file_handle = CreateFileA(
+        filename,
+        GENERIC_WRITE,
+        NULL,
+        NULL,
+        CREATE_ALWAYS,
+        NULL,
+        NULL);
+    if (file_handle == INVALID_HANDLE_VALUE)
+    {
+        printf("ERROR writing file: %s. Dumping to stdout\n", filename);
+        printf("%.*s\n", data.len, data.data);
+        return;
+    }
+
+    DWORD written = 0;
+    if (!WriteFile(file_handle, data.data, data.len, &written, nullptr) || written != data.len)
+    {
+        printf("ERROR writing file: %s. Dumping to stdout\n", filename);
+        printf("%.*s\n", data.len, data.data);
+    }
+
+    CloseHandle(file_handle);
+
 }
 
 uint64_t debug_get_cycle_count()

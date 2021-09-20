@@ -205,12 +205,10 @@ struct String
     }
 
     template <size_t N>
-    static String from(const char (&str)[N])
+    String(const char (&str)[N])
     {
-        String ret;
-        ret.data = (char *)&str;
-        ret.len = N - 1; // remove '\0'
-        return ret;
+        data = (char *)&str;
+        len = N - 1; // remove '\0'
     }
 
     char *to_char_array(StackAllocator *allocator)
@@ -231,13 +229,27 @@ struct String
         return s;
     }
 
-    // bool operator==(const String &o) const {
-    //     return len == o.len && !strncmp(data, o.data, len);
-    // }
-
     bool operator<(const String &o) const
     {
         return len < o.len || strncmp(data, o.data, len) < 0;
+    }
+    
+    static String from(int i, StackAllocator *allocator)
+    {
+        String ret;
+        ret.data = allocator->alloc(15); // should never be more than 15 digits, right 
+        _itoa_s(i, ret.data, 15, 10);
+        ret.len = strlen(ret.data);
+        return ret;
+    }
+    
+    static String from(float val, StackAllocator *allocator)
+    {
+        String ret;
+        ret.data = allocator->alloc(40);
+        ret.len = snprintf(ret.data, 40, "%f", val);
+        allocator->free(ret.data + ret.len);
+        return ret;
     }
 };
 

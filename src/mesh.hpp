@@ -62,22 +62,22 @@ Mesh load_obj(FileData file, StackAllocator *allocator, StackAllocator *temp_all
         // replace whitespace seperator will null terminator, makes it much easier to user atof() later
         *buf = '\0';
 
-        if (strcmp(token, String::from("v")))
+        if (strcmp(token, "v"))
         {
             v_count++;
             skip_to_next_line(&buf, buf_end);
         }
-        else if (strcmp(token, String::from("vt")))
+        else if (strcmp(token, "vt"))
         {
             vt_count++;
             skip_to_next_line(&buf, buf_end);
         }
-        else if (strcmp(token, String::from("vn")))
+        else if (strcmp(token, "vn"))
         {
             vn_count++;
             skip_to_next_line(&buf, buf_end);
         }
-        else if (strcmp(token, String::from("f")))
+        else if (strcmp(token, "f"))
         {
             f_count++;
             skip_to_next_line(&buf, buf_end);
@@ -99,7 +99,7 @@ Mesh load_obj(FileData file, StackAllocator *allocator, StackAllocator *temp_all
     buf_end = file.data + file.length;
     while ((token = parse_token(&buf, buf_end)).len)
     {
-        if (strcmp(token, String::from("v")))
+        if (strcmp(token, "v"))
         {
             String x = parse_token(&buf, buf_end);
             String y = parse_token(&buf, buf_end);
@@ -109,7 +109,7 @@ Mesh load_obj(FileData file, StackAllocator *allocator, StackAllocator *temp_all
             v[v_i++] = strtof(z.data, nullptr);
             skip_to_next_line(&buf, buf_end);
         }
-        else if (strcmp(token, String::from("vt")))
+        else if (strcmp(token, "vt"))
         {
             String u = parse_token(&buf, buf_end);
             String v = parse_token(&buf, buf_end);
@@ -117,7 +117,7 @@ Mesh load_obj(FileData file, StackAllocator *allocator, StackAllocator *temp_all
             vt[vt_i++] = strtof(v.data, nullptr);
             skip_to_next_line(&buf, buf_end);
         }
-        else if (strcmp(token, String::from("vn")))
+        else if (strcmp(token, "vn"))
         {
             String x = parse_token(&buf, buf_end);
             String y = parse_token(&buf, buf_end);
@@ -127,7 +127,7 @@ Mesh load_obj(FileData file, StackAllocator *allocator, StackAllocator *temp_all
             vn[vn_i++] = strtof(z.data, nullptr);
             skip_to_next_line(&buf, buf_end);
         }
-        else if (strcmp(token, String::from("f")))
+        else if (strcmp(token, "f"))
         {
             for (int i = 0; i < 3; i++)
             {

@@ -28,9 +28,21 @@ struct RpcServer : public BaseRpcServer
 
     void InGamePromptPassOrPlay(Peer *, Empty);
 
+    void InGamePlayerBuzzed(Peer *, Empty);
+
+    void InGamePromptForAnswer(Peer *, Empty);
+
+    void InGameStartPlay(Peer *, Empty);
+
     void InGameAnswer(Peer *, Empty);
 
     void InGameFlipAnswer(Peer *, Empty);
+
+    void InGameEggghhhh(Peer *, Empty);
+
+    void InGameEndRound(Peer *, Empty);
+
+    void InGameEndGame(Peer *, Empty);
 
 };
 
@@ -164,6 +176,30 @@ void RpcServer::InGamePromptPassOrPlay(Peer *peer, Empty req)
 }
 
 
+void RpcServer::InGamePlayerBuzzed(Peer *peer, Empty req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::InGamePlayerBuzzed);
+    append(&out, req); out.send(peer);
+}
+
+
+void RpcServer::InGamePromptForAnswer(Peer *peer, Empty req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::InGamePromptForAnswer);
+    append(&out, req); out.send(peer);
+}
+
+
+void RpcServer::InGameStartPlay(Peer *peer, Empty req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::InGameStartPlay);
+    append(&out, req); out.send(peer);
+}
+
+
 void RpcServer::InGameAnswer(Peer *peer, Empty req)
 {
     MessageBuilder out;
@@ -176,6 +212,30 @@ void RpcServer::InGameFlipAnswer(Peer *peer, Empty req)
 {
     MessageBuilder out;
     append(&out, (char) Rpc::InGameFlipAnswer);
+    append(&out, req); out.send(peer);
+}
+
+
+void RpcServer::InGameEggghhhh(Peer *peer, Empty req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::InGameEggghhhh);
+    append(&out, req); out.send(peer);
+}
+
+
+void RpcServer::InGameEndRound(Peer *peer, Empty req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::InGameEndRound);
+    append(&out, req); out.send(peer);
+}
+
+
+void RpcServer::InGameEndGame(Peer *peer, Empty req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::InGameEndGame);
     append(&out, req); out.send(peer);
 }
 

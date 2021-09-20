@@ -73,6 +73,18 @@ struct RpcClient : public BaseRpcClient
     bool got_InGamePromptPassOrPlay_msg = false;
     Empty InGamePromptPassOrPlay_msg;
 
+    Empty *get_InGamePlayerBuzzed_msg();
+    bool got_InGamePlayerBuzzed_msg = false;
+    Empty InGamePlayerBuzzed_msg;
+
+    Empty *get_InGamePromptForAnswer_msg();
+    bool got_InGamePromptForAnswer_msg = false;
+    Empty InGamePromptForAnswer_msg;
+
+    Empty *get_InGameStartPlay_msg();
+    bool got_InGameStartPlay_msg = false;
+    Empty InGameStartPlay_msg;
+
     Empty *get_InGameAnswer_msg();
     bool got_InGameAnswer_msg = false;
     Empty InGameAnswer_msg;
@@ -80,6 +92,18 @@ struct RpcClient : public BaseRpcClient
     Empty *get_InGameFlipAnswer_msg();
     bool got_InGameFlipAnswer_msg = false;
     Empty InGameFlipAnswer_msg;
+
+    Empty *get_InGameEggghhhh_msg();
+    bool got_InGameEggghhhh_msg = false;
+    Empty InGameEggghhhh_msg;
+
+    Empty *get_InGameEndRound_msg();
+    bool got_InGameEndRound_msg = false;
+    Empty InGameEndRound_msg;
+
+    Empty *get_InGameEndGame_msg();
+    bool got_InGameEndGame_msg = false;
+    Empty InGameEndGame_msg;
 
 };
 
@@ -174,6 +198,27 @@ bool RpcClient::handle_rpc(char *data, int msg_len)
             got_InGamePromptPassOrPlay_msg = true;
         }
         break;
+        case Rpc::InGamePlayerBuzzed:
+        {
+            InGamePlayerBuzzed_msg = {};
+            read(&in, &InGamePlayerBuzzed_msg);
+            got_InGamePlayerBuzzed_msg = true;
+        }
+        break;
+        case Rpc::InGamePromptForAnswer:
+        {
+            InGamePromptForAnswer_msg = {};
+            read(&in, &InGamePromptForAnswer_msg);
+            got_InGamePromptForAnswer_msg = true;
+        }
+        break;
+        case Rpc::InGameStartPlay:
+        {
+            InGameStartPlay_msg = {};
+            read(&in, &InGameStartPlay_msg);
+            got_InGameStartPlay_msg = true;
+        }
+        break;
         case Rpc::InGameAnswer:
         {
             InGameAnswer_msg = {};
@@ -186,6 +231,27 @@ bool RpcClient::handle_rpc(char *data, int msg_len)
             InGameFlipAnswer_msg = {};
             read(&in, &InGameFlipAnswer_msg);
             got_InGameFlipAnswer_msg = true;
+        }
+        break;
+        case Rpc::InGameEggghhhh:
+        {
+            InGameEggghhhh_msg = {};
+            read(&in, &InGameEggghhhh_msg);
+            got_InGameEggghhhh_msg = true;
+        }
+        break;
+        case Rpc::InGameEndRound:
+        {
+            InGameEndRound_msg = {};
+            read(&in, &InGameEndRound_msg);
+            got_InGameEndRound_msg = true;
+        }
+        break;
+        case Rpc::InGameEndGame:
+        {
+            InGameEndGame_msg = {};
+            read(&in, &InGameEndGame_msg);
+            got_InGameEndGame_msg = true;
         }
         break;
         default:
@@ -331,6 +397,27 @@ Empty *RpcClient::get_InGamePromptPassOrPlay_msg()
     return msg;
 }
 
+Empty *RpcClient::get_InGamePlayerBuzzed_msg()
+{
+    auto msg = got_InGamePlayerBuzzed_msg ? &InGamePlayerBuzzed_msg : nullptr;
+    got_InGamePlayerBuzzed_msg = false;
+    return msg;
+}
+
+Empty *RpcClient::get_InGamePromptForAnswer_msg()
+{
+    auto msg = got_InGamePromptForAnswer_msg ? &InGamePromptForAnswer_msg : nullptr;
+    got_InGamePromptForAnswer_msg = false;
+    return msg;
+}
+
+Empty *RpcClient::get_InGameStartPlay_msg()
+{
+    auto msg = got_InGameStartPlay_msg ? &InGameStartPlay_msg : nullptr;
+    got_InGameStartPlay_msg = false;
+    return msg;
+}
+
 Empty *RpcClient::get_InGameAnswer_msg()
 {
     auto msg = got_InGameAnswer_msg ? &InGameAnswer_msg : nullptr;
@@ -342,6 +429,27 @@ Empty *RpcClient::get_InGameFlipAnswer_msg()
 {
     auto msg = got_InGameFlipAnswer_msg ? &InGameFlipAnswer_msg : nullptr;
     got_InGameFlipAnswer_msg = false;
+    return msg;
+}
+
+Empty *RpcClient::get_InGameEggghhhh_msg()
+{
+    auto msg = got_InGameEggghhhh_msg ? &InGameEggghhhh_msg : nullptr;
+    got_InGameEggghhhh_msg = false;
+    return msg;
+}
+
+Empty *RpcClient::get_InGameEndRound_msg()
+{
+    auto msg = got_InGameEndRound_msg ? &InGameEndRound_msg : nullptr;
+    got_InGameEndRound_msg = false;
+    return msg;
+}
+
+Empty *RpcClient::get_InGameEndGame_msg()
+{
+    auto msg = got_InGameEndGame_msg ? &InGameEndGame_msg : nullptr;
+    got_InGameEndGame_msg = false;
     return msg;
 }
 

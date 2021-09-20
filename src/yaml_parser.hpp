@@ -7,15 +7,16 @@
 
 #include "platform.hpp"
 
+struct YamlListElem;
+struct YamlLiteral;
+struct YamlDictElem;
+
 enum struct YamlType
 {
     KEY,
     KEY_VALUE,
 };
 
-struct YamlListElem;
-struct YamlLiteral;
-struct YamlDictElem;
 struct YamlValue
 {
     enum struct Type

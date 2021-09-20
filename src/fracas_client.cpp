@@ -9,6 +9,7 @@
 #include "camera.hpp"
 #include "debug_ui.hpp"
 #include "font.hpp"
+#include "game_scripts.hpp"
 #include "mesh.hpp"
 #include "main_menu.hpp"
 #include "net/net.hpp"
@@ -275,7 +276,7 @@ bool init_if_not()
         server.open("127.0.0.1", 6519, false);
 
         allocator.init(1024ull * 1024 * 1024 * 2); // 2gb
-        temp.init(1024 * 1024 * 50);               // 50 mb
+        temp.init(1024 * 1024 * 100);               // 50 mb
         assets.init(memory);
         scene.init(&assets, memory);
         ui_state = ServerMessageType::INVALID;
@@ -321,6 +322,7 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
 
     static RpcClient client("127.0.0.1", 6666);
     static ClientData client_data(&assets, &client, memory);
+    static Game game;
 
     static bool inited = false;
     if (!inited)
@@ -328,6 +330,7 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
         inited = true;
 
         client.client_data = &client_data;
+        game.init(&scene);
     }
 
     int msg_len;
@@ -364,7 +367,8 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
     }
     else
     {
-        editor.update_and_draw(&scene, main_target, input_state, memory);
+        game.update(1 / 60.f, &scene, &client);
+        editor.update_and_draw(&scene, &game, main_target, input_state, memory);
     }
 
     // if (animation_wait)

@@ -26,6 +26,18 @@ enum struct Keys
     DOWN,
     LEFT,
     RIGHT,
+    F1,
+    F2,
+    F3,
+    F4,
+    F5,
+    F6,
+    F7,
+    F8,
+    F9,
+    F10,
+    F11,
+    F12,
     INVALID
 };
 
@@ -72,6 +84,7 @@ struct FileData
 };
 FileData read_entire_file(const char *);
 FileData read_entire_file(const char *, StackAllocator *);
+void write_file(const char *, String);
 void free_file(FileData);
 uint64_t debug_get_cycle_count();
 

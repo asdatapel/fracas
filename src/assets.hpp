@@ -47,12 +47,12 @@ struct Assets
         TextureFormat format;
     };
     const std::array<TextureDefinition, StandardPbrMaterial::N> STANDARD_MATERIAL_FILES = {
-        TextureDefinition{String::from("\\diffuse.bmp"), TextureFormat::SRGB8_ALPHA8},
-        TextureDefinition{String::from("\\normal.bmp"), TextureFormat::RGBA8},
-        TextureDefinition{String::from("\\metal.bmp"), TextureFormat::SRGB8_ALPHA8},
-        TextureDefinition{String::from("\\roughness.bmp"), TextureFormat::SRGB8_ALPHA8},
-        TextureDefinition{String::from("\\emit.bmp"), TextureFormat::SRGB8_ALPHA8},
-        TextureDefinition{String::from("\\ao.bmp"), TextureFormat::SRGB8_ALPHA8},
+        TextureDefinition{"\\diffuse.bmp", TextureFormat::SRGB8_ALPHA8},
+        TextureDefinition{"\\normal.bmp", TextureFormat::RGBA8},
+        TextureDefinition{"\\metal.bmp", TextureFormat::SRGB8_ALPHA8},
+        TextureDefinition{"\\roughness.bmp", TextureFormat::SRGB8_ALPHA8},
+        TextureDefinition{"\\emit.bmp", TextureFormat::SRGB8_ALPHA8},
+        TextureDefinition{"\\ao.bmp", TextureFormat::SRGB8_ALPHA8},
     };
 
     // TODO don't use a map, somehow
@@ -111,8 +111,8 @@ struct Assets
 
     void init(Memory mem)
     {
-        load_scene(String::from("C:\\Users\\Asda\\Desktop\\test\\"),
-                   String::from("set.fobj"),
+        load_scene("resources\\scenes\\test\\",
+                   "set.fobj",
                    mem);
 
         for (int i = 0; i < FONT_ASSET_COUNT; i++)
@@ -121,14 +121,14 @@ struct Assets
         }
 
         const String bar_numbers[] = {
-            String::from("resources/images/bar_numbers/num_1.bmp"),
-            String::from("resources/images/bar_numbers/num_2.bmp"),
-            String::from("resources/images/bar_numbers/num_3.bmp"),
-            String::from("resources/images/bar_numbers/num_4.bmp"),
-            String::from("resources/images/bar_numbers/num_5.bmp"),
-            String::from("resources/images/bar_numbers/num_6.bmp"),
-            String::from("resources/images/bar_numbers/num_7.bmp"),
-            String::from("resources/images/bar_numbers/num_8.bmp"),
+            "resources/images/bar_numbers/num_1.bmp",
+            "resources/images/bar_numbers/num_2.bmp",
+            "resources/images/bar_numbers/num_3.bmp",
+            "resources/images/bar_numbers/num_4.bmp",
+            "resources/images/bar_numbers/num_5.bmp",
+            "resources/images/bar_numbers/num_6.bmp",
+            "resources/images/bar_numbers/num_7.bmp",
+            "resources/images/bar_numbers/num_8.bmp",
         };
 
         for (int i = 0; i < bar_num_textures.size(); i++)
@@ -142,9 +142,9 @@ struct Assets
         auto dict_to_vec = [](YamlDictElem *dict, Memory mem)
         {
             Vec3f vec;
-            vec.x = atof(((YamlLiteral *)dict->get(String::from("x")))->value.to_char_array(mem.temp));
-            vec.y = atof(((YamlLiteral *)dict->get(String::from("y")))->value.to_char_array(mem.temp));
-            vec.z = atof(((YamlLiteral *)dict->get(String::from("z")))->value.to_char_array(mem.temp));
+            vec.x = atof(((YamlLiteral *)dict->get("x"))->value.to_char_array(mem.temp));
+            vec.y = atof(((YamlLiteral *)dict->get("y"))->value.to_char_array(mem.temp));
+            vec.z = atof(((YamlLiteral *)dict->get("z"))->value.to_char_array(mem.temp));
 
             return vec;
         };
@@ -163,25 +163,25 @@ struct Assets
         Collection collection;
 
         YamlDictElem *main = YamlParser(file).parse(mem.temp);
-        YamlListElem *objects = (YamlListElem *)main->get(String::from("objects"));
+        YamlListElem *objects = (YamlListElem *)main->get("objects");
         YamlListElem *obj_elem = objects;
         while (obj_elem)
         {
             Entity e = {};
 
             YamlDictElem *obj = (YamlDictElem *)obj_elem->value;
-            String name = ((YamlLiteral *)obj->get(String::from("name")))->value;
-            String type = ((YamlLiteral *)obj->get(String::from("type")))->value;
-            if (strcmp(String::from("MESH"), type))
+            String name = ((YamlLiteral *)obj->get("name"))->value;
+            String type = ((YamlLiteral *)obj->get("type"))->value;
+            if (strcmp("MESH", type))
             {
-                String data = ((YamlLiteral *)obj->get(String::from("data")))->value;
+                String data = ((YamlLiteral *)obj->get("data"))->value;
                 VertexBuffer buf = load_mesh(folder.concat(data, mem.temp), mem);
 
                 StandardPbrMaterial *material = (StandardPbrMaterial *)mem.allocator->alloc(sizeof(StandardPbrMaterial));
                 new (material) StandardPbrMaterial();
                 for (int i = 0; i < STANDARD_MATERIAL_FILES.size(); i++)
                 {
-                    String material_name = ((YamlLiteral *)obj->get(String::from("material")))->value;
+                    String material_name = ((YamlLiteral *)obj->get("material"))->value;
                     String texture_path = folder.concat(material_name, mem.temp).concat(STANDARD_MATERIAL_FILES[i].filename, mem.temp);
                     material->textures[i] = load_texture(texture_path, STANDARD_MATERIAL_FILES[i].format, mem);
                 }
@@ -191,20 +191,20 @@ struct Assets
                 e.material = material;
                 e.shader = &threed_shader;
             }
-            else if (strcmp(String::from("LIGHT"), type))
+            else if (strcmp("LIGHT", type))
             {
-                YamlDictElem *light = (YamlDictElem *)obj->get(String::from("light"));
-                YamlDictElem *color = (YamlDictElem *)light->get(String::from("color"));
+                YamlDictElem *light = (YamlDictElem *)obj->get("light");
+                YamlDictElem *color = (YamlDictElem *)light->get("color");
 
                 e.type = EntityType::LIGHT;
                 e.spot_light.color = dict_to_vec(color, mem);
-                e.spot_light.inner_angle = atof(((YamlLiteral *)light->get(String::from("inner_angle")))->value.to_char_array(mem.temp));
-                e.spot_light.outer_angle = atof(((YamlLiteral *)light->get(String::from("outer_angle")))->value.to_char_array(mem.temp));
+                e.spot_light.inner_angle = atof(((YamlLiteral *)light->get("inner_angle"))->value.to_char_array(mem.temp));
+                e.spot_light.outer_angle = atof(((YamlLiteral *)light->get("outer_angle"))->value.to_char_array(mem.temp));
             }
 
-            YamlDictElem *position = (YamlDictElem *)obj->get(String::from("position"));
-            YamlDictElem *rotation = (YamlDictElem *)obj->get(String::from("rotation"));
-            YamlDictElem *scale = (YamlDictElem *)obj->get(String::from("scale"));
+            YamlDictElem *position = (YamlDictElem *)obj->get("position");
+            YamlDictElem *rotation = (YamlDictElem *)obj->get("rotation");
+            YamlDictElem *scale = (YamlDictElem *)obj->get("scale");
             e.transform.position = dict_to_vec(position, mem);
             e.transform.rotation = dict_to_vec(rotation, mem);
             e.transform.scale = dict_to_vec(scale, mem);
@@ -224,9 +224,9 @@ struct Assets
         auto dict_to_vec = [](YamlDictElem *dict, Memory mem)
         {
             Vec3f vec;
-            vec.x = atof(((YamlLiteral *)dict->get(String::from("x")))->value.to_char_array(mem.temp));
-            vec.y = atof(((YamlLiteral *)dict->get(String::from("y")))->value.to_char_array(mem.temp));
-            vec.z = atof(((YamlLiteral *)dict->get(String::from("z")))->value.to_char_array(mem.temp));
+            vec.x = atof(((YamlLiteral *)dict->get("x"))->value.to_char_array(mem.temp));
+            vec.y = atof(((YamlLiteral *)dict->get("y"))->value.to_char_array(mem.temp));
+            vec.z = atof(((YamlLiteral *)dict->get("z"))->value.to_char_array(mem.temp));
 
             return vec;
         };
@@ -240,23 +240,23 @@ struct Assets
         FileData file = read_entire_file(filepath, mem.temp);
 
         YamlDictElem *main = YamlParser(file).parse(mem.temp);
-        YamlListElem *objects = (YamlListElem *)main->get(String::from("objects"));
+        YamlListElem *objects = (YamlListElem *)main->get("objects");
 
         YamlListElem *obj_elem = objects;
         while (obj_elem)
         {
             YamlDictElem *obj = (YamlDictElem *)obj_elem->value;
-            String name = ((YamlLiteral *)obj->get(String::from("name")))->value;
-            String type = ((YamlLiteral *)obj->get(String::from("type")))->value;
-            if (strcmp(String::from("COLLECTION"), type))
+            String name = ((YamlLiteral *)obj->get("name"))->value;
+            String type = ((YamlLiteral *)obj->get("type"))->value;
+            if (strcmp("COLLECTION", type))
             {
-                String collection_name = ((YamlLiteral *)obj->get(String::from("collection")))->value;
-                String collection_folder = folder.concat(collection_name, mem.temp).concat(String::from("\\"), mem.temp);
-                Collection *collection = load_collection(collection_folder, collection_name.concat(String::from(".fobj"), mem.temp), mem);
+                String collection_name = ((YamlLiteral *)obj->get("collection"))->value;
+                String collection_folder = folder.concat(collection_name, mem.temp).concat("\\", mem.temp);
+                Collection *collection = load_collection(collection_folder, collection_name.concat(".fobj", mem.temp), mem);
 
-                YamlDictElem *position_str = (YamlDictElem *)obj->get(String::from("position"));
-                YamlDictElem *rotation_str = (YamlDictElem *)obj->get(String::from("rotation"));
-                YamlDictElem *scale_str = (YamlDictElem *)obj->get(String::from("scale"));
+                YamlDictElem *position_str = (YamlDictElem *)obj->get("position");
+                YamlDictElem *rotation_str = (YamlDictElem *)obj->get("rotation");
+                YamlDictElem *scale_str = (YamlDictElem *)obj->get("scale");
                 Vec3f position = dict_to_vec(position_str, mem);
                 Vec3f rotation = dict_to_vec(rotation_str, mem);
                 Vec3f scale = dict_to_vec(scale_str, mem);
@@ -283,16 +283,16 @@ struct Assets
             else
             {
                 Entity e = {};
-                if (strcmp(String::from("MESH"), type))
+                if (strcmp("MESH", type))
                 {
-                    String data = ((YamlLiteral *)obj->get(String::from("data")))->value;
+                    String data = ((YamlLiteral *)obj->get("data"))->value;
                     VertexBuffer buf = load_mesh(folder.concat(data, mem.temp), mem);
 
                     StandardPbrMaterial *material = (StandardPbrMaterial *)mem.allocator->alloc(sizeof(StandardPbrMaterial));
                     new (material) StandardPbrMaterial();
                     for (int i = 0; i < STANDARD_MATERIAL_FILES.size(); i++)
                     {
-                        String material_name = ((YamlLiteral *)obj->get(String::from("material")))->value;
+                        String material_name = ((YamlLiteral *)obj->get("material"))->value;
                         String texture_path = folder.concat(material_name, mem.temp).concat(STANDARD_MATERIAL_FILES[i].filename, mem.temp);
                         material->textures[i] = load_texture(texture_path, STANDARD_MATERIAL_FILES[i].format, mem);
                     }
@@ -302,20 +302,20 @@ struct Assets
                     e.material = material;
                     e.shader = &threed_shader;
                 }
-                else if (strcmp(String::from("LIGHT"), type))
+                else if (strcmp("LIGHT", type))
                 {
-                    YamlDictElem *light = (YamlDictElem *)obj->get(String::from("light"));
-                    YamlDictElem *color = (YamlDictElem *)light->get(String::from("color"));
+                    YamlDictElem *light = (YamlDictElem *)obj->get("light");
+                    YamlDictElem *color = (YamlDictElem *)light->get("color");
 
                     e.type = EntityType::LIGHT;
                     e.spot_light.color = dict_to_vec(color, mem);
-                    e.spot_light.inner_angle = atof(((YamlLiteral *)light->get(String::from("inner_angle")))->value.to_char_array(mem.temp));
-                    e.spot_light.outer_angle = atof(((YamlLiteral *)light->get(String::from("outer_angle")))->value.to_char_array(mem.temp));
+                    e.spot_light.inner_angle = atof(((YamlLiteral *)light->get("inner_angle"))->value.to_char_array(mem.temp));
+                    e.spot_light.outer_angle = atof(((YamlLiteral *)light->get("outer_angle"))->value.to_char_array(mem.temp));
                 }
 
-                YamlDictElem *position = (YamlDictElem *)obj->get(String::from("position"));
-                YamlDictElem *rotation = (YamlDictElem *)obj->get(String::from("rotation"));
-                YamlDictElem *scale = (YamlDictElem *)obj->get(String::from("scale"));
+                YamlDictElem *position = (YamlDictElem *)obj->get("position");
+                YamlDictElem *rotation = (YamlDictElem *)obj->get("rotation");
+                YamlDictElem *scale = (YamlDictElem *)obj->get("scale");
                 e.transform.position = dict_to_vec(position, mem);
                 e.transform.rotation = dict_to_vec(rotation, mem);
                 e.transform.scale = dict_to_vec(scale, mem);

@@ -105,14 +105,14 @@ void clear_bars(Scene *scene, RenderTarget previous_target)
 {
     // TODO should be empty
     static String answers[8] = {
-        String::from("RED ASJKDD ASKJHDQQW"),
-        String::from("Blue"),
-        String::from("ORANGE"),
-        String::from("GREEN"),
-        String::from("PURPLE"),
-        String::from("VIOLET"),
-        String::from("PINK"),
-        String::from("CYAN"),
+        "RED ASJKDD ASKJHDQQW",
+        "Blue",
+        "ORANGE",
+        "GREEN",
+        "PURPLE",
+        "VIOLET",
+        "PINK",
+        "CYAN",
     };
     for (int i = 0; i < 8; i++)
     {
@@ -197,6 +197,7 @@ RenderTarget do_floor(Scene *scene, Camera *camera)
 
 void Scene::init(Assets *assets, Memory mem)
 {
+    entity_names = assets->entity_names;
     entities.init(mem.allocator, 1024);
     for (int i = 0; i < assets->entities.size(); i++)
     {
@@ -283,7 +284,7 @@ void Scene::init(Assets *assets, Memory mem)
 
     font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ANTON_REGULAR_TTF], 128, mem.temp);
 
-    FileData anim_file = read_entire_file("C:\\Users\\Asda\\Desktop\\test\\anim\\anim.fanim", mem.temp);
+    FileData anim_file = read_entire_file("resources\\scenes\\test\\anim\\anim.fanim", mem.temp);
     anim = parse_animation(anim_file, mem);
 }
 
@@ -303,11 +304,11 @@ void Scene::update_and_draw(RenderTarget backbuffer, InputState *input, Camera *
         score_targets[0].clear();
 
         String strs[5] = {
-            String::from("hellp"),
-            String::from("khgjkh"),
-            String::from("yertyerty"),
-            String::from("nvcbnp"),
-            String::from("hesdfg"),
+            "hellp",
+            "khgjkh",
+            "yertyerty",
+            "nvcbnp",
+            "hesdfg",
         };
 
         static int t = 0;

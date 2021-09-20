@@ -11,6 +11,9 @@ struct Scene
 
     FreeList<Entity> entities;
 
+    // TODO this is temporary until we can connect entities by id
+    std::unordered_map<std::string, int> entity_names;
+
     struct Bar
     {
         int entity_id;
@@ -38,6 +41,11 @@ struct Scene
 
     void init(Assets *assets, Memory mem);
     void update_and_draw(RenderTarget backbuffer, InputState *input, Camera *camera);
+    
+    Entity *get(int i)
+    {
+        return entities.data[i].assigned ? &entities.data[i].value : nullptr;
+    }
 
     Animation anim;
 };

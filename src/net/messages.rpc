@@ -79,6 +79,18 @@ client InGameAskQuestion
 
 client InGamePromptPassOrPlay
 
+client InGamePlayerBuzzed
+
+client InGamePromptForAnswer
+
+client InGameStartPlay
+
 client InGameAnswer
 
 client InGameFlipAnswer
+
+client InGameEggghhhh
+
+client InGameEndRound
+
+client InGameEndGame
