@@ -33,6 +33,19 @@ String to_string(EntityType type)
         break;
     }
 }
+EntityType entity_type_from_string(String type)
+{
+    if (strcmp(type, "MESH"))
+        return EntityType::MESH;
+    if (strcmp(type, "LIGHT"))
+        return EntityType::LIGHT;
+    if (strcmp(type, "CAMERA"))
+        return EntityType::CAMERA;
+    if (strcmp(type, "SPLINE"))
+        return EntityType::SPLINE;
+
+    return EntityType::UNKNOWN;
+}
 
 struct DebugTag
 {
@@ -99,12 +112,12 @@ struct FreeList
         }
     }
 
-    T *push_back(T &value)
+    int push_back(T &value)
     {
         Element *current = next;
         if (!current)
         {
-            return nullptr;
+            return -1;
         }
 
         next = current->next;
@@ -112,7 +125,12 @@ struct FreeList
         current->value = value;
         current->assigned = true;
 
-        return &current->value;
+        return current - data;
+    }
+
+    int get_index()
+    {
+
     }
 
     void free(Element *elem)

@@ -195,10 +195,15 @@ RenderTarget do_floor(Scene *scene, Camera *camera)
     return scene->floor_target;
 }
 
-void Scene::init(Assets *assets, Memory mem)
+void Scene::init(Memory mem)
 {
-    entity_names = assets->entity_names;
     entities.init(mem.allocator, 1024);
+}
+
+void Scene::load(Assets *assets, Memory mem)
+{
+    entities.init(mem.allocator, 1024);
+    entity_names = assets->entity_names;
     for (int i = 0; i < assets->entities.size(); i++)
     {
         entities.push_back(assets->entities[i]);
@@ -295,6 +300,18 @@ void Scene::update_and_draw(RenderTarget backbuffer, InputState *input, Camera *
     static RenderTarget hdr_target(1920, 1080, TextureFormat::RGB16F, TextureFormat::DEPTH24);
 
     clear_bars(this, hdr_target);
+
+    for (int i = 0; i < entities.size; i++)
+    {
+        if (entities.data[i].assigned)
+        {
+            Entity &e = entities.data[i].value;
+            if (e.type == EntityType::CAMERA)
+            {
+                e.camera.update_from_transform(hdr_target, e.transform);
+            }
+        }
+    }
 
     RenderTarget floor_reflection = do_floor(this, camera);
     floor_reflection.color_tex.gen_mipmaps();
@@ -407,18 +424,6 @@ void Scene::update_and_draw(RenderTarget backbuffer, InputState *input, Camera *
         if (entities.data[i].assigned)
         {
             Entity &e = entities.data[i].value;
-            if (e.type == EntityType::CAMERA)
-            {
-                e.camera.update_from_transform(hdr_target, e.transform);
-            }
-        }
-    }
-
-    for (int i = 0; i < entities.size; i++)
-    {
-        if (entities.data[i].assigned)
-        {
-            Entity &e = entities.data[i].value;
 
             if (e.type == EntityType::MESH)
             {
@@ -465,7 +470,6 @@ void Scene::update_and_draw(RenderTarget backbuffer, InputState *input, Camera *
                         std::string uniform_name = std::string("bone_transforms[") + std::to_string(i) + std::string("]");
                         int handle = glGetUniformLocation(threed_skinning_shader.shader_handle, uniform_name.c_str());
                         glUniformMatrix4fv(handle, 1, false, &transform[0][0]);
-                        
                     }
                     // glUniform3fv(threed_skinning_shader.uniform_handles[(int)UniformId::BONE_POSITIONS], bone_positions.size(), (float *)bone_positions.data());
                 }

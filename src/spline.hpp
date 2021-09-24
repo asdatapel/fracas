@@ -34,6 +34,15 @@ float catmull_rom(float t, float v0, float v1, float v2, float v3)
                   (2 * v0 - 5 * v1 + 4 * v2 - v3) * t2 +
                   (-v0 + 3 * v1 - 3 * v2 + v3) * t3);
 }
+Vec3f catmull_rom(float t, Spline3 s)
+{
+    Vec3f ret;
+    ret.x = catmull_rom(t, s.points[0].x, s.points[1].x, s.points[2].x, s.points[3].x);
+    ret.y = catmull_rom(t, s.points[0].y, s.points[1].y, s.points[2].y, s.points[3].y);
+    ret.z = catmull_rom(t, s.points[0].z, s.points[1].z, s.points[2].z, s.points[3].z);
+
+    return ret;
+}
 float catmull_rom_tangent(float t, float v0, float v1, float v2, float v3)
 {
     float t2 = t * t;
@@ -210,21 +219,6 @@ void draw_spline(Spline3 &spline, RenderTarget target, InputState *input, Memory
 
             if (cross_p1_screen.z > 0 && cross_p2_screen.z > 0)
                 debug_draw_line(target, cross_p1_screen.xy(), cross_p2_screen.xy(), {.4, .2, .9, 1}, 1.5);
-        }
-
-        for (int i = 0; i < spline.points.len; i++)
-        {
-            if (imm_3d_point(&spline.points[i]))
-            {
-                imm_window("Node Deets", {0, target.height - 200.f, 300, 200});
-
-                Vec3f temp = spline.points[i];
-                imm_label("Position");
-                imm_num_input(&temp.x);
-                imm_num_input(&temp.y);
-                imm_num_input(&temp.z);
-                spline.points[i] = temp;
-            }
         }
     }
 

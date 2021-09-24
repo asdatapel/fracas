@@ -5,8 +5,8 @@ entities:
     transform: 
       position: 
         x: 0.000000
-        y: 10.000000
-        z: -2.000000
+        y: 0.000000
+        z: 0.000000
       rotation: 
         x: 0.000000
         y: 0.000000
@@ -1291,7 +1291,7 @@ entities:
         y: 7.615914
         z: -4.771345
       rotation: 
-        x: 3.141593
+        x: 0.000000
         y: 0.000000
         z: -0.000000
       scale: 
@@ -1335,9 +1335,9 @@ entities:
     type: MESH
     transform: 
       position: 
-        x: 0.000000
-        y: 10.000000
-        z: -2.000000
+        x: 2.048684
+        y: 6.815914
+        z: -4.771345
       rotation: 
         x: 0.000000
         y: 0.000000
@@ -1449,7 +1449,7 @@ entities:
       position: 
         x: 8.027314
         y: 5.089178
-        z: 20.857956
+        z: 12.677959
       rotation: 
         x: 0.000000
         y: 0.000000
@@ -1574,7 +1574,7 @@ entities:
       outer_angle: 0.392699
       inner_angle: 0.333794
   - id: 87
-    name: 
+    name: camera
     type: CAMERA
     transform: 
       position: 
@@ -1589,15 +1589,8 @@ entities:
         x: 1.000000
         y: 1.000000
         z: 1.000000
-    light: 
-      color: 
-        x: 0.000000
-        y: -60050840011455954645113896960.000000
-        z: 0.000000
-      outer_angle: 744050055105159703667292939801853952.00    
-      inner_angle: 0.000000
   - id: 88
-    name: 
+    name: test spline
     type: SPLINE
     transform: 
       position: 
@@ -1606,20 +1599,36 @@ entities:
         z: 0.000000
       rotation: 
         x: 0.000000
-        y: -1984781215856590848.000000
+        y: 0.000000
         z: 0.000000
       scale: 
         x: 0.000000
         y: 0.000000
-        z: 1920.000000
+        z: 0.000000
+    spline: 
+      - x: 0.237900
+        y: 9.796402
+        z: 19.803436
+      - x: 1.024695
+        y: 2.740040
+        z: 19.283943
+      - x: -0.028650
+        y: 7.939420
+        z: 3.018626
+      - x: 0.001526
+        y: 6.848089
+        z: -1.217070
 scripts: 
   - name: Intro Sequence
     inputs: 
       - name: camera
-        value: 74
+        value: 87
         id: 0
+      - name: path
+        value: 88
+        id: 1
   - name: Faceoff Start Sequence
     inputs: 
       - name: camera
-        value: 0
+        value: 87
         id: 0

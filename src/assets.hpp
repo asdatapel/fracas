@@ -23,6 +23,11 @@ struct Temp
         allocator = mem.temp;
         data = mem.temp->next;
     }
+    Temp(StackAllocator *alloc)
+    {
+        allocator = alloc;
+        data = alloc->next;
+    }
     ~Temp()
     {
         allocator->free(data);

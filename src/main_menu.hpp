@@ -560,6 +560,11 @@ struct LobbyPage : MenuPage
                 rpc_client->StartGame({game_id});
             }
         }
+
+        if (rpc_client->get_GameStarted_msg())
+        {
+            menu->current = nullptr;
+        }
     }
 
     void set_game(uint32_t game_id, uint32_t game_owner_id)

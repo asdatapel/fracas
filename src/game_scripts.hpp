@@ -1,5 +1,6 @@
 #pragma once
 
+#include "spline.hpp"
 #include "scene/scene.hpp"
 #include "net/generated_rpc_client.hpp"
 
@@ -30,6 +31,7 @@ struct IntroSequence : Sequence
             "Intro Sequence",
             {
                 {"camera", &input.camera, EntityType::CAMERA},
+                {"path", &input.path, EntityType::SPLINE},
             },
         };
     }
@@ -44,6 +46,7 @@ struct IntroSequence : Sequence
     struct Input
     {
         int camera;
+        int path;
     };
     Input input;
 
@@ -64,8 +67,11 @@ struct IntroSequence : Sequence
         camera_pos = lerp(camera_pos_start, camera_pos_end, t / length);
 
         Entity *camera = scene->get(input.camera);
-        if (camera)
-            camera->transform.position = camera_pos;
+        Entity *path = scene->get(input.path);
+        if (camera && path && path->type == EntityType::SPLINE)
+        {
+            camera->transform.position = catmull_rom(constant_distance_t(path->spline, t / length) - 1, path->spline);
+        }
     }
 
     bool ready()
@@ -115,6 +121,9 @@ struct FaceoffStartSequence : Sequence
         }
 
         camera_pos = lerp(camera_pos_start, camera_pos_end, t / length);
+        Entity *camera = scene->get(input.camera);
+        if (camera)
+            camera->transform.position = camera_pos;
     }
     bool ready()
     {
@@ -138,7 +147,7 @@ struct Game
         // wait for
     }
     void update(float, Scene *, RpcClient *);
-    void handle_rpcs(RpcClient *);
+    void handle_rpcs(Scene *, RpcClient *);
 
     // TODO there really should be a way to create a static array at compile time or something why is it so hard
     std::vector<ScriptDefinition> get_script_defs()
@@ -152,20 +161,24 @@ struct Game
 
 void Game::update(float timestep, Scene *scene, RpcClient *rpc_client)
 {
-    handle_rpcs(rpc_client);
+    handle_rpcs(scene, rpc_client);
 
     current_sequence->update(timestep, scene);
-    // if (current_sequence.finished())
-    // {
-    //  rpc_client.send_ready();
+    if (current_sequence->ready())
+    {
+        rpc_client->InGameReady({});
+    }
 }
 
-void Game::handle_rpcs(RpcClient *rpc_client)
+void Game::handle_rpcs(Scene *scene, RpcClient *rpc_client)
 {
     if (auto msg = rpc_client->get_InGameStartRound_msg())
     {
-        // round_start_sequence.init();
-        // current_sequence = &round_start_sequence;
+        if (current_sequence != &faceoff_start_sequence)
+        {
+            faceoff_start_sequence.init(scene, 0);
+            current_sequence = &faceoff_start_sequence;
+        }
     }
     else if (auto msg = rpc_client->get_InGameStartFaceoff_msg())
     {

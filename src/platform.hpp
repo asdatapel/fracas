@@ -14,6 +14,7 @@ enum struct Keys
     NUM_7,
     NUM_8,
     NUM_9,
+    SPACE,
     BACKSPACE,
     W,
     A,

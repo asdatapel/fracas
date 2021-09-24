@@ -192,7 +192,6 @@ struct String
     template <size_t N>
     String(AllocatedString<N> &str2)
     {
-
         data = str2.data;
         len = str2.len;
     }

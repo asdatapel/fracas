@@ -278,7 +278,8 @@ bool init_if_not()
         allocator.init(1024ull * 1024 * 1024 * 2); // 2gb
         temp.init(1024 * 1024 * 100);               // 50 mb
         assets.init(memory);
-        scene.init(&assets, memory);
+        scene.init(memory);
+        scene.load(&assets, memory);
         ui_state = ServerMessageType::INVALID;
         ui_font = load_font(assets.font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_LIGHT_TTF], 32, memory.temp);
 
@@ -367,8 +368,7 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
     }
     else
     {
-        game.update(1 / 60.f, &scene, &client);
-        editor.update_and_draw(&scene, &game, main_target, input_state, memory);
+        editor.update_and_draw(&scene, &game, &client, main_target, input_state, memory);
     }
 
     // if (animation_wait)

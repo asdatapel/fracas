@@ -120,6 +120,9 @@ void key_input_callback(GLFWwindow *window, int key, int scancode, int action, i
     case GLFW_KEY_KP_9:
         append_if_press(Keys::NUM_9);
         break;
+    case GLFW_KEY_SPACE:
+        append_if_press(Keys::SPACE);
+        break;
     case GLFW_KEY_BACKSPACE:
         append_if_press(Keys::BACKSPACE);
         break;

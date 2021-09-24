@@ -66,6 +66,8 @@ message StartGameResponse
 
 server StartGame StartGameRequest StartGameResponse
 
+server InGameReady
+
 message GameStartedMessage
 game_id uint
 

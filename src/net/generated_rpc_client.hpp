@@ -23,6 +23,8 @@ struct RpcClient : public BaseRpcClient
 
     void StartGame(StartGameRequest);
 
+    void InGameReady(Empty);
+
 
 
     ListGamesResponse *get_ListGames_msg();
@@ -52,6 +54,10 @@ struct RpcClient : public BaseRpcClient
     StartGameResponse *get_StartGame_msg();
     bool got_StartGame_msg = false;
     StartGameResponse StartGame_msg;
+
+    Empty *get_InGameReady_msg();
+    bool got_InGameReady_msg = false;
+    Empty InGameReady_msg;
 
     GameStartedMessage *get_GameStarted_msg();
     bool got_GameStarted_msg = false;
@@ -161,6 +167,13 @@ bool RpcClient::handle_rpc(char *data, int msg_len)
             StartGame_msg = {};
             read(&in, &StartGame_msg);
             got_StartGame_msg = true;
+        }
+        break;
+        case Rpc::InGameReady:
+        {
+            InGameReady_msg = {};
+            read(&in, &InGameReady_msg);
+            got_InGameReady_msg = true;
         }
         break;
         case Rpc::GameStarted:
@@ -311,6 +324,13 @@ void RpcClient::StartGame(StartGameRequest req)
     append(&out, req); out.send(&peer);
 }
 
+void RpcClient::InGameReady(Empty req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::InGameReady);
+    append(&out, req); out.send(&peer);
+}
+
 
 
 ListGamesResponse *RpcClient::get_ListGames_msg()
@@ -359,6 +379,13 @@ StartGameResponse *RpcClient::get_StartGame_msg()
 {
     auto msg = got_StartGame_msg ? &StartGame_msg : nullptr;
     got_StartGame_msg = false;
+    return msg;
+}
+
+Empty *RpcClient::get_InGameReady_msg()
+{
+    auto msg = got_InGameReady_msg ? &InGameReady_msg : nullptr;
+    got_InGameReady_msg = false;
     return msg;
 }
 

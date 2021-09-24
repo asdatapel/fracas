@@ -16,6 +16,7 @@ struct RpcServer : public BaseRpcServer
     void HandleSwapTeam(ClientId client_id, SwapTeamRequest*, Empty*);
     void HandleLeaveGame(ClientId client_id, LeaveGameRequest*, LeaveGameResponse*);
     void HandleStartGame(ClientId client_id, StartGameRequest*, StartGameResponse*);
+    void HandleInGameReady(ClientId client_id, Empty*, Empty*);
 
 
     void GameStarted(Peer *, GameStartedMessage);
@@ -126,6 +127,17 @@ void RpcServer::handle_rpc(ClientId client_id, Peer *peer, char *data, int msg_l
         read(&in, &req);
         HandleStartGame(client_id, &req, &resp);
         append(&out, (char)Rpc::StartGame);
+        append(&out, resp);
+        out.send(peer);
+    }
+    break;
+    case Rpc::InGameReady:
+    {
+        Empty req;
+        Empty resp;
+        read(&in, &req);
+        HandleInGameReady(client_id, &req, &resp);
+        append(&out, (char)Rpc::InGameReady);
         append(&out, resp);
         out.send(peer);
     }

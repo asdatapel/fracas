@@ -734,6 +734,7 @@ enum struct Rpc : char
 	SwapTeam,
 	LeaveGame,
 	StartGame,
+	InGameReady,
 	GameStarted,
 	InGameStartRound,
 	InGameStartFaceoff,

@@ -21,26 +21,10 @@ namespace YAML
         };
         Type type;
 
-        Literal *as_literal()
-        {
-            assert(type == Type::LITERAL);
-            return (Literal *)this;
-        }
-        KeyPair *as_keypair()
-        {
-            assert(type == Type::KEYPAIR);
-            return (KeyPair *)this;
-        }
-        List *as_list()
-        {
-            assert(type == Type::LIST);
-            return (List *)this;
-        }
-        Dict *as_dict()
-        {
-            assert(type == Type::DICT);
-            return (Dict *)this;
-        }
+        String as_literal();
+        KeyPair *as_keypair();
+        List *as_list();
+        Dict *as_dict();
     };
     struct Literal : Value
     {
@@ -187,6 +171,27 @@ namespace YAML
         Dict() { type = Type::DICT; }
     };
 
+    String Value::as_literal()
+    {
+        assert(type == Type::LITERAL);
+        return ((Literal *)this)->value;
+    }
+    KeyPair *Value::as_keypair()
+    {
+        assert(type == Type::KEYPAIR);
+        return (KeyPair *)this;
+    }
+    List *Value::as_list()
+    {
+        assert(type == Type::LIST);
+        return (List *)this;
+    }
+    Dict *Value::as_dict()
+    {
+        assert(type == Type::DICT);
+        return (Dict *)this;
+    }
+
     void serialize(Value *root, StackAllocator *alloc, int indents = 0, bool should_newline = true)
     {
         auto append = [&](String str, bool newline = false)
@@ -241,8 +246,7 @@ namespace YAML
         break;
         case Value::Type::LITERAL:
         {
-            Literal *l = root->as_literal();
-            append(l->value, false);
+            append(root->as_literal(), false);
         }
         break;
         default:

@@ -39,7 +39,8 @@ struct Scene
 
     Font font;
 
-    void init(Assets *assets, Memory mem);
+    void init(Memory mem);
+    void load(Assets *assets, Memory mem);
     void update_and_draw(RenderTarget backbuffer, InputState *input, Camera *camera);
     
     Entity *get(int i)

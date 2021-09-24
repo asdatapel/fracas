@@ -87,7 +87,7 @@ AllocatedString<N> sanitize_name(AllocatedString<N> name)
 
 void RpcServer::HandleListGames(ClientId client_id, ListGamesRequest *req, ListGamesResponse *resp)
 {
-    
+
     for (auto it : server_data->lobbies)
     {
         GameId game_id = it.first;
@@ -113,7 +113,7 @@ void RpcServer::HandleGetGame(ClientId client_id, GetGameRequest *req, GetGameRe
         // TODO send NOT_FOUND
         return;
     }
-    
+
     Lobby *lobby = &server_data->lobbies[req->game_id];
     resp->game.id = req->game_id;
     resp->game.name = lobby->properties.name;
@@ -275,5 +275,16 @@ void RpcServer::HandleStartGame(ClientId client_id, StartGameRequest *req, Start
         Peer *peer = &server_data->clients[lobby->players[i].id].peer;
         GameStarted(peer, {req->game_id});
     }
+}
 
+void RpcServer::HandleInGameReady(ClientId client_id, Empty *req, Empty *resp)
+{
+    Client *client = &server_data->clients[client_id];
+    // if (server_data->lobbies.count(client->game_id) == 0)
+    // {
+    //     // TODO send error INTERNAL_ERROR
+    //     return;
+    // }
+
+    InGameStartRound(&client->peer, {});
 }
