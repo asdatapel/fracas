@@ -374,7 +374,7 @@ bool imm_button(String text)
     return imm_button(me, text);
 }
 
-bool imm_list_item(ImmId me, String text)
+bool imm_list_item(ImmId me, String text, bool selected_flag = false)
 {
     ImmWindow &window = state.windows[state.current_window];
 
@@ -408,13 +408,13 @@ bool imm_list_item(ImmId me, String text)
     window.next_elem_pos.y += rect.height + gap;
     window.last_height += rect.height + gap;
 
-    return window.selected == me;
+    return selected_flag || window.selected == me;
 }
 
-bool imm_list_item(String text)
+bool imm_list_item(String text, bool selected_flag = false)
 {
     ImmId me = hash(text);
-    return imm_list_item(me, text);
+    return imm_list_item(me, text, selected_flag);
 }
 
 template <size_t N>
@@ -550,7 +550,7 @@ void imm_num_input(float *val)
     window.last_height += rect.height + gap;
 }
 
-bool imm_3d_point(Vec3f *p)
+bool imm_3d_point(Vec3f *p, bool selected_flag = false)
 {
     auto ndc_to_screen = [](RenderTarget target, Vec3f p)
     {
@@ -575,6 +575,7 @@ bool imm_3d_point(Vec3f *p)
 
         Rect view_rect = {p_screen.x - 5, p_screen.y - 5, 10, 10};
         Rect interactive_rect = {p_screen.x - 15, p_screen.y - 15, 30, 30};
+
         imm_hot(me, interactive_rect);
         bool hot = state.hot == me;
         imm_select(me, hot);
@@ -601,5 +602,5 @@ bool imm_3d_point(Vec3f *p)
         draw_rect(state.target, view_rect, color);
     }
 
-    return state.selected == me;
+    return selected_flag || state.selected == me;
 }

@@ -16,6 +16,10 @@ struct Editor
     bool playing = false;
     Scene play_scene;
 
+    int selected_entity_i = -1;
+    Entity *selected_entity = nullptr;
+    int selected_spline_node = -1;
+
     void update_and_draw(Scene *scene, Game *game, RpcClient *rpc_client, RenderTarget backbuffer, InputState *input, Memory mem)
     {
         static bool init = false;
@@ -98,14 +102,12 @@ struct Editor
         imm_begin(target, *get_camera(scene), input);
 
         imm_window("Entities", {0, 0, 300, 600});
-        int selected_entity_i = -1;
-        Entity *selected_entity = nullptr;
         for (int i = 0; i < scene->entities.size; i++)
         {
             if (scene->entities.data[i].assigned)
             {
                 Entity &e = scene->entities.data[i].value;
-                if (imm_list_item((ImmId)i + 1, e.debug_tag.name))
+                if (imm_list_item((ImmId)i + 1, e.debug_tag.name, selected_entity_i == i))
                 {
                     selected_entity = &e;
                     selected_entity_i = i;
@@ -139,8 +141,10 @@ struct Editor
 
                 for (int i = 0; i < selected_entity->spline.points.len; i++)
                 {
-                    if (imm_3d_point(&selected_entity->spline.points[i]))
+                    if (imm_3d_point(&selected_entity->spline.points[i], selected_spline_node == i))
                     {
+                        selected_spline_node = i;
+
                         Vec3f temp = selected_entity->spline.points[i];
                         imm_label("Spline Node");
                         imm_num_input(&temp.x);
