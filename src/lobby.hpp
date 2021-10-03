@@ -283,12 +283,7 @@ void RpcServer::HandleStartGame(ClientId client_id, StartGameRequest *req, Start
         return; // TODO error
     }
 
-    lobby->start_game();
-    for (int i = 0; i < lobby->players.len; i++)
-    {
-        Peer *peer = &server_data->clients[lobby->players[i].id].peer;
-        GameStarted(peer, {req->game_id});
-    }
+    lobby->start_game({this, lobby}, req->game_id);
 }
 
 void RpcServer::HandleInGameReady(ClientId client_id, Empty *req, Empty *resp)
@@ -302,22 +297,18 @@ void RpcServer::HandleInGameReady(ClientId client_id, Empty *req, Empty *resp)
 
     Lobby *lobby = &server_data->lobbies[client->game_id];
 
-    if (!lobby->waiting_on_ready)
+    if (lobby->waiter != &Lobby::waiter_all_ready)
     {
         return;
     }
 
     PlayerData *player_data = lobby->get_player_data(client_id);
-    if (!player_data)
-    {
-        // TODO return INTERNAL_ERROR
-    }
     player_data->ready = true;
+
 
     if (lobby->are_all_players_ready())
     {
-        lobby->reset_ready();
-        lobby->waiting_on_ready = lobby->do_next_stage({this, lobby});
+        lobby->do_next_stage({this, lobby});
     }
 }
 
@@ -331,7 +322,7 @@ void RpcServer::HandleInGameBuzz(ClientId client_id, Empty *req, Empty *resp)
     }
 
     Lobby *lobby = &server_data->lobbies[client->game_id];
-    if (!lobby->waiting_for_buzz())
+    if (lobby->waiter != &Lobby::waiter_buzz)
     {
         return;
     }
@@ -351,9 +342,7 @@ void RpcServer::HandleInGameBuzz(ClientId client_id, Empty *req, Empty *resp)
     }
 
     Broadcaster{this, lobby}.broadcast(&RpcServer::InGamePlayerBuzzed, InGamePlayerBuzzedMessage{client_id});
-    lobby->reset_ready();
-    lobby->waiting_on_ready = true;
-    lobby->next_stage = &Lobby::stage_prompt_for_answer;
+    lobby->set_next_stage(&Lobby::stage_prompt_for_answer);
 }
 
 void RpcServer::HandleInGameAnswer(ClientId client_id, InGameAnswerMessage *req, Empty *resp)
@@ -366,6 +355,10 @@ void RpcServer::HandleInGameAnswer(ClientId client_id, InGameAnswerMessage *req,
     }
 
     Lobby *lobby = &server_data->lobbies[client->game_id];
+    if (lobby->waiter != &Lobby::waiter_answer)
+    {
+        return;
+    }
     if (client_id != lobby->who_can_answer())
     {
         // TODO PERMISSION_DENIED
@@ -377,9 +370,7 @@ void RpcServer::HandleInGameAnswer(ClientId client_id, InGameAnswerMessage *req,
     lobby->game.last_answer = req->answer;
     lobby->game.last_answer_client_id = client_id;
 
-    lobby->reset_ready();
-    lobby->waiting_on_ready = true;
-    lobby->next_stage = &Lobby::stage_respond_to_answer;
+    lobby->set_next_stage(&Lobby::stage_respond_to_answer);
 }
 
 void RpcServer::HandleInGameChoosePassOrPlay(ClientId client_id, InGameChoosePassOrPlayMessage *req, Empty *resp)
@@ -392,7 +383,7 @@ void RpcServer::HandleInGameChoosePassOrPlay(ClientId client_id, InGameChoosePas
     }
 
     Lobby *lobby = &server_data->lobbies[client->game_id];
-    if (lobby->game.round_stage != RoundStage::PASS_OR_PLAY)
+    if (lobby->waiter != &Lobby::waiter_pass_or_play)
     {
         return;
     }
@@ -412,16 +403,5 @@ void RpcServer::HandleInGameChoosePassOrPlay(ClientId client_id, InGameChoosePas
         Broadcaster{this, lobby}.broadcast(&RpcServer::InGamePlayerChosePassOrPlay, InGameChoosePassOrPlayMessage{false});
     }
 
-    lobby->reset_ready();
-    lobby->waiting_on_ready = true;
-    lobby->next_stage = &Lobby::stage_start_play;
-}
-
-void RpcServer::HandleServerTick()
-{
-    check timers
-    // answer - do an eeeggghhhh
-    // buzz - both wrong
-    // pass or play - pick random
-    // ready - move on to next stage
+    lobby->set_next_stage(&Lobby::stage_start_play);
 }

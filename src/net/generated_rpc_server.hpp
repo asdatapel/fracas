@@ -24,6 +24,8 @@ struct RpcServer : public BaseRpcServer
 
     void GameStarted(Peer *, GameStartedMessage);
 
+    void PlayerLeft(Peer *, PlayerLeftMessage);
+
     void InGameStartRound(Peer *, InGameStartRoundMessage);
 
     void InGameStartFaceoff(Peer *, Empty);
@@ -190,6 +192,14 @@ void RpcServer::GameStarted(Peer *peer, GameStartedMessage req)
 {
     MessageBuilder out;
     append(&out, (char) Rpc::GameStarted);
+    append(&out, req); out.send(peer);
+}
+
+
+void RpcServer::PlayerLeft(Peer *peer, PlayerLeftMessage req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::PlayerLeft);
     append(&out, req); out.send(peer);
 }
 

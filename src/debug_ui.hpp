@@ -2,7 +2,7 @@
 
 #include "graphics/graphics.hpp"
 
-typedef unsigned long ImmId;
+typedef uint64_t ImmId;
 
 struct ImmWindow
 {

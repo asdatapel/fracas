@@ -81,6 +81,10 @@ struct RpcClient : public BaseRpcClient
     bool got_GameStarted_msg = false;
     GameStartedMessage GameStarted_msg;
 
+    PlayerLeftMessage *get_PlayerLeft_msg();
+    bool got_PlayerLeft_msg = false;
+    PlayerLeftMessage PlayerLeft_msg;
+
     InGameStartRoundMessage *get_InGameStartRound_msg();
     bool got_InGameStartRound_msg = false;
     InGameStartRoundMessage InGameStartRound_msg;
@@ -224,6 +228,13 @@ bool RpcClient::handle_rpc(char *data, int msg_len)
             GameStarted_msg = {};
             read(&in, &GameStarted_msg);
             got_GameStarted_msg = true;
+        }
+        break;
+        case Rpc::PlayerLeft:
+        {
+            PlayerLeft_msg = {};
+            read(&in, &PlayerLeft_msg);
+            got_PlayerLeft_msg = true;
         }
         break;
         case Rpc::InGameStartRound:
@@ -485,6 +496,13 @@ GameStartedMessage *RpcClient::get_GameStarted_msg()
 {
     auto msg = got_GameStarted_msg ? &GameStarted_msg : nullptr;
     got_GameStarted_msg = false;
+    return msg;
+}
+
+PlayerLeftMessage *RpcClient::get_PlayerLeft_msg()
+{
+    auto msg = got_PlayerLeft_msg ? &PlayerLeft_msg : nullptr;
+    got_PlayerLeft_msg = false;
     return msg;
 }
 

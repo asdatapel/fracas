@@ -12,26 +12,6 @@
 #include "lobby.hpp"
 #include "net/net.hpp"
 
-// typedef void (*HandleFunc)(MessageReader *, Client *);
-// HandleFunc handle_funcs[(int)ClientMessageType::INVALID] = {
-//     handle_CREATE_GAME, // CREATE_GAME,
-//     handle_JOIN_GAME,   // JOIN_GAME,
-//     handle_LEAVE_GAME,  // LEAVE_GAME,
-
-//     handle_LEAVE_GAME,
-//     // READY,
-//     // START,
-//     // BUZZ,
-//     // PASS_OR_PLAY,
-//     // ANSWER,
-
-//     // HOST_START_ASK_QUESTION,
-//     // HOST_RESPOND_TO_ANSWER,
-//     // HOST_END_GAME,
-
-//     // CELEBRATE,
-// };
-
 SOCKET open_socket(uint16_t port)
 {
     SOCKET s;
@@ -138,7 +118,7 @@ int main(int argc, char *argv[])
         for (auto it : server_data.lobbies)
         {
             Lobby *lobby = &it.second;
-            //server_tick(game, elapsed.count());
+            lobby->tick({&rpc_server, lobby}, elapsed.count());
             if (lobby->stage == LobbyStage::DEAD)
             {
                 server_data.lobbies.erase(it.first);

@@ -71,6 +71,11 @@ game_id int
 
 client GameStarted GameStartedMessage
 
+message PlayerLeftMessage
+user_id int
+
+client PlayerLeft PlayerLeftMessage
+
 server InGameReady
 
 message InGameAnswerMessage

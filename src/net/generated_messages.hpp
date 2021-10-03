@@ -22,6 +22,7 @@ enum struct Message : char
 	StartGameRequest,
 	StartGameResponse,
 	GameStartedMessage,
+	PlayerLeftMessage,
 	InGameAnswerMessage,
 	InGameChoosePassOrPlayMessage,
 	InGameStartRoundMessage,
@@ -733,6 +734,45 @@ uint32_t read(MessageReader *msg, std::vector<GameStartedMessage> *out)
 	return len;
 };
 
+struct PlayerLeftMessage 
+{
+    int32_t user_id = {};
+};
+void append(MessageBuilder *msg, PlayerLeftMessage &in)
+{
+    append(msg, in.user_id);
+}
+uint32_t read(MessageReader *msg, PlayerLeftMessage *out)
+{
+    uint32_t len = 0;
+
+    len += read(msg, &out->user_id);
+    return len;
+}
+void append(MessageBuilder *msg, std::vector<PlayerLeftMessage> &in)
+{
+	append(msg, (uint16_t)in.size());
+	for (auto &it : in)
+    {
+        append(msg, it);
+    }
+};
+uint32_t read(MessageReader *msg, std::vector<PlayerLeftMessage> *out)
+{
+	uint32_t len = 0;
+
+	uint16_t list_len;
+	len += read(msg, &list_len);
+	for (int i = 0; i < list_len; i++)
+    {
+		PlayerLeftMessage elem;
+        len += read(msg, &elem);
+        out->push_back(elem);
+	}
+
+	return len;
+};
+
 struct InGameAnswerMessage 
 {
     AllocatedString<64> answer = {};
@@ -1105,6 +1145,7 @@ enum struct Rpc : char
 	InGameBuzz,
 	InGameChoosePassOrPlay,
 	GameStarted,
+	PlayerLeft,
 	InGameStartRound,
 	InGameStartFaceoff,
 	InGameAskQuestion,
