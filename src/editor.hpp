@@ -75,6 +75,11 @@ struct Editor
             scene->update_and_draw(backbuffer, input, &debug_camera);
             debug_ui(scene, game, backbuffer, input, mem);
         }
+    }
+
+    void debug_ui(Scene *scene, Game *game, RenderTarget target, InputState *input, Memory mem)
+    {
+        imm_begin(target, *get_camera(scene), input);
 
         for (int i = 0; i < input->key_input.len; i++)
         {
@@ -94,12 +99,19 @@ struct Editor
             {
                 playing ? stop_play() : start_play(scene, game);
             }
-        }
-    }
 
-    void debug_ui(Scene *scene, Game *game, RenderTarget target, InputState *input, Memory mem)
-    {
-        imm_begin(target, *get_camera(scene), input);
+            // add spline
+            if (input->keys[(int)Keys::LALT] && input->key_input[i] == Keys::S)
+            {
+                Entity new_spline;
+                new_spline.type = EntityType::SPLINE;
+                new_spline.spline.points.append({-3, 1.5, 5});
+                new_spline.spline.points.append({-3, 1.5, 3});
+                new_spline.spline.points.append({-3, 1.5, 2});
+                new_spline.spline.points.append({-3, 1.5, 0});
+                scene->entities.push_back(new_spline);
+            }
+        }
 
         imm_window("Entities", {0, 0, 300, 600});
         for (int i = 0; i < scene->entities.size; i++)
@@ -213,7 +225,7 @@ struct Editor
                 imm_label(selected_script->inputs[i].name);
 
                 Entity *input_entity = &scene->entities.data[*selected_script->inputs[i].value].value;
-                if (imm_button(input_entity->debug_tag.name))
+                if (imm_button((ImmId)selected_script->inputs[i].value, input_entity->debug_tag.name))
                 {
                     if (selected_entity)
                     {
@@ -230,9 +242,8 @@ struct Editor
     {
         playing = true;
 
-        game->init(&play_scene);
-
         // copy scene
+        play_scene.font = scene->font;
         for (int i = 0; i < scene->entities.size; i++)
         {
             play_scene.entities.data[i].assigned = scene->entities.data[i].assigned;
@@ -260,6 +271,9 @@ struct Editor
 
         play_scene.font = scene->font;
         play_scene.anim = scene->anim;
+
+        // 
+        game->init(&play_scene);
     }
 
     void stop_play()
@@ -433,12 +447,15 @@ struct Editor
             if (entity.type == EntityType::SPLINE)
             {
                 YAML::List *points = in_e->get("spline")->as_list();
-                for (int p = 0; p < entity.spline.points.len; p++)
+                entity.spline.points.len = 0;
+                for (int p = 0; p < points->len; p++)
                 {
+                    Vec3f point;
                     YAML::Dict *in_p = points->get(p)->as_dict();
-                    entity.spline.points[p].x = atof(in_p->get("x")->as_literal().to_char_array(alloc));
-                    entity.spline.points[p].y = atof(in_p->get("y")->as_literal().to_char_array(alloc));
-                    entity.spline.points[p].z = atof(in_p->get("z")->as_literal().to_char_array(alloc));
+                    point.x = atof(in_p->get("x")->as_literal().to_char_array(alloc));
+                    point.y = atof(in_p->get("y")->as_literal().to_char_array(alloc));
+                    point.z = atof(in_p->get("z")->as_literal().to_char_array(alloc));
+                    entity.spline.points.append(point);
                 }
             }
         }

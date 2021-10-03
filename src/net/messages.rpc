@@ -1,7 +1,7 @@
 message Empty
 
 message GameMetadata
-id uint
+id int
 name string
 owner string
 is_self_hosted bool
@@ -15,12 +15,12 @@ games list GameMetadata
 server ListGames ListGamesRequest ListGamesResponse
 
 message Player
-user_id uint
+user_id int
 name string
 team bool
 
 message GetGameRequest
-game_id uint
+game_id int
 
 message GetGameResponse
 game GameMetadata
@@ -34,13 +34,13 @@ owner_name string
 is_self_hosted bool
 
 message CreateGameResponse
-game_id uint
-owner_id uint
+game_id int
+owner_id int
 
 server CreateGame CreateGameRequest CreateGameResponse
 
 message JoinGameRequest
-game_id uint
+game_id int
 player_name string
 
 message JoinGameResponse
@@ -48,8 +48,8 @@ message JoinGameResponse
 server JoinGame JoinGameRequest JoinGameResponse
 
 message SwapTeamRequest
-game_id uint
-user_id uint
+game_id int
+user_id int
 
 server SwapTeam SwapTeamRequest
 
@@ -60,38 +60,75 @@ message LeaveGameResponse
 server LeaveGame LeaveGameRequest LeaveGameResponse
 
 message StartGameRequest
-game_id uint
+game_id int
 
 message StartGameResponse
 
 server StartGame StartGameRequest StartGameResponse
 
-server InGameReady
-
 message GameStartedMessage
-game_id uint
+game_id int
 
 client GameStarted GameStartedMessage
 
-client InGameStartRound
+server InGameReady
+
+message InGameAnswerMessage
+answer string
+
+server InGameAnswer InGameAnswerMessage
+
+server InGameBuzz
+
+message InGameChoosePassOrPlayMessage
+play bool
+
+server InGameChoosePassOrPlay InGameChoosePassOrPlayMessage
+
+message InGameStartRoundMessage
+round int
+
+client InGameStartRound InGameStartRoundMessage
 
 client InGameStartFaceoff
 
-client InGameAskQuestion
+message InGameAskQuestionMessage
+question string
+
+client InGameAskQuestion InGameAskQuestionMessage
 
 client InGamePromptPassOrPlay
 
-client InGamePlayerBuzzed
+message InGamePlayerBuzzedMessage
+user_id int
 
-client InGamePromptForAnswer
+client InGamePlayerBuzzed InGamePlayerBuzzedMessage
 
-client InGameStartPlay
+message InGamePromptForAnswerMessage
+user_id int
 
-client InGameAnswer
+client InGamePromptForAnswer InGamePromptForAnswerMessage
 
-client InGameFlipAnswer
+message InGameStartPlayMessage
+team int
 
-client InGameEggghhhh
+client InGameStartPlay InGameStartPlayMessage
+
+client InGamePlayerChosePassOrPlay InGameChoosePassOrPlayMessage
+
+client InGamePlayerAnswered InGameAnswerMessage
+
+message InGameFlipAnswerMessage
+answer_index int
+answer string
+score int
+
+client InGameFlipAnswer InGameFlipAnswerMessage
+
+message InGameEggghhhhMessage
+n_incorrects int
+
+client InGameEggghhhh InGameEggghhhhMessage
 
 client InGameEndRound
 

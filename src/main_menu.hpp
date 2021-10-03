@@ -230,8 +230,8 @@ struct List : SelectionGroup
 {
     struct Item
     {
-        uint32_t id;
-        AllocatedString<32> name;
+        int32_t id;
+        PlayerName name;
     };
 
     std::vector<Item> items;
@@ -242,7 +242,7 @@ struct List : SelectionGroup
     float scrollbar_y_offset = 0.f;
     SelectionGroup *selection_group = this;
     int selected_i = -1;
-    uint32_t selected_item_id = 0;
+    int32_t selected_item_id = 0;
 
     const float ITEM_HEIGHT = 60.f;
     const float ITEM_BORDER = 10.f;
@@ -343,7 +343,7 @@ struct List : SelectionGroup
         items.push_back(item);
     }
 
-    uint32_t get_selected_id()
+    int32_t get_selected_id()
     {
         if (selection_group->selected == this)
         {
@@ -470,8 +470,8 @@ struct LobbyPage : MenuPage
 
     Font font;
     RpcClient *rpc_client;
-    uint32_t game_id = 0;
-    uint32_t game_owner_id = 0;
+    GameId game_id = 0;
+    ClientId game_owner_id = 0;
 
     LobbyPage(Assets *assets, RpcClient *rpc_client, Memory mem)
     {
@@ -588,7 +588,7 @@ struct JoinGamePage : MenuPage
 
     Rect user_input_panel;
     Label username_label;
-    TextBox2<32> username_textbox;
+    TextBox2<PlayerName::MAX_LEN> username_textbox;
 
     Font font;
     RpcClient *rpc_client;

@@ -25,6 +25,12 @@ struct RpcClient : public BaseRpcClient
 
     void InGameReady(Empty);
 
+    void InGameAnswer(InGameAnswerMessage);
+
+    void InGameBuzz(Empty);
+
+    void InGameChoosePassOrPlay(InGameChoosePassOrPlayMessage);
+
 
 
     ListGamesResponse *get_ListGames_msg();
@@ -59,49 +65,65 @@ struct RpcClient : public BaseRpcClient
     bool got_InGameReady_msg = false;
     Empty InGameReady_msg;
 
+    Empty *get_InGameAnswer_msg();
+    bool got_InGameAnswer_msg = false;
+    Empty InGameAnswer_msg;
+
+    Empty *get_InGameBuzz_msg();
+    bool got_InGameBuzz_msg = false;
+    Empty InGameBuzz_msg;
+
+    Empty *get_InGameChoosePassOrPlay_msg();
+    bool got_InGameChoosePassOrPlay_msg = false;
+    Empty InGameChoosePassOrPlay_msg;
+
     GameStartedMessage *get_GameStarted_msg();
     bool got_GameStarted_msg = false;
     GameStartedMessage GameStarted_msg;
 
-    Empty *get_InGameStartRound_msg();
+    InGameStartRoundMessage *get_InGameStartRound_msg();
     bool got_InGameStartRound_msg = false;
-    Empty InGameStartRound_msg;
+    InGameStartRoundMessage InGameStartRound_msg;
 
     Empty *get_InGameStartFaceoff_msg();
     bool got_InGameStartFaceoff_msg = false;
     Empty InGameStartFaceoff_msg;
 
-    Empty *get_InGameAskQuestion_msg();
+    InGameAskQuestionMessage *get_InGameAskQuestion_msg();
     bool got_InGameAskQuestion_msg = false;
-    Empty InGameAskQuestion_msg;
+    InGameAskQuestionMessage InGameAskQuestion_msg;
 
     Empty *get_InGamePromptPassOrPlay_msg();
     bool got_InGamePromptPassOrPlay_msg = false;
     Empty InGamePromptPassOrPlay_msg;
 
-    Empty *get_InGamePlayerBuzzed_msg();
+    InGamePlayerBuzzedMessage *get_InGamePlayerBuzzed_msg();
     bool got_InGamePlayerBuzzed_msg = false;
-    Empty InGamePlayerBuzzed_msg;
+    InGamePlayerBuzzedMessage InGamePlayerBuzzed_msg;
 
-    Empty *get_InGamePromptForAnswer_msg();
+    InGamePromptForAnswerMessage *get_InGamePromptForAnswer_msg();
     bool got_InGamePromptForAnswer_msg = false;
-    Empty InGamePromptForAnswer_msg;
+    InGamePromptForAnswerMessage InGamePromptForAnswer_msg;
 
-    Empty *get_InGameStartPlay_msg();
+    InGameStartPlayMessage *get_InGameStartPlay_msg();
     bool got_InGameStartPlay_msg = false;
-    Empty InGameStartPlay_msg;
+    InGameStartPlayMessage InGameStartPlay_msg;
 
-    Empty *get_InGameAnswer_msg();
-    bool got_InGameAnswer_msg = false;
-    Empty InGameAnswer_msg;
+    InGameChoosePassOrPlayMessage *get_InGamePlayerChosePassOrPlay_msg();
+    bool got_InGamePlayerChosePassOrPlay_msg = false;
+    InGameChoosePassOrPlayMessage InGamePlayerChosePassOrPlay_msg;
 
-    Empty *get_InGameFlipAnswer_msg();
+    InGameAnswerMessage *get_InGamePlayerAnswered_msg();
+    bool got_InGamePlayerAnswered_msg = false;
+    InGameAnswerMessage InGamePlayerAnswered_msg;
+
+    InGameFlipAnswerMessage *get_InGameFlipAnswer_msg();
     bool got_InGameFlipAnswer_msg = false;
-    Empty InGameFlipAnswer_msg;
+    InGameFlipAnswerMessage InGameFlipAnswer_msg;
 
-    Empty *get_InGameEggghhhh_msg();
+    InGameEggghhhhMessage *get_InGameEggghhhh_msg();
     bool got_InGameEggghhhh_msg = false;
-    Empty InGameEggghhhh_msg;
+    InGameEggghhhhMessage InGameEggghhhh_msg;
 
     Empty *get_InGameEndRound_msg();
     bool got_InGameEndRound_msg = false;
@@ -176,6 +198,27 @@ bool RpcClient::handle_rpc(char *data, int msg_len)
             got_InGameReady_msg = true;
         }
         break;
+        case Rpc::InGameAnswer:
+        {
+            InGameAnswer_msg = {};
+            read(&in, &InGameAnswer_msg);
+            got_InGameAnswer_msg = true;
+        }
+        break;
+        case Rpc::InGameBuzz:
+        {
+            InGameBuzz_msg = {};
+            read(&in, &InGameBuzz_msg);
+            got_InGameBuzz_msg = true;
+        }
+        break;
+        case Rpc::InGameChoosePassOrPlay:
+        {
+            InGameChoosePassOrPlay_msg = {};
+            read(&in, &InGameChoosePassOrPlay_msg);
+            got_InGameChoosePassOrPlay_msg = true;
+        }
+        break;
         case Rpc::GameStarted:
         {
             GameStarted_msg = {};
@@ -232,11 +275,18 @@ bool RpcClient::handle_rpc(char *data, int msg_len)
             got_InGameStartPlay_msg = true;
         }
         break;
-        case Rpc::InGameAnswer:
+        case Rpc::InGamePlayerChosePassOrPlay:
         {
-            InGameAnswer_msg = {};
-            read(&in, &InGameAnswer_msg);
-            got_InGameAnswer_msg = true;
+            InGamePlayerChosePassOrPlay_msg = {};
+            read(&in, &InGamePlayerChosePassOrPlay_msg);
+            got_InGamePlayerChosePassOrPlay_msg = true;
+        }
+        break;
+        case Rpc::InGamePlayerAnswered:
+        {
+            InGamePlayerAnswered_msg = {};
+            read(&in, &InGamePlayerAnswered_msg);
+            got_InGamePlayerAnswered_msg = true;
         }
         break;
         case Rpc::InGameFlipAnswer:
@@ -331,6 +381,27 @@ void RpcClient::InGameReady(Empty req)
     append(&out, req); out.send(&peer);
 }
 
+void RpcClient::InGameAnswer(InGameAnswerMessage req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::InGameAnswer);
+    append(&out, req); out.send(&peer);
+}
+
+void RpcClient::InGameBuzz(Empty req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::InGameBuzz);
+    append(&out, req); out.send(&peer);
+}
+
+void RpcClient::InGameChoosePassOrPlay(InGameChoosePassOrPlayMessage req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::InGameChoosePassOrPlay);
+    append(&out, req); out.send(&peer);
+}
+
 
 
 ListGamesResponse *RpcClient::get_ListGames_msg()
@@ -389,6 +460,27 @@ Empty *RpcClient::get_InGameReady_msg()
     return msg;
 }
 
+Empty *RpcClient::get_InGameAnswer_msg()
+{
+    auto msg = got_InGameAnswer_msg ? &InGameAnswer_msg : nullptr;
+    got_InGameAnswer_msg = false;
+    return msg;
+}
+
+Empty *RpcClient::get_InGameBuzz_msg()
+{
+    auto msg = got_InGameBuzz_msg ? &InGameBuzz_msg : nullptr;
+    got_InGameBuzz_msg = false;
+    return msg;
+}
+
+Empty *RpcClient::get_InGameChoosePassOrPlay_msg()
+{
+    auto msg = got_InGameChoosePassOrPlay_msg ? &InGameChoosePassOrPlay_msg : nullptr;
+    got_InGameChoosePassOrPlay_msg = false;
+    return msg;
+}
+
 GameStartedMessage *RpcClient::get_GameStarted_msg()
 {
     auto msg = got_GameStarted_msg ? &GameStarted_msg : nullptr;
@@ -396,7 +488,7 @@ GameStartedMessage *RpcClient::get_GameStarted_msg()
     return msg;
 }
 
-Empty *RpcClient::get_InGameStartRound_msg()
+InGameStartRoundMessage *RpcClient::get_InGameStartRound_msg()
 {
     auto msg = got_InGameStartRound_msg ? &InGameStartRound_msg : nullptr;
     got_InGameStartRound_msg = false;
@@ -410,7 +502,7 @@ Empty *RpcClient::get_InGameStartFaceoff_msg()
     return msg;
 }
 
-Empty *RpcClient::get_InGameAskQuestion_msg()
+InGameAskQuestionMessage *RpcClient::get_InGameAskQuestion_msg()
 {
     auto msg = got_InGameAskQuestion_msg ? &InGameAskQuestion_msg : nullptr;
     got_InGameAskQuestion_msg = false;
@@ -424,42 +516,49 @@ Empty *RpcClient::get_InGamePromptPassOrPlay_msg()
     return msg;
 }
 
-Empty *RpcClient::get_InGamePlayerBuzzed_msg()
+InGamePlayerBuzzedMessage *RpcClient::get_InGamePlayerBuzzed_msg()
 {
     auto msg = got_InGamePlayerBuzzed_msg ? &InGamePlayerBuzzed_msg : nullptr;
     got_InGamePlayerBuzzed_msg = false;
     return msg;
 }
 
-Empty *RpcClient::get_InGamePromptForAnswer_msg()
+InGamePromptForAnswerMessage *RpcClient::get_InGamePromptForAnswer_msg()
 {
     auto msg = got_InGamePromptForAnswer_msg ? &InGamePromptForAnswer_msg : nullptr;
     got_InGamePromptForAnswer_msg = false;
     return msg;
 }
 
-Empty *RpcClient::get_InGameStartPlay_msg()
+InGameStartPlayMessage *RpcClient::get_InGameStartPlay_msg()
 {
     auto msg = got_InGameStartPlay_msg ? &InGameStartPlay_msg : nullptr;
     got_InGameStartPlay_msg = false;
     return msg;
 }
 
-Empty *RpcClient::get_InGameAnswer_msg()
+InGameChoosePassOrPlayMessage *RpcClient::get_InGamePlayerChosePassOrPlay_msg()
 {
-    auto msg = got_InGameAnswer_msg ? &InGameAnswer_msg : nullptr;
-    got_InGameAnswer_msg = false;
+    auto msg = got_InGamePlayerChosePassOrPlay_msg ? &InGamePlayerChosePassOrPlay_msg : nullptr;
+    got_InGamePlayerChosePassOrPlay_msg = false;
     return msg;
 }
 
-Empty *RpcClient::get_InGameFlipAnswer_msg()
+InGameAnswerMessage *RpcClient::get_InGamePlayerAnswered_msg()
+{
+    auto msg = got_InGamePlayerAnswered_msg ? &InGamePlayerAnswered_msg : nullptr;
+    got_InGamePlayerAnswered_msg = false;
+    return msg;
+}
+
+InGameFlipAnswerMessage *RpcClient::get_InGameFlipAnswer_msg()
 {
     auto msg = got_InGameFlipAnswer_msg ? &InGameFlipAnswer_msg : nullptr;
     got_InGameFlipAnswer_msg = false;
     return msg;
 }
 
-Empty *RpcClient::get_InGameEggghhhh_msg()
+InGameEggghhhhMessage *RpcClient::get_InGameEggghhhh_msg()
 {
     auto msg = got_InGameEggghhhh_msg ? &InGameEggghhhh_msg : nullptr;
     got_InGameEggghhhh_msg = false;

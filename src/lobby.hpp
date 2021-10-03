@@ -13,6 +13,20 @@ struct ServerData
     std::unordered_map<ClientId, Client> clients;
 };
 
+template <typename FN, typename MSG>
+void Broadcaster::broadcast(FN fn, MSG msg)
+{
+    for (int i = 0; i < lobby->players.len; i++)
+    {
+        ClientId client_id = lobby->players[i].id;
+
+        if (rpc_server->server_data->clients.count(client_id))
+        {
+            (((RpcServer *)rpc_server)->*fn)(&rpc_server->server_data->clients.at(client_id).peer, msg);
+        }
+    }
+}
+
 ClientId add_client(ServerData *server_data, SOCKET s)
 {
     static ClientId next_client_id = 1;
@@ -30,16 +44,6 @@ ClientId add_client(ServerData *server_data, SOCKET s)
 
     server_data->clients[next_client_id] = client;
     return next_client_id;
-}
-
-void remove_client(ServerData *server_data, ClientId client_id)
-{
-    Client *client = &server_data->clients[client_id];
-    if (client->game_id && server_data->lobbies.count(client->game_id))
-    {
-        Lobby &lobby = server_data->lobbies[client->game_id];
-        lobby.remove_player(client_id);
-    }
 }
 
 GameId add_game(ServerData *server_data, GameProperties properties)
@@ -77,12 +81,22 @@ AllocatedString<N> sanitize_name(AllocatedString<N> name)
     }
 
     // remove trailing space
-    if (ret.len > 0 && ret.data[ret.len - 1] == ' ')
+    if (ret.len > 0 && isspace(ret.data[ret.len - 1]))
     {
         ret.len -= 1;
     }
 
     return ret;
+}
+
+void BaseRpcServer::on_disconnect(ClientId client_id)
+{
+    Client *client = &server_data->clients[client_id];
+    if (client->game_id && server_data->lobbies.count(client->game_id))
+    {
+        Lobby *lobby = &server_data->lobbies[client->game_id];
+        lobby->remove_player(client_id, {this, lobby});
+    }
 }
 
 void RpcServer::HandleListGames(ClientId client_id, ListGamesRequest *req, ListGamesResponse *resp)
@@ -245,7 +259,7 @@ void RpcServer::HandleLeaveGame(ClientId client_id, LeaveGameRequest *req, Leave
     }
 
     Lobby *lobby = &server_data->lobbies[client->game_id];
-    lobby->remove_player(client->client_id);
+    lobby->remove_player(client->client_id, {this, lobby});
     client->game_id = 0;
 }
 
@@ -280,11 +294,134 @@ void RpcServer::HandleStartGame(ClientId client_id, StartGameRequest *req, Start
 void RpcServer::HandleInGameReady(ClientId client_id, Empty *req, Empty *resp)
 {
     Client *client = &server_data->clients[client_id];
-    // if (server_data->lobbies.count(client->game_id) == 0)
-    // {
-    //     // TODO send error INTERNAL_ERROR
-    //     return;
-    // }
+    if (server_data->lobbies.count(client->game_id) == 0)
+    {
+        // TODO send error PERMISSION_DENIED
+        return;
+    }
 
-    InGameStartRound(&client->peer, {});
+    Lobby *lobby = &server_data->lobbies[client->game_id];
+
+    if (!lobby->waiting_on_ready)
+    {
+        return;
+    }
+
+    PlayerData *player_data = lobby->get_player_data(client_id);
+    if (!player_data)
+    {
+        // TODO return INTERNAL_ERROR
+    }
+    player_data->ready = true;
+
+    if (lobby->are_all_players_ready())
+    {
+        lobby->reset_ready();
+        lobby->waiting_on_ready = lobby->do_next_stage({this, lobby});
+    }
+}
+
+void RpcServer::HandleInGameBuzz(ClientId client_id, Empty *req, Empty *resp)
+{
+    Client *client = &server_data->clients[client_id];
+    if (server_data->lobbies.count(client->game_id) == 0)
+    {
+        // TODO send error PERMISSION_DENIED
+        return;
+    }
+
+    Lobby *lobby = &server_data->lobbies[client->game_id];
+    if (!lobby->waiting_for_buzz())
+    {
+        return;
+    }
+
+    auto [fp0, fp1] = lobby->faceoff_players();
+    if (client_id != fp0)
+    {
+        lobby->game.buzzing_family = 0;
+    }
+    if (client_id != fp1)
+    {
+        lobby->game.buzzing_family = 1;
+    }
+    else
+    {
+        return;
+    }
+
+    Broadcaster{this, lobby}.broadcast(&RpcServer::InGamePlayerBuzzed, InGamePlayerBuzzedMessage{client_id});
+    lobby->reset_ready();
+    lobby->waiting_on_ready = true;
+    lobby->next_stage = &Lobby::stage_prompt_for_answer;
+}
+
+void RpcServer::HandleInGameAnswer(ClientId client_id, InGameAnswerMessage *req, Empty *resp)
+{
+    Client *client = &server_data->clients[client_id];
+    if (server_data->lobbies.count(client->game_id) == 0)
+    {
+        // TODO send error PERMISSION_DENIED
+        return;
+    }
+
+    Lobby *lobby = &server_data->lobbies[client->game_id];
+    if (client_id != lobby->who_can_answer())
+    {
+        // TODO PERMISSION_DENIED
+        return;
+    }
+
+    Broadcaster{this, lobby}.broadcast(&RpcServer::InGamePlayerAnswered, InGameAnswerMessage{req->answer});
+
+    lobby->game.last_answer = req->answer;
+    lobby->game.last_answer_client_id = client_id;
+
+    lobby->reset_ready();
+    lobby->waiting_on_ready = true;
+    lobby->next_stage = &Lobby::stage_respond_to_answer;
+}
+
+void RpcServer::HandleInGameChoosePassOrPlay(ClientId client_id, InGameChoosePassOrPlayMessage *req, Empty *resp)
+{
+    Client *client = &server_data->clients[client_id];
+    if (server_data->lobbies.count(client->game_id) == 0)
+    {
+        // TODO send error PERMISSION_DENIED
+        return;
+    }
+
+    Lobby *lobby = &server_data->lobbies[client->game_id];
+    if (lobby->game.round_stage != RoundStage::PASS_OR_PLAY)
+    {
+        return;
+    }
+    if (client_id != lobby->who_won_faceoff())
+    {
+        return;
+    }
+
+    if (req->play)
+    {
+        lobby->game.playing_family = lobby->game.faceoff_winning_family;
+        Broadcaster{this, lobby}.broadcast(&RpcServer::InGamePlayerChosePassOrPlay, InGameChoosePassOrPlayMessage{true});
+    }
+    else
+    {
+        lobby->game.playing_family = 1 - lobby->game.faceoff_winning_family;
+        Broadcaster{this, lobby}.broadcast(&RpcServer::InGamePlayerChosePassOrPlay, InGameChoosePassOrPlayMessage{false});
+    }
+
+    lobby->reset_ready();
+    lobby->waiting_on_ready = true;
+    lobby->next_stage = &Lobby::stage_start_play;
+}
+
+void RpcServer::HandleServerTick()
+{
+    check timers
+    // answer - do an eeeggghhhh
+    // buzz - both wrong
+    // pass or play - pick random
+    // ready - move on to next stage
 }

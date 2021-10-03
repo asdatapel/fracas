@@ -1618,8 +1618,45 @@ entities:
       - x: 0.001526
         y: 6.848089
         z: -1.217070
+  - id: 89
+    name: faceoff_zoom
+    type: SPLINE
+    transform: 
+      position: 
+        x: 0.900000
+        y: 0.200000
+        z: 0.300000
+      rotation: 
+        x: 0.000000
+        y: 3143940.000000
+        z: 0.000000
+      scale: 
+        x: 0.000000
+        y: 0.000000
+        z: 3143980.000000
+    spline: 
+      - x: -0.000361
+        y: 1.599746
+        z: 12.028971
+      - x: -0.001063
+        y: 1.499944
+        z: 6.201192
+      - x: -0.000910
+        y: 1.500013
+        z: 2.818503
+      - x: -0.000962
+        y: 1.720049
+        z: -3.391500
 scripts: 
   - name: Intro Sequence
+    inputs: 
+      - name: camera
+        value: 87
+        id: 0
+      - name: path
+        value: 88
+        id: 1
+  - name: Round Start Sequence
     inputs: 
       - name: camera
         value: 87
@@ -1631,4 +1668,12 @@ scripts:
     inputs: 
       - name: camera
         value: 87
+        id: 0
+      - name: path
+        value: 89
+        id: 1
+  - name: Ask Question Sequence
+    inputs: 
+      - name: score screen
+        value: 64
         id: 0

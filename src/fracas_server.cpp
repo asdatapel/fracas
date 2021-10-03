@@ -3,9 +3,9 @@
 #include <stdint.h>
 #include <map>
 
-#include <winsock2.h>
-
 #include "net/net.cpp"
+
+#include <winsock2.h>
 
 #include "common.hpp"
 #include "game_state.hpp"
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
 
             if (!client->peer.is_connected())
             {
-                remove_client(&server_data, client_id);
+                rpc_server.on_disconnect(client_id);
                 client_to_delete = client_id;
                 continue;
             }

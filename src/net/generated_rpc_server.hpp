@@ -17,29 +17,34 @@ struct RpcServer : public BaseRpcServer
     void HandleLeaveGame(ClientId client_id, LeaveGameRequest*, LeaveGameResponse*);
     void HandleStartGame(ClientId client_id, StartGameRequest*, StartGameResponse*);
     void HandleInGameReady(ClientId client_id, Empty*, Empty*);
+    void HandleInGameAnswer(ClientId client_id, InGameAnswerMessage*, Empty*);
+    void HandleInGameBuzz(ClientId client_id, Empty*, Empty*);
+    void HandleInGameChoosePassOrPlay(ClientId client_id, InGameChoosePassOrPlayMessage*, Empty*);
 
 
     void GameStarted(Peer *, GameStartedMessage);
 
-    void InGameStartRound(Peer *, Empty);
+    void InGameStartRound(Peer *, InGameStartRoundMessage);
 
     void InGameStartFaceoff(Peer *, Empty);
 
-    void InGameAskQuestion(Peer *, Empty);
+    void InGameAskQuestion(Peer *, InGameAskQuestionMessage);
 
     void InGamePromptPassOrPlay(Peer *, Empty);
 
-    void InGamePlayerBuzzed(Peer *, Empty);
+    void InGamePlayerBuzzed(Peer *, InGamePlayerBuzzedMessage);
 
-    void InGamePromptForAnswer(Peer *, Empty);
+    void InGamePromptForAnswer(Peer *, InGamePromptForAnswerMessage);
 
-    void InGameStartPlay(Peer *, Empty);
+    void InGameStartPlay(Peer *, InGameStartPlayMessage);
 
-    void InGameAnswer(Peer *, Empty);
+    void InGamePlayerChosePassOrPlay(Peer *, InGameChoosePassOrPlayMessage);
 
-    void InGameFlipAnswer(Peer *, Empty);
+    void InGamePlayerAnswered(Peer *, InGameAnswerMessage);
 
-    void InGameEggghhhh(Peer *, Empty);
+    void InGameFlipAnswer(Peer *, InGameFlipAnswerMessage);
+
+    void InGameEggghhhh(Peer *, InGameEggghhhhMessage);
 
     void InGameEndRound(Peer *, Empty);
 
@@ -142,6 +147,39 @@ void RpcServer::handle_rpc(ClientId client_id, Peer *peer, char *data, int msg_l
         out.send(peer);
     }
     break;
+    case Rpc::InGameAnswer:
+    {
+        InGameAnswerMessage req;
+        Empty resp;
+        read(&in, &req);
+        HandleInGameAnswer(client_id, &req, &resp);
+        append(&out, (char)Rpc::InGameAnswer);
+        append(&out, resp);
+        out.send(peer);
+    }
+    break;
+    case Rpc::InGameBuzz:
+    {
+        Empty req;
+        Empty resp;
+        read(&in, &req);
+        HandleInGameBuzz(client_id, &req, &resp);
+        append(&out, (char)Rpc::InGameBuzz);
+        append(&out, resp);
+        out.send(peer);
+    }
+    break;
+    case Rpc::InGameChoosePassOrPlay:
+    {
+        InGameChoosePassOrPlayMessage req;
+        Empty resp;
+        read(&in, &req);
+        HandleInGameChoosePassOrPlay(client_id, &req, &resp);
+        append(&out, (char)Rpc::InGameChoosePassOrPlay);
+        append(&out, resp);
+        out.send(peer);
+    }
+    break;
     default:
         assert(false);
     }
@@ -156,7 +194,7 @@ void RpcServer::GameStarted(Peer *peer, GameStartedMessage req)
 }
 
 
-void RpcServer::InGameStartRound(Peer *peer, Empty req)
+void RpcServer::InGameStartRound(Peer *peer, InGameStartRoundMessage req)
 {
     MessageBuilder out;
     append(&out, (char) Rpc::InGameStartRound);
@@ -172,7 +210,7 @@ void RpcServer::InGameStartFaceoff(Peer *peer, Empty req)
 }
 
 
-void RpcServer::InGameAskQuestion(Peer *peer, Empty req)
+void RpcServer::InGameAskQuestion(Peer *peer, InGameAskQuestionMessage req)
 {
     MessageBuilder out;
     append(&out, (char) Rpc::InGameAskQuestion);
@@ -188,7 +226,7 @@ void RpcServer::InGamePromptPassOrPlay(Peer *peer, Empty req)
 }
 
 
-void RpcServer::InGamePlayerBuzzed(Peer *peer, Empty req)
+void RpcServer::InGamePlayerBuzzed(Peer *peer, InGamePlayerBuzzedMessage req)
 {
     MessageBuilder out;
     append(&out, (char) Rpc::InGamePlayerBuzzed);
@@ -196,7 +234,7 @@ void RpcServer::InGamePlayerBuzzed(Peer *peer, Empty req)
 }
 
 
-void RpcServer::InGamePromptForAnswer(Peer *peer, Empty req)
+void RpcServer::InGamePromptForAnswer(Peer *peer, InGamePromptForAnswerMessage req)
 {
     MessageBuilder out;
     append(&out, (char) Rpc::InGamePromptForAnswer);
@@ -204,7 +242,7 @@ void RpcServer::InGamePromptForAnswer(Peer *peer, Empty req)
 }
 
 
-void RpcServer::InGameStartPlay(Peer *peer, Empty req)
+void RpcServer::InGameStartPlay(Peer *peer, InGameStartPlayMessage req)
 {
     MessageBuilder out;
     append(&out, (char) Rpc::InGameStartPlay);
@@ -212,15 +250,23 @@ void RpcServer::InGameStartPlay(Peer *peer, Empty req)
 }
 
 
-void RpcServer::InGameAnswer(Peer *peer, Empty req)
+void RpcServer::InGamePlayerChosePassOrPlay(Peer *peer, InGameChoosePassOrPlayMessage req)
 {
     MessageBuilder out;
-    append(&out, (char) Rpc::InGameAnswer);
+    append(&out, (char) Rpc::InGamePlayerChosePassOrPlay);
     append(&out, req); out.send(peer);
 }
 
 
-void RpcServer::InGameFlipAnswer(Peer *peer, Empty req)
+void RpcServer::InGamePlayerAnswered(Peer *peer, InGameAnswerMessage req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::InGamePlayerAnswered);
+    append(&out, req); out.send(peer);
+}
+
+
+void RpcServer::InGameFlipAnswer(Peer *peer, InGameFlipAnswerMessage req)
 {
     MessageBuilder out;
     append(&out, (char) Rpc::InGameFlipAnswer);
@@ -228,7 +274,7 @@ void RpcServer::InGameFlipAnswer(Peer *peer, Empty req)
 }
 
 
-void RpcServer::InGameEggghhhh(Peer *peer, Empty req)
+void RpcServer::InGameEggghhhh(Peer *peer, InGameEggghhhhMessage req)
 {
     MessageBuilder out;
     append(&out, (char) Rpc::InGameEggghhhh);

@@ -316,34 +316,35 @@ void Scene::update_and_draw(RenderTarget backbuffer, InputState *input, Camera *
     RenderTarget floor_reflection = do_floor(this, camera);
     floor_reflection.color_tex.gen_mipmaps();
 
-    {
-        score_targets[0].bind();
-        score_targets[0].clear();
+    // {
+    //     score_targets[0].bind();
+    //     score_targets[0].clear();
 
-        String strs[5] = {
-            "hellp",
-            "khgjkh",
-            "yertyerty",
-            "nvcbnp",
-            "hesdfg",
-        };
+    //     String strs[5] = {
+    //         "hellp",
+    //         "khgjkh",
+    //         "yertyerty",
+    //         "nvcbnp",
+    //         "hesdfg",
+    //     };
 
-        static int t = 0;
-        t++;
-        int idx = (t / 5) % 5;
+    //     static int t = 0;
+    //     t++;
+    //     int idx = (t / 5) % 5;
 
-        float aspect_ratio = 2.f;
-        float text_scale = 4.f;
-        {
-            float target_border = 0.05f;
-            Rect sub_target = {0, 0,
-                               .8f * score_targets[0].width,
-                               .5f * score_targets[0].height};
-            draw_centered_text(font, score_targets[0], strs[idx], sub_target, target_border, text_scale, aspect_ratio);
-        }
+    //     float aspect_ratio = 2.f;
+    //     float text_scale = 4.f;
+    //     {
+    //         float target_border = 0.05f;
+    //         Rect sub_target = {0, 0,
+    //                            .8f * score_targets[0].width,
+    //                            .5f * score_targets[0].height};
+    //         draw_centered_text(font, score_targets[0], strs[idx], sub_target, target_border, text_scale, aspect_ratio);
+    //     }
 
-        score_targets[0].color_tex.gen_mipmaps();
-    }
+    //     score_targets[0].color_tex.gen_mipmaps();
+    // }
+    
     for (int i = 0; i < input->key_input.len; i++)
     {
         if (input->key_input[i] >= Keys::NUM_1 && input->key_input[i] <= Keys::NUM_8)

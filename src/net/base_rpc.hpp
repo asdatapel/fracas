@@ -10,6 +10,8 @@ struct BaseRpcServer
     {
         this->server_data = server_data;
     }
+
+    void on_disconnect( ClientId client_id);
 };
 
 struct ClientData;
@@ -21,4 +23,14 @@ struct BaseRpcClient
     {
         peer.open(address, port, false);
     }
+};
+
+struct Lobby;
+struct Broadcaster
+{
+    BaseRpcServer *rpc_server;
+    Lobby *lobby;
+    
+    template <typename FN, typename MSG>
+    void broadcast(FN, MSG);
 };

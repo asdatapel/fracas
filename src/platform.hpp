@@ -39,6 +39,10 @@ enum struct Keys
     F10,
     F11,
     F12,
+    LCTRL,
+    RCTRL,
+    LALT,
+    RALT,
     INVALID
 };
 
