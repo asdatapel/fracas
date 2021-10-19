@@ -95,7 +95,11 @@ round int
 
 client InGameStartRound InGameStartRoundMessage
 
-client InGameStartFaceoff
+message InGameStartFaceoffMessage 
+faceoffer_0_id int
+faceoffer_1_id int
+
+client InGameStartFaceoff InGameStartFaceoffMessage
 
 message InGameAskQuestionMessage
 question string
@@ -118,6 +122,11 @@ message InGameStartPlayMessage
 team int
 
 client InGameStartPlay InGameStartPlayMessage
+
+message InGameStartStealMessage
+team int
+
+client InGameStartSteal InGameStartStealMessage
 
 client InGamePlayerChosePassOrPlay InGameChoosePassOrPlayMessage
 

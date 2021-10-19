@@ -8,7 +8,7 @@
 #include "net/generated_rpc_server.hpp"
 #include "util.hpp"
 
-const uint32_t second = 1000000000;
+const uint64_t second = 1000000000;
 
 struct GameProperties
 {
@@ -57,7 +57,7 @@ struct GameState
     int incorrects = 0;
     int round_winner = -1;
 
-    Array<int, 2> current_players;
+    Array<int, 2> current_players = {0, 0};
     int playing_family = -1;
     int buzzing_family = -1;
     int faceoff_winning_family = -1;
@@ -152,14 +152,14 @@ struct Lobby
         return true;
     }
 
-    ClientId get_indexed_player(int team, int i)
+    ClientId get_indexed_player(int team, int index)
     {
         int count = 0;
         for (int i = 0; i < players.len; i++)
         {
             if (players[i].team == team)
             {
-                if (count == i)
+                if (count == index)
                 {
                     return players[i].id;
                 }
@@ -392,7 +392,11 @@ struct Lobby
     void end_game(Broadcaster broadcaster)
     {
         stage = LobbyStage::ENDED;
+        game.round_stage = RoundStage::END;
+
         broadcaster.broadcast(&RpcServer::InGameEndGame, Empty{});
+
+        set_waiter(&Lobby::waiter_end_game, 10 * 60 * second);
     }
 
     void do_next_stage(Broadcaster broadcaster)
@@ -432,7 +436,8 @@ struct Lobby
     {
         game.round_stage = RoundStage::FACEOFF;
 
-        broadcaster.broadcast(&RpcServer::InGameStartFaceoff, Empty{});
+        auto faceoffers = faceoff_players();
+        broadcaster.broadcast(&RpcServer::InGameStartFaceoff, InGameStartFaceoffMessage{faceoffers.first, faceoffers.second});
         set_next_stage(&Lobby::stage_ask_question);
     }
 
@@ -558,14 +563,18 @@ struct Lobby
     void stage_start_steal(Broadcaster broadcaster)
     {
         game.round_stage = RoundStage::STEAL;
-        broadcaster.broadcast(&RpcServer::InGameStartPlay, InGameStartPlayMessage{1 - game.faceoff_winning_family});
+        broadcaster.broadcast(&RpcServer::InGameStartSteal, InGameStartStealMessage{1 - game.faceoff_winning_family});
         set_next_stage(&Lobby::stage_prompt_for_answer);
     }
 
     void stage_end_round(Broadcaster broadcaster)
     {
         game.round_stage = RoundStage::END;
-        game.scores[game.round_winner] += game.this_round_points;
+
+        if (game.round_winner != -1)
+        {
+            game.scores[game.round_winner] += game.this_round_points;
+        }
 
         broadcaster.broadcast(&RpcServer::InGameEndRound, Empty{});
         set_next_stage(&Lobby::stage_start_round);
@@ -573,10 +582,7 @@ struct Lobby
 
     void stage_end_game(Broadcaster broadcaster)
     {
-        game.round_stage = RoundStage::END;
         end_game(broadcaster);
-
-        set_waiter(&Lobby::waiter_end_game, 10 * 60 * second);
     }
 
     void waiter_buzz(Broadcaster broadcaster, uint64_t elapsed_micros)

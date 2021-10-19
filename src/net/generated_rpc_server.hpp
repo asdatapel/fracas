@@ -28,7 +28,7 @@ struct RpcServer : public BaseRpcServer
 
     void InGameStartRound(Peer *, InGameStartRoundMessage);
 
-    void InGameStartFaceoff(Peer *, Empty);
+    void InGameStartFaceoff(Peer *, InGameStartFaceoffMessage);
 
     void InGameAskQuestion(Peer *, InGameAskQuestionMessage);
 
@@ -39,6 +39,8 @@ struct RpcServer : public BaseRpcServer
     void InGamePromptForAnswer(Peer *, InGamePromptForAnswerMessage);
 
     void InGameStartPlay(Peer *, InGameStartPlayMessage);
+
+    void InGameStartSteal(Peer *, InGameStartStealMessage);
 
     void InGamePlayerChosePassOrPlay(Peer *, InGameChoosePassOrPlayMessage);
 
@@ -212,7 +214,7 @@ void RpcServer::InGameStartRound(Peer *peer, InGameStartRoundMessage req)
 }
 
 
-void RpcServer::InGameStartFaceoff(Peer *peer, Empty req)
+void RpcServer::InGameStartFaceoff(Peer *peer, InGameStartFaceoffMessage req)
 {
     MessageBuilder out;
     append(&out, (char) Rpc::InGameStartFaceoff);
@@ -256,6 +258,14 @@ void RpcServer::InGameStartPlay(Peer *peer, InGameStartPlayMessage req)
 {
     MessageBuilder out;
     append(&out, (char) Rpc::InGameStartPlay);
+    append(&out, req); out.send(peer);
+}
+
+
+void RpcServer::InGameStartSteal(Peer *peer, InGameStartStealMessage req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::InGameStartSteal);
     append(&out, req); out.send(peer);
 }
 

@@ -89,9 +89,9 @@ struct RpcClient : public BaseRpcClient
     bool got_InGameStartRound_msg = false;
     InGameStartRoundMessage InGameStartRound_msg;
 
-    Empty *get_InGameStartFaceoff_msg();
+    InGameStartFaceoffMessage *get_InGameStartFaceoff_msg();
     bool got_InGameStartFaceoff_msg = false;
-    Empty InGameStartFaceoff_msg;
+    InGameStartFaceoffMessage InGameStartFaceoff_msg;
 
     InGameAskQuestionMessage *get_InGameAskQuestion_msg();
     bool got_InGameAskQuestion_msg = false;
@@ -112,6 +112,10 @@ struct RpcClient : public BaseRpcClient
     InGameStartPlayMessage *get_InGameStartPlay_msg();
     bool got_InGameStartPlay_msg = false;
     InGameStartPlayMessage InGameStartPlay_msg;
+
+    InGameStartStealMessage *get_InGameStartSteal_msg();
+    bool got_InGameStartSteal_msg = false;
+    InGameStartStealMessage InGameStartSteal_msg;
 
     InGameChoosePassOrPlayMessage *get_InGamePlayerChosePassOrPlay_msg();
     bool got_InGamePlayerChosePassOrPlay_msg = false;
@@ -284,6 +288,13 @@ bool RpcClient::handle_rpc(char *data, int msg_len)
             InGameStartPlay_msg = {};
             read(&in, &InGameStartPlay_msg);
             got_InGameStartPlay_msg = true;
+        }
+        break;
+        case Rpc::InGameStartSteal:
+        {
+            InGameStartSteal_msg = {};
+            read(&in, &InGameStartSteal_msg);
+            got_InGameStartSteal_msg = true;
         }
         break;
         case Rpc::InGamePlayerChosePassOrPlay:
@@ -513,7 +524,7 @@ InGameStartRoundMessage *RpcClient::get_InGameStartRound_msg()
     return msg;
 }
 
-Empty *RpcClient::get_InGameStartFaceoff_msg()
+InGameStartFaceoffMessage *RpcClient::get_InGameStartFaceoff_msg()
 {
     auto msg = got_InGameStartFaceoff_msg ? &InGameStartFaceoff_msg : nullptr;
     got_InGameStartFaceoff_msg = false;
@@ -552,6 +563,13 @@ InGameStartPlayMessage *RpcClient::get_InGameStartPlay_msg()
 {
     auto msg = got_InGameStartPlay_msg ? &InGameStartPlay_msg : nullptr;
     got_InGameStartPlay_msg = false;
+    return msg;
+}
+
+InGameStartStealMessage *RpcClient::get_InGameStartSteal_msg()
+{
+    auto msg = got_InGameStartSteal_msg ? &InGameStartSteal_msg : nullptr;
+    got_InGameStartSteal_msg = false;
     return msg;
 }
 

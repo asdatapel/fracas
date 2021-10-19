@@ -16,6 +16,7 @@ enum struct Keys
     NUM_9,
     SPACE,
     BACKSPACE,
+    ENTER,
     W,
     A,
     S,
@@ -43,6 +44,7 @@ enum struct Keys
     RCTRL,
     LALT,
     RALT,
+    ESCAPE,
     INVALID
 };
 

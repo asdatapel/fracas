@@ -26,10 +26,12 @@ enum struct Message : char
 	InGameAnswerMessage,
 	InGameChoosePassOrPlayMessage,
 	InGameStartRoundMessage,
+	InGameStartFaceoffMessage,
 	InGameAskQuestionMessage,
 	InGamePlayerBuzzedMessage,
 	InGamePromptForAnswerMessage,
 	InGameStartPlayMessage,
+	InGameStartStealMessage,
 	InGameFlipAnswerMessage,
 	InGameEggghhhhMessage
 };
@@ -890,6 +892,48 @@ uint32_t read(MessageReader *msg, std::vector<InGameStartRoundMessage> *out)
 	return len;
 };
 
+struct InGameStartFaceoffMessage 
+{
+    int32_t faceoffer_0_id = {};
+    int32_t faceoffer_1_id = {};
+};
+void append(MessageBuilder *msg, InGameStartFaceoffMessage &in)
+{
+    append(msg, in.faceoffer_0_id);
+    append(msg, in.faceoffer_1_id);
+}
+uint32_t read(MessageReader *msg, InGameStartFaceoffMessage *out)
+{
+    uint32_t len = 0;
+
+    len += read(msg, &out->faceoffer_0_id);
+    len += read(msg, &out->faceoffer_1_id);
+    return len;
+}
+void append(MessageBuilder *msg, std::vector<InGameStartFaceoffMessage> &in)
+{
+	append(msg, (uint16_t)in.size());
+	for (auto &it : in)
+    {
+        append(msg, it);
+    }
+};
+uint32_t read(MessageReader *msg, std::vector<InGameStartFaceoffMessage> *out)
+{
+	uint32_t len = 0;
+
+	uint16_t list_len;
+	len += read(msg, &list_len);
+	for (int i = 0; i < list_len; i++)
+    {
+		InGameStartFaceoffMessage elem;
+        len += read(msg, &elem);
+        out->push_back(elem);
+	}
+
+	return len;
+};
+
 struct InGameAskQuestionMessage 
 {
     AllocatedString<64> question = {};
@@ -1046,6 +1090,45 @@ uint32_t read(MessageReader *msg, std::vector<InGameStartPlayMessage> *out)
 	return len;
 };
 
+struct InGameStartStealMessage 
+{
+    int32_t team = {};
+};
+void append(MessageBuilder *msg, InGameStartStealMessage &in)
+{
+    append(msg, in.team);
+}
+uint32_t read(MessageReader *msg, InGameStartStealMessage *out)
+{
+    uint32_t len = 0;
+
+    len += read(msg, &out->team);
+    return len;
+}
+void append(MessageBuilder *msg, std::vector<InGameStartStealMessage> &in)
+{
+	append(msg, (uint16_t)in.size());
+	for (auto &it : in)
+    {
+        append(msg, it);
+    }
+};
+uint32_t read(MessageReader *msg, std::vector<InGameStartStealMessage> *out)
+{
+	uint32_t len = 0;
+
+	uint16_t list_len;
+	len += read(msg, &list_len);
+	for (int i = 0; i < list_len; i++)
+    {
+		InGameStartStealMessage elem;
+        len += read(msg, &elem);
+        out->push_back(elem);
+	}
+
+	return len;
+};
+
 struct InGameFlipAnswerMessage 
 {
     int32_t answer_index = {};
@@ -1153,6 +1236,7 @@ enum struct Rpc : char
 	InGamePlayerBuzzed,
 	InGamePromptForAnswer,
 	InGameStartPlay,
+	InGameStartSteal,
 	InGamePlayerChosePassOrPlay,
 	InGamePlayerAnswered,
 	InGameFlipAnswer,

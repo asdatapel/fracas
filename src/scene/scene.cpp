@@ -198,6 +198,7 @@ RenderTarget do_floor(Scene *scene, Camera *camera)
 void Scene::init(Memory mem)
 {
     entities.init(mem.allocator, 1024);
+    hdr_target = RenderTarget(1920, 1080, TextureFormat::RGB16F, TextureFormat::DEPTH24);
 }
 
 void Scene::load(Assets *assets, Memory mem)
@@ -293,13 +294,42 @@ void Scene::load(Assets *assets, Memory mem)
     anim = parse_animation(anim_file, mem);
 }
 
-void Scene::update_and_draw(RenderTarget backbuffer, InputState *input, Camera *camera)
+void Scene::update_and_draw(RenderTarget backbuffer, InputState *input, Camera *editor_camera)
 {
     //TODO check backbuffer resize
 
     static RenderTarget hdr_target(1920, 1080, TextureFormat::RGB16F, TextureFormat::DEPTH24);
 
     clear_bars(this, hdr_target);
+
+    Camera *camera;
+    if (editor_camera)
+    {
+        camera = editor_camera;
+    }
+    else
+    {
+        if (selected_camera_id < 0)
+        {
+            for (int i = 0; i < entities.size; i++)
+            {
+                if (entities.data[i].assigned)
+                {
+                    Entity &e = entities.data[i].value;
+                    if (e.type == EntityType::CAMERA)
+                    {
+                        selected_camera_id = i;
+                        break;
+                    }
+                }
+            }
+        }
+        if (selected_camera_id < 0)
+        {
+            return; // cant draw without camera
+        }
+        camera = &entities.data[selected_camera_id].value.camera;
+    }
 
     for (int i = 0; i < entities.size; i++)
     {
@@ -344,7 +374,7 @@ void Scene::update_and_draw(RenderTarget backbuffer, InputState *input, Camera *
 
     //     score_targets[0].color_tex.gen_mipmaps();
     // }
-    
+
     for (int i = 0; i < input->key_input.len; i++)
     {
         if (input->key_input[i] >= Keys::NUM_1 && input->key_input[i] <= Keys::NUM_8)
@@ -355,22 +385,22 @@ void Scene::update_and_draw(RenderTarget backbuffer, InputState *input, Camera *
     }
     for (int i = 0; i < 8; i++)
     {
-        Bar *bar = &bars[i];
-        if (bar->animation_t > 0.f)
-        {
-            bar->animation_t += 0.01f;
-        }
-        float rotation = (powf(bar->animation_t * 4, 2) * 90.f);
-        if (rotation < 0.f)
-        {
-            rotation = 0.f;
-        }
-        if (rotation > 180.f)
-        {
-            rotation = 180.f;
-        }
+        // Bar *bar = &bars[i];
+        // if (bar->animation_t > 0.f)
+        // {
+        //     bar->animation_t += 0.01f;
+        // }
+        // float rotation = (powf(bar->animation_t * 4, 2) * 90.f);
+        // if (rotation < 0.f)
+        // {
+        //     rotation = 0.f;
+        // }
+        // if (rotation > 180.f)
+        // {
+        //     rotation = 180.f;
+        // }
 
-        entities.data[bar->entity_id].value.transform.rotation.x = glm::radians(rotation);
+        // entities.data[bar->entity_id].value.transform.rotation.x = glm::radians(rotation);
     }
 
     // float speed_denoms[3] = {2, 2.75, 2.15};

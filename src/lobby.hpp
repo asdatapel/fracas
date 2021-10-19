@@ -296,7 +296,6 @@ void RpcServer::HandleInGameReady(ClientId client_id, Empty *req, Empty *resp)
     }
 
     Lobby *lobby = &server_data->lobbies[client->game_id];
-
     if (lobby->waiter != &Lobby::waiter_all_ready)
     {
         return;
@@ -328,11 +327,11 @@ void RpcServer::HandleInGameBuzz(ClientId client_id, Empty *req, Empty *resp)
     }
 
     auto [fp0, fp1] = lobby->faceoff_players();
-    if (client_id != fp0)
+    if (client_id == fp0)
     {
         lobby->game.buzzing_family = 0;
     }
-    if (client_id != fp1)
+    if (client_id == fp1)
     {
         lobby->game.buzzing_family = 1;
     }

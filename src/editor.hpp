@@ -11,7 +11,6 @@ struct Editor
 
     EditorCamera debug_camera;
     bool use_debug_camera = false;
-    int selected_camera_id = -1;
 
     bool playing = false;
     Scene play_scene;
@@ -27,27 +26,6 @@ struct Editor
         {
             init = true;
 
-            Entity new_e;
-            new_e.type = EntityType::CAMERA;
-            new_e.transform.position.x = (float)(rand() % 10000) / 10000 * 60 - 30;
-            new_e.transform.position.z = (float)(rand() % 10000) / 10000 * 60 - 30;
-            new_e.transform.position.y = (float)(rand() % 10000) / 10000 * 20;
-            new_e.transform.rotation.x = 0;
-            new_e.transform.rotation.z = 0;
-            new_e.transform.rotation.y = 0;
-            new_e.transform.scale.x = 1;
-            new_e.transform.scale.z = 1;
-            new_e.transform.scale.y = 1;
-            selected_camera_id = scene->entities.push_back(new_e);
-
-            Entity new_spline;
-            new_spline.type = EntityType::SPLINE;
-            new_spline.spline.points.append({-3, 1.5, 5});
-            new_spline.spline.points.append({-3, 1.5, 3});
-            new_spline.spline.points.append({-3, 1.5, 2});
-            new_spline.spline.points.append({-3, 1.5, 0});
-            scene->entities.push_back(new_spline);
-
             deserialize(scene, game, mem.temp);
 
             play_scene.init(mem);
@@ -61,8 +39,8 @@ struct Editor
                     debug_camera.update(backbuffer, input);
             }
 
-            game->update(1 / 60.f, &play_scene, rpc_client);
-            play_scene.update_and_draw(backbuffer, input, get_camera(&play_scene));
+            play_scene.update_and_draw(backbuffer, input, nullptr);
+            game->update(1 / 60.f, &play_scene, rpc_client, input);
             debug_ui(&play_scene, game, backbuffer, input, mem);
         }
         else
@@ -72,7 +50,7 @@ struct Editor
                 debug_camera.update(backbuffer, input);
             }
 
-            scene->update_and_draw(backbuffer, input, &debug_camera);
+            scene->update_and_draw(backbuffer, input, get_camera(scene));
             debug_ui(scene, game, backbuffer, input, mem);
         }
     }
@@ -94,11 +72,6 @@ struct Editor
             {
                 deserialize(scene, game, mem.temp);
             }
-            // play / pause
-            if (input->key_input[i] == Keys::SPACE)
-            {
-                playing ? stop_play() : start_play(scene, game);
-            }
 
             // add spline
             if (input->keys[(int)Keys::LALT] && input->key_input[i] == Keys::S)
@@ -110,6 +83,36 @@ struct Editor
                 new_spline.spline.points.append({-3, 1.5, 2});
                 new_spline.spline.points.append({-3, 1.5, 0});
                 scene->entities.push_back(new_spline);
+            }
+            // add spline
+            if (input->keys[(int)Keys::LALT] && input->key_input[i] == Keys::W)
+            {
+                Entity new_e;
+                new_e.type = EntityType::CAMERA;
+                new_e.transform.position.x = 0;
+                new_e.transform.position.z = 0;
+                new_e.transform.position.y = 10;
+                new_e.transform.rotation.x = 0;
+                new_e.transform.rotation.z = 0;
+                new_e.transform.rotation.y = 0;
+                new_e.transform.scale.x = 1;
+                new_e.transform.scale.z = 1;
+                new_e.transform.scale.y = 1;
+                scene->entities.push_back(new_e);
+            }
+
+            // play / pause
+            if (input->key_input[i] == Keys::SPACE)
+            {
+                playing ? stop_play() : start_play(scene, game);
+            }
+
+            if (input->key_input[i] == Keys::ESCAPE)
+            {
+                if (use_debug_camera)
+                {
+                    use_debug_camera = false;
+                }
             }
         }
 
@@ -147,7 +150,7 @@ struct Editor
                 imm_num_input(&selected_entity->spot_light.inner_angle);
                 imm_num_input(&selected_entity->spot_light.outer_angle);
             }
-            if (selected_entity->type == EntityType::SPLINE)
+            else if (selected_entity->type == EntityType::SPLINE)
             {
                 draw_spline(selected_entity->spline, target, input, mem, get_camera(scene), true);
 
@@ -177,6 +180,23 @@ struct Editor
                     selected_entity->spline.points[1] = p2;
                     selected_entity->spline.points[2] = p1;
                     selected_entity->spline.points[3] = p0;
+                }
+            }
+            else if (selected_entity->type == EntityType::CAMERA)
+            {
+                imm_label("Camera");
+                if (imm_button("View from camera"))
+                {
+                    if (!use_debug_camera && scene->selected_camera_id == selected_entity_i)
+                    {
+                        use_debug_camera = true;
+                        scene->selected_camera_id = -1;
+                    }
+                    else
+                    {
+                        scene->selected_camera_id = selected_entity_i;
+                        use_debug_camera = false;
+                    }
                 }
             }
         }
@@ -227,7 +247,7 @@ struct Editor
                 Entity *input_entity = &scene->entities.data[*selected_script->inputs[i].value].value;
                 if (imm_button((ImmId)selected_script->inputs[i].value, input_entity->debug_tag.name))
                 {
-                    if (selected_entity)
+                    if (selected_entity && selected_entity->type == selected_script->inputs[i].entity_type)
                     {
                         *selected_script->inputs[i].value = selected_entity_i;
                     }
@@ -272,7 +292,6 @@ struct Editor
         play_scene.font = scene->font;
         play_scene.anim = scene->anim;
 
-        // 
         game->init(&play_scene);
     }
 
@@ -425,6 +444,10 @@ struct Editor
             int id = atoi(in_e->get("id")->as_literal().to_char_array(alloc));
             Entity &entity = scene->entities.data[id].value;
             scene->entities.data[i].assigned = true;
+            if (scene->entities.next == &scene->entities.data[i])
+            {
+                scene->entities.next = scene->entities.data[i].next;
+            }
 
             entity.type = entity_type_from_string(in_e->get("type")->as_literal());
             entity.debug_tag.name = string_to_allocated_string<32>(in_e->get("name")->as_literal());
@@ -464,19 +487,26 @@ struct Editor
         YAML::List *in_scripts = root->get("scripts")->as_list();
         for (int i = 0; i < in_scripts->len; i++)
         {
-            YAML::List *inputs = in_scripts->get(i)->as_dict()->get("inputs")->as_list();
-            for (int input_i = 0; input_i < inputs->len; input_i++)
+            if (in_scripts->get(i)->as_dict()->get("inputs")->type == YAML::Value::Type::LIST)
             {
-                YAML::Dict *input = inputs->get(input_i)->as_dict();
-                int id = atoi(input->get("id")->as_literal().to_char_array(alloc));
-                int value = atoi(input->get("value")->as_literal().to_char_array(alloc));
-                *script_defs[i].inputs[id].value = value;
+                YAML::List *inputs = in_scripts->get(i)->as_dict()->get("inputs")->as_list();
+                for (int input_i = 0; input_i < inputs->len; input_i++)
+                {
+                    YAML::Dict *input = inputs->get(input_i)->as_dict();
+                    int id = atoi(input->get("id")->as_literal().to_char_array(alloc));
+                    int value = atoi(input->get("value")->as_literal().to_char_array(alloc));
+                    *script_defs[i].inputs[id].value = value;
+                }
             }
         }
     }
 
     Camera *get_camera(Scene *scene)
     {
-        return (use_debug_camera || !playing || selected_camera_id == -1) ? &debug_camera : &scene->entities.data[selected_camera_id].value.camera;
+        if (use_debug_camera || scene->selected_camera_id < 0)
+            return &debug_camera;
+        if (scene->selected_camera_id > -1)
+            return &scene->entities.data[scene->selected_camera_id].value.camera;
+        return &debug_camera;
     }
 };

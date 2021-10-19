@@ -16,8 +16,6 @@ in order:
     - signed distance fields for text
     - improve menu background
  - test on laptop
- - server preempts (so it doesn't wait on READY forever)
- - server timer for answers
  - parse question spreadsheet
  - simple answer checking mechanism
  - ui layouting
@@ -25,3 +23,12 @@ in order:
  - fill out server messages to contain more info (family names, etc)
  - avatar pics + fun stuff like a celebration emoji effect
  - change references to pointers
+
+
+ 10-3 plan
+ need way for scripts to access assets (fonts, textures, sounds) easily
+ need to create assets from scripts (and reset on stop)
+ draw prompt for BUZZ
+ draw question
+ textbox for answer + button to submit
+ buttons for Pass Play

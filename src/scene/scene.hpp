@@ -9,7 +9,11 @@ struct Scene
     Texture unfiltered_cubemap;
     StandardPbrEnvMaterial env_mat;
 
+    RenderTarget hdr_target;
+
     FreeList<Entity> entities;
+
+    int selected_camera_id = -1;
 
     // TODO this is temporary until we can connect entities by id
     std::unordered_map<std::string, int> entity_names;

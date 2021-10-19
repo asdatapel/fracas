@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
             server_data.clients.erase(client_to_delete);
         }
         
-        for (auto it : server_data.lobbies)
+        for (auto& it : server_data.lobbies)
         {
             Lobby *lobby = &it.second;
             lobby->tick({&rpc_server, lobby}, elapsed.count());
