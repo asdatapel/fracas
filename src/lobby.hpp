@@ -7,18 +7,403 @@
 #include "net/net.hpp"
 #include "net/generated_rpc_server.hpp"
 
+const uint64_t second = 1000000000;
+
 struct ServerData
 {
     std::unordered_map<GameId, Lobby> lobbies;
     std::unordered_map<ClientId, Client> clients;
 };
 
+struct GameProperties
+{
+    ClientId owner;
+    AllocatedString<64> name = {};
+    bool is_self_hosted = false;
+    AllocatedString<64> owner_name;
+};
+enum struct LobbyStage
+{
+    NOT_STARTED,
+    IN_GAME,
+    ENDED,
+    DEAD,
+};
+struct Lobby
+{
+    GameProperties properties;
+    LobbyStage stage = LobbyStage::NOT_STARTED;
+    GameState game = {};
+
+    typedef void (Lobby::*Stage)(Broadcaster);
+    typedef void (Lobby::*Waiter)(Broadcaster, uint64_t);
+    Stage next_stage = nullptr;
+    Waiter waiter = nullptr;
+    uint64_t waiter_deadline = 0;
+    uint64_t waiter_elapsed = 0;
+
+    bool ready_to_delete = false;
+
+    Lobby() = default;
+    Lobby(GameProperties properties)
+    {
+        this->properties = properties;
+    }
+
+    void set_waiter(Waiter waiter, uint64_t deadline)
+    {
+        this->waiter = waiter;
+        waiter_deadline = deadline;
+        waiter_elapsed = 0;
+    }
+
+    void set_next_stage(Stage stage)
+    {
+        for (int i = 0; i < game.players.len; i++)
+        {
+            game.players[i].ready = false;
+        }
+        next_stage = stage;
+
+        set_waiter(&Lobby::waiter_all_ready, 30 * second);
+    }
+
+    void add_player(ClientId client_id, AllocatedString<64> name)
+    {
+        if (game.is_player_in_this_game(client_id))
+        {
+            // TODO maybe return error
+            return;
+        }
+        if (game.num_players() >= MAX_PLAYERS_PER_GAME)
+        {
+            // TODO return error GAME_FULL
+            return;
+        }
+
+        int next_family = 0;
+        if (game.num_players(1) < game.num_players(0))
+        {
+            next_family = 1;
+        }
+        game.players.append({client_id, name, next_family});
+    }
+
+    void remove_player(ClientId client_id, Broadcaster broadcaster)
+    {
+        for (int i = 0; i < game.players.len; i++)
+        {
+            if (game.players[i].id == client_id)
+            {
+                game.players.shift_delete(i);
+            }
+        }
+
+        if (properties.owner == client_id)
+        {
+            end_game(broadcaster);
+            // MAYBETODO we can switch the owner instead, as long as the game isn't self hosted
+        }
+
+        if (stage != LobbyStage::NOT_STARTED && (game.num_players(0) == 0 || game.num_players(1) == 0))
+        {
+            end_game(broadcaster);
+        }
+
+        broadcaster.broadcast(&RpcServer::PlayerLeft, PlayerLeftMessage{client_id});
+    }
+
+    bool ready_to_start()
+    {
+        if (stage != LobbyStage::NOT_STARTED)
+            return false;
+
+        int fam_0_count = game.num_players(0);
+        int fam_1_count = game.num_players(1);
+        return fam_0_count > 0 && fam_0_count < MAX_PLAYERS_PER_GAME / 2 &&
+               fam_1_count > 0 && fam_1_count < MAX_PLAYERS_PER_GAME / 2;
+    }
+
+    void start_game(Broadcaster broadcaster, GameId game_id)
+    {
+        // game = GameState(); TODO this resets players which are now stored in GameState. Either remove them from GameState or make a GameState::reset function
+        stage = LobbyStage::IN_GAME;
+
+        for (int i = 0; i < game.players.len; i++)
+        {
+            Peer *peer = &broadcaster.rpc_server->server_data->clients.at(game.players[i].id).peer;
+            ((RpcServer*)broadcaster.rpc_server)->GameStarted(peer, GameStartedMessage{game_id, game.players[i].id});
+        }
+
+        set_next_stage(&Lobby::stage_start_round);
+    }
+
+    bool has_started()
+    {
+        return game.round >= 0;
+    }
+
+    void end_game(Broadcaster broadcaster)
+    {
+        stage = LobbyStage::ENDED;
+        game.round_stage = RoundStage::END;
+
+        broadcaster.broadcast(&RpcServer::InGameEndGame, Empty{});
+
+        set_waiter(&Lobby::waiter_end_game, 10 * 60 * second);
+    }
+
+    void do_next_stage(Broadcaster broadcaster)
+    {
+        (this->*next_stage)(broadcaster);
+    }
+
+    void stage_start_round(Broadcaster broadcaster)
+    {
+        game.round++;
+        game.round_stage = RoundStage::START;
+
+        game.playing_family = -1;
+        game.buzzing_family = -1;
+        game.faceoff_winning_family = -1;
+
+        game.this_round_points = 0;
+        game.incorrects = 0;
+        game.round_winner = -1;
+
+        game.last_answer.len = 0;
+
+        game.question = string_to_allocated_string<128>("name a color bitch bitch stupid bitch?");
+        game.answers.append({false, 15, "red"});
+        game.answers.append({false, 15, "green"});
+        game.answers.append({false, 14, "blue"});
+        game.answers.append({false, 13, "orange"});
+        game.answers.append({false, 13, "pink"});
+        game.answers.append({false, 13, "purple"});
+        game.answers.append({false, 2, "muave"});
+
+        broadcaster.broadcast(&RpcServer::InGameStartRound, InGameStartRoundMessage{game.round});
+        set_next_stage(&Lobby::stage_start_faceoff);
+    }
+
+    void stage_start_faceoff(Broadcaster broadcaster)
+    {
+        game.round_stage = RoundStage::FACEOFF;
+
+        auto faceoffers = game.faceoff_players();
+        broadcaster.broadcast(&RpcServer::InGameStartFaceoff, InGameStartFaceoffMessage{faceoffers.first, faceoffers.second});
+        set_next_stage(&Lobby::stage_ask_question);
+    }
+
+    void stage_ask_question(Broadcaster broadcaster)
+    {
+        broadcaster.broadcast(&RpcServer::InGameAskQuestion, InGameAskQuestionMessage{game.question});
+        set_waiter(&Lobby::waiter_buzz, 10 * second); 
+    }
+
+    void stage_prompt_for_answer(Broadcaster broadcaster)
+    {
+        broadcaster.broadcast(&RpcServer::InGamePromptForAnswer, InGamePromptForAnswerMessage{game.who_can_answer()});
+
+        set_waiter(&Lobby::waiter_answer, 15 * second); // TODO increase this
+    }
+
+    void stage_respond_to_answer(Broadcaster broadcaster)
+    {
+        int this_answer_incorrect = 0; // used to simplify checking which faceoffer is answering
+        int answer_i = game.check_answer();
+        int score = answer_i == -1 ? 0 : game.answers[answer_i].score;
+        if (answer_i == -1)
+        {
+            this_answer_incorrect = 1;
+            game.incorrects += 1;
+
+            broadcaster.broadcast(&RpcServer::InGameEggghhhh, InGameEggghhhhMessage{game.incorrects});
+        }
+        else
+        {
+            game.answers[answer_i].revealed = true;
+            game.this_round_points += score;
+
+            broadcaster.broadcast(&RpcServer::InGameFlipAnswer, InGameFlipAnswerMessage{answer_i, game.last_answer, score});
+        }
+
+        if (game.round_stage == RoundStage::FACEOFF)
+        {
+            if (game.this_round_points == score && game.incorrects == this_answer_incorrect) // no one has answered yet
+            {
+                if (answer_i == 0)
+                {
+                    // buzzer wins automatically
+                    game.faceoff_winning_family = game.buzzing_family;
+                    set_next_stage(&Lobby::stage_prompt_pass_or_play);
+                }
+                else
+                {
+                    set_next_stage(&Lobby::stage_prompt_for_answer);
+                }
+            }
+            else
+            {
+                if (game.this_round_points == 0)
+                {
+                    // both faceoffers failed, move on to next round
+                    set_next_stage(&Lobby::stage_end_round);
+                }
+                else if (score > game.this_round_points)
+                {
+                    // non-buzzer wins
+                    game.faceoff_winning_family = 1 - game.buzzing_family;
+                    set_next_stage(&Lobby::stage_prompt_pass_or_play);
+                }
+                else
+                {
+                    // buzzer wins
+                    game.faceoff_winning_family = game.buzzing_family;
+                    set_next_stage(&Lobby::stage_prompt_pass_or_play);
+                }
+            }
+        }
+        else if (game.round_stage == RoundStage::STEAL)
+        {
+            if (answer_i == -1) // wrong answer
+            {
+                game.round_winner = game.playing_family;
+            }
+            else // right answer
+            {
+                game.round_winner = 1 - game.playing_family;
+            }
+
+            // always progress round, since stealing family only gets one chance
+            set_next_stage(&Lobby::stage_end_round);
+        }
+        else
+        {
+            if (game.incorrects == 3)
+            {
+                set_next_stage(&Lobby::stage_start_steal);
+            }
+            else
+            {
+                game.current_players[game.playing_family] += 1;
+
+                if (game.are_all_answers_flipped())
+                {
+                    game.round_winner = game.playing_family;
+                    set_next_stage(&Lobby::stage_end_round);
+                }
+                else
+                {
+                    set_next_stage(&Lobby::stage_prompt_for_answer);
+                }
+            }
+        }
+    };
+
+    void stage_prompt_pass_or_play(Broadcaster broadcaster)
+    {
+        broadcaster.broadcast(&RpcServer::InGamePromptPassOrPlay, Empty{});
+        set_waiter(&Lobby::waiter_pass_or_play, 30 * second);
+    }
+
+    void stage_start_play(Broadcaster broadcaster)
+    {
+        game.round_stage = RoundStage::PLAY;
+        broadcaster.broadcast(&RpcServer::InGameStartPlay, InGameStartPlayMessage{game.faceoff_winning_family});
+        set_next_stage(&Lobby::stage_prompt_for_answer);
+    }
+
+    void stage_start_steal(Broadcaster broadcaster)
+    {
+        game.round_stage = RoundStage::STEAL;
+        broadcaster.broadcast(&RpcServer::InGameStartSteal, InGameStartStealMessage{1 - game.faceoff_winning_family});
+        set_next_stage(&Lobby::stage_prompt_for_answer);
+    }
+
+    void stage_end_round(Broadcaster broadcaster)
+    {
+        game.round_stage = RoundStage::END;
+
+        if (game.round_winner != -1)
+        {
+            game.scores[game.round_winner] += game.this_round_points;
+        }
+
+        broadcaster.broadcast(&RpcServer::InGameEndRound, Empty{});
+        set_next_stage(&Lobby::stage_start_round);
+    }
+
+    void stage_end_game(Broadcaster broadcaster)
+    {
+        end_game(broadcaster);
+    }
+
+    void waiter_buzz(Broadcaster broadcaster, uint64_t elapsed_micros)
+    {
+        waiter_elapsed += elapsed_micros;
+        if (waiter_elapsed >= waiter_deadline)
+        {
+            game.incorrects += 1;
+            broadcaster.broadcast(&RpcServer::InGameEggghhhh, InGameEggghhhhMessage{game.incorrects});
+            set_next_stage(&Lobby::stage_end_round);
+        }
+    }
+    void waiter_pass_or_play(Broadcaster broadcaster, uint64_t elapsed_micros)
+    {
+        waiter_elapsed += elapsed_micros;
+        if (waiter_elapsed >= waiter_deadline)
+        {
+            // default to PLAY
+            game.playing_family = game.faceoff_winning_family;
+            broadcaster.broadcast(&RpcServer::InGamePlayerChosePassOrPlay, InGameChoosePassOrPlayMessage{true});
+            set_next_stage(&Lobby::stage_start_play);
+        }
+    }
+    void waiter_answer(Broadcaster broadcaster, uint64_t elapsed_micros)
+    {
+        waiter_elapsed += elapsed_micros;
+        if (waiter_elapsed >= waiter_deadline)
+        {
+            AllocatedString<64> empty_answer = string_to_allocated_string<64>("...");
+            game.last_answer = empty_answer;
+            broadcaster.broadcast(&RpcServer::InGamePlayerAnswered, InGameAnswerMessage{empty_answer});
+
+            set_next_stage(&Lobby::stage_respond_to_answer);
+        }
+    }
+    void waiter_all_ready(Broadcaster broadcaster, uint64_t elapsed_micros)
+    {
+        waiter_elapsed += elapsed_micros;
+        if (waiter_elapsed >= waiter_deadline)
+        {
+            do_next_stage(broadcaster);
+        }
+    }
+    void waiter_end_game(Broadcaster broadcaster, uint64_t elapsed_micros)
+    {
+        waiter_elapsed += elapsed_micros;
+        if (waiter_elapsed >= waiter_deadline)
+        {
+            ready_to_delete = true;
+        }
+    }
+
+    void tick(Broadcaster broadcaster, uint64_t elapsed_time)
+    {
+        if (waiter)
+        {
+            (this->*waiter)(broadcaster, elapsed_time);
+        }
+    }
+};
+
 template <typename FN, typename MSG>
 void Broadcaster::broadcast(FN fn, MSG msg)
 {
-    for (int i = 0; i < lobby->players.len; i++)
+    for (int i = 0; i < lobby->game.players.len; i++)
     {
-        ClientId client_id = lobby->players[i].id;
+        ClientId client_id = lobby->game.players[i].id;
 
         if (rpc_server->server_data->clients.count(client_id))
         {
@@ -113,7 +498,7 @@ void RpcServer::HandleListGames(ClientId client_id, ListGamesRequest *req, ListG
             game_msg.id = game_id;
             game_msg.name = lobby->properties.name;
             game_msg.owner = server_data->clients[lobby->properties.owner].username;
-            game_msg.num_players = lobby->num_players();
+            game_msg.num_players = lobby->game.num_players();
             game_msg.is_self_hosted = lobby->properties.is_self_hosted;
             resp->games.push_back(game_msg);
         }
@@ -132,13 +517,13 @@ void RpcServer::HandleGetGame(ClientId client_id, GetGameRequest *req, GetGameRe
     resp->game.id = req->game_id;
     resp->game.name = lobby->properties.name;
     resp->game.owner = server_data->clients[lobby->properties.owner].username;
-    resp->game.num_players = lobby->num_players();
+    resp->game.num_players = lobby->game.num_players();
     resp->game.is_self_hosted = lobby->properties.is_self_hosted;
-    for (int i = 0; i < lobby->players.len; i++)
+    for (int i = 0; i < lobby->game.players.len; i++)
     {
-        resp->players.push_back({lobby->players[i].id,
-                                 lobby->players[i].name,
-                                 lobby->players[i].team == 1});
+        resp->players.push_back({lobby->game.players[i].id,
+                                 lobby->game.players[i].name,
+                                 lobby->game.players[i].team == 1});
     }
 }
 
@@ -231,16 +616,16 @@ void RpcServer::HandleSwapTeam(ClientId client_id, SwapTeamRequest *req, Empty *
     {
         return; // TODO cannot swap after game has started
     }
-    if (!lobby->is_player_in_this_game(req->user_id))
+    if (!lobby->game.is_player_in_this_game(req->user_id))
     {
         return; // error requested user isn't in this game
     }
 
-    for (int i = 0; i < lobby->players.len; i++)
+    for (int i = 0; i < lobby->game.players.len; i++)
     {
-        if (lobby->players[i].id == req->user_id)
+        if (lobby->game.players[i].id == req->user_id)
         {
-            lobby->players[i].team = 1 - lobby->players[i].team;
+            lobby->game.players[i].team = 1 - lobby->game.players[i].team;
         }
     }
 }
@@ -301,11 +686,10 @@ void RpcServer::HandleInGameReady(ClientId client_id, Empty *req, Empty *resp)
         return;
     }
 
-    PlayerData *player_data = lobby->get_player_data(client_id);
+    PlayerData *player_data = lobby->game.get_player_data(client_id);
     player_data->ready = true;
 
-
-    if (lobby->are_all_players_ready())
+    if (lobby->game.are_all_players_ready())
     {
         lobby->do_next_stage({this, lobby});
     }
@@ -326,7 +710,7 @@ void RpcServer::HandleInGameBuzz(ClientId client_id, Empty *req, Empty *resp)
         return;
     }
 
-    auto [fp0, fp1] = lobby->faceoff_players();
+    auto [fp0, fp1] = lobby->game.faceoff_players();
     if (client_id == fp0)
     {
         lobby->game.buzzing_family = 0;
@@ -358,7 +742,7 @@ void RpcServer::HandleInGameAnswer(ClientId client_id, InGameAnswerMessage *req,
     {
         return;
     }
-    if (client_id != lobby->who_can_answer())
+    if (client_id != lobby->game.who_can_answer())
     {
         // TODO PERMISSION_DENIED
         return;
@@ -386,7 +770,7 @@ void RpcServer::HandleInGameChoosePassOrPlay(ClientId client_id, InGameChoosePas
     {
         return;
     }
-    if (client_id != lobby->who_won_faceoff())
+    if (client_id != lobby->game.who_won_faceoff())
     {
         return;
     }

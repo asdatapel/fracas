@@ -68,6 +68,7 @@ server StartGame StartGameRequest StartGameResponse
 
 message GameStartedMessage
 game_id int
+your_id int
 
 client GameStarted GameStartedMessage
 

@@ -121,7 +121,6 @@ namespace YAML
                 elem = elem->next;
             }
 
-            assert(false);
             return nullptr;
         }
 

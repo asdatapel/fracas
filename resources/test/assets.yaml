@@ -1,0 +1,52 @@
+assets:
+  meshes:
+    - id: 0
+      name: x
+      path: resources/models/x2/Text.fmesh
+  render_targets:
+    - id: 0
+      name: "bar_1_target"
+      width: 1024
+      height: 1024
+      color_format: RGBA8
+      depth_format: NONE
+  textures:
+    - id: 0
+      path: resources/models/x2/diffuse.bmp
+      format: SRGB8_ALPHA8
+    - id: 1
+      path: resources/models/x2/normal.bmp
+      format: RGBA8
+    - id: 2
+      path: resources/models/x2/metal.bmp
+      format: SRGB8_ALPHA8
+    - id: 3
+      path: resources/models/x2/roughness.bmp
+      format: SRGB8_ALPHA8
+    - id: 4
+      path: resources/models/x2/emit.bmp
+      format: SRGB8_ALPHA8
+    - id: 5
+      path: resources/models/x2/ao.bmp
+      format: SRGB8_ALPHA8
+    - id: 6
+      name: "bar_1_overlay_texture"
+      render_target: 0
+    - id: 7
+      name: "bar_number_1"
+      path: resources/images/bar_numbers/num_1.bmp
+      format: SRGB8_ALPHA8
+  materials:
+    - id: 0
+      textures:
+        - 7
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+  shaders:
+    - id: 0
+      name: standard_pbr
+      vert: resources2/shaders/threed/vert.gl
+      frag: resources2/shaders/threed/frag.gl

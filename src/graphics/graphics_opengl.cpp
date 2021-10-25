@@ -334,7 +334,7 @@ void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
-void update_lights(LightUniformBlock lights)
+void upload_lights(LightUniformBlock lights)
 {
     glBindBuffer(GL_UNIFORM_BUFFER, lights_ubo_buffer);
     for (int i = 0; i < lights.num_lights; i++)

@@ -189,6 +189,12 @@ struct String
 
     String() {}
 
+    String(char *data, uint16_t len)
+    {
+        this->data = data;
+        this->len = len;
+    }
+
     template <size_t N>
     String(AllocatedString<N> &str2)
     {

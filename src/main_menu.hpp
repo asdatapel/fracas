@@ -373,7 +373,7 @@ struct MainMenu;
 
 struct MenuPage
 {
-    virtual void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu) = 0;
+    virtual void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu, ClientGameData *game_data) = 0;
 };
 
 struct MainMenu
@@ -414,7 +414,7 @@ struct MainPage : MenuPage
         create_button.text = "Create Game";
     }
 
-    void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu) override
+    void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu, ClientGameData *game_data) override
     {
         {
             String title_text_1 = "FAMILY";
@@ -511,7 +511,7 @@ struct LobbyPage : MenuPage
         family_2_list.max_items = MAX_PLAYERS_PER_GAME * 2;
     }
 
-    void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu) override
+    void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu, ClientGameData *game_data) override
     {
         if (back_button.update_and_draw(target, input, &font))
         {
@@ -561,8 +561,18 @@ struct LobbyPage : MenuPage
             }
         }
 
-        if (rpc_client->get_GameStarted_msg())
+        if (auto msg = rpc_client->get_GameStarted_msg())
         {
+            game_data->my_id = msg->your_id;
+            for (int i = 0; i < family_1_list.items.size(); i++)
+            {
+                game_data->game_state.players.append({family_1_list.items[i].id, family_1_list.items[i].name, 0});
+            }
+            for (int i = 0; i < family_2_list.items.size(); i++)
+            {
+                game_data->game_state.players.append({family_2_list.items[i].id, family_2_list.items[i].name, 1});
+            }
+
             menu->current = nullptr;
         }
     }
@@ -626,7 +636,7 @@ struct JoinGamePage : MenuPage
         username_textbox.rect.height = 70.f;
     }
 
-    void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu) override
+    void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu, ClientGameData *game_data) override
     {
         if (back_button.update_and_draw(target, input, &font))
         {
@@ -723,7 +733,7 @@ struct CreateGamePage : MenuPage
         user_name_text_box.rect.height = 70.f;
     }
 
-    void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu) override
+    void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu, ClientGameData *game_data) override
     {
         if (back_button.update_and_draw(target, input, &font))
         {
@@ -793,7 +803,7 @@ struct SettingsPage : MenuPage
         connect_to_server_button.rect.width = connect_to_server_button.rect.height;
     }
 
-    void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu) override
+    void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu, ClientGameData *game_data) override
     {
         if (back_button.update_and_draw(target, input, &font))
         {

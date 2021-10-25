@@ -10,9 +10,11 @@ enum struct TextureFormat
     RGBA8,
     SRGB8_ALPHA8,
     RGB16F,
+    RGBA16F,
 
     DEPTH24,
 };
+
 // [internalformat, format]
 std::pair<GLenum, GLenum> format_to_opengl(TextureFormat format)
 {
@@ -30,9 +32,44 @@ std::pair<GLenum, GLenum> format_to_opengl(TextureFormat format)
         return {GL_SRGB_ALPHA, GL_RGBA};
     case TextureFormat::RGB16F:
         return {GL_RGB16F, GL_RGB};
+    case TextureFormat::RGBA16F:
+        return {GL_RGBA16F, GL_RGBA};
     case TextureFormat::DEPTH24:
         return {GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT};
     }
+}
+
+TextureFormat texture_format_from_string(String str)
+{
+    if (strcmp(str, "SRGB8_ALPHA8"))
+    {
+        return TextureFormat::SRGB8_ALPHA8;
+    }
+    if (strcmp(str, "RED"))
+    {
+        return TextureFormat::RED;
+    }
+    if (strcmp(str, "RGB8"))
+    {
+        return TextureFormat::RGB8;
+    }
+    if (strcmp(str, "RGBA8"))
+    {
+        return TextureFormat::RGBA8;
+    }
+    if (strcmp(str, "RGB16F"))
+    {
+        return TextureFormat::RGB16F;
+    }
+    if (strcmp(str, "RGBA16F"))
+    {
+        return TextureFormat::RGBA16F;
+    }
+    if (strcmp(str, "DEPTH24"))
+    {
+        return TextureFormat::DEPTH24;
+    }
+    return TextureFormat::NONE;
 }
 
 struct Texture

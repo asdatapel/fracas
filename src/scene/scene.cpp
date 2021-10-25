@@ -156,7 +156,7 @@ RenderTarget do_floor(Scene *scene, Camera *camera)
             }
         }
     }
-    update_lights(all_lights);
+    upload_lights(all_lights);
 
     scene->floor_target.clear();
     scene->floor_target.bind();
@@ -448,7 +448,7 @@ void Scene::update_and_draw(RenderTarget backbuffer, InputState *input, Camera *
             }
         }
     }
-    update_lights(all_lights);
+    upload_lights(all_lights);
 
     for (int i = 0; i < entities.size; i++)
     {
@@ -554,4 +554,190 @@ void Scene::update_and_draw(RenderTarget backbuffer, InputState *input, Camera *
     backbuffer.bind();
     draw_rect();
     glEnable(GL_DEPTH_TEST);
+}
+
+void Scene2::init(Memory mem, TextureFormat texture_format)
+{
+    entities.init(mem.allocator, 1024);
+    target = RenderTarget(1920, 1080, texture_format, TextureFormat::DEPTH24);
+}
+void Scene2::load(const char *filename, Assets2 *assets, Memory mem)
+{
+    FileData file = read_entire_file(filename, mem.temp);
+    YAML::Dict *root = YAML::deserialize(String(file.data, file.length), mem.temp)->as_dict();
+
+    active_camera_id = atoi(root->get("active_camera_id")->as_literal().to_char_array(mem.temp));
+
+    YAML::List *in_entities = root->get("entities")->as_list();
+    for (int i = 0; i < in_entities->len; i++)
+    {
+        YAML::Dict *in_e = in_entities->get(i)->as_dict();
+
+        int id = atoi(in_e->get("id")->as_literal().to_char_array(mem.temp));
+        Entity &entity = entities.data[id].value;
+        entities.data[i].assigned = true;
+        if (entities.next == &entities.data[i])
+        {
+            entities.next = entities.data[i].next;
+        }
+
+        entity.type = entity_type_from_string(in_e->get("type")->as_literal());
+        entity.debug_tag.name = string_to_allocated_string<32>(in_e->get("name")->as_literal());
+
+        // transform
+        YAML::Dict *in_transform = in_e->get("transform")->as_dict();
+        YAML::Dict *in_position = in_transform->get("position")->as_dict();
+        entity.transform.position.x = atof(in_position->get("x")->as_literal().to_char_array(mem.temp));
+        entity.transform.position.y = atof(in_position->get("y")->as_literal().to_char_array(mem.temp));
+        entity.transform.position.z = atof(in_position->get("z")->as_literal().to_char_array(mem.temp));
+        YAML::Dict *in_rotation = in_transform->get("rotation")->as_dict();
+        entity.transform.rotation.x = atof(in_rotation->get("x")->as_literal().to_char_array(mem.temp));
+        entity.transform.rotation.y = atof(in_rotation->get("y")->as_literal().to_char_array(mem.temp));
+        entity.transform.rotation.z = atof(in_rotation->get("z")->as_literal().to_char_array(mem.temp));
+        YAML::Dict *in_scale = in_transform->get("scale")->as_dict();
+        entity.transform.scale.x = atof(in_scale->get("x")->as_literal().to_char_array(mem.temp));
+        entity.transform.scale.y = atof(in_scale->get("y")->as_literal().to_char_array(mem.temp));
+        entity.transform.scale.z = atof(in_scale->get("z")->as_literal().to_char_array(mem.temp));
+
+        if (entity.type == EntityType::MESH)
+        {
+            YAML::Dict *in_mesh = in_e->get("mesh")->as_dict();
+            int mesh_id = atoi(in_mesh->get("mesh")->as_literal().to_char_array(mem.temp));
+            int material_id = atoi(in_mesh->get("material")->as_literal().to_char_array(mem.temp));
+
+            entity.vert_buffer = assets->meshes.data[mesh_id].value;
+            entity.material = assets->materials.data[material_id].value;
+            entity.shader = &threed_shader;
+        }
+        else if (entity.type == EntityType::SPLINE)
+        {
+            YAML::List *points = in_e->get("spline")->as_list();
+            entity.spline.points.len = 0;
+            for (int p = 0; p < points->len; p++)
+            {
+                Vec3f point;
+                YAML::Dict *in_p = points->get(p)->as_dict();
+                point.x = atof(in_p->get("x")->as_literal().to_char_array(mem.temp));
+                point.y = atof(in_p->get("y")->as_literal().to_char_array(mem.temp));
+                point.z = atof(in_p->get("z")->as_literal().to_char_array(mem.temp));
+                entity.spline.points.append(point);
+            }
+        }
+    }
+
+    // setup env material
+    {
+        RenderTarget temp_target(0, 0, TextureFormat::NONE, TextureFormat::NONE);
+        Texture hdri_tex = load_hdri(debug_hdr);
+        unfiltered_cubemap = hdri_to_cubemap(temp_target, hdri_tex, 1024);
+        env_mat = create_env_mat(temp_target, unfiltered_cubemap);
+    }
+}
+void Scene2::update_and_draw(Camera *editor_camera)
+{
+    // TODO handle target resize
+
+    Camera *camera;
+    if (editor_camera)
+    {
+        camera = editor_camera;
+    }
+    else
+    {
+        if (active_camera_id < 0)
+        {
+            for (int i = 0; i < entities.size; i++)
+            {
+                if (entities.data[i].assigned)
+                {
+                    Entity &e = entities.data[i].value;
+                    if (e.type == EntityType::CAMERA)
+                    {
+                        active_camera_id = i;
+                        break;
+                    }
+                }
+            }
+        }
+        if (active_camera_id < 0)
+        {
+            return; // cant draw without camera
+        }
+        camera = &entities.data[active_camera_id].value.camera;
+    }
+
+    for (int i = 0; i < entities.size; i++)
+    {
+        if (entities.data[i].assigned)
+        {
+            Entity &e = entities.data[i].value;
+            if (e.type == EntityType::CAMERA)
+            {
+                e.camera.update_from_transform(target, e.transform);
+            }
+        }
+    }
+
+    target.bind();
+    target.clear();
+
+    LightUniformBlock all_lights;
+    all_lights.num_lights = 0;
+    for (int i = 0; i < entities.size && all_lights.num_lights < MAX_LIGHTS; i++)
+    {
+        if (entities.data[i].assigned)
+        {
+            Entity &e = entities.data[i].value;
+            if (e.type == EntityType::LIGHT)
+            {
+                SpotLight light;
+                light.position = {e.transform.position.x, e.transform.position.y, e.transform.position.z};
+                light.direction = glm::rotate(glm::quat(glm::vec3{e.transform.rotation.x, e.transform.rotation.y, e.transform.rotation.z}), glm::vec3(0, -1, 0));
+                light.color = glm::vec3{e.spot_light.color.x, e.spot_light.color.y, e.spot_light.color.z};
+                light.outer_angle = e.spot_light.outer_angle;
+                light.inner_angle = e.spot_light.inner_angle;
+                all_lights.spot_lights[all_lights.num_lights] = light;
+                all_lights.num_lights++;
+            }
+        }
+    }
+    upload_lights(all_lights);
+
+    for (int i = 0; i < entities.size; i++)
+    {
+        if (entities.data[i].assigned)
+        {
+            Entity &e = entities.data[i].value;
+
+            if (e.type == EntityType::MESH)
+            {
+                glm::vec3 rot(e.transform.rotation.x, e.transform.rotation.y, e.transform.rotation.z);
+                glm::vec3 pos(e.transform.position.x, e.transform.position.y, e.transform.position.z);
+                glm::vec3 scale(e.transform.scale.x, e.transform.scale.y, e.transform.scale.z);
+                glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) *
+                                  glm::scale(glm::mat4(1.f), scale) *
+                                  glm::toMat4(glm::quat(rot));
+
+                Shader shader = *e.shader;
+                bind_shader(shader);
+                bind_camera(shader, *camera);
+                bind_mat4(shader, UniformId::MODEL, model);
+                bind_material(shader, env_mat);
+                bind_material(shader, *e.material);
+
+                draw(target, shader, e.vert_buffer);
+            }
+        }
+    }
+
+    // bind_shader(cubemap_shader);
+    // bind_mat4(cubemap_shader, UniformId::PROJECTION, camera->perspective);
+    // bind_mat4(cubemap_shader, UniformId::VIEW, camera->view);
+    // bind_texture(cubemap_shader, UniformId::ENV_MAP, unfiltered_cubemap);
+    // draw_cubemap();
+}
+
+Entity *Scene2::get(int id)
+{
+    return entities.data[id].assigned ? &entities.data[id].value : nullptr;
 }

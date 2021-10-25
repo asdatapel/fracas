@@ -46,13 +46,30 @@ struct Scene
     void init(Memory mem);
     void load(Assets *assets, Memory mem);
     void update_and_draw(RenderTarget backbuffer, InputState *input, Camera *camera);
-    
+
     Entity *get(int i)
     {
         return entities.data[i].assigned ? &entities.data[i].value : nullptr;
     }
 
     Animation anim;
+};
+
+struct Scene2
+{
+    FreeList<Entity> entities;
+    int active_camera_id = -1;
+
+    Texture unfiltered_cubemap;
+    StandardPbrEnvMaterial env_mat;
+    RenderTarget target;
+
+    bool visible = false;
+
+    void init(Memory mem, TextureFormat texture_format = TextureFormat::RGB16F);
+    void load(const char *filename, Assets2 *assets, Memory mem);
+    void update_and_draw(Camera *editor_camera);
+    Entity *get(int id);
 };
 
 #include "scene.cpp"

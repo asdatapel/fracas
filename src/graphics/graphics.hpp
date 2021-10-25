@@ -104,7 +104,7 @@ struct LightUniformBlock
 
     const static int SIZE = (SpotLight::SIZE * MAX_LIGHTS) + 4;
 };
-void update_lights(LightUniformBlock lights);
+void upload_lights(LightUniformBlock lights);
 
 static Bitmap parse_bitmap(FileData file_data, StackAllocator *allocator)
 {

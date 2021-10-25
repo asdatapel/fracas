@@ -69,11 +69,11 @@ struct Entity
     EntityType type = EntityType::UNKNOWN;
     DebugTag debug_tag;
 
+    Transform transform;
+
     VertexBuffer vert_buffer;
     Material *material = nullptr;
     Shader *shader = nullptr;
-
-    Transform transform;
 
     SpotLightDef spot_light;
 
@@ -128,9 +128,16 @@ struct FreeList
         return current - data;
     }
 
-    int get_index()
+    T* emplace(T &value, int index)
     {
+        if (next == &data[index])
+        {
+            next = data[index].next;
+        }
+        data[index].value = value;
+        data[index].assigned = true;
 
+        return &data[index].value;
     }
 
     void free(Element *elem)

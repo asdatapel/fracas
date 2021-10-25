@@ -1,0 +1,75 @@
+entities: 
+  - id: 0
+    name: x_0
+    type: MESH
+    mesh:
+      mesh: 0
+      material: 0
+    transform: 
+      position: 
+        x: 0.000000
+        y: 0.000000
+        z: 0.000000
+      rotation: 
+        x: 180.000000
+        y: 0.000000
+        z: 0.000000
+      scale: 
+        x: 1.000000
+        y: 1.000000
+        z: 1.000000
+  - id: 1
+    name: x_1
+    type: MESH
+    mesh:
+      mesh: 0
+      material: 0
+    transform: 
+      position: 
+        x: 0.000000
+        y: 0.000000
+        z: 12.493738
+      rotation: 
+        x: 90.000000
+        y: 0.000000
+        z: 0.000000
+      scale: 
+        x: 1
+        y: 1
+        z: 1
+  - id: 2
+    name: x_2
+    type: MESH
+    mesh:
+      mesh: 0
+      material: 0
+    transform: 
+      position: 
+        x: 1.000000
+        y: 0.000000
+        z: 10.493738
+      rotation: 
+        x: 2
+        y: 0
+        z: 0
+      scale: 
+        x: 1
+        y: 1
+        z: 1
+  - id: 3
+    name: x_camera
+    type: CAMERA
+    transform: 
+      position: 
+        x: 0
+        y: 0
+        z: 3
+      rotation: 
+        x: 0
+        y: 0
+        z: 0
+      scale: 
+        x: 1
+        y: 1
+        z: 1
+active_camera_id: 3

@@ -700,16 +700,19 @@ uint32_t read(MessageReader *msg, std::vector<StartGameResponse> *out)
 struct GameStartedMessage 
 {
     int32_t game_id = {};
+    int32_t your_id = {};
 };
 void append(MessageBuilder *msg, GameStartedMessage &in)
 {
     append(msg, in.game_id);
+    append(msg, in.your_id);
 }
 uint32_t read(MessageReader *msg, GameStartedMessage *out)
 {
     uint32_t len = 0;
 
     len += read(msg, &out->game_id);
+    len += read(msg, &out->your_id);
     return len;
 }
 void append(MessageBuilder *msg, std::vector<GameStartedMessage> &in)

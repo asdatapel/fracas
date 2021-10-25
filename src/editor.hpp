@@ -19,7 +19,7 @@ struct Editor
     Entity *selected_entity = nullptr;
     int selected_spline_node = -1;
 
-    void update_and_draw(Scene *scene, Game *game, RpcClient *rpc_client, RenderTarget backbuffer, InputState *input, Memory mem)
+    void update_and_draw(Scene *scene, Scene2 *x_scene, Game *game, RpcClient *rpc_client, RenderTarget backbuffer, InputState *input, Memory mem)
     {
         static bool init = false;
         if (!init)
@@ -40,8 +40,8 @@ struct Editor
             }
 
             play_scene.update_and_draw(backbuffer, input, nullptr);
-            game->update(1 / 60.f, &play_scene, rpc_client, input);
-            debug_ui(&play_scene, game, backbuffer, input, mem);
+            game->update(1 / 60.f, {&play_scene, x_scene}, rpc_client, input);
+            debug_ui(&play_scene, x_scene, game, backbuffer, input, mem);
         }
         else
         {
@@ -51,11 +51,11 @@ struct Editor
             }
 
             scene->update_and_draw(backbuffer, input, get_camera(scene));
-            debug_ui(scene, game, backbuffer, input, mem);
+            debug_ui(scene, x_scene, game, backbuffer, input, mem);
         }
     }
 
-    void debug_ui(Scene *scene, Game *game, RenderTarget target, InputState *input, Memory mem)
+    void debug_ui(Scene *scene, Scene2 *x_scene, Game *game, RenderTarget target, InputState *input, Memory mem)
     {
         imm_begin(target, *get_camera(scene), input);
 
@@ -104,7 +104,7 @@ struct Editor
             // play / pause
             if (input->key_input[i] == Keys::SPACE)
             {
-                playing ? stop_play() : start_play(scene, game);
+                playing ? stop_play() : start_play(scene, x_scene, game);
             }
 
             if (input->key_input[i] == Keys::ESCAPE)
@@ -258,7 +258,7 @@ struct Editor
         imm_end();
     }
 
-    void start_play(Scene *scene, Game *game)
+    void start_play(Scene *scene, Scene2 *x_scene, Game *game)
     {
         playing = true;
 
@@ -292,7 +292,7 @@ struct Editor
         play_scene.font = scene->font;
         play_scene.anim = scene->anim;
 
-        game->init(&play_scene);
+        game->init({&play_scene, x_scene});
     }
 
     void stop_play()
