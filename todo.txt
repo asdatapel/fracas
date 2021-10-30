@@ -1,5 +1,6 @@
 in order:
  - rendering
+    - normal maps are broken. most objects use shader 'threed' which doesn't use normal maps properly
     - dynamic text on tables, screens, entrances
     - env map generation
     - translucent materials

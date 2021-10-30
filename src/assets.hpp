@@ -339,7 +339,8 @@ struct Assets2
     FreeList<VertexBuffer> meshes;
     FreeList<RenderTarget> render_targets;
     FreeList<Texture> textures;
-    FreeList<Material *> materials;
+    FreeList<Material> materials;
+    FreeList<Shader> shaders;
 
     std::map<std::string, int> named_meshes;
 
@@ -349,6 +350,7 @@ struct Assets2
         render_targets.init(mem.allocator, 64);
         textures.init(mem.allocator, 1024);
         materials.init(mem.allocator, 1024);
+        shaders.init(mem.allocator, 1024);
 
         FileData file = read_entire_file(filename, mem.temp);
         YAML::Dict *root = YAML::deserialize(String(file.data, file.length), mem.temp)->as_dict()->get("assets")->as_dict();
@@ -412,18 +414,32 @@ struct Assets2
         {
             YAML::Dict *in_material = in_materials->get(i)->as_dict();
             int id = atoi(in_material->get("id")->as_literal().to_char_array(mem.temp));
+            int num_parameters = atoi(in_material->get("num_parameters")->as_literal().to_char_array(mem.temp));
             YAML::List *texture_refs = in_material->get("textures")->as_list();
 
-            StandardPbrMaterial *material = (StandardPbrMaterial *)mem.allocator->alloc(sizeof(StandardPbrMaterial));
-            new (material) StandardPbrMaterial();
+            Material material = Material::allocate(texture_refs->len, num_parameters, mem.allocator);
             for (int tex_i = 0; tex_i < texture_refs->len; tex_i++)
             {
                 int texture_ref_id = atoi(texture_refs->get(tex_i)->as_literal().to_char_array(mem.temp));
-                material->textures[tex_i] = textures.data[texture_ref_id].value;
+                material.textures[tex_i] = textures.data[texture_ref_id].value;
             }
 
-            Material *m = (Material *)material;
-            materials.emplace(m, id);
+            materials.emplace(material, id);
+        }
+        YAML::List *in_shaders = root->get("shaders")->as_list();
+        for (int i = 0; i < in_shaders->len; i++)
+        {
+            YAML::Dict *in_shader = in_shaders->get(i)->as_dict();
+            int id = atoi(in_shader->get("id")->as_literal().to_char_array(mem.temp));
+            String name = in_shader->get("name")->as_literal();
+            String vert_path = in_shader->get("vert")->as_literal();
+            String frag_path = in_shader->get("frag")->as_literal();
+
+            auto vert_src = read_entire_file(vert_path.to_char_array(mem.temp), mem.temp);
+            auto frag_src = read_entire_file(frag_path.to_char_array(mem.temp), mem.temp);
+            
+            Shader shader = create_shader({vert_src.data, (uint16_t)vert_src.length}, {frag_src.data, (uint16_t)frag_src.length}, name.to_char_array(mem.temp));
+            shaders.emplace(shader, id);
         }
     }
 

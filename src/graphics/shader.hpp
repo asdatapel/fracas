@@ -25,7 +25,6 @@ Shader load_shader(unsigned int handle)
         {
             if (s.uniform_handles[i] != -1)
             {
-                glUniform1i(s.uniform_handles[i], num_textures);
                 s.tex_units[i] = num_textures;
                 num_textures++;
             }

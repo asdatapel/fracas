@@ -145,9 +145,8 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
     else
     {
         editor.update_and_draw(&scene, &x_scene, &game, &client, main_target, input_state, memory);
-        x_scene.visible = true;
         BoardController board_controller;
-        board_controller.flip(&assets2, 0, "", 0);
+        board_controller.flip(&scene, &assets2, 0, "", 0);
         if (x_scene.visible)
         {
             x_scene.update_and_draw(nullptr);

@@ -1,0 +1,63 @@
+FaceoffStart:
+step 1:
+select correct player entities
+step 2:
+animate camera to correct position on family 1
+animate family 1 player leaving
+step 3:
+animate camera to correct position on family 2
+animate family 2 player leaving
+step 4:
+animate camera to faceoff table
+animate both players coming in
+animate host welcoming them
+animate table lighting
+step 5:
+send ready
+step 6:
+ambient animations for players
+
+AskQuestion:
+step 1:
+camera on faceoff table (animation not required)
+animate host talking
+"we asked 100 people..."
+step 2:
+camera on faceoff table (animation not required)
+animate host talking
+show question text on screen
+
+PassOrPlaySequence:
+animate people clapping
+animate host saying
+camera on winner, either left or right
+aminate player deliberating
+draw buttons
+
+### lets do text based configuration
+# FaceoffStart
+set-camera $camera
+set-vec3 $camera.rotation x y z
+play-anim @faceoffer0 walk_to_faceoff_table_left 1.0x
+play-anim @faceoffer1 walk_to_faceoff_table_right 1.0x
+play-anim @host welcome_faceoff
+
+spline3 $camera.position $faceoff_zoom_spline 3.0
+gate
+ready
+
+-------------------------------------------------------------- AskQuestion
+set-camera $board_closeup_camera
+animate @host talking "n answer on the board"
+animate textures on the board <-- how?
+camera on faceoff table
+animate @faceoffer0 ready_to_buzz_left
+animate @faceoffer1 ready_to_buzz_right
+animate @host talking "we asked 100 people..."
+animate @host talking question
+show question text on screen
+
+### what about ambient objects, like spotlights
+in c++ - BoardController
+in c++ - AudienceController
+in c++ - TableLightsController

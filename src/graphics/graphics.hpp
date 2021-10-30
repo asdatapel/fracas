@@ -50,6 +50,7 @@ struct VertexBuffer
 
 RenderTarget init_graphics(uint32_t width, uint32_t height);
 
+Shader create_shader(String vert_src, String frag_src, const char *debug_name = "");
 void bind_shader(Shader shader);
 void bind_1f(Shader shader, UniformId uniform_id, float val);
 void bind_1i(Shader shader, UniformId uniform_id, int val);

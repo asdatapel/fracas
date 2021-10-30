@@ -131,6 +131,32 @@ unsigned int create_shader_program(const char *folder)
     return shaderProgram;
 }
 
+Shader create_shader(String vert_src, String frag_src, const char *debug_name)
+{
+    int vert_src_len = vert_src.len;
+    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vert_src.data, &vert_src_len);
+    glCompileShader(vertexShader);
+    check_shader_error(vertexShader, debug_name);
+
+    int frag_src_len = frag_src.len;
+    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &frag_src.data, &frag_src_len);
+    glCompileShader(fragmentShader);
+    check_shader_error(fragmentShader, debug_name);
+
+    unsigned int shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+    check_error_program(shaderProgram, debug_name);
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    return load_shader(shaderProgram);
+}
+
 RenderTarget init_graphics(uint32_t width, uint32_t height)
 {
     glViewport(0, 0, width, height);

@@ -606,7 +606,7 @@ void Scene2::load(const char *filename, Assets2 *assets, Memory mem)
             int material_id = atoi(in_mesh->get("material")->as_literal().to_char_array(mem.temp));
 
             entity.vert_buffer = assets->meshes.data[mesh_id].value;
-            entity.material = assets->materials.data[material_id].value;
+            entity.material = &assets->materials.data[material_id].value;
             entity.shader = &threed_shader;
         }
         else if (entity.type == EntityType::SPLINE)
