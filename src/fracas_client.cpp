@@ -30,7 +30,7 @@ Scene scene;
 Editor editor;
 Font ui_font;
 Assets2 assets2;
-Scene2 x_scene;
+Scene x_scene;
 
 StackAllocator allocator;
 StackAllocator temp;
@@ -52,10 +52,11 @@ bool init_if_not()
         temp.init(1024 * 1024 * 100);              // 50 mb
         assets.init(memory);
         scene.init(memory);
-        scene.load(&assets, memory);
         ui_font = load_font(assets.font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_LIGHT_TTF], 32, memory.temp);
 
-        assets2.load("resources/test/assets.yaml", memory);
+        assets2.load("resources/test/main_assets.yaml", memory);
+        scene.load("resources/test/main.yaml", &assets2, memory);
+        scene.visible = true;
         x_scene.init(memory, TextureFormat::RGBA16F);
         x_scene.load("resources/test/eeegghhh_scene.yaml", &assets2, memory);
 
@@ -145,8 +146,14 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
     else
     {
         editor.update_and_draw(&scene, &x_scene, &game, &client, main_target, input_state, memory);
-        BoardController board_controller;
-        board_controller.flip(&scene, &assets2, 0, "", 0);
+        static BoardController board_controller;
+        static bool init = false;
+        if (!init)
+        {
+            init = true;
+            board_controller.activate(5);
+        }
+        board_controller.update(1 / 60.f, &scene);
         if (x_scene.visible)
         {
             x_scene.update_and_draw(nullptr);

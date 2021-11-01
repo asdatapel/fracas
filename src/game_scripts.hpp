@@ -11,7 +11,7 @@
 struct Scenes
 {
     Scene *main;
-    Scene2 *xs;
+    Scene *xs;
     bool draw_xs = false;
 };
 
@@ -222,7 +222,7 @@ struct AskQuestionSequence : Sequence
     void update(float timestep, Scenes scenes, InputState *input_state, RpcClient *rpc_client)
     {
         glEnable(GL_BLEND);
-        draw_text(scenes.main->font, scenes.main->hdr_target, question, 10, 10, 2, 2);
+        // draw_text(scenes.main->font, scenes.main->target, question, 10, 10, 2, 2);
         glDisable(GL_BLEND);
 
         buzz_button.rect = anchor_bottom_right(
@@ -230,10 +230,10 @@ struct AskQuestionSequence : Sequence
             {25.f, 25.f});
         buzz_button.text = "BUZZ";
 
-        if (buzz_button.update_and_draw(scenes.main->hdr_target, input_state, &scenes.main->font))
-        {
-            rpc_client->InGameBuzz({});
-        }
+        // if (buzz_button.update_and_draw(scenes.main->target, input_state, &scenes.main->font))
+        // {
+        //     rpc_client->InGameBuzz({});
+        // }
     }
     bool ready()
     {
@@ -275,14 +275,14 @@ struct PassOrPlaySequence : Sequence
             {25.f, 25.f});
         pass_button.text = "PASS";
 
-        if (play_button.update_and_draw(scenes.main->hdr_target, input_state, &scenes.main->font))
-        {
-            rpc_client->InGameChoosePassOrPlay({true});
-        }
-        if (pass_button.update_and_draw(scenes.main->hdr_target, input_state, &scenes.main->font))
-        {
-            rpc_client->InGameChoosePassOrPlay({false});
-        }
+        // if (play_button.update_and_draw(scenes.main->target, input_state, &scenes.main->font))
+        // {
+        //     rpc_client->InGameChoosePassOrPlay({true});
+        // }
+        // if (pass_button.update_and_draw(scenes.main->target, input_state, &scenes.main->font))
+        // {
+        //     rpc_client->InGameChoosePassOrPlay({false});
+        // }
         glDisable(GL_BLEND);
     }
     bool ready()
@@ -325,7 +325,7 @@ struct PlayerBuzzedSequence : Sequence
         float pos_y = 500 + sinf(t * 1000) * 20;
 
         glEnable(GL_BLEND);
-        draw_text(scenes.main->font, scenes.main->hdr_target, player_name, pos_x, pos_y, 2, 2);
+        // draw_text(scenes.main->font, scenes.main->target, player_name, pos_x, pos_y, 2, 2);
         glDisable(GL_BLEND);
     }
     bool ready()
@@ -369,7 +369,7 @@ struct PromptForAnswerSequence : Sequence
             textbox.rect = {1000, 1000, 300, 100};
             glDisable(GL_DEPTH_TEST);
             glEnable(GL_BLEND);
-            textbox.update_and_draw(scenes.main->hdr_target, input_state, &scenes.main->font);
+            // textbox.update_and_draw(scenes.main->target, input_state, &scenes.main->font);
             glDisable(GL_BLEND);
             glEnable(GL_DEPTH_TEST);
 
@@ -384,7 +384,7 @@ struct PromptForAnswerSequence : Sequence
         else
         {
             glEnable(GL_BLEND);
-            draw_text(scenes.main->font, scenes.main->hdr_target, answerer, 500, 500, 2, 2);
+            // draw_text(scenes.main->font, scenes.main->target, answerer, 500, 500, 2, 2);
             glDisable(GL_BLEND);
         }
     }
@@ -529,7 +529,7 @@ struct PlayerAnsweredSequence : Sequence
         float pos_y = 500 + sinf(t * 1000) * 20;
 
         glEnable(GL_BLEND);
-        draw_text(scenes.main->font, scenes.main->hdr_target, answer, pos_x, pos_y, 2, 2);
+        // draw_text(scenes.main->font, scenes.main->target, answer, pos_x, pos_y, 2, 2);
         glDisable(GL_BLEND);
     }
     bool ready()
@@ -585,7 +585,7 @@ struct FlipAnswerSequence : Sequence
     {
         t += timestep;
 
-        scenes.main->selected_camera_id = input.camera;
+        scenes.main->active_camera_id = input.camera;
 
         float rotation = 180 * (t / length);
         if (rotation > 180.f)

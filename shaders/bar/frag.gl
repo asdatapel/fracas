@@ -7,8 +7,8 @@ in vec2 frag_uv;
 in vec2 frag_text_uv;
 in vec3 frag_normal;
 
+layout(binding=9) uniform sampler2D num_tex;
 uniform float ripple_t;
-uniform sampler2D num_tex;
 uniform vec3 camera_position;
 
 #include pbr_uniforms  
@@ -22,7 +22,7 @@ uniform vec3 camera_position;
 float easeOutElastic(float t) {
     float c4 = (2 * 3.1415) / 3;
 
-    t = clamp(t, 0, 1);
+    t = clamp(t * t, 0, 1);
     return pow(2, -10 * t) * sin((t * 10 - 0.75) * c4) + 1;
 }
 

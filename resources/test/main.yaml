@@ -1,0 +1,1943 @@
+entities:
+  - id: 0
+    mesh:
+      material: 0
+      mesh: 0
+    name: room
+    transform:
+      position:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 1
+    mesh:
+      material: 1
+      mesh: 1
+      shader: 2
+    name: floor
+    transform:
+      position:
+        x: 0.0
+        y: 0.0
+        z: -2.493738
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.339918
+    type: MESH
+  - id: 2
+    mesh:
+      material: 2
+      mesh: 2
+    name: background.001.Cube.002
+    transform:
+      position:
+        x: 19.519382
+        y: 1.240896
+        z: 9.175755
+      rotation:
+        x: 0.0
+        y: -1.521126
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 3
+    mesh:
+      material: 3
+      mesh: 3
+    name: background.001.Cube.011
+    transform:
+      position:
+        x: 19.519382
+        y: 8.515062
+        z: 9.175755
+      rotation:
+        x: 0.0
+        y: -1.521126
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 4
+    mesh:
+      material: 4
+      mesh: 4
+    name: background.001.Cube.012
+    transform:
+      position:
+        x: 19.519382
+        y: 16.640739
+        z: 9.175755
+      rotation:
+        x: 0.0
+        y: -1.521126
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 5
+    mesh:
+      material: 5
+      mesh: 5
+    name: background.001.Cube.013
+    transform:
+      position:
+        x: 27.14183
+        y: 9.437151
+        z: 8.796837
+      rotation:
+        x: 0.0
+        y: -1.521126
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 6
+    mesh:
+      material: 6
+      mesh: 6
+    name: background.001.Cylinder.011
+    transform:
+      position:
+        x: 22.399597
+        y: 8.449556
+        z: 5.322002
+      rotation:
+        x: 0.0
+        y: -1.521126
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 7
+    mesh:
+      material: 7
+      mesh: 7
+    name: background.001.Cylinder.012
+    transform:
+      position:
+        x: 22.827702
+        y: 8.449556
+        z: 13.933909
+      rotation:
+        x: 0.0
+        y: -1.521126
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 8
+    mesh:
+      material: 8
+      mesh: 8
+    name: background.001.Cylinder.013
+    transform:
+      position:
+        x: 23.25581
+        y: 8.449556
+        z: 22.545816
+      rotation:
+        x: 0.0
+        y: -1.521126
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 9
+    mesh:
+      material: 9
+      mesh: 9
+    name: background.001.Cylinder
+    transform:
+      position:
+        x: 21.971493
+        y: 8.449556
+        z: -3.289905
+      rotation:
+        x: 0.0
+        y: -1.521126
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 10
+    name: background.001.Spot
+    spotlight:
+      color:
+        x: 2000.0
+        y: 386.67941093444824
+        z: 27.839329093694687
+      inner_angle: 0.10471973542853164
+      outer_angle: 0.6981316804885864
+    transform:
+      position:
+        x: 24.643276
+        y: 0.608066
+        z: -10.776815
+      rotation:
+        x: 3.030385
+        y: -1.521126
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: LIGHT
+  - id: 11
+    name: background.001.Spot.001
+    spotlight:
+      color:
+        x: 1207.6325416564941
+        y: 9.681183844804764
+        z: 57.36605077981949
+      inner_angle: 0.10471973542853164
+      outer_angle: 0.6981316804885864
+    transform:
+      position:
+        x: 24.858898
+        y: 0.608066
+        z: -6.439274
+      rotation:
+        x: 3.030385
+        y: -1.521126
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: LIGHT
+  - id: 12
+    name: background.001.Spot.002
+    spotlight:
+      color:
+        x: 2000.0
+        y: 386.67941093444824
+        z: 27.839329093694687
+      inner_angle: 0.10471973542853164
+      outer_angle: 0.6981316804885864
+    transform:
+      position:
+        x: 25.074522
+        y: 0.608066
+        z: -2.10173
+      rotation:
+        x: 3.030385
+        y: -1.521126
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: LIGHT
+  - id: 13
+    name: background.001.Spot.003
+    spotlight:
+      color:
+        x: 1207.6325416564941
+        y: 9.681183844804764
+        z: 57.36605077981949
+      inner_angle: 0.10471973542853164
+      outer_angle: 0.6981316804885864
+    transform:
+      position:
+        x: 25.290144
+        y: 0.608066
+        z: 2.235811
+      rotation:
+        x: 3.030385
+        y: -1.521126
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: LIGHT
+  - id: 14
+    name: background.001.Spot.004
+    spotlight:
+      color:
+        x: 2000.0
+        y: 386.67941093444824
+        z: 27.839329093694687
+      inner_angle: 0.10471973542853164
+      outer_angle: 0.6981316804885864
+    transform:
+      position:
+        x: 25.505768
+        y: 0.608066
+        z: 6.573353
+      rotation:
+        x: 3.030385
+        y: -1.521126
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: LIGHT
+  - id: 15
+    name: background.001.Spot.005
+    spotlight:
+      color:
+        x: 1207.6325416564941
+        y: 9.681183844804764
+        z: 57.36605077981949
+      inner_angle: 0.10471973542853164
+      outer_angle: 0.6981316804885864
+    transform:
+      position:
+        x: 25.72139
+        y: 0.608066
+        z: 10.910894
+      rotation:
+        x: 3.030385
+        y: -1.521126
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: LIGHT
+  - id: 16
+    name: background.001.Spot.007
+    spotlight:
+      color:
+        x: 2000.0
+        y: 386.67941093444824
+        z: 27.839329093694687
+      inner_angle: 0.10471973542853164
+      outer_angle: 0.6981316804885864
+    transform:
+      position:
+        x: 25.937012
+        y: 0.608066
+        z: 15.248436
+      rotation:
+        x: 3.030385
+        y: -1.521126
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: LIGHT
+  - id: 17
+    name: background.001.Spot.006
+    spotlight:
+      color:
+        x: 1207.6325416564941
+        y: 9.681183844804764
+        z: 57.36605077981949
+      inner_angle: 0.10471973542853164
+      outer_angle: 0.6981316804885864
+    transform:
+      position:
+        x: 26.152634
+        y: 0.608066
+        z: 19.585979
+      rotation:
+        x: 3.030385
+        y: -1.521126
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: LIGHT
+  - id: 18
+    name: background.001.Spot.009
+    spotlight:
+      color:
+        x: 2000.0
+        y: 386.67941093444824
+        z: 27.839329093694687
+      inner_angle: 0.10471973542853164
+      outer_angle: 0.6981316804885864
+    transform:
+      position:
+        x: 26.368258
+        y: 0.608066
+        z: 23.923521
+      rotation:
+        x: 3.030385
+        y: -1.521126
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: LIGHT
+  - id: 19
+    name: background.001.Spot.008
+    spotlight:
+      color:
+        x: 1207.6325416564941
+        y: 9.681183844804764
+        z: 57.36605077981949
+      inner_angle: 0.10471973542853164
+      outer_angle: 0.6981316804885864
+    transform:
+      position:
+        x: 26.583881
+        y: 0.608066
+        z: 28.261061
+      rotation:
+        x: 3.030385
+        y: -1.521126
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: LIGHT
+  - id: 20
+    mesh:
+      material: 2
+      mesh: 2
+    name: background.Cube.002
+    transform:
+      position:
+        x: 0.283054
+        y: 1.004569
+        z: -13.870351
+      rotation:
+        x: 0.0
+        y: -0.000781
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 21
+    mesh:
+      material: 3
+      mesh: 3
+    name: background.Cube.011
+    transform:
+      position:
+        x: 0.283054
+        y: 8.278735
+        z: -13.870351
+      rotation:
+        x: 0.0
+        y: -0.000781
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 22
+    mesh:
+      material: 4
+      mesh: 4
+    name: background.Cube.012
+    transform:
+      position:
+        x: 0.283054
+        y: 16.404413
+        z: -13.870351
+      rotation:
+        x: 0.0
+        y: -0.000781
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 23
+    mesh:
+      material: 5
+      mesh: 5
+    name: background.Cube.013
+    transform:
+      position:
+        x: 0.289015
+        y: 9.200824
+        z: -21.502213
+      rotation:
+        x: 0.0
+        y: -0.000781
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 24
+    mesh:
+      material: 6
+      mesh: 6
+    name: background.Cylinder.011
+    transform:
+      position:
+        x: -3.420547
+        y: 8.213229
+        z: -16.941246
+      rotation:
+        x: 0.0
+        y: -0.000781
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 25
+    mesh:
+      material: 7
+      mesh: 7
+    name: background.Cylinder.012
+    transform:
+      position:
+        x: 5.201992
+        y: 8.213229
+        z: -16.934511
+      rotation:
+        x: 0.0
+        y: -0.000781
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 26
+    mesh:
+      material: 8
+      mesh: 8
+    name: background.Cylinder.013
+    transform:
+      position:
+        x: 13.824531
+        y: 8.213229
+        z: -16.927776
+      rotation:
+        x: 0.0
+        y: -0.000781
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 27
+    mesh:
+      material: 9
+      mesh: 9
+    name: background.Cylinder
+    transform:
+      position:
+        x: -12.043086
+        y: 8.213229
+        z: -16.947981
+      rotation:
+        x: 0.0
+        y: -0.000781
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 28
+    name: background.Spot
+    spotlight:
+      color:
+        x: 2000.0
+        y: 386.67941093444824
+        z: 27.839329093694687
+      inner_angle: 0.10471973542853164
+      outer_angle: 0.6981316804885864
+    transform:
+      position:
+        x: -19.385735
+        y: 0.37174
+        z: -19.993927
+      rotation:
+        x: 3.030385
+        y: -0.000781
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: LIGHT
+  - id: 29
+    name: background.Spot.001
+    spotlight:
+      color:
+        x: 1207.6325416564941
+        y: 9.681183844804764
+        z: 57.36605077981949
+      inner_angle: 0.10471973542853164
+      outer_angle: 0.6981316804885864
+    transform:
+      position:
+        x: -15.042834
+        y: 0.37174
+        z: -19.990534
+      rotation:
+        x: 3.030385
+        y: -0.000781
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: LIGHT
+  - id: 30
+    name: background.Spot.002
+    spotlight:
+      color:
+        x: 2000.0
+        y: 386.67941093444824
+        z: 27.839329093694687
+      inner_angle: 0.10471973542853164
+      outer_angle: 0.6981316804885864
+    transform:
+      position:
+        x: -10.699938
+        y: 0.37174
+        z: -19.987143
+      rotation:
+        x: 3.030385
+        y: -0.000781
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: LIGHT
+  - id: 31
+    name: background.Spot.003
+    spotlight:
+      color:
+        x: 1207.6325416564941
+        y: 9.681183844804764
+        z: 57.36605077981949
+      inner_angle: 0.10471973542853164
+      outer_angle: 0.6981316804885864
+    transform:
+      position:
+        x: -6.357042
+        y: 0.37174
+        z: -19.983749
+      rotation:
+        x: 3.030385
+        y: -0.000781
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: LIGHT
+  - id: 32
+    name: background.Spot.004
+    spotlight:
+      color:
+        x: 2000.0
+        y: 386.67941093444824
+        z: 27.839329093694687
+      inner_angle: 0.10471973542853164
+      outer_angle: 0.6981316804885864
+    transform:
+      position:
+        x: -2.014145
+        y: 0.37174
+        z: -19.980358
+      rotation:
+        x: 3.030385
+        y: -0.000781
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: LIGHT
+  - id: 33
+    name: background.Spot.005
+    spotlight:
+      color:
+        x: 1207.6325416564941
+        y: 9.681183844804764
+        z: 57.36605077981949
+      inner_angle: 0.10471973542853164
+      outer_angle: 0.6981316804885864
+    transform:
+      position:
+        x: 2.328751
+        y: 0.37174
+        z: -19.976965
+      rotation:
+        x: 3.030385
+        y: -0.000781
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: LIGHT
+  - id: 34
+    name: background.Spot.007
+    spotlight:
+      color:
+        x: 2000.0
+        y: 386.67941093444824
+        z: 27.839329093694687
+      inner_angle: 0.10471973542853164
+      outer_angle: 0.6981316804885864
+    transform:
+      position:
+        x: 6.671647
+        y: 0.37174
+        z: -19.973572
+      rotation:
+        x: 3.030385
+        y: -0.000781
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: LIGHT
+  - id: 35
+    name: background.Spot.006
+    spotlight:
+      color:
+        x: 1207.6325416564941
+        y: 9.681183844804764
+        z: 57.36605077981949
+      inner_angle: 0.10471973542853164
+      outer_angle: 0.6981316804885864
+    transform:
+      position:
+        x: 11.014544
+        y: 0.37174
+        z: -19.970181
+      rotation:
+        x: 3.030385
+        y: -0.000781
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: LIGHT
+  - id: 36
+    name: background.Spot.009
+    spotlight:
+      color:
+        x: 2000.0
+        y: 386.67941093444824
+        z: 27.839329093694687
+      inner_angle: 0.10471973542853164
+      outer_angle: 0.6981316804885864
+    transform:
+      position:
+        x: 15.357442
+        y: 0.37174
+        z: -19.966789
+      rotation:
+        x: 3.030385
+        y: -0.000781
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: LIGHT
+  - id: 37
+    name: background.Spot.008
+    spotlight:
+      color:
+        x: 1207.6325416564941
+        y: 9.681183844804764
+        z: 57.36605077981949
+      inner_angle: 0.10471973542853164
+      outer_angle: 0.6981316804885864
+    transform:
+      position:
+        x: 19.700336
+        y: 0.37174
+        z: -19.963396
+      rotation:
+        x: 3.030385
+        y: -0.000781
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: LIGHT
+  - id: 38
+    mesh:
+      material: 10
+      mesh: 10
+    name: arch.Cube
+    transform:
+      position:
+        x: -9.319868
+        y: 0.0
+        z: 3.498086
+      rotation:
+        x: 0.0
+        y: 1.288841
+        z: 0.0
+      scale:
+        x: 0.777317
+        y: 0.777317
+        z: 0.777317
+    type: MESH
+  - id: 39
+    mesh:
+      material: 11
+      mesh: 11
+    name: arch.Cube.003
+    transform:
+      position:
+        x: -9.319868
+        y: 0.0
+        z: 3.498086
+      rotation:
+        x: 0.0
+        y: 1.288841
+        z: 0.0
+      scale:
+        x: 0.777317
+        y: 0.777317
+        z: 0.777317
+    type: MESH
+  - id: 40
+    mesh:
+      material: 12
+      mesh: 12
+    name: arch.Cube.002
+    transform:
+      position:
+        x: -9.319868
+        y: 0.0
+        z: 3.498086
+      rotation:
+        x: 0.0
+        y: 1.288841
+        z: 0.0
+      scale:
+        x: 0.777317
+        y: 0.777317
+        z: 0.777317
+    type: MESH
+  - id: 41
+    mesh:
+      material: 13
+      mesh: 13
+    name: arch.Cube.001
+    transform:
+      position:
+        x: -9.319868
+        y: 0.0
+        z: 3.498086
+      rotation:
+        x: 0.0
+        y: 1.288841
+        z: 0.0
+      scale:
+        x: 0.777317
+        y: 0.777317
+        z: 0.777317
+    type: MESH
+  - id: 42
+    mesh:
+      material: 10
+      mesh: 10
+    name: arch.001.Cube
+    transform:
+      position:
+        x: 9.607377
+        y: 0.0
+        z: 3.498086
+      rotation:
+        x: 0.0
+        y: -1.400688
+        z: 0.0
+      scale:
+        x: 0.777317
+        y: 0.777317
+        z: 0.777317
+    type: MESH
+  - id: 43
+    mesh:
+      material: 11
+      mesh: 11
+    name: arch.001.Cube.003
+    transform:
+      position:
+        x: 9.607377
+        y: 0.0
+        z: 3.498086
+      rotation:
+        x: 0.0
+        y: -1.400688
+        z: 0.0
+      scale:
+        x: 0.777317
+        y: 0.777317
+        z: 0.777317
+    type: MESH
+  - id: 44
+    mesh:
+      material: 12
+      mesh: 12
+    name: arch.001.Cube.002
+    transform:
+      position:
+        x: 9.607377
+        y: 0.0
+        z: 3.498086
+      rotation:
+        x: 0.0
+        y: -1.400688
+        z: 0.0
+      scale:
+        x: 0.777317
+        y: 0.777317
+        z: 0.777317
+    type: MESH
+  - id: 45
+    mesh:
+      material: 13
+      mesh: 13
+    name: arch.001.Cube.001
+    transform:
+      position:
+        x: 9.607377
+        y: 0.0
+        z: 3.498086
+      rotation:
+        x: 0.0
+        y: -1.400688
+        z: 0.0
+      scale:
+        x: 0.777317
+        y: 0.777317
+        z: 0.777317
+    type: MESH
+  - id: 46
+    name: Camera
+    transform:
+      position:
+        x: -29.761623
+        y: 13.559318
+        z: 12.680855
+      rotation:
+        x: 0
+        y: 0
+        z: 0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: CAMERA
+  - id: 47
+    mesh:
+      material: 14
+      mesh: 14
+    name: uv_sphere
+    transform:
+      position:
+        x: -20.313961
+        y: 7.074824
+        z: 19.545116
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 48
+    name: test_light
+    spotlight:
+      color:
+        x: 20000.0
+        y: 4791.745543479919
+        z: 495.95870077610016
+      inner_angle: 0.39269909262657166
+      outer_angle: 0.39269909262657166
+    transform:
+      position:
+        x: -14.938587
+        y: 8.02038
+        z: -9.549906
+      rotation:
+        x: 0.886937
+        y: 0.784282
+        z: 0.226912
+      scale:
+        x: 4.545329
+        y: 4.545329
+        z: 4.545329
+    type: LIGHT
+  - id: 49
+    mesh:
+      material: 15
+      mesh: 15
+    name: bricks
+    transform:
+      position:
+        x: 0.0
+        y: 3.5
+        z: 0.0
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 50
+    mesh:
+      material: 16
+      mesh: 16
+    name: icosahedron.Cube
+    transform:
+      position:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 51
+    name: icosahedron.Armature
+    transform:
+      position:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: ARMATURE
+  - id: 52
+    mesh:
+      material: 17
+      mesh: 17
+    name: family_2_table
+    transform:
+      position:
+        x: 3.013034
+        y: 0.0
+        z: 4.032305
+      rotation:
+        x: 0.0
+        y: -10.510715
+        z: -0.0
+      scale:
+        x: 0.92661
+        y: 0.92661
+        z: 0.92661
+    type: MESH
+  - id: 53
+    mesh:
+      material: 18
+      mesh: 18
+    name: family_1_1.009
+    transform:
+      position:
+        x: 6.486586
+        y: 0.88
+        z: 7.310973
+      rotation:
+        x: 0.0
+        y: -5.873541
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 54
+    mesh:
+      material: 18
+      mesh: 18
+    name: family_1_1.008
+    transform:
+      position:
+        x: 5.921393
+        y: 0.88
+        z: 6.17617
+      rotation:
+        x: 0.0
+        y: -5.873541
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 55
+    mesh:
+      material: 18
+      mesh: 18
+    name: family_1_1.007
+    transform:
+      position:
+        x: 5.358194
+        y: 0.88
+        z: 5.107086
+      rotation:
+        x: 0.0
+        y: -5.873541
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 56
+    mesh:
+      material: 18
+      mesh: 18
+    name: family_1_1.006
+    transform:
+      position:
+        x: 4.89099
+        y: 0.88
+        z: 4.220221
+      rotation:
+        x: 0.0
+        y: -5.873541
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 57
+    mesh:
+      material: 18
+      mesh: 18
+    name: family_1_1.005
+    transform:
+      position:
+        x: 4.255131
+        y: 0.88
+        z: 3.013209
+      rotation:
+        x: 0.0
+        y: -5.873541
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 58
+    mesh:
+      material: 17
+      mesh: 17
+    name: family_1_table
+    transform:
+      position:
+        x: -5.350463
+        y: 0.0
+        z: 7.718758
+      rotation:
+        x: 0.0
+        y: -2.097361
+        z: -0.0
+      scale:
+        x: 0.893574
+        y: 0.893574
+        z: 0.893574
+    type: MESH
+  - id: 59
+    mesh:
+      material: 18
+      mesh: 18
+    name: family_1_1
+    transform:
+      position:
+        x: -6.925821
+        y: 0.88
+        z: 7.077949
+      rotation:
+        x: 0.0
+        y: -0.429823
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 60
+    mesh:
+      material: 18
+      mesh: 18
+    name: family_1_1.001
+    transform:
+      position:
+        x: -6.404263
+        y: 0.88
+        z: 6.180739
+      rotation:
+        x: 0.0
+        y: -0.429823
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 61
+    mesh:
+      material: 18
+      mesh: 18
+    name: family_1_1.002
+    transform:
+      position:
+        x: -5.751476
+        y: 0.88
+        z: 5.132319
+      rotation:
+        x: 0.0
+        y: -0.429823
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 62
+    mesh:
+      material: 18
+      mesh: 18
+    name: family_1_1.003
+    transform:
+      position:
+        x: -5.021178
+        y: 0.88
+        z: 4.142471
+      rotation:
+        x: 0.0
+        y: -0.429823
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 63
+    mesh:
+      material: 18
+      mesh: 18
+    name: family_1_1.004
+    transform:
+      position:
+        x: -4.399708
+        y: 0.88
+        z: 2.926009
+      rotation:
+        x: 0.0
+        y: -0.429823
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 64
+    mesh:
+      material: 19
+      mesh: 19
+    name: left_score_screen
+    transform:
+      position:
+        x: -5.361121
+        y: 6.341046
+        z: -4.435926
+      rotation:
+        x: 0.0
+        y: 1.570796
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 65
+    mesh:
+      material: 19
+      mesh: 19
+    name: right_score_screen
+    transform:
+      position:
+        x: 5.472819
+        y: 6.341046
+        z: -4.435928
+      rotation:
+        x: 0.0
+        y: 1.570796
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 66
+    mesh:
+      material: 19
+      mesh: 19
+    name: big_screen
+    transform:
+      position:
+        x: 0.04874
+        y: 10.458573
+        z: -4.462498
+      rotation:
+        x: 0.0
+        y: 1.570796
+        z: 0.0
+      scale:
+        x: 2.38915
+        y: 2.38915
+        z: 2.38915
+    type: MESH
+  - id: 67
+    name: backboard.left_score_screen
+    transform:
+      position:
+        x: -5.361121
+        y: 6.985654
+        z: -5.113419
+      rotation:
+        x: 0.0
+        y: 1.570796
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: EMPTY
+  - id: 68
+    name: backboard.right_score_screen
+    transform:
+      position:
+        x: 5.472819
+        y: 6.985654
+        z: -5.11342
+      rotation:
+        x: 0.0
+        y: 1.570796
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: EMPTY
+  - id: 69
+    name: backboard.big_screen.001
+    transform:
+      position:
+        x: 0.04874
+        y: 11.103182
+        z: -5.13999
+      rotation:
+        x: 0.0
+        y: 1.570796
+        z: 0.0
+      scale:
+        x: 2.38915
+        y: 2.38915
+        z: 2.38915
+    type: EMPTY
+  - id: 70
+    mesh:
+      material: 20
+      mesh: 20
+    name: backboard.backboard
+    transform:
+      position:
+        x: 0.0
+        y: 5.707961
+        z: -5.136507
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 71
+    mesh:
+      material: 24
+      mesh: 21
+      shader: 1
+    name: bar_1
+    transform:
+      position:
+        x: -1.956111
+        y: 7.615914
+        z: -4.771345
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 72
+    mesh:
+      material: 25
+      mesh: 21
+      shader: 1
+    name: bar_2
+    transform:
+      position:
+        x: -1.956111
+        y: 6.815914
+        z: -4.771345
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 73
+    mesh:
+      material: 26
+      mesh: 21
+      shader: 1
+    name: bar_3
+    transform:
+      position:
+        x: -1.956111
+        y: 6.015913
+        z: -4.771345
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 74
+    mesh:
+      material: 27
+      mesh: 21
+      shader: 1
+    name: bar_4
+    transform:
+      position:
+        x: -1.956111
+        y: 5.215913
+        z: -4.771345
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 75
+    mesh:
+      material: 28
+      mesh: 21
+      shader: 1
+    name: bar_5
+    transform:
+      position:
+        x: 2.048684
+        y: 7.615914
+        z: -4.771345
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 76
+    mesh:
+      material: 29
+      mesh: 21
+      shader: 1
+    name: bar_6
+    transform:
+      position:
+        x: 2.048684
+        y: 6.815914
+        z: -4.771345
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 77
+    mesh:
+      material: 30
+      mesh: 21
+      shader: 1
+    name: bar_7
+    transform:
+      position:
+        x: 2.048684
+        y: 6.015913
+        z: -4.771345
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 78
+    mesh:
+      material: 31
+      mesh: 21
+      shader: 1
+    name: bar_8
+    transform:
+      position:
+        x: 2.048684
+        y: 5.215913
+        z: -4.771345
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 79
+    mesh:
+      material: 22
+      mesh: 22
+    name: faceoff_table
+    transform:
+      position:
+        x: 0.535897
+        y: 0.0
+        z: 0.968012
+      rotation:
+        x: 0.0
+        y: -1.570796
+        z: 0.0
+      scale:
+        x: 0.780023
+        y: 0.780023
+        z: 0.780023
+    type: MESH
+  - id: 80
+    mesh:
+      material: 18
+      mesh: 18
+    name: host
+    transform:
+      position:
+        x: -0.049291
+        y: 0.88
+        z: -0.539906
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 81
+    mesh:
+      material: 23
+      mesh: 23
+    name: emit_cube
+    transform:
+      position:
+        x: 8.027314
+        y: 5.089178
+        z: 12.677959
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 82
+    name: Spot.004
+    spotlight:
+      color:
+        x: 1000.0
+        y: 1000.0
+        z: 1000.0
+      inner_angle: 0.3337942263919169
+      outer_angle: 0.39269909262657166
+    transform:
+      position:
+        x: 9.781715
+        y: 16.22279
+        z: 7.851425
+      rotation:
+        x: 1.153704
+        y: 0.478891
+        z: 0.0
+      scale:
+        x: 4.545329
+        y: 4.545329
+        z: 4.545329
+    type: LIGHT
+  - id: 83
+    name: Spot.001
+    spotlight:
+      color:
+        x: 2000.0
+        y: 470.6158936023712
+        z: 90.05667269229889
+      inner_angle: 0.3337942263919169
+      outer_angle: 0.39269909262657166
+    transform:
+      position:
+        x: 0.0
+        y: 16.860794
+        z: 11.180017
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.34585
+      scale:
+        x: 2.817383
+        y: 2.817383
+        z: 2.817382
+    type: LIGHT
+  - id: 84
+    name: Spot.002
+    spotlight:
+      color:
+        x: 2500.0
+        y: 537.6098677515984
+        z: 105.79711757600307
+      inner_angle: 0.3337942263919169
+      outer_angle: 0.39269909262657166
+    transform:
+      position:
+        x: 0.0
+        y: 17.161188
+        z: 14.318736
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: 0.38016
+      scale:
+        x: 3.049555
+        y: 3.049555
+        z: 3.049555
+    type: LIGHT
+  - id: 85
+    name: Spot.003
+    spotlight:
+      color:
+        x: 2000.0
+        y: 664.6518111228943
+        z: 73.32305610179901
+      inner_angle: 0.3337942263919169
+      outer_angle: 0.39269909262657166
+    transform:
+      position:
+        x: 0.0
+        y: 18.209522
+        z: 18.483984
+      rotation:
+        x: 0.80428
+        y: 0.0
+        z: 0.0
+      scale:
+        x: 2.794878
+        y: 2.794878
+        z: 2.794878
+    type: LIGHT
+  - id: 86
+    name: Spot
+    spotlight:
+      color:
+        x: 1000.0
+        y: 1000.0
+        z: 1000.0
+      inner_angle: 0.3337942263919169
+      outer_angle: 0.39269909262657166
+    transform:
+      position:
+        x: -10.771651
+        y: 16.22279
+        z: 7.851425
+      rotation:
+        x: 1.151917
+        y: -0.523599
+        z: -0.0
+      scale:
+        x: 2.131829
+        y: 2.131829
+        z: 2.131829
+    type: LIGHT
+  - id: 87
+    name: camera
+    transform:
+      position:
+        x: -29.754
+        y: 12.668
+        z: 20.802002
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: CAMERA
+  - id: 88
+    name: test spline
+    spline:
+      - x: 0.2379
+        y: 9.796402
+        z: 19.803436
+      - x: 1.024695
+        y: 2.74004
+        z: 19.283943
+      - x: -0.02865
+        y: 7.93942
+        z: 3.018626
+      - x: 0.001526
+        y: 6.848089
+        z: -1.21707
+    transform:
+      position:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+      scale:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+    type: SPLINE
+  - id: 89
+    name: faceoff_zoom
+    spline:
+      - x: -0.000361
+        y: 1.599746
+        z: 12.028971
+      - x: -0.001063
+        y: 1.499944
+        z: 6.201192
+      - x: -0.00091
+        y: 1.500013
+        z: 2.818503
+      - x: -0.000962
+        y: 1.720049
+        z: -3.3915
+    transform:
+      position:
+        x: 0.9
+        y: 0.2
+        z: 0.3
+      rotation:
+        x: 0.0
+        y: 3143940.0
+        z: 0.0
+      scale:
+        x: 0.0
+        y: 0.0
+        z: 3143980.0
+    type: SPLINE
+  - id: 90
+    name: camera_board_closeup
+    transform:
+      position:
+        x: 0.08
+        y: 7.199999
+        z: 4.659999
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: CAMERA
+scripts:
+  - inputs:
+      - id: 0
+        name: camera
+        value: 87
+      - id: 1
+        name: path
+        value: 88
+    name: Intro Sequence
+  - inputs:
+      - id: 0
+        name: camera
+        value: 87
+      - id: 1
+        name: path
+        value: 88
+    name: Round Start Sequence
+  - inputs:
+      - id: 0
+        name: camera
+        value: 87
+      - id: 1
+        name: path
+        value: 89
+    name: Faceoff Start Sequence
+  - inputs: null
+    name: Ask Question Sequence
+  - inputs: null
+    name: PlayerBuzzedSequence
+  - inputs: null
+    name: PromptForAnswerSequence
+  - inputs: null
+    name: Pass Or Play Sequence
+  - inputs:
+      - id: 0
+        name: camera
+        value: 0
+      - id: 1
+        name: path
+        value: 0
+    name: StartPlaySequence
+  - inputs:
+      - id: 0
+        name: camera
+        value: 0
+      - id: 1
+        name: path
+        value: 0
+    name: StartStealSequence
+  - inputs: null
+    name: PlayerAnsweredSequence
+  - inputs:
+      - id: 0
+        name: panel_1
+        value: 71
+      - id: 1
+        name: panel_2
+        value: 72
+      - id: 2
+        name: panel_3
+        value: 73
+      - id: 3
+        name: panel_4
+        value: 74
+      - id: 4
+        name: panel_5
+        value: 75
+      - id: 5
+        name: panel_6
+        value: 76
+      - id: 6
+        name: panel_7
+        value: 77
+      - id: 7
+        name: panel_8
+        value: 78
+      - id: 8
+        name: camera
+        value: 90
+    name: FlipAnswerSequence
+  - inputs:
+      - id: 0
+        name: camera
+        value: 0
+    name: EeeeeggghhhhSequence
+  - inputs:
+      - id: 0
+        name: camera
+        value: 0
+    name: EndRoundSequence
+  - inputs:
+      - id: 0
+        name: camera
+        value: 0
+    name: EndGameSequence
+active_camera_id: -1
+hdr: resources/hdri/Newport_Loft_Ref.hdr
+cubemap_visible: true
+planar_reflector:
+  entity_id: 1
+  render_target: 0

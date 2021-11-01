@@ -10,7 +10,6 @@ struct Parameter
 
 struct Material
 {
-    UniformId *uniform_ids;
     int num_textures;
     Texture *textures;
 
@@ -19,13 +18,9 @@ struct Material
 
     static Material allocate(int num_textures, int num_parameters, StackAllocator *allocator)
     {
-        // TODO do something about uinforms
         Material material;
-
         material.textures = (Texture *)allocator->alloc(sizeof(Texture) * num_textures);
-        material.uniform_ids = (UniformId *)allocator->alloc(sizeof(UniformId) * num_textures);
         material.num_textures = num_textures;
-
         material.num_parameters = num_parameters;
         material.parameters = (Parameter *)allocator->alloc(sizeof(Parameter) * num_parameters);
         return material;
@@ -35,20 +30,11 @@ struct Material
 struct StandardPbrMaterial : Material
 {
     static const int N = 6;
-    static inline UniformId uniform_id_array[N] = {
-        UniformId::ALBEDO_TEXTURE,
-        UniformId::NORMAL_TEXTURE,
-        UniformId::METAL_TEXTURE,
-        UniformId::ROUGHNESS_TEXTURE,
-        UniformId::EMIT_TEXTURE,
-        UniformId::AO_TEXTURE,
-    };
     Texture texture_array[N];
     StandardPbrMaterial()
     {
         num_textures = N;
         textures = texture_array;
-        uniform_ids = uniform_id_array;
     }
     void operator=(const StandardPbrMaterial &other)
     {
@@ -59,7 +45,6 @@ struct StandardPbrMaterial : Material
 template <size_t N>
 struct AllocatedMaterial : Material
 {
-    Array<UniformId, N> uniform_id_array;
     Array<Texture, N> texture_array;
 
     AllocatedMaterial()
@@ -73,14 +58,12 @@ struct AllocatedMaterial : Material
     {
         num_textures = other.num_textures;
         texture_array = other.texture_array;
-        uniform_id_array = other.uniform_id_array;
     }
 
     void append(Texture tex, UniformId uniform_id)
     {
         assert(num_textures < N);
         texture_array.append(tex);
-        uniform_id_array.append(uniform_id);
         num_textures++;
     }
 
@@ -92,7 +75,6 @@ struct AllocatedMaterial : Material
         memcpy(m.texture_array.arr, other->textures, other->num_textures * sizeof(Texture));
         memcpy(m.uniform_id_array.arr, other->uniform_ids, other->num_textures * sizeof(UniformId));
         m.texture_array.len = other->num_textures;
-        m.uniform_id_array.len = other->num_textures;
         m.num_textures = other->num_textures;
         return m;
     }
@@ -101,17 +83,11 @@ struct AllocatedMaterial : Material
 struct StandardPbrEnvMaterial : Material
 {
     static const int N = 3;
-    static inline UniformId uniform_id_array[N] = {
-        UniformId::IRRADIANCE,
-        UniformId::ENV_MAP,
-        UniformId::BRDF,
-    };
     Texture texture_array[N];
     StandardPbrEnvMaterial()
     {
         num_textures = N;
         textures = texture_array;
-        uniform_ids = uniform_id_array;
     }
     void operator=(const StandardPbrEnvMaterial &other)
     {
@@ -119,11 +95,11 @@ struct StandardPbrEnvMaterial : Material
     }
 };
 
-void bind_material(Shader shader, Material material)
+void bind_material(Shader shader, Material material, int texture_slot_offset = 0)
 {
     for (int i = 0; i < material.num_textures; i++)
     {
-        bind_texture(shader, material.uniform_ids[i], material.textures[i]);
+        bind_texture(shader, texture_slot_offset + i, material.textures[i]);
     }
     for (int i = 0; i < material.num_parameters; i++)
     {

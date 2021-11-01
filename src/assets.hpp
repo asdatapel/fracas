@@ -195,7 +195,7 @@ struct Assets
                 e.type = EntityType::MESH;
                 e.vert_buffer = buf;
                 e.material = material;
-                e.shader = &threed_shader;
+                // e.shader = &threed_shader;
             }
             else if (strcmp("LIGHT", type))
             {
@@ -306,7 +306,7 @@ struct Assets
                     e.type = EntityType::MESH;
                     e.vert_buffer = buf;
                     e.material = material;
-                    e.shader = &threed_shader;
+                    // e.shader = &threed_shader;
                 }
                 else if (strcmp("LIGHT", type))
                 {
@@ -360,28 +360,35 @@ struct Assets2
         {
             YAML::Dict *in_mesh = in_meshes->get(i)->as_dict();
             int id = atoi(in_mesh->get("id")->as_literal().to_char_array(mem.temp));
-            String name = in_mesh->get("name")->as_literal();
             String path = in_mesh->get("path")->as_literal();
 
             VertexBuffer mesh = load_and_upload_mesh(path, mem);
             meshes.emplace(mesh, id);
-            named_meshes.emplace(std::string(name.data, name.len), id);
+
+            if (auto name_val = in_mesh->get("name"))
+            {
+                String name = name_val->as_literal();
+                named_meshes.emplace(std::string(name.data, name.len), id);
+            }
         }
-        YAML::List *in_render_targets = root->get("render_targets")->as_list();
-        for (int i = 0; i < in_render_targets->len; i++)
+        if (auto in_render_targets_val = root->get("render_targets"))
         {
-            YAML::Dict *in_render_target = in_render_targets->get(i)->as_dict();
-            int id = atoi(in_render_target->get("id")->as_literal().to_char_array(mem.temp));
+            YAML::List *in_render_targets = in_render_targets_val->as_list();
+            for (int i = 0; i < in_render_targets->len; i++)
+            {
+                YAML::Dict *in_render_target = in_render_targets->get(i)->as_dict();
+                int id = atoi(in_render_target->get("id")->as_literal().to_char_array(mem.temp));
 
-            String color_format_string = in_render_target->get("color_format")->as_literal();
-            String depth_format_string = in_render_target->get("depth_format")->as_literal();
-            TextureFormat color_format = texture_format_from_string(color_format_string);
-            TextureFormat depth_format = texture_format_from_string(depth_format_string);
-            int width = atoi(in_render_target->get("width")->as_literal().to_char_array(mem.temp));
-            int height = atoi(in_render_target->get("height")->as_literal().to_char_array(mem.temp));
+                String color_format_string = in_render_target->get("color_format")->as_literal();
+                String depth_format_string = in_render_target->get("depth_format")->as_literal();
+                TextureFormat color_format = texture_format_from_string(color_format_string);
+                TextureFormat depth_format = texture_format_from_string(depth_format_string);
+                int width = atoi(in_render_target->get("width")->as_literal().to_char_array(mem.temp));
+                int height = atoi(in_render_target->get("height")->as_literal().to_char_array(mem.temp));
 
-            RenderTarget target = RenderTarget(width, height, color_format, depth_format);
-            render_targets.emplace(target, id);
+                RenderTarget target = RenderTarget(width, height, color_format, depth_format);
+                render_targets.emplace(target, id);
+            }
         }
         YAML::List *in_textures = root->get("textures")->as_list();
         for (int i = 0; i < in_textures->len; i++)
@@ -414,9 +421,14 @@ struct Assets2
         {
             YAML::Dict *in_material = in_materials->get(i)->as_dict();
             int id = atoi(in_material->get("id")->as_literal().to_char_array(mem.temp));
-            int num_parameters = atoi(in_material->get("num_parameters")->as_literal().to_char_array(mem.temp));
-            YAML::List *texture_refs = in_material->get("textures")->as_list();
 
+            int num_parameters = 0;
+            if (auto num_parameters_val = in_material->get("num_parameters"))
+            {
+                num_parameters = atoi(num_parameters_val->as_literal().to_char_array(mem.temp));
+            }
+
+            YAML::List *texture_refs = in_material->get("textures")->as_list();
             Material material = Material::allocate(texture_refs->len, num_parameters, mem.allocator);
             for (int tex_i = 0; tex_i < texture_refs->len; tex_i++)
             {
@@ -426,20 +438,23 @@ struct Assets2
 
             materials.emplace(material, id);
         }
-        YAML::List *in_shaders = root->get("shaders")->as_list();
-        for (int i = 0; i < in_shaders->len; i++)
+        if (auto in_shaders_val = root->get("shaders"))
         {
-            YAML::Dict *in_shader = in_shaders->get(i)->as_dict();
-            int id = atoi(in_shader->get("id")->as_literal().to_char_array(mem.temp));
-            String name = in_shader->get("name")->as_literal();
-            String vert_path = in_shader->get("vert")->as_literal();
-            String frag_path = in_shader->get("frag")->as_literal();
+            YAML::List *in_shaders = in_shaders_val->as_list();
+            for (int i = 0; i < in_shaders->len; i++)
+            {
+                YAML::Dict *in_shader = in_shaders->get(i)->as_dict();
+                int id = atoi(in_shader->get("id")->as_literal().to_char_array(mem.temp));
+                String name = in_shader->get("name")->as_literal();
+                String vert_path = in_shader->get("vert")->as_literal();
+                String frag_path = in_shader->get("frag")->as_literal();
 
-            auto vert_src = read_entire_file(vert_path.to_char_array(mem.temp), mem.temp);
-            auto frag_src = read_entire_file(frag_path.to_char_array(mem.temp), mem.temp);
-            
-            Shader shader = create_shader({vert_src.data, (uint16_t)vert_src.length}, {frag_src.data, (uint16_t)frag_src.length}, name.to_char_array(mem.temp));
-            shaders.emplace(shader, id);
+                auto vert_src = read_entire_file(vert_path.to_char_array(mem.temp), mem.temp);
+                auto frag_src = read_entire_file(frag_path.to_char_array(mem.temp), mem.temp);
+
+                Shader shader = create_shader({vert_src.data, (uint16_t)vert_src.length}, {frag_src.data, (uint16_t)frag_src.length}, name.to_char_array(mem.temp));
+                shaders.emplace(shader, id);
+            }
         }
     }
 

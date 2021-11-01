@@ -20,8 +20,6 @@ Shader basic_shader;
 Shader textured_shader;
 Shader textured_mapped_shader;
 Shader blurred_colors_shader;
-Shader threed_shader;
-Shader bar_shader;
 Shader rect_to_cubemap_shader;
 Shader cubemap_shader;
 Shader irradiance_shader;
@@ -29,9 +27,12 @@ Shader env_filter_shader;
 Shader brdf_lut_shader;
 Shader tonemap_shader;
 Shader blur_shader;
+Shader twod_shader;
+
+Shader bar_shader;
+Shader threed_shader;
 Shader threed_with_planar_shader;
 Shader threed_with_normals_shader;
-Shader twod_shader;
 Shader threed_skinning_shader;
 
 struct Bitmap
@@ -58,6 +59,7 @@ void bind_2i(Shader shader, UniformId uniform_id, int i1, int i2);
 void bind_2f(Shader shader, UniformId uniform_id, float f1, float f2);
 void bind_4f(Shader shader, UniformId uniform_id, float f1, float f2, float f3, float f4);
 void bind_mat4(Shader shader, UniformId uniform_id, glm::mat4 mat);
+void bind_texture(Shader shader, int texture_slot, Texture texture);
 void bind_texture(Shader shader, UniformId uniform_id, Texture texture);
 
 void debug_begin_immediate();

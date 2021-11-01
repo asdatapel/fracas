@@ -289,6 +289,11 @@ void bind_texture(Shader shader, UniformId uniform_id, Texture texture)
         texture.bind();
     }
 }
+void bind_texture(Shader shader, int texture_slot, Texture texture)
+{
+    glActiveTexture(GL_TEXTURE0 + texture_slot);
+    texture.bind();
+}
 
 void draw(RenderTarget target, Shader shader, VertexBuffer buf)
 {

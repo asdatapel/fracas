@@ -73,3 +73,5 @@ entities:
         y: 1
         z: 1
 active_camera_id: 3
+hdr: resources/images/hdr/empty.hdr
+draw_cubemap: false

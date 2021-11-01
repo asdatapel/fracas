@@ -4,18 +4,19 @@ const float PI = 3.14159265359;
 #section debug_uniform
 uniform float t;
 
-#section pbr_uniforms
-uniform sampler2D albedo_texture;
-uniform sampler2D normal_texture;
-uniform sampler2D metal_texture;
-uniform sampler2D roughness_texture;
-uniform sampler2D emit_texture;
-uniform sampler2D ao_texture;
-
 #section pbr_env_uniforms
-uniform samplerCube irradiance;
-uniform samplerCube env_map;
-uniform sampler2D   brdf;  
+uniform layout(binding=0) samplerCube irradiance;
+uniform layout(binding=1) samplerCube env_map;
+uniform layout(binding=2) sampler2D   brdf;  
+
+#section pbr_uniforms
+layout(binding=3) uniform sampler2D albedo_texture;
+layout(binding=4) uniform sampler2D normal_texture;
+layout(binding=5) uniform sampler2D metal_texture;
+layout(binding=6) uniform sampler2D roughness_texture;
+layout(binding=7) uniform sampler2D emit_texture;
+layout(binding=8) uniform sampler2D ao_texture;
+
 
 #section light_uniforms
 const int MAX_LIGHTS = 50;

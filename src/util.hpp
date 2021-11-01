@@ -256,6 +256,7 @@ struct String
         allocator->free(ret.data + ret.len);
         return ret;
     }
+
 };
 
 bool strcmp(String str1, String str2)

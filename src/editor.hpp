@@ -19,17 +19,17 @@ struct Editor
     Entity *selected_entity = nullptr;
     int selected_spline_node = -1;
 
-    void update_and_draw(Scene *scene, Scene2 *x_scene, Game *game, RpcClient *rpc_client, RenderTarget backbuffer, InputState *input, Memory mem)
+    void update_and_draw(Scene *scene, Scene *x_scene, Game *game, RpcClient *rpc_client, RenderTarget backbuffer, InputState *input, Memory mem)
     {
         static bool init = false;
         if (!init)
         {
             init = true;
 
-            deserialize(scene, game, mem.temp);
-
             play_scene.init(mem);
         }
+
+        static Bloomer bloomer(scene->target.width, scene->target.height);
 
         if (playing)
         {
@@ -39,8 +39,17 @@ struct Editor
                     debug_camera.update(backbuffer, input);
             }
 
-            play_scene.update_and_draw(backbuffer, input, nullptr);
+            play_scene.update_and_draw(nullptr);
             game->update(1 / 60.f, {&play_scene, x_scene}, rpc_client, input);
+
+            bloomer.do_bloom(scene->target);
+            bind_shader(tonemap_shader);
+            bind_1f(tonemap_shader, UniformId::EXPOSURE, 1);
+            bind_texture(tonemap_shader, UniformId::BASE, play_scene.target.color_tex);
+            bind_texture(tonemap_shader, UniformId::BLOOM, bloomer.get_final().color_tex);
+            backbuffer.bind();
+            draw_rect();
+
             debug_ui(&play_scene, x_scene, game, backbuffer, input, mem);
         }
         else
@@ -50,12 +59,21 @@ struct Editor
                 debug_camera.update(backbuffer, input);
             }
 
-            scene->update_and_draw(backbuffer, input, get_camera(scene));
+            scene->update_and_draw(get_camera(scene));
+
+            bloomer.do_bloom(scene->target);
+            bind_shader(tonemap_shader);
+            bind_1f(tonemap_shader, UniformId::EXPOSURE, 1);
+            bind_texture(tonemap_shader, UniformId::BASE, scene->target.color_tex);
+            bind_texture(tonemap_shader, UniformId::BLOOM, bloomer.get_final().color_tex);
+            backbuffer.bind();
+            draw_rect();
+
             debug_ui(scene, x_scene, game, backbuffer, input, mem);
         }
     }
 
-    void debug_ui(Scene *scene, Scene2 *x_scene, Game *game, RenderTarget target, InputState *input, Memory mem)
+    void debug_ui(Scene *scene, Scene *x_scene, Game *game, RenderTarget target, InputState *input, Memory mem)
     {
         imm_begin(target, *get_camera(scene), input);
 
@@ -187,14 +205,14 @@ struct Editor
                 imm_label("Camera");
                 if (imm_button("View from camera"))
                 {
-                    if (!use_debug_camera && scene->selected_camera_id == selected_entity_i)
+                    if (!use_debug_camera && scene->active_camera_id == selected_entity_i)
                     {
                         use_debug_camera = true;
-                        scene->selected_camera_id = -1;
+                        scene->active_camera_id = -1;
                     }
                     else
                     {
-                        scene->selected_camera_id = selected_entity_i;
+                        scene->active_camera_id = selected_entity_i;
                         use_debug_camera = false;
                     }
                 }
@@ -258,12 +276,11 @@ struct Editor
         imm_end();
     }
 
-    void start_play(Scene *scene, Scene2 *x_scene, Game *game)
+    void start_play(Scene *scene, Scene *x_scene, Game *game)
     {
         playing = true;
 
         // copy scene
-        play_scene.font = scene->font;
         for (int i = 0; i < scene->entities.size; i++)
         {
             play_scene.entities.data[i].assigned = scene->entities.data[i].assigned;
@@ -271,26 +288,26 @@ struct Editor
         }
         play_scene.unfiltered_cubemap = scene->unfiltered_cubemap;
         play_scene.env_mat = scene->env_mat;
-        play_scene.entity_names = scene->entity_names;
-        play_scene.bars = scene->bars;
+        // play_scene.entity_names = scene->entity_names;
+        // play_scene.bars = scene->bars;
 
-        for (int i = 0; i < 3; i++)
-        {
-            play_scene.score_targets[i] = scene->score_targets[i];
-            play_scene.score_materials[i] = scene->score_materials[i];
-        }
+        // for (int i = 0; i < 3; i++)
+        // {
+        //     play_scene.score_targets[i] = scene->score_targets[i];
+        //     play_scene.score_materials[i] = scene->score_materials[i];
+        // }
 
-        play_scene.floor_id = scene->floor_id;
-        play_scene.flipped_camera = scene->flipped_camera;
-        play_scene.floor_target = scene->floor_target;
-        play_scene.floor_material = scene->floor_material;
+        // play_scene.floor_id = scene->floor_id;
+        // play_scene.flipped_camera = scene->flipped_camera;
+        // play_scene.floor_target = scene->floor_target;
+        // play_scene.floor_material = scene->floor_material;
 
-        play_scene.uv_sphere_id = scene->uv_sphere_id;
-        play_scene.icosahedron_id = scene->icosahedron_id;
-        play_scene.brick_id = scene->brick_id;
+        // play_scene.uv_sphere_id = scene->uv_sphere_id;
+        // play_scene.icosahedron_id = scene->icosahedron_id;
+        // play_scene.brick_id = scene->brick_id;
 
-        play_scene.font = scene->font;
-        play_scene.anim = scene->anim;
+        // play_scene.font = scene->font;
+        // play_scene.anim = scene->anim;
 
         game->init({&play_scene, x_scene});
     }
@@ -503,10 +520,10 @@ struct Editor
 
     Camera *get_camera(Scene *scene)
     {
-        if (use_debug_camera || scene->selected_camera_id < 0)
+        if (use_debug_camera || scene->active_camera_id < 0)
             return &debug_camera;
-        if (scene->selected_camera_id > -1)
-            return &scene->entities.data[scene->selected_camera_id].value.camera;
+        if (scene->active_camera_id > -1)
+            return &scene->entities.data[scene->active_camera_id].value.camera;
         return &debug_camera;
     }
 };
