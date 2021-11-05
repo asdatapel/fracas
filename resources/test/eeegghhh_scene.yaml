@@ -3,8 +3,8 @@ entities:
     name: x_0
     type: MESH
     mesh:
-      mesh: 0
-      material: 0
+      mesh: 24
+      material: 32
     transform: 
       position: 
         x: 0.000000
@@ -22,8 +22,8 @@ entities:
     name: x_1
     type: MESH
     mesh:
-      mesh: 0
-      material: 0
+      mesh: 24
+      material: 32
     transform: 
       position: 
         x: 0.000000
@@ -41,8 +41,8 @@ entities:
     name: x_2
     type: MESH
     mesh:
-      mesh: 0
-      material: 0
+      mesh: 24
+      material: 32
     transform: 
       position: 
         x: 1.000000
@@ -73,5 +73,5 @@ entities:
         y: 1
         z: 1
 active_camera_id: 3
-hdr: resources/images/hdr/empty.hdr
+hdr: resources/hdri/Newport_Loft_Ref.hdr
 draw_cubemap: false

@@ -218,6 +218,7 @@ assets:
         - 130
         - 131
         - 144
+        - 153
       num_parameters: 1
     - id: 25
       name: bar_2
@@ -229,6 +230,7 @@ assets:
         - 130
         - 131
         - 145
+        - 154
       num_parameters: 1
     - id: 26
       name: bar_3
@@ -240,6 +242,7 @@ assets:
         - 130
         - 131
         - 146
+        - 155
       num_parameters: 1
     - id: 27
       name: bar_4
@@ -251,6 +254,7 @@ assets:
         - 130
         - 131
         - 147
+        - 156
       num_parameters: 1
     - id: 28
       name: bar_5
@@ -262,6 +266,7 @@ assets:
         - 130
         - 131
         - 148
+        - 157
       num_parameters: 1
     - id: 29
       name: bar_6
@@ -273,6 +278,7 @@ assets:
         - 130
         - 131
         - 149
+        - 158
       num_parameters: 1
     - id: 30
       name: bar_7
@@ -284,6 +290,7 @@ assets:
         - 130
         - 131
         - 150
+        - 159
       num_parameters: 1
     - id: 31
       name: bar_8
@@ -295,7 +302,17 @@ assets:
         - 130
         - 131
         - 151
+        - 160
       num_parameters: 1
+    - id: 32
+      name: x
+      textures:
+        - 161
+        - 162
+        - 163
+        - 164
+        - 165
+        - 166
   meshes:
     - id: 0
       path: resources/scenes/test/room/room.fmesh
@@ -345,6 +362,9 @@ assets:
       path: resources/scenes/test/faceoff_table/faceoff_table.fmesh
     - id: 23
       path: resources/scenes/test/emit_cube/Cube.fmesh
+    - id: 24
+      name: x
+      path: resources/models/x2/Text.fmesh
   textures:
     - format: SRGB8_ALPHA8
       id: 0
@@ -813,6 +833,48 @@ assets:
     - id: 152
       name: "planar_target"
       render_target: 0
+    - id: 153
+      name: "bar_1_text"
+      render_target: 1
+    - id: 154
+      name: "bar_2_text"
+      render_target: 2
+    - id: 155
+      name: "bar_3_text"
+      render_target: 3
+    - id: 156
+      name: "bar_4_text"
+      render_target: 4
+    - id: 157
+      name: "bar_5_text"
+      render_target: 5
+    - id: 158
+      name: "bar_6_text"
+      render_target: 6
+    - id: 159
+      name: "bar_7_text"
+      render_target: 7
+    - id: 160
+      name: "bar_8_text"
+      render_target: 8
+    - id: 161
+      path: resources/models/x2/diffuse.bmp
+      format: SRGB8_ALPHA8
+    - id: 162
+      path: resources/models/x2/normal.bmp
+      format: RGBA8
+    - id: 163
+      path: resources/models/x2/metal.bmp
+      format: RGBA8
+    - id: 164
+      path: resources/models/x2/roughness.bmp
+      format: RGBA8
+    - id: 165
+      path: resources/models/x2/emit.bmp
+      format: SRGB8_ALPHA8
+    - id: 166
+      path: resources/models/x2/ao.bmp
+      format: RGBA8
   render_targets:
     - id: 0
       name: "planar_target"
@@ -820,6 +882,54 @@ assets:
       height: 720
       color_format: RGB16F
       depth_format: DEPTH24
+    - id: 1
+      name: "bar_1_text"
+      width: 1024
+      height: 512
+      color_format: RGBA8
+      depth_format: NONE
+    - id: 2
+      name: "bar_2_text"
+      width: 1024
+      height: 512
+      color_format: RGBA8
+      depth_format: NONE
+    - id: 3
+      name: "bar_3_text"
+      width: 1024
+      height: 512
+      color_format: RGBA8
+      depth_format: NONE
+    - id: 4
+      name: "bar_4_text"
+      width: 1024
+      height: 512
+      color_format: RGBA8
+      depth_format: NONE
+    - id: 5
+      name: "bar_5_text"
+      width: 1024
+      height: 512
+      color_format: RGBA8
+      depth_format: NONE
+    - id: 6
+      name: "bar_6_text"
+      width: 1024
+      height: 512
+      color_format: RGBA8
+      depth_format: NONE
+    - id: 7
+      name: "bar_7_text"
+      width: 1024
+      height: 512
+      color_format: RGBA8
+      depth_format: NONE
+    - id: 8
+      name: "bar_8_text"
+      width: 1024
+      height: 512
+      color_format: RGBA8
+      depth_format: NONE
   shaders:
     - id: 0
       name: main_threed
@@ -833,3 +943,10 @@ assets:
       name: planar
       vert: resources2/shaders/threed_with_planar/vert.gl
       frag: resources2/shaders/threed_with_planar/frag.gl
+  fonts:
+    - id: 0
+      path: resources/fonts/Anton_Regular.ttf
+    - id: 1
+      path: resources/fonts/RobotoCondensed_Regular.ttf
+    - id: 2
+      path: resources/fonts/RobotoCondensed_Light.ttf

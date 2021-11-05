@@ -46,7 +46,7 @@ struct GameState
     int buzzing_family = -1;
     int faceoff_winning_family = -1;
 
-    Array<int, 2> scores;
+    Array<int, 2> scores = {{}, {}};
 
     AllocatedString<128> last_answer;
     ClientId last_answer_client_id;

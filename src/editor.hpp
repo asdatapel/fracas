@@ -7,8 +7,6 @@
 
 struct Editor
 {
-    const char *temp_scene_file = "resources/test/test.yaml";
-
     EditorCamera debug_camera;
     bool use_debug_camera = false;
 
@@ -19,12 +17,13 @@ struct Editor
     Entity *selected_entity = nullptr;
     int selected_spline_node = -1;
 
-    void update_and_draw(Scene *scene, Scene *x_scene, Game *game, RpcClient *rpc_client, RenderTarget backbuffer, InputState *input, Memory mem)
+    void update_and_draw(Scene *scene, Scene *x_scene, Assets *assets, Game *game, RpcClient *rpc_client, RenderTarget backbuffer, InputState *input, Memory mem)
     {
         static bool init = false;
         if (!init)
         {
             init = true;
+            deserialize(game, mem.temp);
 
             play_scene.init(mem);
         }
@@ -40,9 +39,19 @@ struct Editor
             }
 
             play_scene.update_and_draw(nullptr);
-            game->update(1 / 60.f, {&play_scene, x_scene}, rpc_client, input);
+            game->update(1 / 60.f, {&play_scene, x_scene, assets}, rpc_client, input);
+            if (x_scene->visible)
+            {
+                x_scene->update_and_draw(nullptr);
+                play_scene.target.bind();
+                glEnable(GL_BLEND);
+                glDisable(GL_DEPTH_TEST);
+                draw_textured_rect(play_scene.target, {0, 0, 1920, 1080}, {}, x_scene->target.color_tex);
+                glEnable(GL_DEPTH_TEST);
+                glDisable(GL_BLEND);
+            }
 
-            bloomer.do_bloom(scene->target);
+            bloomer.do_bloom(play_scene.target);
             bind_shader(tonemap_shader);
             bind_1f(tonemap_shader, UniformId::EXPOSURE, 1);
             bind_texture(tonemap_shader, UniformId::BASE, play_scene.target.color_tex);
@@ -60,6 +69,16 @@ struct Editor
             }
 
             scene->update_and_draw(get_camera(scene));
+            if (x_scene->visible)
+            {
+                x_scene->update_and_draw(nullptr);
+                scene->target.bind();
+                glEnable(GL_BLEND);
+                glDisable(GL_DEPTH_TEST);
+                draw_textured_rect(scene->target, {0, 0, 1920, 1080}, {}, x_scene->target.color_tex);
+                glEnable(GL_DEPTH_TEST);
+                glDisable(GL_BLEND);
+            }
 
             bloomer.do_bloom(scene->target);
             bind_shader(tonemap_shader);
@@ -83,12 +102,12 @@ struct Editor
             if (input->key_input[i] == Keys::F1)
             {
                 String out = serialize(scene, game, mem.temp);
-                write_file(temp_scene_file, out);
+                // write_file(temp_scene_file, out);
             }
             // load scene
             if (input->key_input[i] == Keys::F2)
             {
-                deserialize(scene, game, mem.temp);
+                // deserialize(scene, game, mem.temp);
             }
 
             // add spline
@@ -288,26 +307,10 @@ struct Editor
         }
         play_scene.unfiltered_cubemap = scene->unfiltered_cubemap;
         play_scene.env_mat = scene->env_mat;
-        // play_scene.entity_names = scene->entity_names;
-        // play_scene.bars = scene->bars;
 
-        // for (int i = 0; i < 3; i++)
-        // {
-        //     play_scene.score_targets[i] = scene->score_targets[i];
-        //     play_scene.score_materials[i] = scene->score_materials[i];
-        // }
-
-        // play_scene.floor_id = scene->floor_id;
-        // play_scene.flipped_camera = scene->flipped_camera;
-        // play_scene.floor_target = scene->floor_target;
-        // play_scene.floor_material = scene->floor_material;
-
-        // play_scene.uv_sphere_id = scene->uv_sphere_id;
-        // play_scene.icosahedron_id = scene->icosahedron_id;
-        // play_scene.brick_id = scene->brick_id;
-
-        // play_scene.font = scene->font;
-        // play_scene.anim = scene->anim;
+        play_scene.render_planar = scene->render_planar;
+        play_scene.planar_target = scene->planar_target;
+        play_scene.planar_entity = scene->planar_entity;
 
         game->init({&play_scene, x_scene});
     }
@@ -443,62 +446,16 @@ struct Editor
         return out;
     }
 
-    void deserialize(Scene *scene, Game *game, StackAllocator *alloc)
+    void deserialize(Game *game, StackAllocator *alloc)
     {
         Temp temp(alloc);
 
-        FileData in = read_entire_file(temp_scene_file, alloc);
+        const char *script_file = "resources/test/scripts.yaml";
+        FileData in = read_entire_file(script_file, alloc);
         String in_str;
         in_str.data = in.data;
         in_str.len = in.length;
         YAML::Dict *root = YAML::deserialize(in_str, alloc)->as_dict();
-
-        YAML::List *in_entities = root->get("entities")->as_list();
-        for (int i = 0; i < in_entities->len; i++)
-        {
-            YAML::Dict *in_e = in_entities->get(i)->as_dict();
-
-            int id = atoi(in_e->get("id")->as_literal().to_char_array(alloc));
-            Entity &entity = scene->entities.data[id].value;
-            scene->entities.data[i].assigned = true;
-            if (scene->entities.next == &scene->entities.data[i])
-            {
-                scene->entities.next = scene->entities.data[i].next;
-            }
-
-            entity.type = entity_type_from_string(in_e->get("type")->as_literal());
-            entity.debug_tag.name = string_to_allocated_string<32>(in_e->get("name")->as_literal());
-
-            // transform
-            YAML::Dict *in_transform = in_e->get("transform")->as_dict();
-            YAML::Dict *in_position = in_transform->get("position")->as_dict();
-            entity.transform.position.x = atof(in_position->get("x")->as_literal().to_char_array(alloc));
-            entity.transform.position.y = atof(in_position->get("y")->as_literal().to_char_array(alloc));
-            entity.transform.position.z = atof(in_position->get("z")->as_literal().to_char_array(alloc));
-            YAML::Dict *in_rotation = in_transform->get("rotation")->as_dict();
-            entity.transform.rotation.x = atof(in_rotation->get("x")->as_literal().to_char_array(alloc));
-            entity.transform.rotation.y = atof(in_rotation->get("y")->as_literal().to_char_array(alloc));
-            entity.transform.rotation.z = atof(in_rotation->get("z")->as_literal().to_char_array(alloc));
-            YAML::Dict *in_scale = in_transform->get("scale")->as_dict();
-            entity.transform.scale.x = atof(in_scale->get("x")->as_literal().to_char_array(alloc));
-            entity.transform.scale.y = atof(in_scale->get("y")->as_literal().to_char_array(alloc));
-            entity.transform.scale.z = atof(in_scale->get("z")->as_literal().to_char_array(alloc));
-
-            if (entity.type == EntityType::SPLINE)
-            {
-                YAML::List *points = in_e->get("spline")->as_list();
-                entity.spline.points.len = 0;
-                for (int p = 0; p < points->len; p++)
-                {
-                    Vec3f point;
-                    YAML::Dict *in_p = points->get(p)->as_dict();
-                    point.x = atof(in_p->get("x")->as_literal().to_char_array(alloc));
-                    point.y = atof(in_p->get("y")->as_literal().to_char_array(alloc));
-                    point.z = atof(in_p->get("z")->as_literal().to_char_array(alloc));
-                    entity.spline.points.append(point);
-                }
-            }
-        }
 
         std::vector<ScriptDefinition> script_defs = game->get_script_defs();
         YAML::List *in_scripts = root->get("scripts")->as_list();

@@ -12,12 +12,13 @@ struct Scenes
 {
     Scene *main;
     Scene *xs;
-    bool draw_xs = false;
+
+    Assets *assets;
 };
 
 struct Sequence
 {
-    virtual void update(float, Scenes, InputState *, RpcClient *) = 0;
+    virtual void update(float, Scenes, BoardController *board_controller, InputState *, RpcClient *) = 0;
     virtual bool ready() = 0;
 };
 
@@ -64,7 +65,7 @@ struct IntroSequence : Sequence
         t = 0;
     }
 
-    void update(float timestep, Scenes scenes, InputState *input_state, RpcClient *rpc_client)
+    void update(float timestep, Scenes scenes, BoardController *board_controller, InputState *input_state, RpcClient *rpc_client)
     {
         t += timestep;
         if (t > length)
@@ -76,6 +77,7 @@ struct IntroSequence : Sequence
         Entity *path = scenes.main->get(input.path);
         if (camera && path && path->type == EntityType::SPLINE)
         {
+            scenes.main->active_camera_id = input.camera;
             camera->transform.position = catmull_rom(constant_distance_t(path->spline, t / length) - 1, path->spline);
         }
     }
@@ -114,7 +116,7 @@ struct RoundStartSequence : Sequence
     {
         t = 0;
     }
-    void update(float timestep, Scenes scenes, InputState *input_state, RpcClient *rpc_client)
+    void update(float timestep, Scenes scenes, BoardController *board_controller, InputState *input_state, RpcClient *rpc_client)
     {
         t += timestep;
         if (t > length)
@@ -164,7 +166,7 @@ struct FaceoffStartSequence : Sequence
     {
         t = 0;
     }
-    void update(float timestep, Scenes scenes, InputState *input_state, RpcClient *rpc_client)
+    void update(float timestep, Scenes scenes, BoardController *board_controller, InputState *input_state, RpcClient *rpc_client)
     {
         t += timestep;
         if (t > length)
@@ -219,10 +221,12 @@ struct AskQuestionSequence : Sequence
     {
         this->question = string_to_allocated_string<128>(question);
     }
-    void update(float timestep, Scenes scenes, InputState *input_state, RpcClient *rpc_client)
+    void update(float timestep, Scenes scenes, BoardController *board_controller, InputState *input_state, RpcClient *rpc_client)
     {
+        Font *font = scenes.assets->get_font(FONT_ROBOTO_CONDENSED_REGULAR, 64);
+
         glEnable(GL_BLEND);
-        // draw_text(scenes.main->font, scenes.main->target, question, 10, 10, 2, 2);
+        draw_text(*font, scenes.main->target, question, 10, 10, 2, 2);
         glDisable(GL_BLEND);
 
         buzz_button.rect = anchor_bottom_right(
@@ -230,10 +234,10 @@ struct AskQuestionSequence : Sequence
             {25.f, 25.f});
         buzz_button.text = "BUZZ";
 
-        // if (buzz_button.update_and_draw(scenes.main->target, input_state, &scenes.main->font))
-        // {
-        //     rpc_client->InGameBuzz({});
-        // }
+        if (buzz_button.update_and_draw(scenes.main->target, input_state, font))
+        {
+            rpc_client->InGameBuzz({});
+        }
     }
     bool ready()
     {
@@ -260,8 +264,10 @@ struct PassOrPlaySequence : Sequence
     Button2 play_button;
     Button2 pass_button;
 
-    void update(float timestep, Scenes scenes, InputState *input_state, RpcClient *rpc_client)
+    void update(float timestep, Scenes scenes, BoardController *board_controller, InputState *input_state, RpcClient *rpc_client)
     {
+        Font *font = scenes.assets->get_font(FONT_ROBOTO_CONDENSED_REGULAR, 64);
+
         glEnable(GL_BLEND);
         play_button.rect = {
             25.f,
@@ -275,14 +281,14 @@ struct PassOrPlaySequence : Sequence
             {25.f, 25.f});
         pass_button.text = "PASS";
 
-        // if (play_button.update_and_draw(scenes.main->target, input_state, &scenes.main->font))
-        // {
-        //     rpc_client->InGameChoosePassOrPlay({true});
-        // }
-        // if (pass_button.update_and_draw(scenes.main->target, input_state, &scenes.main->font))
-        // {
-        //     rpc_client->InGameChoosePassOrPlay({false});
-        // }
+        if (play_button.update_and_draw(scenes.main->target, input_state, font))
+        {
+            rpc_client->InGameChoosePassOrPlay({true});
+        }
+        if (pass_button.update_and_draw(scenes.main->target, input_state, font))
+        {
+            rpc_client->InGameChoosePassOrPlay({false});
+        }
         glDisable(GL_BLEND);
     }
     bool ready()
@@ -317,15 +323,17 @@ struct PlayerBuzzedSequence : Sequence
         t = 0;
         this->player_name = player_name;
     }
-    void update(float timestep, Scenes scenes, InputState *input_state, RpcClient *rpc_client)
+    void update(float timestep, Scenes scenes, BoardController *board_controller, InputState *input_state, RpcClient *rpc_client)
     {
+        Font *font = scenes.assets->get_font(FONT_ROBOTO_CONDENSED_REGULAR, 64);
+
         t += timestep;
 
         float pos_x = 200 + sinf(t * 1000) * 20;
         float pos_y = 500 + sinf(t * 1000) * 20;
 
         glEnable(GL_BLEND);
-        // draw_text(scenes.main->font, scenes.main->target, player_name, pos_x, pos_y, 2, 2);
+        draw_text(*font, scenes.main->target, player_name, pos_x, pos_y, 2, 2);
         glDisable(GL_BLEND);
     }
     bool ready()
@@ -362,14 +370,15 @@ struct PromptForAnswerSequence : Sequence
         this->me_is_answering = me_is_answering;
         this->answerer = answerer;
     }
-    void update(float timestep, Scenes scenes, InputState *input_state, RpcClient *rpc_client)
+    void update(float timestep, Scenes scenes, BoardController *board_controller, InputState *input_state, RpcClient *rpc_client)
     {
+        Font *font = scenes.assets->get_font(FONT_ROBOTO_CONDENSED_REGULAR, 64);
         if (me_is_answering)
         {
             textbox.rect = {1000, 1000, 300, 100};
             glDisable(GL_DEPTH_TEST);
             glEnable(GL_BLEND);
-            // textbox.update_and_draw(scenes.main->target, input_state, &scenes.main->font);
+            textbox.update_and_draw(scenes.main->target, input_state, font);
             glDisable(GL_BLEND);
             glEnable(GL_DEPTH_TEST);
 
@@ -384,7 +393,7 @@ struct PromptForAnswerSequence : Sequence
         else
         {
             glEnable(GL_BLEND);
-            // draw_text(scenes.main->font, scenes.main->target, answerer, 500, 500, 2, 2);
+            draw_text(*font, scenes.main->target, answerer, 500, 500, 2, 2);
             glDisable(GL_BLEND);
         }
     }
@@ -423,7 +432,7 @@ struct StartPlaySequence : Sequence
         t = 0;
     }
 
-    void update(float timestep, Scenes scenes, InputState *input_state, RpcClient *rpc_client)
+    void update(float timestep, Scenes scenes, BoardController *board_controller, InputState *input_state, RpcClient *rpc_client)
     {
         t += timestep;
         if (t > length)
@@ -473,7 +482,7 @@ struct StartStealSequence : Sequence
         t = 0;
     }
 
-    void update(float timestep, Scenes scenes, InputState *input_state, RpcClient *rpc_client)
+    void update(float timestep, Scenes scenes, BoardController *board_controller, InputState *input_state, RpcClient *rpc_client)
     {
         t += timestep;
         if (t > length)
@@ -522,14 +531,16 @@ struct PlayerAnsweredSequence : Sequence
 
         this->answer = answer;
     }
-    void update(float timestep, Scenes scenes, InputState *input_state, RpcClient *rpc_client)
+    void update(float timestep, Scenes scenes, BoardController *board_controller, InputState *input_state, RpcClient *rpc_client)
     {
+        Font *font = scenes.assets->get_font(FONT_ROBOTO_CONDENSED_REGULAR, 64);
+
         t += timestep;
         float pos_x = 200 + sinf(t * 1000) * 20;
         float pos_y = 500 + sinf(t * 1000) * 20;
 
         glEnable(GL_BLEND);
-        // draw_text(scenes.main->font, scenes.main->target, answer, pos_x, pos_y, 2, 2);
+        draw_text(*font, scenes.main->target, answer, pos_x, pos_y, 2, 2);
         glDisable(GL_BLEND);
     }
     bool ready()
@@ -555,7 +566,7 @@ struct FlipAnswerSequence : Sequence
                 {"bar 7", &input.bars[6], EntityType::MESH},
                 {"bar 8", &input.bars[7], EntityType::MESH},
                 {"camera", &input.camera, EntityType::CAMERA},
-            }, 
+            },
         };
     }
 
@@ -581,18 +592,13 @@ struct FlipAnswerSequence : Sequence
         this->answer_i = answer_i;
         this->score = score;
     }
-    void update(float timestep, Scenes scenes, InputState *input_state, RpcClient *rpc_client)
+    void update(float timestep, Scenes scenes, BoardController *board_controller, InputState *input_state, RpcClient *rpc_client)
     {
-        t += timestep;
-
         scenes.main->active_camera_id = input.camera;
+        if (t == 0)
+            board_controller->flip(scenes.main, scenes.assets, answer_i, answer, score);
 
-        float rotation = 180 * (t / length);
-        if (rotation > 180.f)
-            rotation = 180.f;
-        Entity *bar = scenes.main->get(input.bars[answer_i]);
-        bar->transform.rotation.x = glm::radians(rotation);
-
+        t += timestep;
         // set scene camera to board_closeup_camera
         // wait x seconds
         // flip animation
@@ -632,11 +638,11 @@ struct EeeeeggghhhhSequence : Sequence
         t = 0;
     }
 
-    void update(float timestep, Scenes scenes, InputState *input_state, RpcClient *rpc_client)
+    void update(float timestep, Scenes scenes, BoardController *board_controller, InputState *input_state, RpcClient *rpc_client)
     {
         t += timestep;
 
-        scenes.xs->visible = true; 
+        scenes.xs->visible = true;
 
         float speed_denoms[3] = {2, 2.75, 2.15};
         for (int i = 0; i < 3; i++)
@@ -687,7 +693,7 @@ struct EndRoundSequence : Sequence
     float t;
     const float length = 3.f;
 
-    void update(float timestep, Scenes scenes, InputState *input_state, RpcClient *rpc_client)
+    void update(float timestep, Scenes scenes, BoardController *board_controller, InputState *input_state, RpcClient *rpc_client)
     {
         // end round
     }
@@ -719,7 +725,7 @@ struct EndGameSequence : Sequence
     float t;
     const float length = 3.f;
 
-    void update(float timestep, Scenes scenes, InputState *input_state, RpcClient *rpc_client)
+    void update(float timestep, Scenes scenes, BoardController *board_controller, InputState *input_state, RpcClient *rpc_client)
     {
         // show winner
     }
@@ -731,6 +737,8 @@ struct EndGameSequence : Sequence
 
 struct Game
 {
+    BoardController board_controller;
+
     IntroSequence intro_sequence;
     RoundStartSequence round_start_sequence;
     FaceoffStartSequence faceoff_start_sequence;
@@ -789,12 +797,14 @@ void Game::update(float timestep, Scenes scenes, RpcClient *rpc_client, InputSta
 {
     handle_rpcs(scenes, rpc_client);
 
-    current_sequence->update(timestep, scenes, input_state, rpc_client);
+    current_sequence->update(timestep, scenes, &board_controller, input_state, rpc_client);
     if (current_sequence->ready() && !sent_ready)
     {
         rpc_client->InGameReady({});
         sent_ready = true;
     }
+
+    board_controller.update(timestep, scenes.main, scenes.assets);
 }
 
 // returns true if game is over
@@ -873,6 +883,15 @@ bool Game::handle_rpcs(Scenes scenes, RpcClient *rpc_client)
             sent_ready = false;
         }
     }
+    else if (auto msg = rpc_client->get_InGamePlayerChosePassOrPlay_msg())
+    {
+        printf("get_InGamePlayerChosePassOrPlay_msg\n");
+        if (current_sequence != &pass_or_play_sequence)
+        {
+            current_sequence = &pass_or_play_sequence;
+            sent_ready = false;
+        }
+    }
     else if (auto msg = rpc_client->get_InGameStartPlay_msg())
     {
         printf("get_InGameStartPlay_msg\n");
@@ -932,3 +951,19 @@ bool Game::handle_rpcs(Scenes scenes, RpcClient *rpc_client)
     }
     return false;
 }
+
+struct WaitStep
+{
+    float duration;
+    float elapsed;
+    WaitStep(float duration) : duration(duration) {}
+    void init()
+    {
+        elapsed = 0.f;
+    }
+    bool update(float timestep)
+    {
+        elapsed += timestep;
+        return elapsed >= duration;
+    }
+};

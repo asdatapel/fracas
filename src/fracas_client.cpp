@@ -25,11 +25,9 @@
 
 Peer server;
 
-Assets assets;
 Scene scene;
 Editor editor;
-Font ui_font;
-Assets2 assets2;
+Assets assets;
 Scene x_scene;
 
 StackAllocator allocator;
@@ -49,20 +47,17 @@ bool init_if_not()
         server.open("127.0.0.1", 6519, false);
 
         allocator.init(1024ull * 1024 * 1024 * 2); // 2gb
-        temp.init(1024 * 1024 * 100);              // 50 mb
-        assets.init(memory);
-        scene.init(memory);
-        ui_font = load_font(assets.font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_LIGHT_TTF], 32, memory.temp);
+        temp.init(1024 * 1024 * 100);              // 100 mb
 
-        assets2.load("resources/test/main_assets.yaml", memory);
-        scene.load("resources/test/main.yaml", &assets2, memory);
+        assets.load("resources/test/main_assets.yaml", memory);
+
+        scene.init(memory);
+        scene.load("resources/test/main.yaml", &assets, memory);
         scene.visible = true;
         x_scene.init(memory, TextureFormat::RGBA16F);
-        x_scene.load("resources/test/eeegghhh_scene.yaml", &assets2, memory);
+        x_scene.load("resources/test/eeegghhh_scene.yaml", &assets, memory);
 
         imm_init(&assets, memory);
-
-        // MainMenu::init(&assets);
     }
 
     return true;
@@ -145,25 +140,8 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
     }
     else
     {
-        editor.update_and_draw(&scene, &x_scene, &game, &client, main_target, input_state, memory);
+        editor.update_and_draw(&scene, &x_scene, &assets, &game, &client, main_target, input_state, memory);
         static BoardController board_controller;
-        static bool init = false;
-        if (!init)
-        {
-            init = true;
-            board_controller.activate(5);
-        }
-        board_controller.update(1 / 60.f, &scene);
-        if (x_scene.visible)
-        {
-            x_scene.update_and_draw(nullptr);
-            main_target.bind();
-            glEnable(GL_BLEND);
-            glDisable(GL_DEPTH_TEST);
-            draw_textured_rect(main_target, {0, 0, 1920, 1080}, {}, x_scene.target.color_tex);
-            glEnable(GL_DEPTH_TEST);
-            glDisable(GL_BLEND);
-        }
     }
 
     return true;

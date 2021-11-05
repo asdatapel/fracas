@@ -1,6 +1,7 @@
 #pragma once
 
 #include "graphics/graphics.hpp"
+#include "resources.hpp"
 
 typedef uint64_t ImmId;
 
@@ -21,7 +22,7 @@ struct UiState
     RenderTarget target;
     Camera camera_3d;
     InputState *input;
-    Font font;
+    Font *font;
 
     ImmId current_window;
     std::unordered_map<ImmId, ImmWindow> windows;
@@ -68,7 +69,7 @@ bool imm_does_gui_have_focus()
 
 void imm_init(Assets *assets, Memory mem)
 {
-    state.font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_LIGHT_TTF], 24, mem.temp);
+    state.font = assets->get_font(FONT_ROBOTO_CONDENSED_LIGHT, 24);
 }
 
 void imm_begin(RenderTarget target, Camera camera_3d, InputState *input)
@@ -155,7 +156,7 @@ void imm_window(String title, Rect rect)
         rect.x,
         rect.y,
         rect.width,
-        state.font.font_size_px + (border * 2),
+        state.font->font_size_px + (border * 2),
     };
     Rect content_rect = {
         rect.x,
@@ -224,7 +225,7 @@ void imm_window(String title, Rect rect)
 
     draw_rect(state.target, rect, {0, 0, 0, 0.8});
     draw_rect(state.target, title_rect, {.7, .07, .13, 0.8});
-    draw_text_cropped(state.font, state.target, title,
+    draw_text_cropped(*state.font, state.target, title,
                       rect.x + border, rect.y + border, 1, 1);
 
     draw_rect(state.target, scrollbar_rect, scrollbar_color);
@@ -244,12 +245,12 @@ void imm_label(String text)
                  window.content_rect.width, 30};
 
     Color color = {0, 0, 0, 0};
-    float text_scale = (rect.height - (2 * border)) / state.font.font_size_px;
+    float text_scale = (rect.height - (2 * border)) / state.font->font_size_px;
 
     start_scissor(state.target, window.content_rect);
     debug_begin_immediate();
 
-    draw_text_cropped(state.font, state.target, text,
+    draw_text_cropped(*state.font, state.target, text,
                       rect.x + border, rect.y + border, text_scale, text_scale);
 
     debug_end_immediate();
@@ -267,7 +268,7 @@ bool imm_button(ImmId me, String text)
                  window.content_rect.width, 30};
 
     float border = 5;
-    float text_scale = (rect.height - (2 * border)) / state.font.font_size_px;
+    float text_scale = (rect.height - (2 * border)) / state.font->font_size_px;
 
     imm_hot(me, rect);
     bool hot = state.hot == me;
@@ -351,7 +352,7 @@ bool imm_button(ImmId me, String text)
                          {x3, y2},
                          color);
 
-    draw_text_cropped(state.font, state.target, text,
+    draw_text_cropped(*state.font, state.target, text,
                       rect.x + border, rect.y + border + text_y_offset, text_scale, text_scale);
 
     debug_end_immediate();
@@ -389,7 +390,7 @@ bool imm_list_item(ImmId me, String text, bool selected_flag = false)
     }
 
     Color color = {0, 0, 0, 0};
-    float text_scale = (rect.height - (2 * border)) / state.font.font_size_px;
+    float text_scale = (rect.height - (2 * border)) / state.font->font_size_px;
     if (window.selected == me)
     {
         color = {.9, .3, .2, 1};
@@ -399,7 +400,7 @@ bool imm_list_item(ImmId me, String text, bool selected_flag = false)
     debug_begin_immediate();
 
     draw_rect(state.target, rect, color);
-    draw_text_cropped(state.font, state.target, text,
+    draw_text_cropped(*state.font, state.target, text,
                       rect.x + border, rect.y + border, text_scale, text_scale);
 
     debug_end_immediate();
@@ -447,7 +448,7 @@ void imm_textbox(AllocatedString<N> *str)
     }
 
     Color color = {.1, .1, .1, .8};
-    float text_scale = (rect.height - (2 * border)) / state.font.font_size_px;
+    float text_scale = (rect.height - (2 * border)) / state.font->font_size_px;
     if (state.selected == me)
     {
         color = {.8, .8, .8, .8};
@@ -457,7 +458,7 @@ void imm_textbox(AllocatedString<N> *str)
     debug_begin_immediate();
 
     draw_rect(state.target, rect, color);
-    draw_text_cropped(state.font, state.target, *str,
+    draw_text_cropped(*state.font, state.target, *str,
                       rect.x + border, rect.y + border, text_scale, text_scale);
 
     debug_end_immediate();
@@ -530,7 +531,7 @@ void imm_num_input(float *val)
     }
 
     Color color = {.1, .1, .1, .8};
-    float text_scale = (rect.height - (2 * border)) / state.font.font_size_px;
+    float text_scale = (rect.height - (2 * border)) / state.font->font_size_px;
     if (state.selected == me)
     {
         color = {.8, .8, .8, .8};
@@ -540,7 +541,7 @@ void imm_num_input(float *val)
     debug_begin_immediate();
 
     draw_rect(state.target, rect, color);
-    draw_text(state.font, state.target, visible_string,
+    draw_text(*state.font, state.target, visible_string,
               rect.x + border, rect.y + border, text_scale, text_scale);
 
     debug_end_immediate();

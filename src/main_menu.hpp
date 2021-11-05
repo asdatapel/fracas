@@ -394,13 +394,13 @@ struct MainPage : MenuPage
     Button2 settings_button;
     Button2 exit_button;
 
-    Font font;
-    Font title_font;
+    Font *font;
+    Font *title_font;
 
     MainPage(Assets *assets, Memory mem)
     {
-        title_font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ANTON_REGULAR_TTF], 256, mem.temp);
-        font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_REGULAR_TTF], 64, mem.temp);
+        title_font = assets->get_font(FONT_ANTON, 256);
+        font = assets->get_font(FONT_ROBOTO_CONDENSED_REGULAR, 64);
 
         exit_button.rect = anchor_bottom_right(
             {0.2f * 1920, 0.2f * 1920 * 9.f / 16.f / 2.f},
@@ -423,28 +423,28 @@ struct MainPage : MenuPage
             float want_width = 0.6f * target.width;
             float max_width = 0.6f * 1920;
             float width = fminf(max_width, want_width);
-            float scale = width / get_text_width(title_font, title_text_1);
-            float line1_height = get_single_line_height(title_font, title_text_1, scale);
+            float scale = width / get_text_width(*title_font, title_text_1);
+            float line1_height = get_single_line_height(*title_font, title_text_1, scale);
 
-            draw_text_cropped(title_font, target, title_text_1, 25.f, 25.f, scale, scale);
-            draw_text_cropped(title_font, target, title_text_2, 25.f, 25.f + 15 + line1_height, scale, scale);
+            draw_text_cropped(*title_font, target, title_text_1, 25.f, 25.f, scale, scale);
+            draw_text_cropped(*title_font, target, title_text_2, 25.f, 25.f + 15 + line1_height, scale, scale);
         }
 
-        if (exit_button.update_and_draw(target, input, &font))
+        if (exit_button.update_and_draw(target, input, font))
         {
             // TODO need to exit in a cleaner way
             // exit(0);
             menu->current = nullptr;
         }
-        if (settings_button.update_and_draw(target, input, &font))
+        if (settings_button.update_and_draw(target, input, font))
         {
             menu->current = menu->settings;
         }
-        if (create_button.update_and_draw(target, input, &font))
+        if (create_button.update_and_draw(target, input, font))
         {
             menu->current = menu->create;
         }
-        if (join_button.update_and_draw(target, input, &font))
+        if (join_button.update_and_draw(target, input, font))
         {
             menu->current = menu->join;
         }
@@ -468,14 +468,14 @@ struct LobbyPage : MenuPage
     Rect family_2_panel;
     List family_2_list;
 
-    Font font;
+    Font *font;
     RpcClient *rpc_client;
     GameId game_id = 0;
     ClientId game_owner_id = 0;
 
     LobbyPage(Assets *assets, RpcClient *rpc_client, Memory mem)
     {
-        font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_REGULAR_TTF], 128, mem.temp);
+        font = assets->get_font(FONT_ROBOTO_CONDENSED_REGULAR, 128);
         this->rpc_client = rpc_client;
 
         back_button.rect = anchor_bottom_right(
@@ -513,18 +513,18 @@ struct LobbyPage : MenuPage
 
     void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu, ClientGameData *game_data) override
     {
-        if (back_button.update_and_draw(target, input, &font))
+        if (back_button.update_and_draw(target, input, font))
         {
             rpc_client->LeaveGame({});
             menu->current = menu->main;
         }
 
         draw_rect(target, family_1_title_background, {1.f, 0.f, 1.f, .4f});
-        draw_centered_text(font, target, "Family 1", family_1_title_background, .1f, 10, 1);
+        draw_centered_text(*font, target, "Family 1", family_1_title_background, .1f, 10, 1);
         draw_rect(target, family_1_panel, {0.f, 1.f, 0.f, .4f});
 
         draw_rect(target, family_2_title_background, {1.f, 0.f, 1.f, .4f});
-        draw_centered_text(font, target, "Family 2", family_2_title_background, .1f, 10, 1);
+        draw_centered_text(*font, target, "Family 2", family_2_title_background, .1f, 10, 1);
         draw_rect(target, family_2_panel, {0.f, 1.f, 0.f, .4f});
 
         rpc_client->GetGame({game_id});
@@ -543,19 +543,19 @@ struct LobbyPage : MenuPage
             family_2_list.refresh(family_2_list_items);
         }
 
-        family_1_list.update_and_draw(target, input, &font);
-        family_2_list.update_and_draw(target, input, &font);
+        family_1_list.update_and_draw(target, input, font);
+        family_2_list.update_and_draw(target, input, font);
 
         if (game_owner_id > 0)
         {
             if (player_selection_group.selected)
             {
-                if (swap_button.update_and_draw(target, input, &font))
+                if (swap_button.update_and_draw(target, input, font))
                 {
                     rpc_client->SwapTeam({game_id, ((List *)player_selection_group.selected)->get_selected_id()});
                 }
             }
-            if (start_game_button.update_and_draw(target, input, &font))
+            if (start_game_button.update_and_draw(target, input, font))
             {
                 rpc_client->StartGame({game_id});
             }
@@ -600,12 +600,12 @@ struct JoinGamePage : MenuPage
     Label username_label;
     TextBox2<PlayerName::MAX_LEN> username_textbox;
 
-    Font font;
+    Font *font;
     RpcClient *rpc_client;
 
     JoinGamePage(Assets *assets, RpcClient *rpc_client, Memory mem)
     {
-        font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_REGULAR_TTF], 128, mem.temp);
+        font = assets->get_font(FONT_ROBOTO_CONDENSED_REGULAR, 128);
         this->rpc_client = rpc_client;
 
         back_button.rect = anchor_bottom_right(
@@ -638,13 +638,13 @@ struct JoinGamePage : MenuPage
 
     void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu, ClientGameData *game_data) override
     {
-        if (back_button.update_and_draw(target, input, &font))
+        if (back_button.update_and_draw(target, input, font))
         {
             menu->current = menu->main;
         }
 
         draw_rect(target, title_background, {1.f, 0.f, 1.f, .4f});
-        draw_centered_text(font, target, "Select Game", title_background, .1f, 10, 1);
+        draw_centered_text(*font, target, "Select Game", title_background, .1f, 10, 1);
 
         draw_rect(target, game_list_panel, {0.f, 1.f, 0.f, .4f});
         {
@@ -661,16 +661,16 @@ struct JoinGamePage : MenuPage
                 game_list.refresh(game_list_items);
             }
         }
-        game_list.update_and_draw(target, input, &font);
+        game_list.update_and_draw(target, input, font);
 
         if (game_list.get_selected_id() > 0)
         {
             draw_rect(target, game_detail_panel, {0.f, 1.f, 0.f, .4f});
             draw_rect(target, user_input_panel, {0.f, 1.f, 0.f, .4f});
-            username_label.update_and_draw(target, input, &font);
-            username_textbox.update_and_draw(target, input, &font);
+            username_label.update_and_draw(target, input, font);
+            username_textbox.update_and_draw(target, input, font);
 
-            if (join_button.update_and_draw(target, input, &font))
+            if (join_button.update_and_draw(target, input, font))
             {
                 rpc_client->JoinGame({game_list.get_selected_id(), username_textbox.text});
                 ((LobbyPage *)menu->lobby)->set_game(game_list.get_selected_id(), 0);
@@ -693,12 +693,12 @@ struct CreateGamePage : MenuPage
     Label user_name_label;
     TextBox2<32> user_name_text_box;
 
-    Font font;
+    Font *font;
     RpcClient *rpc_client;
 
     CreateGamePage(Assets *assets, RpcClient *rpc_client, Memory mem)
     {
-        font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_REGULAR_TTF], 128, mem.temp);
+        font = assets->get_font(FONT_ROBOTO_CONDENSED_REGULAR, 128);
         this->rpc_client = rpc_client;
 
         back_button.rect = anchor_bottom_right(
@@ -735,11 +735,11 @@ struct CreateGamePage : MenuPage
 
     void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu, ClientGameData *game_data) override
     {
-        if (back_button.update_and_draw(target, input, &font))
+        if (back_button.update_and_draw(target, input, font))
         {
             menu->current = menu->main;
         }
-        if (create_button.update_and_draw(target, input, &font))
+        if (create_button.update_and_draw(target, input, font))
         {
             rpc_client->CreateGame({game_name_text_box.text, user_name_text_box.text, true});
         }
@@ -753,13 +753,13 @@ struct CreateGamePage : MenuPage
         }
 
         draw_rect(target, title_background, {1.f, 0.f, 1.f, .4f});
-        draw_centered_text(font, target, "New Game", title_background, .1f, 10, 1);
+        draw_centered_text(*font, target, "New Game", title_background, .1f, 10, 1);
 
         draw_rect(target, game_settings_panel, {0.f, 1.f, 0.f, .4f});
-        game_name_label.update_and_draw(target, input, &font);
-        game_name_text_box.update_and_draw(target, input, &font);
-        user_name_label.update_and_draw(target, input, &font);
-        user_name_text_box.update_and_draw(target, input, &font);
+        game_name_label.update_and_draw(target, input, font);
+        game_name_text_box.update_and_draw(target, input, font);
+        user_name_label.update_and_draw(target, input, font);
+        user_name_text_box.update_and_draw(target, input, font);
     }
 };
 
@@ -774,12 +774,12 @@ struct SettingsPage : MenuPage
     TextBox2<64> server_ip_address_text_box;
     Button2 connect_to_server_button;
 
-    Font font;
+    Font *font;
     RpcClient *rpc_client;
 
     SettingsPage(Assets *assets, RpcClient *rpc_client, Memory mem)
     {
-        font = load_font(assets->font_files[(int)FontId::RESOURCES_FONTS_ROBOTOCONDENSED_REGULAR_TTF], 128, mem.temp);
+        font = assets->get_font(FONT_ROBOTO_CONDENSED_REGULAR, 128);
         this->rpc_client = rpc_client;
 
         back_button.rect = anchor_bottom_right(
@@ -805,17 +805,17 @@ struct SettingsPage : MenuPage
 
     void update_and_draw(RenderTarget target, InputState *input, MainMenu *menu, ClientGameData *game_data) override
     {
-        if (back_button.update_and_draw(target, input, &font))
+        if (back_button.update_and_draw(target, input, font))
         {
             menu->current = menu->main;
         }
 
         draw_rect(target, title_background, {1.f, 0.f, 1.f, .4f});
-        draw_centered_text(font, target, "New Game", title_background, .1f, 10, 1);
+        draw_centered_text(*font, target, "New Game", title_background, .1f, 10, 1);
 
         draw_rect(target, game_settings_panel, {0.f, 1.f, 0.f, .4f});
-        server_ip_address_text_box.update_and_draw(target, input, &font);
-        if (connect_to_server_button.update_and_draw(target, input, &font))
+        server_ip_address_text_box.update_and_draw(target, input, font);
+        if (connect_to_server_button.update_and_draw(target, input, font))
         {
             rpc_client->peer.close();
             char ip[65];

@@ -132,7 +132,7 @@ struct Lobby
         for (int i = 0; i < game.players.len; i++)
         {
             Peer *peer = &broadcaster.rpc_server->server_data->clients.at(game.players[i].id).peer;
-            ((RpcServer*)broadcaster.rpc_server)->GameStarted(peer, GameStartedMessage{game_id, game.players[i].id});
+            ((RpcServer *)broadcaster.rpc_server)->GameStarted(peer, GameStartedMessage{game_id, game.players[i].id});
         }
 
         set_next_stage(&Lobby::stage_start_round);
@@ -174,13 +174,13 @@ struct Lobby
         game.last_answer.len = 0;
 
         game.question = string_to_allocated_string<128>("name a color bitch bitch stupid bitch?");
-        game.answers.append({false, 15, "red"});
-        game.answers.append({false, 15, "green"});
-        game.answers.append({false, 14, "blue"});
-        game.answers.append({false, 13, "orange"});
-        game.answers.append({false, 13, "pink"});
-        game.answers.append({false, 13, "purple"});
-        game.answers.append({false, 2, "muave"});
+        game.answers.append({false, 98, "RED"});
+        game.answers.append({false, 87, "GREEN"});
+        game.answers.append({false, 76, "BLUE"});
+        game.answers.append({false, 65, "ORANE"});
+        game.answers.append({false, 54, "PINK"});
+        game.answers.append({false, 43, "PURPLE"});
+        game.answers.append({false, 32, "MUAVE"});
 
         broadcaster.broadcast(&RpcServer::InGameStartRound, InGameStartRoundMessage{game.round});
         set_next_stage(&Lobby::stage_start_faceoff);
@@ -198,7 +198,7 @@ struct Lobby
     void stage_ask_question(Broadcaster broadcaster)
     {
         broadcaster.broadcast(&RpcServer::InGameAskQuestion, InGameAskQuestionMessage{game.question});
-        set_waiter(&Lobby::waiter_buzz, 10 * second); 
+        set_waiter(&Lobby::waiter_buzz, 10 * second);
     }
 
     void stage_prompt_for_answer(Broadcaster broadcaster)
@@ -715,7 +715,7 @@ void RpcServer::HandleInGameBuzz(ClientId client_id, Empty *req, Empty *resp)
     {
         lobby->game.buzzing_family = 0;
     }
-    if (client_id == fp1)
+    else if (client_id == fp1)
     {
         lobby->game.buzzing_family = 1;
     }
@@ -746,6 +746,12 @@ void RpcServer::HandleInGameAnswer(ClientId client_id, InGameAnswerMessage *req,
     {
         // TODO PERMISSION_DENIED
         return;
+    }
+
+    for (int i = 0; i < req->answer.len; i++)
+    {
+        if (req->answer.data[i] >= 'a' && req->answer.data[i] <= 'z')
+            req->answer.data[i] -= 32;
     }
 
     Broadcaster{this, lobby}.broadcast(&RpcServer::InGamePlayerAnswered, InGameAnswerMessage{req->answer});
