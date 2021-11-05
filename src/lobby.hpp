@@ -197,7 +197,7 @@ struct Lobby
 
     void stage_ask_question(Broadcaster broadcaster)
     {
-        broadcaster.broadcast(&RpcServer::InGameAskQuestion, InGameAskQuestionMessage{game.question});
+        broadcaster.broadcast(&RpcServer::InGameAskQuestion, InGameAskQuestionMessage{game.question, (int32_t) game.answers.len});
         set_waiter(&Lobby::waiter_buzz, 10 * second);
     }
 

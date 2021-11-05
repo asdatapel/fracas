@@ -104,6 +104,7 @@ client InGameStartFaceoff InGameStartFaceoffMessage
 
 message InGameAskQuestionMessage
 question string
+num_answers int
 
 client InGameAskQuestion InGameAskQuestionMessage
 

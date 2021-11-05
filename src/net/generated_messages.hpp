@@ -940,16 +940,19 @@ uint32_t read(MessageReader *msg, std::vector<InGameStartFaceoffMessage> *out)
 struct InGameAskQuestionMessage 
 {
     AllocatedString<64> question = {};
+    int32_t num_answers = {};
 };
 void append(MessageBuilder *msg, InGameAskQuestionMessage &in)
 {
     append(msg, in.question);
+    append(msg, in.num_answers);
 }
 uint32_t read(MessageReader *msg, InGameAskQuestionMessage *out)
 {
     uint32_t len = 0;
 
     len += read(msg, &out->question);
+    len += read(msg, &out->num_answers);
     return len;
 }
 void append(MessageBuilder *msg, std::vector<InGameAskQuestionMessage> &in)

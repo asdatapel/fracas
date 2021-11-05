@@ -194,16 +194,22 @@ struct AskQuestionSequence : Sequence
         return {
             "Ask Question Sequence",
             this,
-            {},
+            {
+                {"faceoff_camera", &input.faceoff_camera, EntityType::CAMERA},
+                {"board_closeup_camera", &input.board_closeup_camera, EntityType::CAMERA},
+            },
         };
     }
 
     struct Input
     {
+        int faceoff_camera;
+        int board_closeup_camera;
     };
     Input input;
 
     AllocatedString<128> question;
+    int num_answers;
     Button2 buzz_button;
 
     void init(Scenes scenes)
@@ -217,13 +223,56 @@ struct AskQuestionSequence : Sequence
         // }
     }
 
-    void reset(String question)
+    void reset(String question, int num_answers)
     {
         this->question = string_to_allocated_string<128>(question);
+        this->num_answers = num_answers;
     }
     void update(float timestep, Scenes scenes, BoardController *board_controller, InputState *input_state, RpcClient *rpc_client)
     {
         Font *font = scenes.assets->get_font(FONT_ROBOTO_CONDENSED_REGULAR, 64);
+
+        static bool step_0_done = false;
+        if (!step_0_done)
+        {
+            scenes.main->active_camera_id = input.board_closeup_camera;
+        }
+        step_0_done = true;
+
+        static float wait_0 = .5f;
+        wait_0 -= timestep;
+        if (wait_0 > 0.f)
+        {
+            return;
+        }
+
+        static bool step_1_done = false;
+        if (!step_1_done)
+        {
+            board_controller->activate(scenes.main, num_answers);
+        }
+        step_1_done = true;
+
+        static float wait_1 = 2.f;
+        wait_1 -= timestep;
+        if (wait_1 > 0.f)
+        {
+            return;
+        }
+
+        static bool step_2_done = false;
+        if (!step_2_done)
+        {
+            scenes.main->active_camera_id = input.faceoff_camera;
+        }
+        step_2_done = true;
+
+        static float wait_2 = 1.f;
+        wait_2 -= timestep;
+        if (wait_2 > 0.f)
+        {
+            return;
+        }
 
         glEnable(GL_BLEND);
         draw_text(*font, scenes.main->target, question, 10, 10, 2, 2);
@@ -812,6 +861,7 @@ bool Game::handle_rpcs(Scenes scenes, RpcClient *rpc_client)
 {
     if (auto msg = rpc_client->get_InGameStartRound_msg())
     {
+        printf("get_InGameStartRound_msg\n");
         if (current_sequence != &round_start_sequence)
         {
             game_data.game_state.round++;
@@ -824,6 +874,7 @@ bool Game::handle_rpcs(Scenes scenes, RpcClient *rpc_client)
     }
     else if (auto msg = rpc_client->get_InGameStartFaceoff_msg())
     {
+        printf("get_InGameStartFaceoff_msg\n");
         if (current_sequence != &faceoff_start_sequence)
         {
             game_data.game_state.round_stage = RoundStage::FACEOFF;
@@ -835,11 +886,12 @@ bool Game::handle_rpcs(Scenes scenes, RpcClient *rpc_client)
     }
     else if (auto msg = rpc_client->get_InGameAskQuestion_msg())
     {
+        printf("get_InGameAskQuestion_msg\n");
         if (current_sequence != &ask_question_sequence)
         {
             game_data.game_state.question = msg->question;
 
-            ask_question_sequence.reset(msg->question);
+            ask_question_sequence.reset(msg->question, msg->num_answers);
             current_sequence = &ask_question_sequence;
             sent_ready = false;
         }

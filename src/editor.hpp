@@ -101,8 +101,9 @@ struct Editor
             // save scene
             if (input->key_input[i] == Keys::F1)
             {
-                String out = serialize(scene, game, mem.temp);
-                // write_file(temp_scene_file, out);
+                const char *script_file = "resources/test/scripts.yaml";
+                String out = serialize(game, mem.temp);
+                write_file(script_file, out);
             }
             // load scene
             if (input->key_input[i] == Keys::F2)
@@ -320,7 +321,7 @@ struct Editor
         playing = false;
     }
 
-    String serialize(Scene *scene, Game *game, StackAllocator *alloc)
+    String serialize(Game *game, StackAllocator *alloc)
     {
         auto new_dict = [&]()
         {
@@ -342,76 +343,6 @@ struct Editor
         };
 
         YAML::Dict scene_yaml;
-
-        YAML::List entities;
-        scene_yaml.push_back("entities", &entities, alloc);
-        for (int i = 0; i < scene->entities.size; i++)
-        {
-            if (scene->entities.data[i].assigned)
-            {
-                Entity &entity = scene->entities.data[i].value;
-
-                YAML::Dict *e = new_dict();
-                e->push_back("id", new_literal(String::from(i, alloc)), alloc);
-                e->push_back("name", new_literal(entity.debug_tag.name), alloc);
-                e->push_back("type", new_literal(to_string(entity.type)), alloc);
-
-                YAML::Dict *transform = new_dict();
-                YAML::Dict *position = new_dict();
-                position->push_back("x", new_literal(String::from(entity.transform.position.x, alloc)), alloc);
-                position->push_back("y", new_literal(String::from(entity.transform.position.y, alloc)), alloc);
-                position->push_back("z", new_literal(String::from(entity.transform.position.z, alloc)), alloc);
-                transform->push_back("position", position, alloc);
-                YAML::Dict *rotation = new_dict();
-                rotation->push_back("x", new_literal(String::from(entity.transform.rotation.x, alloc)), alloc);
-                rotation->push_back("y", new_literal(String::from(entity.transform.rotation.y, alloc)), alloc);
-                rotation->push_back("z", new_literal(String::from(entity.transform.rotation.z, alloc)), alloc);
-                transform->push_back("rotation", rotation, alloc);
-                YAML::Dict *scale = new_dict();
-                scale->push_back("x", new_literal(String::from(entity.transform.scale.x, alloc)), alloc);
-                scale->push_back("y", new_literal(String::from(entity.transform.scale.y, alloc)), alloc);
-                scale->push_back("z", new_literal(String::from(entity.transform.scale.z, alloc)), alloc);
-                transform->push_back("scale", scale, alloc);
-                e->push_back("transform", transform, alloc);
-
-                switch (entity.type)
-                {
-                case (EntityType::LIGHT):
-                {
-                    YAML::Dict *light = new_dict();
-                    YAML::Dict *color = new_dict();
-                    color->push_back("x", new_literal(String::from(entity.spot_light.color.x, alloc)), alloc);
-                    color->push_back("y", new_literal(String::from(entity.spot_light.color.y, alloc)), alloc);
-                    color->push_back("z", new_literal(String::from(entity.spot_light.color.z, alloc)), alloc);
-                    light->push_back("color", color, alloc);
-
-                    light->push_back("outer_angle", new_literal(String::from(entity.spot_light.outer_angle, alloc)), alloc);
-                    light->push_back("inner_angle", new_literal(String::from(entity.spot_light.inner_angle, alloc)), alloc);
-
-                    e->push_back("light", light, alloc);
-                }
-                break;
-                case (EntityType::SPLINE):
-                {
-                    YAML::List *spline = new_list();
-                    for (int p = 0; p < entity.spline.points.len; p++)
-                    {
-                        YAML::Dict *point = new_dict();
-                        point->push_back("x", new_literal(String::from(entity.spline.points[p].x, alloc)), alloc);
-                        point->push_back("y", new_literal(String::from(entity.spline.points[p].y, alloc)), alloc);
-                        point->push_back("z", new_literal(String::from(entity.spline.points[p].z, alloc)), alloc);
-                        spline->push_back(point, alloc);
-                    }
-                    e->push_back("spline", spline, alloc);
-                }
-                break;
-                default:
-                    break;
-                }
-
-                entities.push_back(e, alloc);
-            }
-        }
 
         YAML::List scripts;
         scene_yaml.push_back("scripts", &scripts, alloc);

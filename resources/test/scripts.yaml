@@ -1,95 +1,101 @@
-scripts:
-  - inputs:
-      - id: 0
-        name: camera
+scripts: 
+  - name: Intro Sequence
+    inputs: 
+      - name: camera
         value: 87
-      - id: 1
-        name: path
+        id: 0
+      - name: path
         value: 88
-    name: Intro Sequence
-  - inputs:
-      - id: 0
-        name: camera
+        id: 1
+  - name: Round Start Sequence
+    inputs: 
+      - name: camera
         value: 87
-      - id: 1
-        name: path
+        id: 0
+      - name: path
         value: 88
-    name: Round Start Sequence
-  - inputs:
-      - id: 0
-        name: camera
+        id: 1
+  - name: Faceoff Start Sequence
+    inputs: 
+      - name: camera
         value: 87
-      - id: 1
-        name: path
+        id: 0
+      - name: path
         value: 89
-    name: Faceoff Start Sequence
-  - inputs: null
-    name: Ask Question Sequence
-  - inputs: null
-    name: PlayerBuzzedSequence
-  - inputs: null
-    name: PromptForAnswerSequence
-  - inputs: null
-    name: Pass Or Play Sequence
-  - inputs:
-      - id: 0
-        name: camera
-        value: 0
-      - id: 1
-        name: path
-        value: 0
-    name: StartPlaySequence
-  - inputs:
-      - id: 0
-        name: camera
-        value: 0
-      - id: 1
-        name: path
-        value: 0
-    name: StartStealSequence
-  - inputs: null
-    name: PlayerAnsweredSequence
-  - inputs:
-      - id: 0
-        name: panel_1
-        value: 71
-      - id: 1
-        name: panel_2
-        value: 72
-      - id: 2
-        name: panel_3
-        value: 73
-      - id: 3
-        name: panel_4
-        value: 74
-      - id: 4
-        name: panel_5
-        value: 75
-      - id: 5
-        name: panel_6
-        value: 76
-      - id: 6
-        name: panel_7
-        value: 77
-      - id: 7
-        name: panel_8
-        value: 78
-      - id: 8
-        name: camera
+        id: 1
+  - name: Ask Question Sequence
+    inputs: 
+      - name: faceoff_camera
+        value: 87
+        id: 0
+      - name: board_closeup_camera
         value: 90
-    name: FlipAnswerSequence
-  - inputs:
-      - id: 0
-        name: camera
+        id: 1
+  - name: PlayerBuzzedSequence
+    inputs: 
+  - name: PromptForAnswerSequence
+    inputs: 
+  - name: Pass Or Play Sequence
+    inputs: 
+  - name: StartPlaySequence
+    inputs: 
+      - name: camera
         value: 0
-    name: EeeeeggghhhhSequence
-  - inputs:
-      - id: 0
-        name: camera
+        id: 0
+      - name: path
         value: 0
-    name: EndRoundSequence
-  - inputs:
-      - id: 0
-        name: camera
+        id: 1
+  - name: StartStealSequence
+    inputs: 
+      - name: camera
         value: 0
-    name: EndGameSequence
+        id: 0
+      - name: path
+        value: 0
+        id: 1
+  - name: PlayerAnsweredSequence
+    inputs: 
+  - name: FlipAnswerSequence
+    inputs: 
+      - name: bar 1
+        value: 71
+        id: 0
+      - name: bar 2
+        value: 72
+        id: 1
+      - name: bar 3
+        value: 73
+        id: 2
+      - name: bar 4
+        value: 74
+        id: 3
+      - name: bar 5
+        value: 75
+        id: 4
+      - name: bar 6
+        value: 76
+        id: 5
+      - name: bar 7
+        value: 77
+        id: 6
+      - name: bar 8
+        value: 78
+        id: 7
+      - name: camera
+        value: 90
+        id: 8
+  - name: EeeeeggghhhhSequence
+    inputs: 
+      - name: camera
+        value: 0
+        id: 0
+  - name: EndRoundSequence
+    inputs: 
+      - name: camera
+        value: 0
+        id: 0
+  - name: EndGameSequence
+    inputs: 
+      - name: camera
+        value: 0
+        id: 0
