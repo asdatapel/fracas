@@ -237,3 +237,9 @@ Vec3f lerp(Vec3f a, Vec3f b, float t)
 {
     return {lerp(a.x, b.x, t), lerp(a.y, b.y, t), lerp(a.z, b.z, t)};
 }
+
+float clamp(float d, float min, float max)
+{
+    const float t = d < min ? min : d;
+    return t > max ? max : t;
+}

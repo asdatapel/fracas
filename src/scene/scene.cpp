@@ -206,13 +206,123 @@ void Scene::load(const char *filename, Assets *assets, Memory mem)
     if (auto planar_reflector_val = root->get("planar_reflector"))
     {
         YAML::Dict *planar_reflector = planar_reflector_val->as_dict();
-        int planar_reflector_entity_id =  atoi(planar_reflector->get("entity_id")->as_literal().to_char_array(mem.temp));
-        int render_target_id =  atoi(planar_reflector->get("render_target")->as_literal().to_char_array(mem.temp));
+        int planar_reflector_entity_id = atoi(planar_reflector->get("entity_id")->as_literal().to_char_array(mem.temp));
+        int render_target_id = atoi(planar_reflector->get("render_target")->as_literal().to_char_array(mem.temp));
 
         render_planar = true;
         planar_entity = get(planar_reflector_entity_id);
         planar_target = assets->render_targets.data[render_target_id].value;
     }
+}
+
+void Scene::serialize(const char *filename, Assets *assets, StackAllocator *alloc)
+{
+    auto new_dict = [&]()
+    {
+        YAML::Dict *dict = (YAML::Dict *)alloc->alloc(sizeof(YAML::Dict));
+        new (dict) YAML::Dict;
+        return dict;
+    };
+    auto new_list = [&]()
+    {
+        YAML::List *list = (YAML::List *)alloc->alloc(sizeof(YAML::List));
+        new (list) YAML::List;
+        return list;
+    };
+    auto new_literal = [&](String val)
+    {
+        YAML::Literal *lit = (YAML::Literal *)alloc->alloc(sizeof(YAML::Literal));
+        new (lit) YAML::Literal(val);
+        return lit;
+    };
+
+    YAML::Dict scene_yaml;
+    YAML::List entities_yaml;
+    scene_yaml.push_back("entities", &entities_yaml, alloc);
+
+    for (int i = 0; i < entities.size; i++)
+    {
+        if (entities.data[i].assigned)
+        {
+            Entity *e = &entities.data[i].value;
+            YAML::Dict *entity_yaml = new_dict();
+            entity_yaml->push_back("id", new_literal(String::from(i, alloc)), alloc);
+            entity_yaml->push_back("name", new_literal(e->debug_tag.name), alloc);
+            entity_yaml->push_back("type", new_literal(to_string(e->type)), alloc);
+
+            YAML::Dict *transform_yaml = new_dict();
+            YAML::Dict *position_yaml = new_dict();
+            position_yaml->push_back("x", new_literal(String::from(e->transform.position.x, alloc)), alloc);
+            position_yaml->push_back("y", new_literal(String::from(e->transform.position.y, alloc)), alloc);
+            position_yaml->push_back("z", new_literal(String::from(e->transform.position.z, alloc)), alloc);
+            YAML::Dict *rotation_yaml = new_dict();
+            rotation_yaml->push_back("x", new_literal(String::from(e->transform.rotation.x, alloc)), alloc);
+            rotation_yaml->push_back("y", new_literal(String::from(e->transform.rotation.y, alloc)), alloc);
+            rotation_yaml->push_back("z", new_literal(String::from(e->transform.rotation.z, alloc)), alloc);
+            YAML::Dict *scale_yaml = new_dict();
+            scale_yaml->push_back("x", new_literal(String::from(e->transform.scale.x, alloc)), alloc);
+            scale_yaml->push_back("y", new_literal(String::from(e->transform.scale.y, alloc)), alloc);
+            scale_yaml->push_back("z", new_literal(String::from(e->transform.scale.z, alloc)), alloc);
+            transform_yaml->push_back("position", position_yaml, alloc);
+            transform_yaml->push_back("rotation", rotation_yaml, alloc);
+            transform_yaml->push_back("scale", scale_yaml, alloc);
+            entity_yaml->push_back("transform", transform_yaml, alloc);
+
+            if (e->type == EntityType::MESH)
+            {
+                YAML::Dict *mesh_yaml = new_dict();
+                mesh_yaml->push_back("mesh", new_literal(String::from(e->vert_buffer.asset_id, alloc)), alloc);
+                mesh_yaml->push_back("material", new_literal(String::from(e->material->asset_id, alloc)), alloc);
+                mesh_yaml->push_back("shader", new_literal(String::from(e->shader->asset_id, alloc)), alloc);
+                entity_yaml->push_back("mesh", mesh_yaml, alloc);
+            }
+            else if (e->type == EntityType::LIGHT)
+            {
+                YAML::Dict *light_yaml = new_dict();
+
+                YAML::Dict *color_yaml = new_dict();
+                color_yaml->push_back("x", new_literal(String::from(e->spot_light.color.x, alloc)), alloc);
+                color_yaml->push_back("y", new_literal(String::from(e->spot_light.color.y, alloc)), alloc);
+                color_yaml->push_back("z", new_literal(String::from(e->spot_light.color.z, alloc)), alloc);
+                light_yaml->push_back("color", color_yaml, alloc);
+
+                light_yaml->push_back("inner_angle", new_literal(String::from(e->spot_light.inner_angle, alloc)), alloc);
+                light_yaml->push_back("outer_angle", new_literal(String::from(e->spot_light.outer_angle, alloc)), alloc);
+
+                entity_yaml->push_back("spotlight", light_yaml, alloc);
+            }
+            else if (e->type == EntityType::SPLINE)
+            {
+                YAML::List *spline_yaml = new_list();
+                for (int p = 0; p < e->spline.points.len; p++)
+                {
+                    YAML::Dict *point_yaml = new_dict();
+                    point_yaml->push_back("x", new_literal(String::from(e->spline.points[p].x, alloc)), alloc);
+                    point_yaml->push_back("y", new_literal(String::from(e->spline.points[p].y, alloc)), alloc);
+                    point_yaml->push_back("z", new_literal(String::from(e->spline.points[p].z, alloc)), alloc);
+                    spline_yaml->push_back(point_yaml, alloc);
+                }
+                entity_yaml->push_back("spline", spline_yaml, alloc);
+            }
+            entities_yaml.push_back(entity_yaml, alloc);
+        }
+    }
+
+    scene_yaml.push_back("active_camera_id", new_literal(String::from(active_camera_id, alloc)), alloc);
+    scene_yaml.push_back("hdr", new_literal("resources/hdri/Newport_Loft_Ref.hdr"), alloc);
+    scene_yaml.push_back("cubemap_visible", new_literal(cubemap_visible ? (String) "true" : (String) "false"), alloc);
+
+    YAML::Dict *planar_reflector_yaml = new_dict();
+    planar_reflector_yaml->push_back("entity_id", new_literal(String::from(entities.index_of(planar_entity), alloc)), alloc);
+    planar_reflector_yaml->push_back("render_target", new_literal(String::from(planar_target.asset_id, alloc)), alloc);
+    scene_yaml.push_back("planar_reflector", planar_reflector_yaml, alloc);
+
+    String out;
+    out.data = alloc->next;
+    YAML::serialize(&scene_yaml, alloc, 0, false);
+    out.len = alloc->next - out.data;
+
+    write_file(filename, out);
 }
 
 void Scene::update_and_draw(Camera *editor_camera)
@@ -298,7 +408,7 @@ void Scene::update_and_draw(Camera *editor_camera)
         Camera flipped_camera = *camera;
         flipped_camera.view = reflection_mat * camera->view * reflection_mat;
         flipped_camera.pos_y = (2 * planar_position_y) - camera->pos_y;
-        
+
         render_entities(&flipped_camera);
 
         bind_shader(*planar_entity->shader);
@@ -348,6 +458,18 @@ void Scene::render_entities(Camera *camera)
                 bind_mat4(shader, UniformId::MODEL, model);
                 bind_material(shader, env_mat);
                 bind_material(shader, *e.material, 3);
+
+                if (e.animation)
+                {
+                    for (int i = 0; i < e.animation->num_bones; i++)
+                    {
+                        // TODO shouldn't be querying location every time
+                        std::string uniform_name = std::string("bone_transforms[") + std::to_string(i) + std::string("]");
+                        int handle = glGetUniformLocation(threed_skinning_shader.shader_handle, uniform_name.c_str());
+                        glm::mat4 transform = e.animation->mats[i];
+                        glUniformMatrix4fv(handle, 1, false, &transform[0][0]);
+                    }
+                }
 
                 draw(target, shader, e.vert_buffer);
             }

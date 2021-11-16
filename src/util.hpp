@@ -49,6 +49,32 @@ struct Memory
     StackAllocator *temp;
 };
 
+struct Temp
+{
+    StackAllocator *allocator;
+    char *data = nullptr;
+
+    Temp(Memory mem)
+    {
+        allocator = mem.temp;
+        data = mem.temp->next;
+    }
+    Temp(StackAllocator *alloc)
+    {
+        allocator = alloc;
+        data = alloc->next;
+    }
+    ~Temp()
+    {
+        allocator->free(data);
+    }
+
+    static Temp start(Memory mem)
+    {
+        return Temp(mem);
+    }
+};
+
 template <typename T>
 struct RefArray
 {
@@ -120,6 +146,79 @@ struct Array
     const static size_t MAX_LEN = N;
 };
 
+template <typename T>
+struct FreeList
+{
+    struct Element
+    {
+        bool assigned;
+        union
+        {
+            T value;
+            Element *next;
+        };
+    };
+
+    Element *data = nullptr;
+    int size = 0;
+    Element *next = nullptr, *last = nullptr;
+
+    void init(StackAllocator *allocator, int size)
+    {
+        this->size = size;
+        data = (Element *)allocator->alloc(size * sizeof(Element));
+        next = data;
+        last = next;
+
+        for (int i = 0; i < size; i++)
+        {
+            free(data + i);
+        }
+    }
+
+    int push_back(T &value)
+    {
+        Element *current = next;
+        if (!current)
+        {
+            return -1;
+        }
+
+        next = current->next;
+
+        current->value = value;
+        current->assigned = true;
+
+        return current - data;
+    }
+
+    T* emplace(T &value, int index)
+    {
+        if (next == &data[index])
+        {
+            next = data[index].next;
+        }
+        data[index].value = value;
+        data[index].assigned = true;
+
+        return &data[index].value;
+    }
+
+    void free(Element *elem)
+    {
+        elem->assigned = false;
+        elem->next = nullptr;
+        last->next = elem;
+        last = elem;
+    }
+
+    int index_of(T *ptr)
+    {
+        return ((Element*)ptr - data);
+    }
+};
+
+
 template <size_t N>
 struct AllocatedString
 {
@@ -156,12 +255,12 @@ struct AllocatedString
         return len++;
     }
 
-    int append(char *s)
+    int append(const char *s)
     {
         int i = 0;
         while (s[i] != '\0' && len < MAX_LEN)
         {
-            data[len++] = s[i];
+            data[len++] = s[i++];
         }
 
         return len;

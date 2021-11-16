@@ -14,32 +14,6 @@
 #include "scene/entity.hpp"
 #include "yaml.hpp"
 
-struct Temp
-{
-    StackAllocator *allocator;
-    char *data = nullptr;
-
-    Temp(Memory mem)
-    {
-        allocator = mem.temp;
-        data = mem.temp->next;
-    }
-    Temp(StackAllocator *alloc)
-    {
-        allocator = alloc;
-        data = alloc->next;
-    }
-    ~Temp()
-    {
-        allocator->free(data);
-    }
-
-    static Temp start(Memory mem)
-    {
-        return Temp(mem);
-    }
-};
-
 struct Assets
 {
     Memory mem;
@@ -76,7 +50,7 @@ struct Assets
             int id = atoi(in_mesh->get("id")->as_literal().to_char_array(mem.temp));
             String path = in_mesh->get("path")->as_literal();
 
-            VertexBuffer mesh = load_and_upload_mesh(path, mem);
+            VertexBuffer mesh = load_and_upload_mesh(path, id, mem);
             meshes.emplace(mesh, id);
         }
         if (auto in_render_targets_val = root->get("render_targets"))
@@ -95,6 +69,7 @@ struct Assets
                 int height = atoi(in_render_target->get("height")->as_literal().to_char_array(mem.temp));
 
                 RenderTarget target = RenderTarget(width, height, color_format, depth_format);
+                target.asset_id = id;
                 render_targets.emplace(target, id);
             }
         }
@@ -138,6 +113,7 @@ struct Assets
 
             YAML::List *texture_refs = in_material->get("textures")->as_list();
             Material material = Material::allocate(texture_refs->len, num_parameters, mem.allocator);
+            material.asset_id = id;
             for (int tex_i = 0; tex_i < texture_refs->len; tex_i++)
             {
                 int texture_ref_id = atoi(texture_refs->get(tex_i)->as_literal().to_char_array(mem.temp));
@@ -161,6 +137,7 @@ struct Assets
                 auto frag_src = read_entire_file(frag_path.to_char_array(mem.temp), mem.temp);
 
                 Shader shader = create_shader({vert_src.data, (uint16_t)vert_src.length}, {frag_src.data, (uint16_t)frag_src.length}, name.to_char_array(mem.temp));
+                shader.asset_id = id;
                 shaders.emplace(shader, id);
             }
         }
@@ -200,7 +177,7 @@ struct Assets
         return tex;
     }
 
-    VertexBuffer load_and_upload_mesh(String filepath, Memory mem)
+    VertexBuffer load_and_upload_mesh(String filepath, int asset_id, Memory mem)
     {
         auto t = Temp::start(mem);
 
@@ -208,6 +185,7 @@ struct Assets
         FileData file = read_entire_file(filepath_chars, mem.allocator);
         Mesh mesh = load_fmesh(file, mem);
         VertexBuffer buf = upload_vertex_buffer(mesh);
+        buf.asset_id = asset_id;
         return buf;
     }
 

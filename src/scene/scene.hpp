@@ -23,6 +23,7 @@ struct Scene
     Entity *get(int id);
     void init(Memory mem, TextureFormat texture_format = TextureFormat::RGB16F);
     void load(const char *filename, Assets *assets, Memory mem);
+    void serialize(const char *filename, Assets *assets, StackAllocator *alloc);
     void update_and_draw(Camera *editor_camera);
 
     void set_planar_target(RenderTarget target);

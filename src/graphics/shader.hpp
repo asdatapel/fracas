@@ -2,10 +2,11 @@
 
 #include <glad/glad.h>
 
-#include "graphics.hpp"
 #include <uniforms.hpp>
+#include "../asset.hpp"
+#include "graphics.hpp"
 
-struct Shader
+struct Shader : Asset
 {
     int shader_handle;
     int uniform_handles[UNIFORM_COUNT];

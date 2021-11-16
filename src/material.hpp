@@ -1,5 +1,6 @@
 #pragma once
 
+#include "asset.hpp"
 #include "graphics/shader.hpp"
 
 struct Parameter
@@ -8,7 +9,7 @@ struct Parameter
     float value;
 };
 
-struct Material
+struct Material : Asset
 {
     int num_textures;
     Texture *textures;

@@ -632,6 +632,8 @@ void RpcServer::HandleSwapTeam(ClientId client_id, SwapTeamRequest *req, Empty *
 
 void RpcServer::HandleLeaveGame(ClientId client_id, LeaveGameRequest *req, LeaveGameResponse *resp)
 {
+    printf("HandleLeaveGame - player: %i\n", client_id);
+
     Client *client = &server_data->clients[client_id];
     if (!client->game_id)
     {
@@ -650,6 +652,8 @@ void RpcServer::HandleLeaveGame(ClientId client_id, LeaveGameRequest *req, Leave
 
 void RpcServer::HandleStartGame(ClientId client_id, StartGameRequest *req, StartGameResponse *resp)
 {
+    printf("HandleStartGame - player: %i, game: %i\n", client_id, req->game_id);
+
     Client *client = &server_data->clients[client_id];
     if (server_data->lobbies.count(client->game_id) == 0)
     {
@@ -673,6 +677,8 @@ void RpcServer::HandleStartGame(ClientId client_id, StartGameRequest *req, Start
 
 void RpcServer::HandleInGameReady(ClientId client_id, Empty *req, Empty *resp)
 {
+    printf("HandleInGameReady - player: %i\n", client_id);
+
     Client *client = &server_data->clients[client_id];
     if (server_data->lobbies.count(client->game_id) == 0)
     {
@@ -697,6 +703,8 @@ void RpcServer::HandleInGameReady(ClientId client_id, Empty *req, Empty *resp)
 
 void RpcServer::HandleInGameBuzz(ClientId client_id, Empty *req, Empty *resp)
 {
+    printf("HandleInGameBuzz - player: %i\n", client_id);
+
     Client *client = &server_data->clients[client_id];
     if (server_data->lobbies.count(client->game_id) == 0)
     {
@@ -730,6 +738,8 @@ void RpcServer::HandleInGameBuzz(ClientId client_id, Empty *req, Empty *resp)
 
 void RpcServer::HandleInGameAnswer(ClientId client_id, InGameAnswerMessage *req, Empty *resp)
 {
+    printf("HandleInGameAnswer - player: %i, answer: %.*s\n", client_id, req->answer.len, req->answer.data);
+
     Client *client = &server_data->clients[client_id];
     if (server_data->lobbies.count(client->game_id) == 0)
     {
@@ -764,6 +774,8 @@ void RpcServer::HandleInGameAnswer(ClientId client_id, InGameAnswerMessage *req,
 
 void RpcServer::HandleInGameChoosePassOrPlay(ClientId client_id, InGameChoosePassOrPlayMessage *req, Empty *resp)
 {
+    printf("HandleInGameChoosePassOrPlay - player: %i, play?: %i\n", client_id, req->play);
+    
     Client *client = &server_data->clients[client_id];
     if (server_data->lobbies.count(client->game_id) == 0)
     {

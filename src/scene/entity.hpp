@@ -1,8 +1,9 @@
 #pragma once
 
-#include "../util.hpp"
-#include "../math.hpp"
+#include "../animation.hpp"
 #include "../camera.hpp"
+#include "../math.hpp"
+#include "../util.hpp"
 
 enum struct EntityType
 {
@@ -80,71 +81,6 @@ struct Entity
     Camera camera;
 
     Spline3 spline;
-};
 
-template <typename T>
-struct FreeList
-{
-    struct Element
-    {
-        bool assigned;
-        union
-        {
-            T value;
-            Element *next;
-        };
-    };
-
-    Element *data = nullptr;
-    int size = 0;
-    Element *next = nullptr, *last = nullptr;
-
-    void init(StackAllocator *allocator, int size)
-    {
-        this->size = size;
-        data = (Element *)allocator->alloc(size * sizeof(Element));
-        next = data;
-        last = next;
-
-        for (int i = 0; i < size; i++)
-        {
-            free(data + i);
-        }
-    }
-
-    int push_back(T &value)
-    {
-        Element *current = next;
-        if (!current)
-        {
-            return -1;
-        }
-
-        next = current->next;
-
-        current->value = value;
-        current->assigned = true;
-
-        return current - data;
-    }
-
-    T* emplace(T &value, int index)
-    {
-        if (next == &data[index])
-        {
-            next = data[index].next;
-        }
-        data[index].value = value;
-        data[index].assigned = true;
-
-        return &data[index].value;
-    }
-
-    void free(Element *elem)
-    {
-        elem->assigned = false;
-        elem->next = nullptr;
-        last->next = elem;
-        last = elem;
-    }
+    Animation *animation = nullptr;
 };

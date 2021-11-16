@@ -1031,25 +1031,6 @@ entities:
         y: 1.0
         z: 1.0
     type: MESH
-  - id: 50
-    mesh:
-      material: 16
-      mesh: 16
-    name: icosahedron.Cube
-    transform:
-      position:
-        x: 0.0
-        y: 0.0
-        z: 0.0
-      rotation:
-        x: 0.0
-        y: 0.0
-        z: -0.0
-      scale:
-        x: 1.0
-        y: 1.0
-        z: 1.0
-    type: MESH
   - id: 51
     name: icosahedron.Armature
     transform:
@@ -1426,7 +1407,7 @@ entities:
     name: bar_1
     transform:
       position:
-        x: -1.956111
+        x: -2
         y: 7.615914
         z: -4.771345
       rotation:
@@ -1446,7 +1427,7 @@ entities:
     name: bar_2
     transform:
       position:
-        x: -1.956111
+        x: -2
         y: 6.815914
         z: -4.771345
       rotation:
@@ -1466,7 +1447,7 @@ entities:
     name: bar_3
     transform:
       position:
-        x: -1.956111
+        x: -2
         y: 6.015913
         z: -4.771345
       rotation:
@@ -1486,7 +1467,7 @@ entities:
     name: bar_4
     transform:
       position:
-        x: -1.956111
+        x: -2
         y: 5.215913
         z: -4.771345
       rotation:
@@ -1506,7 +1487,7 @@ entities:
     name: bar_5
     transform:
       position:
-        x: 2.048684
+        x: 2
         y: 7.615914
         z: -4.771345
       rotation:
@@ -1526,7 +1507,7 @@ entities:
     name: bar_6
     transform:
       position:
-        x: 2.048684
+        x: 2
         y: 6.815914
         z: -4.771345
       rotation:
@@ -1546,7 +1527,7 @@ entities:
     name: bar_7
     transform:
       position:
-        x: 2.048684
+        x: 2
         y: 6.015913
         z: -4.771345
       rotation:
@@ -1566,7 +1547,7 @@ entities:
     name: bar_8
     transform:
       position:
-        x: 2.048684
+        x: 2
         y: 5.215913
         z: -4.771345
       rotation:
@@ -1840,6 +1821,46 @@ entities:
         y: 1.0
         z: 1.0
     type: CAMERA
+  - id: 50
+    mesh:
+      material: 16
+      mesh: 16
+      shader: 3
+    name: icosahedron.Cube
+    transform:
+      position:
+        x: 3.1
+        y: 0.0
+        z: 0.78
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 91
+    mesh:
+      material: 33
+      mesh: 25
+      shader: 3
+    name: icosahedron.Cube
+    transform:
+      position:
+        x: -3.1
+        y: 0.0
+        z: 0.78
+      rotation:
+        x: 0.0
+        y: 3.1415
+        z: 0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
 active_camera_id: -1
 hdr: resources/hdri/Newport_Loft_Ref.hdr
 cubemap_visible: true

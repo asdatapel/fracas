@@ -17,6 +17,8 @@ struct Editor
     Entity *selected_entity = nullptr;
     int selected_spline_node = -1;
 
+    bool editor_visible = false;
+
     void update_and_draw(Scene *scene, Scene *x_scene, Assets *assets, Game *game, RpcClient *rpc_client, RenderTarget backbuffer, InputState *input, Memory mem)
     {
         static bool init = false;
@@ -59,7 +61,7 @@ struct Editor
             backbuffer.bind();
             draw_rect();
 
-            debug_ui(&play_scene, x_scene, game, backbuffer, input, mem);
+            debug_ui(&play_scene, x_scene, game, backbuffer, input, assets, mem);
         }
         else
         {
@@ -88,11 +90,26 @@ struct Editor
             backbuffer.bind();
             draw_rect();
 
-            debug_ui(scene, x_scene, game, backbuffer, input, mem);
+            debug_ui(scene, x_scene, game, backbuffer, input, assets, mem);
         }
+
+        // static float debug_t = 0.f;
+        // static Animation anim = parse_animation(read_entire_file("resources/scenes/test/anim/anim.fanim"), mem);
+        // debug_t += 0.001f;
+        // anim.update(debug_t);
+
+        // std::array<glm::vec3, 14> bone_positions;
+        // bind_shader(assets->shaders.data[SHADER_THREED_SKINNING].value);
+        // for (int i = 0; i < anim.num_bones; i++)
+        // {
+        //     glm::mat4 transform = anim.mats[i];
+        //     std::string uniform_name = std::string("bone_transforms[") + std::to_string(i) + std::string("]");
+        //     int handle = glGetUniformLocation(threed_skinning_shader.shader_handle, uniform_name.c_str());
+        //     glUniformMatrix4fv(handle, 1, false, &transform[0][0]);
+        // }
     }
 
-    void debug_ui(Scene *scene, Scene *x_scene, Game *game, RenderTarget target, InputState *input, Memory mem)
+    void debug_ui(Scene *scene, Scene *x_scene, Game *game, RenderTarget target, InputState *input, Assets *assets, Memory mem)
     {
         imm_begin(target, *get_camera(scene), input);
 
@@ -104,11 +121,18 @@ struct Editor
                 const char *script_file = "resources/test/scripts.yaml";
                 String out = serialize(game, mem.temp);
                 write_file(script_file, out);
+
+                scene->serialize("resources/test/main_scene.yaml", assets, mem.temp);
             }
             // load scene
             if (input->key_input[i] == Keys::F2)
             {
                 // deserialize(scene, game, mem.temp);
+            }
+
+            if (input->key_input[i] == Keys::F12)
+            {
+                editor_visible = !editor_visible;
             }
 
             // add spline
@@ -154,146 +178,149 @@ struct Editor
             }
         }
 
-        imm_window("Entities", {0, 0, 300, 600});
-        for (int i = 0; i < scene->entities.size; i++)
+        if (editor_visible)
         {
-            if (scene->entities.data[i].assigned)
+            imm_window("Entities", {0, 0, 300, 600});
+            for (int i = 0; i < scene->entities.size; i++)
             {
-                Entity &e = scene->entities.data[i].value;
-                if (imm_list_item((ImmId)i + 1, e.debug_tag.name, selected_entity_i == i))
+                if (scene->entities.data[i].assigned)
                 {
-                    selected_entity = &e;
-                    selected_entity_i = i;
-                }
-            }
-        }
-
-        if (selected_entity)
-        {
-            imm_window("Deets", {target.width - 300.f, 0, 300, 400});
-            imm_textbox(&selected_entity->debug_tag.name);
-
-            imm_label("Position");
-            imm_num_input(&selected_entity->transform.position.x);
-            imm_num_input(&selected_entity->transform.position.y);
-            imm_num_input(&selected_entity->transform.position.z);
-            imm_label("Rotation");
-            imm_num_input(&selected_entity->transform.rotation.x);
-            imm_num_input(&selected_entity->transform.rotation.y);
-            imm_num_input(&selected_entity->transform.rotation.z);
-
-            if (selected_entity->type == EntityType::LIGHT)
-            {
-                imm_label("Light");
-                imm_num_input(&selected_entity->spot_light.inner_angle);
-                imm_num_input(&selected_entity->spot_light.outer_angle);
-            }
-            else if (selected_entity->type == EntityType::SPLINE)
-            {
-                draw_spline(selected_entity->spline, target, input, mem, get_camera(scene), true);
-
-                for (int i = 0; i < selected_entity->spline.points.len; i++)
-                {
-                    if (imm_3d_point(&selected_entity->spline.points[i], selected_spline_node == i))
+                    Entity &e = scene->entities.data[i].value;
+                    if (imm_list_item((ImmId)i + 1, e.debug_tag.name, selected_entity_i == i))
                     {
-                        selected_spline_node = i;
-
-                        Vec3f temp = selected_entity->spline.points[i];
-                        imm_label("Spline Node");
-                        imm_num_input(&temp.x);
-                        imm_num_input(&temp.y);
-                        imm_num_input(&temp.z);
-                        selected_entity->spline.points[i] = temp;
-                    }
-                }
-
-                if (imm_button("Flip Spline"))
-                {
-                    Vec3f p0 = selected_entity->spline.points[0];
-                    Vec3f p1 = selected_entity->spline.points[1];
-                    Vec3f p2 = selected_entity->spline.points[2];
-                    Vec3f p3 = selected_entity->spline.points[3];
-
-                    selected_entity->spline.points[0] = p3;
-                    selected_entity->spline.points[1] = p2;
-                    selected_entity->spline.points[2] = p1;
-                    selected_entity->spline.points[3] = p0;
-                }
-            }
-            else if (selected_entity->type == EntityType::CAMERA)
-            {
-                imm_label("Camera");
-                if (imm_button("View from camera"))
-                {
-                    if (!use_debug_camera && scene->active_camera_id == selected_entity_i)
-                    {
-                        use_debug_camera = true;
-                        scene->active_camera_id = -1;
-                    }
-                    else
-                    {
-                        scene->active_camera_id = selected_entity_i;
-                        use_debug_camera = false;
+                        selected_entity = &e;
+                        selected_entity_i = i;
                     }
                 }
             }
-        }
 
-        // if (imm_button("New Camera"))
-        // {
-        //     Entity new_e;
-        //     new_e.type = EntityType::CAMERA;
-        //     new_e.transform.position.x = (float)(rand() % 10000) / 10000 * 60 - 30;
-        //     new_e.transform.position.z = (float)(rand() % 10000) / 10000 * 60 - 30;
-        //     new_e.transform.position.y = (float)(rand() % 10000) / 10000 * 20;
-        //     new_e.transform.rotation.x = 0;
-        //     new_e.transform.rotation.z = 0;
-        //     new_e.transform.rotation.y = 0;
-        //     new_e.transform.scale.x = 1;
-        //     new_e.transform.scale.z = 1;
-        //     new_e.transform.scale.y = 1;
-        //     scene->entities.push_back(new_e);
-        // }
-        // if (imm_button("Set Camera"))
-        // {
-        //     if (selected_entity)
-        //         selected_camera = selected_entity->type == EntityType::CAMERA ? selected_entity : nullptr;
-        // }
-        // if (imm_button("Reset Camera"))
-        // {
-        //     selected_camera = nullptr;
-        // }
-
-        std::vector<ScriptDefinition> scripts = game->get_script_defs();
-        imm_window("Scripts", {0, target.height - 400.f, 300, 400});
-        ScriptDefinition *selected_script = nullptr;
-        for (int i = 0; i < scripts.size(); i++)
-        {
-            ScriptDefinition *script = &scripts[i];
-            if (imm_list_item((ImmId)i + 1, script->name))
+            if (selected_entity)
             {
-                selected_script = script;
-            }
-        }
-        if (selected_script)
-        {
-            imm_window("Script Deets", {target.width - 300.f, target.height - 400.f, 300, 400});
-            for (int i = 0; i < selected_script->inputs.size(); i++)
-            {
-                imm_label(selected_script->inputs[i].name);
+                imm_window("Deets", {target.width - 300.f, 0, 300, 400});
+                imm_textbox(&selected_entity->debug_tag.name);
 
-                Entity *input_entity = &scene->entities.data[*selected_script->inputs[i].value].value;
-                if (imm_button((ImmId)selected_script->inputs[i].value, input_entity->debug_tag.name))
+                imm_label("Position");
+                imm_num_input(&selected_entity->transform.position.x);
+                imm_num_input(&selected_entity->transform.position.y);
+                imm_num_input(&selected_entity->transform.position.z);
+                imm_label("Rotation");
+                imm_num_input(&selected_entity->transform.rotation.x);
+                imm_num_input(&selected_entity->transform.rotation.y);
+                imm_num_input(&selected_entity->transform.rotation.z);
+
+                if (selected_entity->type == EntityType::LIGHT)
                 {
-                    if (selected_entity && selected_entity->type == selected_script->inputs[i].entity_type)
+                    imm_label("Light");
+                    imm_num_input(&selected_entity->spot_light.inner_angle);
+                    imm_num_input(&selected_entity->spot_light.outer_angle);
+                }
+                else if (selected_entity->type == EntityType::SPLINE)
+                {
+                    draw_spline(selected_entity->spline, target, input, mem, get_camera(scene), true);
+
+                    for (int i = 0; i < selected_entity->spline.points.len; i++)
                     {
-                        *selected_script->inputs[i].value = selected_entity_i;
+                        if (imm_3d_point(&selected_entity->spline.points[i], selected_spline_node == i))
+                        {
+                            selected_spline_node = i;
+
+                            Vec3f temp = selected_entity->spline.points[i];
+                            imm_label("Spline Node");
+                            imm_num_input(&temp.x);
+                            imm_num_input(&temp.y);
+                            imm_num_input(&temp.z);
+                            selected_entity->spline.points[i] = temp;
+                        }
+                    }
+
+                    if (imm_button("Flip Spline"))
+                    {
+                        Vec3f p0 = selected_entity->spline.points[0];
+                        Vec3f p1 = selected_entity->spline.points[1];
+                        Vec3f p2 = selected_entity->spline.points[2];
+                        Vec3f p3 = selected_entity->spline.points[3];
+
+                        selected_entity->spline.points[0] = p3;
+                        selected_entity->spline.points[1] = p2;
+                        selected_entity->spline.points[2] = p1;
+                        selected_entity->spline.points[3] = p0;
+                    }
+                }
+                else if (selected_entity->type == EntityType::CAMERA)
+                {
+                    imm_label("Camera");
+                    if (imm_button("View from camera"))
+                    {
+                        if (!use_debug_camera && scene->active_camera_id == selected_entity_i)
+                        {
+                            use_debug_camera = true;
+                            scene->active_camera_id = -1;
+                        }
+                        else
+                        {
+                            scene->active_camera_id = selected_entity_i;
+                            use_debug_camera = false;
+                        }
                     }
                 }
             }
-        }
 
-        imm_end();
+            // if (imm_button("New Camera"))
+            // {
+            //     Entity new_e;
+            //     new_e.type = EntityType::CAMERA;
+            //     new_e.transform.position.x = (float)(rand() % 10000) / 10000 * 60 - 30;
+            //     new_e.transform.position.z = (float)(rand() % 10000) / 10000 * 60 - 30;
+            //     new_e.transform.position.y = (float)(rand() % 10000) / 10000 * 20;
+            //     new_e.transform.rotation.x = 0;
+            //     new_e.transform.rotation.z = 0;
+            //     new_e.transform.rotation.y = 0;
+            //     new_e.transform.scale.x = 1;
+            //     new_e.transform.scale.z = 1;
+            //     new_e.transform.scale.y = 1;
+            //     scene->entities.push_back(new_e);
+            // }
+            // if (imm_button("Set Camera"))
+            // {
+            //     if (selected_entity)
+            //         selected_camera = selected_entity->type == EntityType::CAMERA ? selected_entity : nullptr;
+            // }
+            // if (imm_button("Reset Camera"))
+            // {
+            //     selected_camera = nullptr;
+            // }
+
+            std::vector<ScriptDefinition> scripts = game->get_script_defs();
+            imm_window("Scripts", {0, target.height - 400.f, 300, 400});
+            ScriptDefinition *selected_script = nullptr;
+            for (int i = 0; i < scripts.size(); i++)
+            {
+                ScriptDefinition *script = &scripts[i];
+                if (imm_list_item((ImmId)i + 1, script->name))
+                {
+                    selected_script = script;
+                }
+            }
+            if (selected_script)
+            {
+                imm_window("Script Deets", {target.width - 300.f, target.height - 400.f, 300, 400});
+                for (int i = 0; i < selected_script->inputs.size(); i++)
+                {
+                    imm_label(selected_script->inputs[i].name);
+
+                    Entity *input_entity = &scene->entities.data[*selected_script->inputs[i].value].value;
+                    if (imm_button((ImmId)selected_script->inputs[i].value, input_entity->debug_tag.name))
+                    {
+                        if (selected_entity && selected_entity->type == selected_script->inputs[i].entity_type)
+                        {
+                            *selected_script->inputs[i].value = selected_entity_i;
+                        }
+                    }
+                }
+            }
+
+            imm_end();
+        }
     }
 
     void start_play(Scene *scene, Scene *x_scene, Game *game)

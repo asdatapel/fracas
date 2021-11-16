@@ -7,7 +7,7 @@
 #include "texture.hpp"
 #include "opengl.hpp"
 
-struct RenderTarget
+struct RenderTarget : Asset
 {
     uint32_t width = 0, height = 0;
     Texture color_tex;

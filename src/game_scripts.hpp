@@ -8,12 +8,29 @@
 
 #include "main_menu.hpp"
 
+// stupid shit
+#define CAT_(a, b) a##b
+#define CAT(a, b) CAT_(a, b)
+#define VARNAME(Var) CAT(Var, __LINE__)
+#define step(...)                      \
+    static bool VARNAME(step) = false; \
+    if (!VARNAME(step))                \
+    {                                  \
+        VARNAME(step) = true;          \
+        __VA_ARGS__ ;                  \
+    }
+
 struct Scenes
 {
     Scene *main;
     Scene *xs;
 
     Assets *assets;
+
+    // hijacking this struct for controllers
+    // TODO move this somewhere more appropriate
+    PlayerController *player_controller;
+    UiController *ui_controller;
 };
 
 struct Sequence
@@ -80,6 +97,9 @@ struct IntroSequence : Sequence
             scenes.main->active_camera_id = input.camera;
             camera->transform.position = catmull_rom(constant_distance_t(path->spline, t / length) - 1, path->spline);
         }
+
+        step(
+            scenes.ui_controller->popup_banner("hello", 5.f);)
     }
 
     bool ready()
@@ -180,6 +200,8 @@ struct FaceoffStartSequence : Sequence
         {
             camera->transform.position = catmull_rom(constant_distance_t(path->spline, t / length) - 1, path->spline);
         }
+
+        scenes.player_controller->start_faceoff();
     }
     bool ready()
     {
@@ -214,13 +236,6 @@ struct AskQuestionSequence : Sequence
 
     void init(Scenes scenes)
     {
-        // screen_render_target = RenderTarget(1024, 1024, TextureFormat::RGBA8, TextureFormat::NONE);
-
-        // Entity *screen = scenes.main->get(input.screen);
-        // if (screen)
-        // {
-        //     screen->material->textures[screen->material->num_textures - 1] = screen_render_target.color_tex;
-        // }
     }
 
     void reset(String question, int num_answers)
@@ -253,7 +268,7 @@ struct AskQuestionSequence : Sequence
         }
         step_1_done = true;
 
-        static float wait_1 = 2.f;
+        static float wait_1 = 3.f;
         wait_1 -= timestep;
         if (wait_1 > 0.f)
         {
@@ -378,12 +393,10 @@ struct PlayerBuzzedSequence : Sequence
 
         t += timestep;
 
-        float pos_x = 200 + sinf(t * 1000) * 20;
-        float pos_y = 500 + sinf(t * 1000) * 20;
-
-        glEnable(GL_BLEND);
-        draw_text(*font, scenes.main->target, player_name, pos_x, pos_y, 2, 2);
-        glDisable(GL_BLEND);
+        step(
+            AllocatedString<256> combined = player_name;
+            combined.append(" buzzed.");
+            scenes.ui_controller->popup_banner(combined);)
     }
     bool ready()
     {
@@ -441,9 +454,10 @@ struct PromptForAnswerSequence : Sequence
         }
         else
         {
-            glEnable(GL_BLEND);
-            draw_text(*font, scenes.main->target, answerer, 500, 500, 2, 2);
-            glDisable(GL_BLEND);
+            step(
+                AllocatedString<256> combined = answerer;
+                combined.append(" is answering.");
+                scenes.ui_controller->popup_banner(combined);)
         }
     }
     bool ready()
@@ -495,6 +509,11 @@ struct StartPlaySequence : Sequence
         {
             camera->transform.position = catmull_rom(constant_distance_t(path->spline, t / length) - 1, path->spline);
         }
+
+        // step (player_controller->end_faceoff) // walking away animations
+        // camera on current player, move host to that position
+        // repeat question
+        // 
     }
 
     bool ready()
@@ -588,9 +607,7 @@ struct PlayerAnsweredSequence : Sequence
         float pos_x = 200 + sinf(t * 1000) * 20;
         float pos_y = 500 + sinf(t * 1000) * 20;
 
-        glEnable(GL_BLEND);
-        draw_text(*font, scenes.main->target, answer, pos_x, pos_y, 2, 2);
-        glDisable(GL_BLEND);
+        step(scenes.ui_controller->popup_banner(answer, 5.f))
     }
     bool ready()
     {
@@ -680,7 +697,7 @@ struct EeeeeggghhhhSequence : Sequence
     Input input;
 
     float t;
-    const float length = 3.f;
+    const float length = 5.f;
 
     void reset()
     {
@@ -744,7 +761,9 @@ struct EndRoundSequence : Sequence
 
     void update(float timestep, Scenes scenes, BoardController *board_controller, InputState *input_state, RpcClient *rpc_client)
     {
-        // end round
+        // sweeping camera
+        // move host back to faceoff table
+        // round N graphic on screen
     }
     bool ready()
     {
@@ -787,6 +806,8 @@ struct EndGameSequence : Sequence
 struct Game
 {
     BoardController board_controller;
+    PlayerController player_controller;
+    UiController ui_controller;
 
     IntroSequence intro_sequence;
     RoundStartSequence round_start_sequence;
@@ -810,6 +831,8 @@ struct Game
 
     void init(Scenes scenes)
     {
+        player_controller.init();
+
         // TODO ask server for player avatars?
         ask_question_sequence.init(scenes);
 
@@ -844,6 +867,9 @@ struct Game
 
 void Game::update(float timestep, Scenes scenes, RpcClient *rpc_client, InputState *input_state)
 {
+    scenes.player_controller = &player_controller;
+    scenes.ui_controller = &ui_controller;
+
     handle_rpcs(scenes, rpc_client);
 
     current_sequence->update(timestep, scenes, &board_controller, input_state, rpc_client);
@@ -854,6 +880,8 @@ void Game::update(float timestep, Scenes scenes, RpcClient *rpc_client, InputSta
     }
 
     board_controller.update(timestep, scenes.main, scenes.assets);
+    player_controller.update(timestep, scenes.main, scenes.assets);
+    ui_controller.update(timestep, scenes.main, scenes.assets);
 }
 
 // returns true if game is over
@@ -938,11 +966,7 @@ bool Game::handle_rpcs(Scenes scenes, RpcClient *rpc_client)
     else if (auto msg = rpc_client->get_InGamePlayerChosePassOrPlay_msg())
     {
         printf("get_InGamePlayerChosePassOrPlay_msg\n");
-        if (current_sequence != &pass_or_play_sequence)
-        {
-            current_sequence = &pass_or_play_sequence;
-            sent_ready = false;
-        }
+        ui_controller.popup_banner(msg->play ? "\"Play\"" : "\"PASS\"");
     }
     else if (auto msg = rpc_client->get_InGameStartPlay_msg())
     {

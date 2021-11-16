@@ -313,6 +313,15 @@ assets:
         - 164
         - 165
         - 166
+    - id: 33
+      name: human2
+      textures:
+        - 167
+        - 168
+        - 169
+        - 170
+        - 171
+        - 172
   meshes:
     - id: 0
       path: resources/scenes/test/room/room.fmesh
@@ -365,6 +374,9 @@ assets:
     - id: 24
       name: x
       path: resources/models/x2/Text.fmesh
+    - id: 25
+      name: human2
+      path: resources/models/human2/Cube.fmesh
   textures:
     - format: SRGB8_ALPHA8
       id: 0
@@ -875,6 +887,24 @@ assets:
     - id: 166
       path: resources/models/x2/ao.bmp
       format: RGBA8
+    - id: 167
+      path: resources/models/human2/Cube/diffuse.bmp
+      format: SRGB8_ALPHA8
+    - id: 168
+      path: resources/models/human2/Cube/normal.bmp
+      format: RGBA8
+    - id: 169
+      path: resources/models/human2/Cube/metal.bmp
+      format: RGBA8
+    - id: 170
+      path: resources/models/human2/Cube/roughness.bmp
+      format: RGBA8
+    - id: 171
+      path: resources/models/human2/Cube/emit.bmp
+      format: SRGB8_ALPHA8
+    - id: 172
+      path: resources/models/human2/Cube/ao.bmp
+      format: RGBA8
   render_targets:
     - id: 0
       name: "planar_target"
@@ -943,6 +973,10 @@ assets:
       name: planar
       vert: resources2/shaders/threed_with_planar/vert.gl
       frag: resources2/shaders/threed_with_planar/frag.gl
+    - id: 3
+      name: threed_skinning
+      vert: resources2/shaders/threed_skinning/vert.gl
+      frag: resources2/shaders/threed_skinning/frag.gl
   fonts:
     - id: 0
       path: resources/fonts/Anton_Regular.ttf

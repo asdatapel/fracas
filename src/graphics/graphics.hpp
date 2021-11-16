@@ -9,6 +9,7 @@
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtx/quaternion.hpp"
 
+#include "../asset.hpp"
 #include "../math.hpp"
 #include "../mesh.hpp"
 #include "../platform.hpp"
@@ -41,7 +42,7 @@ struct Bitmap
     Vec4i *data;
 };
 
-struct VertexBuffer
+struct VertexBuffer : Asset
 {
     unsigned int vao;
     unsigned int vbo;

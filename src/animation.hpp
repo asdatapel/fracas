@@ -46,7 +46,8 @@ struct Bone
         };
 
         return glm::translate(glm::mat4(1.0), {pos.x, pos.y, pos.z}) *
-               glm::toMat4(rot) * glm::scale(glm::mat4(1.0), {scale.x, scale.y, scale.z});
+               glm::toMat4(rot) *
+               glm::scale(glm::mat4(1.0), {scale.x, scale.y, scale.z});
     }
 
     int num_frames()
@@ -58,7 +59,7 @@ struct Bone
     {
         glm::mat4 my_transform = interpolate(frame);
 
-        glm::mat4 parent_transform = glm::mat4(1.f); //glm::inverse(glm::mat4(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0));
+        glm::mat4 parent_transform = glm::mat4(1.f);
         if (parent)
         {
             parent_transform = parent->global_transform;

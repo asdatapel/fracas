@@ -52,7 +52,7 @@ bool init_if_not()
         assets.load("resources/test/main_assets.yaml", memory);
 
         scene.init(memory);
-        scene.load("resources/test/main.yaml", &assets, memory);
+        scene.load("resources/test/main_scene.yaml", &assets, memory);
         scene.visible = true;
         x_scene.init(memory, TextureFormat::RGBA16F);
         x_scene.load("resources/test/eeegghhh_scene.yaml", &assets, memory);
