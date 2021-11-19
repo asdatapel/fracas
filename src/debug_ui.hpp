@@ -458,8 +458,7 @@ void imm_textbox(AllocatedString<N> *str)
     debug_begin_immediate();
 
     draw_rect(state.target, rect, color);
-    draw_text_cropped(*state.font, state.target, *str,
-                      rect.x + border, rect.y + border, text_scale, text_scale);
+    draw_text_cropped(*state.font, state.target, *str, rect.x + border, rect.y + border, text_scale, text_scale);
 
     debug_end_immediate();
     end_scissor();

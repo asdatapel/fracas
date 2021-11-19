@@ -1,5 +1,6 @@
 #pragma once
 
+#include "debug_ui2.hpp"
 #include "scene/scene.hpp"
 #include "spline.hpp"
 #include "animation.hpp"
@@ -321,6 +322,11 @@ struct Editor
 
             imm_end();
         }
+
+        Imm::start_frame(target, input, assets);
+        Imm::start_window("title", {50, 50, 200, 500});
+        Imm::start_window("other", {700, 250, 100, 300});
+        Imm::end_frame(&debug_camera, assets);
     }
 
     void start_play(Scene *scene, Scene *x_scene, Game *game)
