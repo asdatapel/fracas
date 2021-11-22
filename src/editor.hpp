@@ -323,9 +323,36 @@ struct Editor
             imm_end();
         }
 
+        String x;
+        String y;
+        String z;
+        String w;
+
         Imm::start_frame(target, input, assets);
         Imm::start_window("title", {50, 50, 200, 500});
+        Imm::label("asfasdf");
+        if (Imm::button("do something"))
+            printf("do something\n");
+        Imm::label("ASad");
+        Imm::label("Ahgh");
+        if (Imm::button("another thing"))
+            printf("another thing\n");
+        Imm::label("ASadasds");
         Imm::start_window("other", {700, 250, 100, 300});
+        if (Imm::button("BULLSHIT"))
+            printf("BULLSHIT\n");
+        Imm::label("HELLO BITCHES");
+        Imm::label("OKAY");
+        Imm::list_item((ImmId)&x, "One");
+        Imm::list_item((ImmId)&y, "Two");
+        Imm::list_item((ImmId)&z, "Three");
+
+        static AllocatedString<64> aasdasd;
+        Imm::textbox(&aasdasd);
+
+        static float val = 1.432f;
+        Imm::num_input(&val);
+        Imm::list_item((ImmId)&w, "Four");
         Imm::end_frame(&debug_camera, assets);
     }
 

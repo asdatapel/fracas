@@ -58,6 +58,7 @@ bool init_if_not()
         x_scene.load("resources/test/eeegghhh_scene.yaml", &assets, memory);
 
         imm_init(&assets, memory);
+        Imm::init();
     }
 
     return true;

@@ -238,14 +238,6 @@ struct AllocatedString
         memcpy(data, str2.data, len);
     }
 
-    // void operator=(const String &str2)
-    // {
-    //     data = arr;
-    //     len = fmin(str2.len, MAX_LEN);
-    //     memcpy(data, str2.data, len);
-    //     printf("operator=(const String &str2), %.*s\n", str2.len, str2.data);
-    // }
-
     int append(char c)
     {
         if (len >= MAX_LEN)
@@ -265,16 +257,6 @@ struct AllocatedString
 
         return len;
     }
-
-    // int append(String s)
-    // {
-    //     if (len + s.len >= MAX_LEN)
-    //         return -1;
-
-    //     memcpy(arr + len, s.data, s.len);
-    //     len += s.len;
-    //     return len;
-    // }
 
     char data[N];
     uint16_t len = 0;
@@ -355,7 +337,6 @@ struct String
         allocator->free(ret.data + ret.len);
         return ret;
     }
-
 };
 
 bool strcmp(String str1, String str2)
@@ -371,3 +352,11 @@ AllocatedString<N> string_to_allocated_string(String str)
     memcpy(ret.data, str.data, ret.len);
     return ret;
 }
+template <uint16_t N>
+AllocatedString<N> float_to_allocated_string(float val)
+{
+    AllocatedString<N> ret;
+    ret.len = snprintf(ret.data, N, "%f", val);
+    return ret;
+}
+

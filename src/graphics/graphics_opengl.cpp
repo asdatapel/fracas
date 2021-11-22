@@ -350,7 +350,7 @@ void draw_textured_rect(RenderTarget target, Rect rect, Color color, Texture tex
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
-void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture tex)
+void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture tex, Color color)
 {
     bind_shader(textured_mapped_shader);
 
@@ -358,6 +358,7 @@ void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture 
     bind_2f(textured_mapped_shader, UniformId::POS, rect.x, rect.y);
     bind_2f(textured_mapped_shader, UniformId::SCALE, rect.width, rect.height);
     bind_4f(textured_mapped_shader, UniformId::UV, uv.x, uv.y, uv.width, uv.height);
+    bind_4f(textured_mapped_shader, UniformId::COLOR, color.r, color.g, color.b, color.a);
 
     bind_texture(textured_mapped_shader, UniformId::TEX, tex);
 
@@ -489,6 +490,7 @@ void debug_draw_immediate(RenderTarget target, Vec2f v1, Vec2f v2, Vec2f v3, Vec
         -to_gl(v3.y, target.height),
     };
 
+    bind_shader(twod_shader);
     bind_4f(twod_shader, UniformId::COLOR, color.r, color.g, color.b, color.a);
     glBindBuffer(GL_ARRAY_BUFFER, immediate_quad_vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vert_data), &vert_data, GL_DYNAMIC_DRAW);
@@ -499,6 +501,15 @@ void debug_draw_immediate(RenderTarget target, Vec2f v1, Vec2f v2, Vec2f v3, Vec
 void debug_draw_immediate(RenderTarget target, Vec2f v1, Vec2f v2, Vec2f v3, Color color)
 {
     debug_draw_immediate(target, v1, v2, v3, v3, color);
+}
+
+void debug_draw_immediate(RenderTarget target, Rect rect, Color color)
+{
+    Vec2f v1 = {rect.x, rect.y},
+          v2 = {rect.x + rect.width, rect.y},
+          v3 = {rect.x + rect.width, rect.y + rect.height},
+          v4 = {rect.x, rect.y + rect.height};
+    debug_draw_immediate(target, v1, v2, v3, v4, color);
 }
 
 void start_scissor(RenderTarget target, Rect rect)

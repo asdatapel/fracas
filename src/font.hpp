@@ -132,6 +132,18 @@ void draw_text(const Font &font, RenderTarget target, String text, float x, floa
   }
 }
 
+void draw_text(const Font &font, RenderTarget target, String text, float x, float y, Color color)
+{
+  float baseline = font.baseline;
+  for (int i = 0; i < text.len; i++)
+  {
+    Character c = font.characters[text.data[i]];
+    Rect shape_rect = {x + c.shape.x, y + baseline + c.shape.y, c.shape.width, c.shape.height};
+    x += c.advance;
+    draw_textured_mapped_rect(target, shape_rect, c.uv, font.atlas, color);
+  }
+}
+
 void draw_centered_text(const Font &font, RenderTarget target, String text, Rect sub_target, float border, float scale, float aspect_ratio)
 {
   float border_x = border * sub_target.width;

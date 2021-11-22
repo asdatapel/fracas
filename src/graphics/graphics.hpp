@@ -67,12 +67,13 @@ void debug_begin_immediate();
 void debug_end_immediate();
 void debug_draw_immediate(RenderTarget target, Vec2f v1, Vec2f v2, Vec2f v3, Vec2f v4, Color color);
 void debug_draw_immediate(RenderTarget target, Vec2f v1, Vec2f v2, Vec2f v3, Color color);
+void debug_draw_immediate(RenderTarget target, Rect rect, Color color);
 
 void draw(RenderTarget target, Shader shader, VertexBuffer buf);
 void draw_rect();
 void draw_rect(RenderTarget target, Rect rect, Color color);
 void draw_textured_rect(RenderTarget target, Rect rect, Color color, Texture tex);
-void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture tex);
+void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture tex, Color color = {1, 1, 1, 1});
 void draw_cubemap();
 
 void start_scissor(RenderTarget target, Rect rect);
