@@ -28,24 +28,22 @@ namespace Imm
         return hash;
     }
 
-    struct SelectionContext
-    {
-        ImmId selected;
-    };
-    struct PendingAction
-    {
-        // for example scroll on window
-    };
     struct DrawItem
     {
         DrawItem() {}
         enum struct Type
         {
+            CLIP,
             TEXT,
             RECT,
             QUAD,
+            TEXTURE,
         };
 
+        struct ClipDrawItem
+        {
+            Rect rect;
+        };
         struct TextDrawItem
         {
             AllocatedString<128> text;
@@ -63,19 +61,33 @@ namespace Imm
             Vec2f points[4];
             Color color;
         };
+        struct TexDrawItem
+        {
+            Texture texture;
+            Rect rect;
+        };
 
         Type type;
         union
         {
+            ClipDrawItem clip_draw_item;
             TextDrawItem text_draw_item;
             RectDrawItem rect_draw_item;
             QuadDrawItem quad_draw_item;
+            TexDrawItem tex_draw_item;
         };
     };
     struct DrawList
     {
         std::vector<DrawItem> buf;
 
+        void push_clip(Rect rect)
+        {
+            DrawItem item;
+            item.type = DrawItem::Type::CLIP;
+            item.clip_draw_item = {rect};
+            buf.push_back(item);
+        }
         void push_text(String text, Vec2f pos, float size, Color color)
         {
             DrawItem item;
@@ -97,8 +109,15 @@ namespace Imm
             item.quad_draw_item = {{p0, p1, p2, p3}, color};
             buf.push_back(item);
         }
+        void push_tex(Texture texture, Rect rect)
+        {
+            DrawItem item;
+            item.type = DrawItem::Type::TEXTURE;
+            item.tex_draw_item = {texture, rect};
+            buf.push_back(item);
+        }
     };
-    struct Window : SelectionContext
+    struct Window
     {
         Rect rect{};
 
@@ -175,10 +194,10 @@ namespace Imm
         return get_text_width(*font, text);
     }
 
-    bool do_hoverable(ImmId id, Rect rect)
+    bool do_hoverable(ImmId id, Rect rect, Rect mask = {})
     {
         if (state.top_window_at_current_mouse_pos == state.current_window &&
-            in_rect(Vec2f{state.input->mouse_x, state.input->mouse_y}, rect))
+            in_rect(Vec2f{state.input->mouse_x, state.input->mouse_y}, rect, mask))
         {
             state.hot = id;
             return true;
@@ -304,6 +323,9 @@ namespace Imm
     void start_window(String title, Rect rect)
     {
         ImmId me = imm_hash(title);
+        ImmId resize_handle_id = me + 1; // I don't know the hash function very well, hopefully this is ok
+        ImmId scrollbar_id = me + 2;
+
         state.current_window = me;
 
         if (state.windows.count(me) == 0)
@@ -316,6 +338,7 @@ namespace Imm
 
         Rect titlebar_rect = {window.rect.x, window.rect.y, window.rect.width, state.style.title_font_size + state.style.inner_padding.y * 2};
         Rect content_container_rect = {window.rect.x, window.rect.y + titlebar_rect.height, window.rect.width, window.rect.height - titlebar_rect.height};
+        Color titlebar_color = {.9, .2, .3, 1};
 
         window.content_rect = {content_container_rect.x + state.style.inner_padding.x,
                                content_container_rect.y + state.style.inner_padding.y,
@@ -323,11 +346,77 @@ namespace Imm
                                content_container_rect.height - state.style.inner_padding.y * 2};
         window.next_elem_pos = {window.content_rect.x, window.content_rect.y};
 
+        // scrollbar
+        bool scrollbar_visible = false;
+        if (window.last_height > window.content_rect.height)
+        {
+            scrollbar_visible = true;
+
+            float scrollbar_width = 10;
+            Rect scrollbar_area_rect = {content_container_rect.x + content_container_rect.width - scrollbar_width,
+                                        content_container_rect.y,
+                                        scrollbar_width,
+                                        content_container_rect.height};
+            window.content_rect.width -= scrollbar_width;
+
+            float scroll_vertical_range = window.last_height - window.content_rect.height;
+            float scrollbar_height = window.content_rect.height / window.last_height * scrollbar_area_rect.height;
+            float scrollbar_vertical_range = scrollbar_area_rect.height - scrollbar_height;
+            float scrollbar_percent = -window.scroll / scroll_vertical_range;
+            float scrollbar_ratio = scroll_vertical_range / scrollbar_vertical_range;
+
+            Rect scrollbar_rect = {scrollbar_area_rect.x,
+                                   content_container_rect.y + (scrollbar_vertical_range * scrollbar_percent),
+                                   scrollbar_width,
+                                   scrollbar_height};
+
+            bool scrollbar_hot = do_hoverable(scrollbar_id, scrollbar_rect);
+            bool scrollbar_active = do_active(scrollbar_id);
+            bool scrollbar_dragging = do_draggable(scrollbar_id);
+
+            Color scrollbar_color = {0, 1, 0, 1};
+            if (scrollbar_hot)
+            {
+                scrollbar_color = lighten(scrollbar_color, 0.2f);
+            }
+            if (scrollbar_active)
+            {
+                scrollbar_color = lighten(scrollbar_color, 0.2f);
+            }
+            if (scrollbar_dragging)
+            {
+                window.scroll -= scrollbar_ratio * (state.input->mouse_y - state.input->prev_mouse_y);
+            }
+            if (in_rect(Vec2f{state.input->mouse_x, state.input->mouse_y}, content_container_rect))
+            {
+                window.scroll += state.input->scrollwheel_count * 20;
+            }
+
+            if (window.scroll > 0)
+            {
+                window.scroll = 0;
+                scrollbar_percent = 0;
+            }
+            if (-window.scroll > scroll_vertical_range)
+            {
+                scrollbar_percent = 1;
+                window.scroll = -scroll_vertical_range;
+            }
+
+            window.next_elem_pos.y += window.scroll;
+
+            window.draw_list.push_rect(scrollbar_rect, scrollbar_color);
+        }
+        else
+        {
+            window.scroll = 0;
+        }
+        window.last_height = 0;
+
+        // moving window
         bool hot = do_hoverable(me, titlebar_rect);
         bool active = do_active(me);
         bool dragging = do_draggable(me);
-
-        Color titlebar_color = {.9, .2, .3, 1};
         if (dragging)
         {
             window.rect.x += state.input->mouse_x - state.input->prev_mouse_x;
@@ -335,11 +424,34 @@ namespace Imm
             titlebar_color = darken(titlebar_color, 0.2f);
         }
 
-        window.draw_list.push_rect(titlebar_rect, titlebar_color);
-        window.draw_list.push_text(title, {titlebar_rect.x + state.style.inner_padding.x, titlebar_rect.y + state.style.inner_padding.y}, state.style.title_font_size, {1, 1, 1, 1});
-        window.draw_list.push_rect(content_container_rect, {1, 1, 1, .8});
+        // keep window in bounds
+        if (window.rect.x > state.target.width - 30)
+            window.rect.x = state.target.width - 30;
+        if (window.rect.y > state.target.height - 30)
+            window.rect.y = state.target.height - 30;
+        if (window.rect.x + window.rect.width < 30)
+            window.rect.x += 30 - (window.rect.x + window.rect.width);
+        if (window.rect.y < 0)
+            window.rect.y = 0;
 
-        ImmId resize_handle_id = me + 1; // I don't know the hash function very well, hopefully this is ok
+        // snapping
+        Rect top_handle = relative_to_absolute({0.45, 0, 0.1, 0.05});
+        if (dragging)
+        {
+            window.draw_list.push_rect(top_handle, {1, 1, 1, 0.5});
+        }
+        if (state.just_stopped_dragging == me)
+        {
+            if (in_rect({state.input->mouse_x, state.input->mouse_y}, top_handle))
+            {
+                window.rect.x = 0;
+                window.rect.width = state.target.width;
+                window.rect.y = 0;
+                window.rect.height = state.target.height / 3;
+            }
+        }
+
+        // resizing
         Rect resize_handle_rect = {
             content_container_rect.x + content_container_rect.width - state.style.inner_padding.x * 2,
             content_container_rect.y + content_container_rect.height - state.style.inner_padding.y * 2,
@@ -356,34 +468,26 @@ namespace Imm
             window.rect.width = fmax(window.rect.width, state.style.inner_padding.x * 2);
             window.rect.height = fmax(window.rect.height, titlebar_rect.height + state.style.inner_padding.y * 2);
         }
+
+        // recalculate some rects
+        titlebar_rect = {window.rect.x, window.rect.y, window.rect.width, state.style.title_font_size + state.style.inner_padding.y * 2};
+        content_container_rect = {window.rect.x, window.rect.y + titlebar_rect.height, window.rect.width, window.rect.height - titlebar_rect.height};
+
+        // draw
+        window.draw_list.push_rect(titlebar_rect, titlebar_color);
+        window.draw_list.push_text(title, {titlebar_rect.x + state.style.inner_padding.x, titlebar_rect.y + state.style.inner_padding.y}, state.style.title_font_size, {1, 1, 1, 1});
+        window.draw_list.push_rect(content_container_rect, {1, 1, 1, .8});
+
         window.draw_list.push_rect(resize_handle_rect, {.5, .5, .5, 1});
 
-        // keep window in bounds
-        if (window.rect.x > state.target.width - 30)
-            window.rect.x = state.target.width - 30;
-        if (window.rect.y > state.target.height - 30)
-            window.rect.y = state.target.height - 30;
-        if (window.rect.x + window.rect.width < 30)
-            window.rect.x += 30 - (window.rect.x + window.rect.width);
-        if (window.rect.y < 0)
-            window.rect.y = 0;
-
-        Rect top_handle = relative_to_absolute({0.45, 0, 0.1, 0.05});
-        if (dragging)
-        {
-            window.draw_list.push_rect(top_handle, {1, 1, 1, 0.5});
-        }
-        if (state.just_stopped_dragging == me)
-        {
-            if (in_rect({state.input->mouse_x, state.input->mouse_y}, top_handle))
-            {
-                window.rect.x = 0;
-                window.rect.width = state.target.width;
-                window.rect.y = 0;
-                window.rect.height = state.target.height / 3;
-            }
-        }
+        window.draw_list.push_clip(window.content_rect);
     }
+    void end_window()
+    {
+        Window &window = state.windows[state.current_window];
+        window.draw_list.push_clip({0, 0, 0, 0});
+    }
+
     void end_frame(Camera *camera, Assets *assets)
     {
         // window ordering
@@ -412,6 +516,14 @@ namespace Imm
                         DrawItem item = window.draw_list.buf[i];
                         switch (item.type)
                         {
+                        case DrawItem::Type::CLIP:
+                        {
+                            if (item.clip_draw_item.rect.width == 0 && item.clip_draw_item.rect.height == 0)
+                                end_scissor();
+                            else
+                                start_scissor(state.target, item.clip_draw_item.rect);
+                        }
+                        break;
                         case DrawItem::Type::TEXT:
                         {
                             Font *font = assets->get_font(FONT_ROBOTO_CONDENSED_LIGHT, item.text_draw_item.size);
@@ -433,9 +545,15 @@ namespace Imm
                                                  item.quad_draw_item.color);
                         }
                         break;
+                        case DrawItem::Type::TEXTURE:
+                        {
+                            draw_textured_rect(state.target, item.tex_draw_item.rect, {}, item.tex_draw_item.texture);
+                        }
+                        break;
                         }
                     }
                     window.draw_list.buf.clear();
+                    end_scissor();
                 }
             }
         }
@@ -474,7 +592,7 @@ namespace Imm
         window.next_elem_pos.y += rect.height + state.style.element_gap;
         window.last_height += rect.height + state.style.element_gap;
 
-        bool hot = do_hoverable(me, rect);
+        bool hot = do_hoverable(me, rect, window.content_rect);
         bool active = do_active(me);
         bool triggered = (state.just_deactivated == me && hot);
 
@@ -555,12 +673,12 @@ namespace Imm
 
         Rect rect = {window.next_elem_pos.x,
                      window.next_elem_pos.y,
-                     window.rect.width - state.style.inner_padding.x * 2,
+                     window.content_rect.width - state.style.inner_padding.x * 2,
                      state.style.content_font_size + state.style.inner_padding.y * 2};
         window.next_elem_pos.y += rect.height + state.style.element_gap;
         window.last_height += rect.height + state.style.element_gap;
 
-        bool hot = do_hoverable(me, rect);
+        bool hot = do_hoverable(me, rect, window.content_rect);
         bool active = do_active(me);
         bool dragging = do_draggable(me);
         bool selected = do_selectable(me, true) || selected_flag;
@@ -580,19 +698,20 @@ namespace Imm
         return selected;
     }
 
+    // returns true on submit
     template <size_t N>
-    void textbox(ImmId me, AllocatedString<N> *str)
+    bool textbox(ImmId me, AllocatedString<N> *str)
     {
         Window &window = state.windows[state.current_window];
 
         Rect rect = {window.next_elem_pos.x,
                      window.next_elem_pos.y,
-                     window.rect.width - state.style.inner_padding.x * 2,
+                     window.content_rect.width - state.style.inner_padding.x * 2,
                      state.style.content_font_size + state.style.inner_padding.y * 2};
         window.next_elem_pos.y += rect.height + state.style.element_gap;
         window.last_height += rect.height + state.style.element_gap;
 
-        bool hot = do_hoverable(me, rect);
+        bool hot = do_hoverable(me, rect, window.content_rect);
         bool active = do_active(me);
         bool dragging = do_draggable(me);
         bool selected = do_selectable(me);
@@ -624,6 +743,11 @@ namespace Imm
                                    {rect.x + state.style.inner_padding.x, rect.y + state.style.inner_padding.y},
                                    state.style.content_font_size,
                                    state.style.content_highlighted_text_color);
+
+        if (state.just_unselected == me ||
+            (selected && state.input->key_down_events[(int)Keys::ENTER]))
+            return true;
+        return false;
     }
     template <size_t N>
     void textbox(AllocatedString<N> *str)
@@ -639,10 +763,10 @@ namespace Imm
 
         Rect rect = {window.next_elem_pos.x,
                      window.next_elem_pos.y,
-                     window.rect.width - state.style.inner_padding.x * 2,
+                     window.content_rect.width - state.style.inner_padding.x * 2,
                      state.style.content_font_size + state.style.inner_padding.y * 2};
 
-        bool hot = do_hoverable(me, rect);
+        bool hot = do_hoverable(me, rect, window.content_rect);
         bool active = do_active(me);
         bool dragging = do_draggable(me);
         bool selected = do_selectable(me);
@@ -654,7 +778,10 @@ namespace Imm
 
         if (state.selected == me)
         {
-            textbox(me, &state.in_progress_string);
+            if (textbox(me, &state.in_progress_string))
+            {
+                *val = strtof(String(state.in_progress_string).to_char_array(&state.per_frame_alloc), nullptr);
+            }
         }
         else
         {
@@ -672,11 +799,24 @@ namespace Imm
                                        {rect.x + state.style.inner_padding.x, rect.y + state.style.inner_padding.y},
                                        state.style.content_font_size,
                                        state.style.content_highlighted_text_color);
-
-            if (state.just_unselected == me)
-            {
-                *val = strtof(String(state.in_progress_string).to_char_array(&state.per_frame_alloc), nullptr);
-            }
         }
+    }
+
+    void texture(ImmId me, Texture val, Rect rect)
+    {
+        Window &window = state.windows[state.current_window];
+
+        bool hot = do_hoverable(me, rect, window.content_rect);
+        bool active = do_active(me);
+        bool dragging = do_draggable(me);
+        bool selected = do_selectable(me);
+
+        window.draw_list.push_tex(val, rect);
+    }
+    void texture(Texture *val)
+    {
+        ImmId me = (ImmId)(uint64_t)val;
+        Window &window = state.windows[state.current_window];
+        texture(me, *val, {window.content_rect.x, window.content_rect.y, window.content_rect.width, window.content_rect.height});
     }
 }

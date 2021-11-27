@@ -55,6 +55,12 @@ void fill_input_state(GLFWwindow *window, InputState *state)
     glfwGetCursorPos(window, &mouse_x, &mouse_y);
     state->mouse_x = mouse_x;
     state->mouse_y = mouse_y;
+
+    for (int i = 0; i < (int)Keys::INVALID; i++)
+    {
+        state->key_down_events[i] = false;
+        state->key_up_events[i] = false;
+    }
 }
 
 void character_input_callback(GLFWwindow *window, unsigned int codepoint)
@@ -75,7 +81,14 @@ void key_input_callback(GLFWwindow *window, int key, int scancode, int action, i
     {
         input_state->keys[(int)k] = (action == GLFW_PRESS || action == GLFW_REPEAT);
         if (action == GLFW_PRESS || action == GLFW_REPEAT)
+        {
             input_state->key_input.append(k);
+            input_state->key_down_events[(int)k] = true;
+        }
+        else
+        {
+            input_state->key_up_events[(int)k] = true;
+        }
     };
 
     switch (key)
@@ -416,7 +429,6 @@ void write_file(const char *filename, String data)
     }
 
     CloseHandle(file_handle);
-
 }
 
 uint64_t debug_get_cycle_count()

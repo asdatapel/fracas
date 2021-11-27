@@ -25,10 +25,10 @@
 
 Peer server;
 
-Scene scene;
+// Scene scene;
 Editor editor;
 Assets assets;
-Scene x_scene;
+// Scene x_scene;
 
 StackAllocator allocator;
 StackAllocator temp;
@@ -142,7 +142,6 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
     else
     {
         editor.update_and_draw(&scene, &x_scene, &assets, &game, &client, main_target, input_state, memory);
-        static BoardController board_controller;
     }
 
     return true;

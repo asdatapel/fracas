@@ -2,12 +2,15 @@
 
 #include "debug_ui2.hpp"
 #include "scene/scene.hpp"
+#include "scene/scene_manager.hpp"
 #include "spline.hpp"
 #include "animation.hpp"
 #include "yaml.hpp"
 
 struct Editor
 {
+    SceneManager scene_manager;
+    
     EditorCamera debug_camera;
     bool use_debug_camera = false;
 
@@ -338,11 +341,16 @@ struct Editor
         if (Imm::button("another thing"))
             printf("another thing\n");
         Imm::label("ASadasds");
+        Imm::end_window();
+
         Imm::start_window("other", {700, 250, 100, 300});
         if (Imm::button("BULLSHIT"))
             printf("BULLSHIT\n");
-        Imm::label("HELLO BITCHES");
-        Imm::label("OKAY");
+        for (int i = 0; i < 20; i++)
+        {
+            Imm::label("HELLO BITCHES");
+            Imm::label("OKAY");
+        }
         Imm::list_item((ImmId)&x, "One");
         Imm::list_item((ImmId)&y, "Two");
         Imm::list_item((ImmId)&z, "Three");
@@ -353,6 +361,9 @@ struct Editor
         static float val = 1.432f;
         Imm::num_input(&val);
         Imm::list_item((ImmId)&w, "Four");
+        Imm::texture(&scene->target.color_tex);
+        Imm::end_window();
+
         Imm::end_frame(&debug_camera, assets);
     }
 

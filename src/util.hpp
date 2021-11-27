@@ -356,7 +356,7 @@ template <uint16_t N>
 AllocatedString<N> float_to_allocated_string(float val)
 {
     AllocatedString<N> ret;
-    ret.len = snprintf(ret.data, N, "%f", val);
+    ret.len = snprintf(ret.data, N, "%g", val);
     return ret;
 }
 

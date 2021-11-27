@@ -51,6 +51,8 @@ enum struct Keys
 struct InputState
 {
     bool keys[(int)Keys::INVALID];
+    bool key_up_events[(int)Keys::INVALID];
+    bool key_down_events[(int)Keys::INVALID];
     bool w, a, s, d;
     bool escape;
 
@@ -65,14 +67,8 @@ struct InputState
     bool up, down, left, right;
     bool zoom_in, zoom_out;
 
-    struct MouseEvent
-    {
-        bool down; // otherwise up
-    };
-    
     Array<char, 128> text_input;
     Array<Keys, 128> key_input;
-    // Array<MouseEvent, 128> mouse_input;
     
     bool mouse_down_event;
     bool mouse_up_event;
