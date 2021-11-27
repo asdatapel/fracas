@@ -36,8 +36,6 @@ struct EditorCamera : Camera
 
     float x_rot = 0.f;
     float y_rot = 0.f;
-    float last_mouse_x = -1;
-    float last_mouse_y = -1;
 
     Vec3f get_dir()
     {
@@ -50,27 +48,18 @@ struct EditorCamera : Camera
     {
         if (input->mouse_left)
         {
-            if (last_mouse_x > -1)
-            {
-                float diff_x = input->mouse_x - last_mouse_x;
-                float diff_y = input->mouse_y - last_mouse_y;
+            float diff_x = input->mouse_x - input->prev_mouse_x;
+            float diff_y = input->mouse_y - input->prev_mouse_y;
 
-                x_rot -= diff_x * 0.1f;
-                y_rot += diff_y * 0.1f;
+            x_rot -= diff_x * 0.1f;
+            y_rot += diff_y * 0.1f;
 
-                if (y_rot >= 89.0f)
-                    y_rot = 89.0f;
-                if (y_rot < -89.0f)
-                    y_rot = -89.0f;
-            }
-            last_mouse_x = input->mouse_x;
-            last_mouse_y = input->mouse_y;
+            if (y_rot >= 89.0f)
+                y_rot = 89.0f;
+            if (y_rot < -89.0f)
+                y_rot = -89.0f;
         }
-        else
-        {
-            last_mouse_x = -1;
-            last_mouse_y = -1;
-        }
+
         float dir_x = cos(glm::radians(x_rot)) * cos(glm::radians(y_rot));
         float dir_y = sin(glm::radians(y_rot));
         float dir_z = sin(glm::radians(x_rot)) * cos(glm::radians(y_rot));

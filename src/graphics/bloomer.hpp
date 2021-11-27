@@ -9,6 +9,7 @@ struct Bloomer
     RenderTarget horizontal_blur_targets[LAYERS];
     RenderTarget vertical_blur_targets[LAYERS];
 
+    Bloomer() {}
     Bloomer(uint32_t width, uint32_t height)
     {
         for (int layer = 0; layer < LAYERS; layer++)

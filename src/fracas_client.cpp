@@ -25,10 +25,9 @@
 
 Peer server;
 
-// Scene scene;
 Editor editor;
 Assets assets;
-// Scene x_scene;
+SceneManager scenes;
 
 StackAllocator allocator;
 StackAllocator temp;
@@ -51,11 +50,8 @@ bool init_if_not()
 
         assets.load("resources/test/main_assets.yaml", memory);
 
-        scene.init(memory);
-        scene.load("resources/test/main_scene.yaml", &assets, memory);
-        scene.visible = true;
-        x_scene.init(memory, TextureFormat::RGBA16F);
-        x_scene.load("resources/test/eeegghhh_scene.yaml", &assets, memory);
+        scenes.init(memory);
+        editor.init(&scenes, &assets, memory);
 
         imm_init(&assets, memory);
         Imm::init();
@@ -104,7 +100,6 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
         inited = true;
 
         client.client_data = &client_data;
-        game.init({&scene, &x_scene});
     }
 
     int msg_len;
@@ -141,7 +136,7 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
     }
     else
     {
-        editor.update_and_draw(&scene, &x_scene, &assets, &game, &client, main_target, input_state, memory);
+        editor.update_and_draw(&assets, &client, main_target, input_state, memory);
     }
 
     return true;

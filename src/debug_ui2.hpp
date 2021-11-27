@@ -169,6 +169,11 @@ namespace Imm
         ImmId just_selected = 0;
         ImmId just_unselected = 0;
 
+        bool last_element_hot = false;
+        bool last_element_active = false;
+        bool last_element_dragging = false;
+        bool last_element_selected = false;
+
         ImmId top_window_at_current_mouse_pos = 0;
 
         AllocatedString<1024> in_progress_string;
@@ -200,13 +205,13 @@ namespace Imm
             in_rect(Vec2f{state.input->mouse_x, state.input->mouse_y}, rect, mask))
         {
             state.hot = id;
-            return true;
         }
-        if (state.hot == id)
+        else if (state.hot == id)
         {
             state.hot = 0;
         }
-        return false;
+        state.last_element_hot = (state.hot == id);
+        return state.last_element_hot;
     }
     bool do_active(ImmId id)
     {
@@ -227,7 +232,6 @@ namespace Imm
                 state.active = id;
                 state.just_activated = id;
                 state.active_position = {state.input->mouse_x, state.input->mouse_y};
-                return true;
             }
             else
             {
@@ -238,7 +242,8 @@ namespace Imm
                 return false;
             }
         }
-        return (state.active == id);
+        state.last_element_active = (state.active == id);
+        return state.last_element_active;
     }
     bool do_draggable(ImmId id)
     {
@@ -252,9 +257,10 @@ namespace Imm
             }
             state.drag_distance = {state.input->mouse_x - state.active_position.x,
                                    state.input->mouse_y - state.active_position.y};
+            state.last_element_dragging = (state.dragging == id);
             return (state.dragging == id);
         }
-        if (state.dragging == id)
+        else if (state.dragging == id)
         {
             state.dragging = 0;
             state.just_stopped_dragging = id;
@@ -268,12 +274,12 @@ namespace Imm
         bool just_stopped_dragging = state.just_stopped_dragging == id;
         if (hot && triggered && !just_stopped_dragging)
         {
-            state.just_selected = id;
             if (state.selected != 0)
             {
                 state.just_unselected = state.selected;
             }
             state.selected = id;
+            state.just_selected = id;
         }
         else
         {
@@ -286,7 +292,9 @@ namespace Imm
                 }
             }
         }
-        return (state.selected == id);
+
+        state.last_element_selected = (state.selected == id);
+        return state.last_element_selected;
     }
 
     void init()
@@ -319,6 +327,11 @@ namespace Imm
         state.just_stopped_dragging = 0;
         state.just_selected = 0;
         state.just_unselected = 0;
+
+        state.last_element_hot = false;
+        state.last_element_active = false;
+        state.last_element_dragging = false;
+        state.last_element_selected = false;
     }
     void start_window(String title, Rect rect)
     {
@@ -504,6 +517,7 @@ namespace Imm
             state.windows[state.top_window_at_current_mouse_pos].z = 0;
         }
 
+        state.target.bind();
         debug_begin_immediate();
         for (int z = state.windows.size() - 1; z >= 0; z--)
         {
@@ -547,7 +561,7 @@ namespace Imm
                         break;
                         case DrawItem::Type::TEXTURE:
                         {
-                            draw_textured_rect(state.target, item.tex_draw_item.rect, {}, item.tex_draw_item.texture);
+                            draw_textured_rect(state.target, item.tex_draw_item.rect, {1, 1, 1, 1}, item.tex_draw_item.texture);
                         }
                         break;
                         }

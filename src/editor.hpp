@@ -9,13 +9,13 @@
 
 struct Editor
 {
-    SceneManager scene_manager;
-    
-    EditorCamera debug_camera;
-    bool use_debug_camera = false;
+    SceneManager *editor_scenes;
+    SceneManager play_scenes;
 
     bool playing = false;
-    Scene play_scene;
+
+    EditorCamera debug_camera;
+    bool use_debug_camera = false;
 
     int selected_entity_i = -1;
     Entity *selected_entity = nullptr;
@@ -23,78 +23,40 @@ struct Editor
 
     bool editor_visible = false;
 
-    void update_and_draw(Scene *scene, Scene *x_scene, Assets *assets, Game *game, RpcClient *rpc_client, RenderTarget backbuffer, InputState *input, Memory mem)
+    void init(SceneManager *scenes, Assets *assets, Memory mem)
     {
-        static bool init = false;
-        if (!init)
-        {
-            init = true;
-            deserialize(game, mem.temp);
+        this->editor_scenes = scenes;
 
-            play_scene.init(mem);
-        }
+        scenes->main.load("resources/test/main_scene.yaml", assets, mem);
+        scenes->xs.load("resources/test/eeegghhh_scene.yaml", assets, mem);
+        play_scenes.init(mem);
 
-        static Bloomer bloomer(scene->target.width, scene->target.height);
+        deserialize(&scenes->game, mem.temp);
+    }
 
+    void update_and_draw(Assets *assets, RpcClient *rpc_client, RenderTarget backbuffer, InputState *input, Memory mem)
+    {
         if (playing)
         {
             if (!imm_does_gui_have_focus())
             {
-                if (use_debug_camera)
-                    debug_camera.update(backbuffer, input);
+                // if (use_debug_camera)
+                // debug_camera.update(backbuffer, input);
             }
 
-            play_scene.update_and_draw(nullptr);
-            game->update(1 / 60.f, {&play_scene, x_scene, assets}, rpc_client, input);
-            if (x_scene->visible)
-            {
-                x_scene->update_and_draw(nullptr);
-                play_scene.target.bind();
-                glEnable(GL_BLEND);
-                glDisable(GL_DEPTH_TEST);
-                draw_textured_rect(play_scene.target, {0, 0, 1920, 1080}, {}, x_scene->target.color_tex);
-                glEnable(GL_DEPTH_TEST);
-                glDisable(GL_BLEND);
-            }
-
-            bloomer.do_bloom(play_scene.target);
-            bind_shader(tonemap_shader);
-            bind_1f(tonemap_shader, UniformId::EXPOSURE, 1);
-            bind_texture(tonemap_shader, UniformId::BASE, play_scene.target.color_tex);
-            bind_texture(tonemap_shader, UniformId::BLOOM, bloomer.get_final().color_tex);
-            backbuffer.bind();
-            draw_rect();
-
-            debug_ui(&play_scene, x_scene, game, backbuffer, input, assets, mem);
+            play_scenes.update_scripts(1 / 60.f, assets, rpc_client, input);
+            play_scenes.update_and_draw(nullptr);
+            debug_ui(&play_scenes, backbuffer, input, assets, mem);
         }
         else
         {
             if (!imm_does_gui_have_focus())
             {
-                debug_camera.update(backbuffer, input);
+                // debug_camera.update(backbuffer, input);
             }
 
-            scene->update_and_draw(get_camera(scene));
-            if (x_scene->visible)
-            {
-                x_scene->update_and_draw(nullptr);
-                scene->target.bind();
-                glEnable(GL_BLEND);
-                glDisable(GL_DEPTH_TEST);
-                draw_textured_rect(scene->target, {0, 0, 1920, 1080}, {}, x_scene->target.color_tex);
-                glEnable(GL_DEPTH_TEST);
-                glDisable(GL_BLEND);
-            }
-
-            bloomer.do_bloom(scene->target);
-            bind_shader(tonemap_shader);
-            bind_1f(tonemap_shader, UniformId::EXPOSURE, 1);
-            bind_texture(tonemap_shader, UniformId::BASE, scene->target.color_tex);
-            bind_texture(tonemap_shader, UniformId::BLOOM, bloomer.get_final().color_tex);
-            backbuffer.bind();
-            draw_rect();
-
-            debug_ui(scene, x_scene, game, backbuffer, input, assets, mem);
+            editor_scenes->update_and_draw(get_camera(&editor_scenes->main));
+            debug_ui(editor_scenes, backbuffer, input, assets, mem);
         }
 
         // static float debug_t = 0.f;
@@ -113,9 +75,9 @@ struct Editor
         // }
     }
 
-    void debug_ui(Scene *scene, Scene *x_scene, Game *game, RenderTarget target, InputState *input, Assets *assets, Memory mem)
+    void debug_ui(SceneManager *scenes, RenderTarget target, InputState *input, Assets *assets, Memory mem)
     {
-        imm_begin(target, *get_camera(scene), input);
+        imm_begin(target, *get_camera(&scenes->main), input);
 
         for (int i = 0; i < input->key_input.len; i++)
         {
@@ -123,10 +85,10 @@ struct Editor
             if (input->key_input[i] == Keys::F1)
             {
                 const char *script_file = "resources/test/scripts.yaml";
-                String out = serialize(game, mem.temp);
+                String out = serialize(&editor_scenes->game, mem.temp);
                 write_file(script_file, out);
 
-                scene->serialize("resources/test/main_scene.yaml", assets, mem.temp);
+                editor_scenes->main.serialize("resources/test/main_scene.yaml", assets, mem.temp);
             }
             // load scene
             if (input->key_input[i] == Keys::F2)
@@ -134,7 +96,7 @@ struct Editor
                 // deserialize(scene, game, mem.temp);
             }
 
-            if (input->key_input[i] == Keys::F12)
+            if (input->key_input[i] == Keys::F11)
             {
                 editor_visible = !editor_visible;
             }
@@ -148,7 +110,7 @@ struct Editor
                 new_spline.spline.points.append({-3, 1.5, 3});
                 new_spline.spline.points.append({-3, 1.5, 2});
                 new_spline.spline.points.append({-3, 1.5, 0});
-                scene->entities.push_back(new_spline);
+                scenes->main.entities.push_back(new_spline);
             }
             // add spline
             if (input->keys[(int)Keys::LALT] && input->key_input[i] == Keys::W)
@@ -164,13 +126,13 @@ struct Editor
                 new_e.transform.scale.x = 1;
                 new_e.transform.scale.z = 1;
                 new_e.transform.scale.y = 1;
-                scene->entities.push_back(new_e);
+                scenes->main.entities.push_back(new_e);
             }
 
             // play / pause
             if (input->key_input[i] == Keys::SPACE)
             {
-                playing ? stop_play() : start_play(scene, x_scene, game);
+                playing ? stop_play() : start_play();
             }
 
             if (input->key_input[i] == Keys::ESCAPE)
@@ -185,11 +147,11 @@ struct Editor
         if (editor_visible)
         {
             imm_window("Entities", {0, 0, 300, 600});
-            for (int i = 0; i < scene->entities.size; i++)
+            for (int i = 0; i < scenes->main.entities.size; i++)
             {
-                if (scene->entities.data[i].assigned)
+                if (scenes->main.entities.data[i].assigned)
                 {
-                    Entity &e = scene->entities.data[i].value;
+                    Entity &e = scenes->main.entities.data[i].value;
                     if (imm_list_item((ImmId)i + 1, e.debug_tag.name, selected_entity_i == i))
                     {
                         selected_entity = &e;
@@ -220,7 +182,7 @@ struct Editor
                 }
                 else if (selected_entity->type == EntityType::SPLINE)
                 {
-                    draw_spline(selected_entity->spline, target, input, mem, get_camera(scene), true);
+                    draw_spline(selected_entity->spline, target, input, mem, get_camera(&scenes->main), true);
 
                     for (int i = 0; i < selected_entity->spline.points.len; i++)
                     {
@@ -255,14 +217,14 @@ struct Editor
                     imm_label("Camera");
                     if (imm_button("View from camera"))
                     {
-                        if (!use_debug_camera && scene->active_camera_id == selected_entity_i)
+                        if (!use_debug_camera && scenes->main.active_camera_id == selected_entity_i)
                         {
                             use_debug_camera = true;
-                            scene->active_camera_id = -1;
+                            scenes->main.active_camera_id = -1;
                         }
                         else
                         {
-                            scene->active_camera_id = selected_entity_i;
+                            scenes->main.active_camera_id = selected_entity_i;
                             use_debug_camera = false;
                         }
                     }
@@ -294,7 +256,7 @@ struct Editor
             //     selected_camera = nullptr;
             // }
 
-            std::vector<ScriptDefinition> scripts = game->get_script_defs();
+            std::vector<ScriptDefinition> scripts = scenes->game.get_script_defs();
             imm_window("Scripts", {0, target.height - 400.f, 300, 400});
             ScriptDefinition *selected_script = nullptr;
             for (int i = 0; i < scripts.size(); i++)
@@ -312,7 +274,7 @@ struct Editor
                 {
                     imm_label(selected_script->inputs[i].name);
 
-                    Entity *input_entity = &scene->entities.data[*selected_script->inputs[i].value].value;
+                    Entity *input_entity = &scenes->main.entities.data[*selected_script->inputs[i].value].value;
                     if (imm_button((ImmId)selected_script->inputs[i].value, input_entity->debug_tag.name))
                     {
                         if (selected_entity && selected_entity->type == selected_script->inputs[i].entity_type)
@@ -361,30 +323,41 @@ struct Editor
         static float val = 1.432f;
         Imm::num_input(&val);
         Imm::list_item((ImmId)&w, "Four");
-        Imm::texture(&scene->target.color_tex);
+        Imm::texture(&scenes->target.color_tex);
+        if (Imm::state.last_element_selected || Imm::state.last_element_active)
+        {
+            if (!playing || use_debug_camera)
+            {
+                debug_camera.update(scenes->target, input);
+            }
+        }
         Imm::end_window();
 
         Imm::end_frame(&debug_camera, assets);
     }
 
-    void start_play(Scene *scene, Scene *x_scene, Game *game)
+    void start_play()
     {
-        playing = true;
-
-        // copy scene
-        for (int i = 0; i < scene->entities.size; i++)
+        auto copy_scene = [](Scene *to, Scene *from)
         {
-            play_scene.entities.data[i].assigned = scene->entities.data[i].assigned;
-            play_scene.entities.data[i].value = scene->entities.data[i].value;
-        }
-        play_scene.unfiltered_cubemap = scene->unfiltered_cubemap;
-        play_scene.env_mat = scene->env_mat;
+            for (int i = 0; i < from->entities.size; i++)
+            {
+                to->entities.data[i].assigned = from->entities.data[i].assigned;
+                to->entities.data[i].value = from->entities.data[i].value;
+            }
+            to->unfiltered_cubemap = from->unfiltered_cubemap;
+            to->env_mat = from->env_mat;
 
-        play_scene.render_planar = scene->render_planar;
-        play_scene.planar_target = scene->planar_target;
-        play_scene.planar_entity = scene->planar_entity;
+            to->render_planar = from->render_planar;
+            to->planar_target = from->planar_target;
+            to->planar_entity = from->planar_entity;
+        };
+        copy_scene(&play_scenes.main, &editor_scenes->main);
+        copy_scene(&play_scenes.xs, &editor_scenes->xs);
 
-        game->init({&play_scene, x_scene});
+        play_scenes.game.init({&play_scenes.main, &play_scenes.xs});
+
+        playing = true;
     }
 
     void stop_play()
