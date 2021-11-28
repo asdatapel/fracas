@@ -333,6 +333,18 @@ struct Editor
         }
         Imm::end_window();
 
+        Imm::start_window("asd10", {700, 250, 100, 300});
+        Imm::end_window();
+        Imm::start_window("asd20", {700, 250, 100, 300});
+        Imm::end_window();
+        Imm::start_window("asd30", {700, 250, 100, 300});
+        Imm::end_window();
+        Imm::start_window("asd40", {700, 250, 100, 300});
+        Imm::end_window();
+        Imm::start_window("asd50", {700, 250, 100, 300});
+        Imm::end_window();
+
+
         Imm::end_frame(&debug_camera, assets);
     }
 

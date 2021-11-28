@@ -117,7 +117,8 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
         main_target.bind();
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        { // background
+        {
+            // background
             static float t = 0;
             t += time_step;
             bind_shader(blurred_colors_shader);
@@ -127,7 +128,6 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
             bind_2f(blurred_colors_shader, UniformId::SCALE, main_target.width, main_target.height);
             draw_rect();
         }
-
         glDisable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
         client_data.main_menu.current->update_and_draw(main_target, input_state, &client_data.main_menu, &game.game_data);

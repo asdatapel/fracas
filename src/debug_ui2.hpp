@@ -117,6 +117,36 @@ namespace Imm
             buf.push_back(item);
         }
     };
+    struct Anchor
+    {
+        enum struct Type
+        {
+            NONE,
+            ROOT,
+            WINDOW_0, // top or left
+            WINDOW_1, // bottom or right
+        };
+
+        static Anchor none()
+        {
+            return {Type::NONE, 0};
+        }
+        static Anchor root()
+        {
+            return {Type::ROOT, 0};
+        }
+        static Anchor window_0(ImmId window)
+        {
+            return {Type::WINDOW_0, window};
+        }
+        static Anchor window_1(ImmId window)
+        {
+            return {Type::WINDOW_1, window};
+        }
+
+        Type type;
+        ImmId window;
+    };
     struct Window
     {
         Rect rect{};
@@ -128,6 +158,11 @@ namespace Imm
 
         int z;
         DrawList draw_list;
+
+        Anchor top_anchor = Anchor::none();
+        Anchor bottom_anchor = Anchor::none();
+        Anchor left_anchor = Anchor::none();
+        Anchor right_anchor = Anchor::none();
 
         Window() {}
         Window(Rect rect)
@@ -152,10 +187,11 @@ namespace Imm
         RenderTarget target;
         InputState *input;
 
-        std::map<ImmId, Window> windows;
         ImmStyle style;
 
+        std::map<ImmId, Window> windows;
         ImmId current_window;
+        ImmId top_window_at_current_mouse_pos = 0;
 
         ImmId hot = 0;
         ImmId active = 0;
@@ -173,8 +209,6 @@ namespace Imm
         bool last_element_active = false;
         bool last_element_dragging = false;
         bool last_element_selected = false;
-
-        ImmId top_window_at_current_mouse_pos = 0;
 
         AllocatedString<1024> in_progress_string;
 
@@ -222,7 +256,6 @@ namespace Imm
                 state.active = 0;
                 state.just_deactivated = id;
             }
-            return false;
         }
 
         if (state.input->mouse_down_event)
@@ -239,7 +272,6 @@ namespace Imm
                 {
                     state.active = 0;
                 }
-                return false;
             }
         }
         state.last_element_active = (state.active == id);
@@ -435,6 +467,48 @@ namespace Imm
             window.rect.x += state.input->mouse_x - state.input->prev_mouse_x;
             window.rect.y += state.input->mouse_y - state.input->prev_mouse_y;
             titlebar_color = darken(titlebar_color, 0.2f);
+
+            for (auto &[id, other_window] : state.windows)
+            {
+                if (other_window.top_anchor.window == me)
+                {
+                    other_window.top_anchor = window.top_anchor;
+                }
+                if (other_window.bottom_anchor.window == me)
+                {
+                    other_window.bottom_anchor = window.bottom_anchor;
+                }
+                if (other_window.left_anchor.window == me)
+                {
+                    other_window.left_anchor = window.left_anchor;
+                }
+                if (other_window.right_anchor.window == me)
+                {
+                    other_window.right_anchor = window.right_anchor;
+                }
+            }
+
+            if (window.top_anchor.type == Anchor::Type::WINDOW_1)
+            {
+                state.windows[window.top_anchor.window].bottom_anchor = window.bottom_anchor;
+            }
+            if (window.bottom_anchor.type == Anchor::Type::WINDOW_0)
+            {
+                state.windows[window.bottom_anchor.window].bottom_anchor = window.top_anchor;
+            }
+            if (window.left_anchor.type == Anchor::Type::WINDOW_1)
+            {
+                state.windows[window.left_anchor.window].bottom_anchor = window.right_anchor;
+            }
+            if (window.right_anchor.type == Anchor::Type::WINDOW_0)
+            {
+                state.windows[window.right_anchor.window].bottom_anchor = window.left_anchor;
+            }
+
+            window.top_anchor = Anchor::none();
+            window.bottom_anchor = Anchor::none();
+            window.left_anchor = Anchor::none();
+            window.right_anchor = Anchor::none();
         }
 
         // keep window in bounds
@@ -449,18 +523,90 @@ namespace Imm
 
         // snapping
         Rect top_handle = relative_to_absolute({0.45, 0, 0.1, 0.05});
+        Rect bottom_handle = relative_to_absolute({0.45, .95, 0.1, 0.05});
+        Rect left_handle = relative_to_absolute({0, 0.45, 0.025, 0.1});
+        Rect right_handle = relative_to_absolute({.975, 0.45, 0.025, 0.1});
+        Rect center_handle = relative_to_absolute({.475, 0.475, 0.05, 0.05});
         if (dragging)
         {
             window.draw_list.push_rect(top_handle, {1, 1, 1, 0.5});
+            window.draw_list.push_rect(bottom_handle, {1, 1, 1, 0.5});
+            window.draw_list.push_rect(left_handle, {1, 1, 1, 0.5});
+            window.draw_list.push_rect(right_handle, {1, 1, 1, 0.5});
+            window.draw_list.push_rect(center_handle, {1, 1, 1, 0.5});
         }
         if (state.just_stopped_dragging == me)
         {
             if (in_rect({state.input->mouse_x, state.input->mouse_y}, top_handle))
             {
-                window.rect.x = 0;
-                window.rect.width = state.target.width;
-                window.rect.y = 0;
+                for (auto &[id, other_w] : state.windows)
+                {
+                    if (other_w.top_anchor.type == Anchor::Type::ROOT)
+                    {
+                        other_w.top_anchor = Anchor::window_1(me);
+                    }
+                }
+
                 window.rect.height = state.target.height / 3;
+
+                window.top_anchor = Anchor::root();
+                window.left_anchor = Anchor::root();
+                window.right_anchor = Anchor::root();
+            }
+            if (in_rect({state.input->mouse_x, state.input->mouse_y}, bottom_handle))
+            {
+                for (auto &[id, other_w] : state.windows)
+                {
+                    if (other_w.bottom_anchor.type == Anchor::Type::ROOT)
+                    {
+                        other_w.bottom_anchor = Anchor::window_0(me);
+                    }
+                }
+
+                window.rect.y = state.target.height - (state.target.height / 3);
+
+                window.bottom_anchor = Anchor::root();
+                window.left_anchor = Anchor::root();
+                window.right_anchor = Anchor::root();
+            }
+            if (in_rect({state.input->mouse_x, state.input->mouse_y}, left_handle))
+            {
+                for (auto &[id, other_w] : state.windows)
+                {
+                    if (other_w.left_anchor.type == Anchor::Type::ROOT)
+                    {
+                        other_w.left_anchor = Anchor::window_1(me);
+                    }
+                }
+
+                window.left_anchor = Anchor::root();
+                window.top_anchor = Anchor::root();
+                window.bottom_anchor = Anchor::root();
+            }
+            if (in_rect({state.input->mouse_x, state.input->mouse_y}, right_handle))
+            {
+                for (auto &[id, other_w] : state.windows)
+                {
+                    if (other_w.right_anchor.type == Anchor::Type::ROOT)
+                    {
+                        other_w.right_anchor = Anchor::window_0(me);
+                    }
+                }
+
+                window.rect.x = state.target.width - (state.target.width / 3);
+
+                window.right_anchor = Anchor::root();
+                window.top_anchor = Anchor::root();
+                window.bottom_anchor = Anchor::root();
+            }
+            if (in_rect({state.input->mouse_x, state.input->mouse_y}, center_handle))
+            {
+                window.rect.x = state.target.width - (state.target.width / 3);
+
+                window.top_anchor = Anchor::root();
+                window.bottom_anchor = Anchor::root();
+                window.left_anchor = Anchor::root();
+                window.right_anchor = Anchor::root();
             }
         }
 
@@ -480,6 +626,42 @@ namespace Imm
             window.rect.height += state.input->mouse_y - state.input->prev_mouse_y;
             window.rect.width = fmax(window.rect.width, state.style.inner_padding.x * 2);
             window.rect.height = fmax(window.rect.height, titlebar_rect.height + state.style.inner_padding.y * 2);
+        }
+        if (window.top_anchor.type == Anchor::Type::ROOT)
+        {
+            window.rect.y = 0;
+        }
+        else if (window.top_anchor.type == Anchor::Type::WINDOW_1)
+        {
+            Window &other_window = state.windows[window.top_anchor.window];
+            window.rect.y = other_window.rect.y + other_window.rect.height;
+        }
+        if (window.bottom_anchor.type == Anchor::Type::ROOT)
+        {
+            window.rect.height = state.target.height - window.rect.y;
+        }
+        else if (window.bottom_anchor.type == Anchor::Type::WINDOW_0)
+        {
+            Window &other_window = state.windows[window.bottom_anchor.window];
+            window.rect.height = other_window.rect.y - window.rect.y;
+        }
+        if (window.left_anchor.type == Anchor::Type::ROOT)
+        {
+            window.rect.x = 0;
+        }
+        else if (window.left_anchor.type == Anchor::Type::WINDOW_1)
+        {
+            Window &other_window = state.windows[window.left_anchor.window];
+            window.rect.x = other_window.rect.x + other_window.rect.width;
+        }
+        if (window.right_anchor.type == Anchor::Type::ROOT)
+        {
+            window.rect.width = state.target.width - window.rect.x;
+        }
+        else if (window.right_anchor.type == Anchor::Type::WINDOW_0)
+        {
+            Window &other_window = state.windows[window.right_anchor.window];
+            window.rect.width = other_window.rect.x - window.rect.x;
         }
 
         // recalculate some rects
@@ -515,6 +697,25 @@ namespace Imm
                 }
             }
             state.windows[state.top_window_at_current_mouse_pos].z = 0;
+        }
+
+        // ugly way of keeping snapped windows in the back
+        for (auto &[id, window] : state.windows)
+        {
+            if (window.top_anchor.type != Anchor::Type::NONE ||
+                window.bottom_anchor.type != Anchor::Type::NONE ||
+                window.left_anchor.type != Anchor::Type::NONE ||
+                window.right_anchor.type != Anchor::Type::NONE)
+            {
+                for (auto &[id, other_window] : state.windows)
+                {
+                    if (other_window.z > window.z)
+                    {
+                        other_window.z -= 1;
+                    }
+                }
+                window.z = state.windows.size() - 1;
+            }
         }
 
         state.target.bind();
