@@ -213,6 +213,17 @@ namespace Imm
         AllocatedString<1024> in_progress_string;
 
         StackAllocator per_frame_alloc;
+
+        ImmId anchored_left = 0;
+        int anchored_left_priority = 0;
+        ImmId anchored_right = 0;
+        int anchored_right_priority = 0;
+        ImmId anchored_up = 0;
+        int anchored_up_priority = 0;
+        ImmId anchored_down = 0;
+        int anchored_down_priority = 0;
+        ImmId anchored_center = 0;
+        ImmId *ordered_anchors[5] = {};
     };
 
     UiState state;
@@ -468,47 +479,30 @@ namespace Imm
             window.rect.y += state.input->mouse_y - state.input->prev_mouse_y;
             titlebar_color = darken(titlebar_color, 0.2f);
 
-            for (auto &[id, other_window] : state.windows)
+            if (state.anchored_up == me)
             {
-                if (other_window.top_anchor.window == me)
-                {
-                    other_window.top_anchor = window.top_anchor;
-                }
-                if (other_window.bottom_anchor.window == me)
-                {
-                    other_window.bottom_anchor = window.bottom_anchor;
-                }
-                if (other_window.left_anchor.window == me)
-                {
-                    other_window.left_anchor = window.left_anchor;
-                }
-                if (other_window.right_anchor.window == me)
-                {
-                    other_window.right_anchor = window.right_anchor;
-                }
+                state.anchored_up = 0;
+                state.anchored_up_priority = 0;
             }
-
-            if (window.top_anchor.type == Anchor::Type::WINDOW_1)
+            if (state.anchored_down == me)
             {
-                state.windows[window.top_anchor.window].bottom_anchor = window.bottom_anchor;
+                state.anchored_down = 0;
+                state.anchored_down_priority = 0;
             }
-            if (window.bottom_anchor.type == Anchor::Type::WINDOW_0)
+            if (state.anchored_left == me)
             {
-                state.windows[window.bottom_anchor.window].bottom_anchor = window.top_anchor;
+                state.anchored_left = 0;
+                state.anchored_left_priority = 0;
             }
-            if (window.left_anchor.type == Anchor::Type::WINDOW_1)
+            if (state.anchored_right == me)
             {
-                state.windows[window.left_anchor.window].bottom_anchor = window.right_anchor;
+                state.anchored_right = 0;
+                state.anchored_right_priority = 0;
             }
-            if (window.right_anchor.type == Anchor::Type::WINDOW_0)
+            if (state.anchored_center == me)
             {
-                state.windows[window.right_anchor.window].bottom_anchor = window.left_anchor;
+                state.anchored_center = 0;
             }
-
-            window.top_anchor = Anchor::none();
-            window.bottom_anchor = Anchor::none();
-            window.left_anchor = Anchor::none();
-            window.right_anchor = Anchor::none();
         }
 
         // keep window in bounds
@@ -537,76 +531,49 @@ namespace Imm
         }
         if (state.just_stopped_dragging == me)
         {
+            auto top_priority = [](int *new_top)
+            {
+                if (state.anchored_up_priority > *new_top)
+                {
+                    state.anchored_up_priority -= 1;
+                }
+                if (state.anchored_down_priority > *new_top)
+                {
+                    state.anchored_down_priority -= 1;
+                }
+                if (state.anchored_left_priority > *new_top)
+                {
+                    state.anchored_left_priority -= 1;
+                }
+                if (state.anchored_right_priority > *new_top)
+                {
+                    state.anchored_right_priority -= 1;
+                }
+                *new_top = 5;
+            };
             if (in_rect({state.input->mouse_x, state.input->mouse_y}, top_handle))
             {
-                for (auto &[id, other_w] : state.windows)
-                {
-                    if (other_w.top_anchor.type == Anchor::Type::ROOT)
-                    {
-                        other_w.top_anchor = Anchor::window_1(me);
-                    }
-                }
-
-                window.rect.height = state.target.height / 3;
-
-                window.top_anchor = Anchor::root();
-                window.left_anchor = Anchor::root();
-                window.right_anchor = Anchor::root();
+                state.anchored_up = me;
+                top_priority(&state.anchored_up_priority);
             }
             if (in_rect({state.input->mouse_x, state.input->mouse_y}, bottom_handle))
             {
-                for (auto &[id, other_w] : state.windows)
-                {
-                    if (other_w.bottom_anchor.type == Anchor::Type::ROOT)
-                    {
-                        other_w.bottom_anchor = Anchor::window_0(me);
-                    }
-                }
-
-                window.rect.y = state.target.height - (state.target.height / 3);
-
-                window.bottom_anchor = Anchor::root();
-                window.left_anchor = Anchor::root();
-                window.right_anchor = Anchor::root();
+                state.anchored_down = me;
+                top_priority(&state.anchored_down_priority);
             }
             if (in_rect({state.input->mouse_x, state.input->mouse_y}, left_handle))
             {
-                for (auto &[id, other_w] : state.windows)
-                {
-                    if (other_w.left_anchor.type == Anchor::Type::ROOT)
-                    {
-                        other_w.left_anchor = Anchor::window_1(me);
-                    }
-                }
-
-                window.left_anchor = Anchor::root();
-                window.top_anchor = Anchor::root();
-                window.bottom_anchor = Anchor::root();
+                state.anchored_left = me;
+                top_priority(&state.anchored_left_priority);
             }
             if (in_rect({state.input->mouse_x, state.input->mouse_y}, right_handle))
             {
-                for (auto &[id, other_w] : state.windows)
-                {
-                    if (other_w.right_anchor.type == Anchor::Type::ROOT)
-                    {
-                        other_w.right_anchor = Anchor::window_0(me);
-                    }
-                }
-
-                window.rect.x = state.target.width - (state.target.width / 3);
-
-                window.right_anchor = Anchor::root();
-                window.top_anchor = Anchor::root();
-                window.bottom_anchor = Anchor::root();
+                state.anchored_right = me;
+                top_priority(&state.anchored_right_priority);
             }
             if (in_rect({state.input->mouse_x, state.input->mouse_y}, center_handle))
             {
-                window.rect.x = state.target.width - (state.target.width / 3);
-
-                window.top_anchor = Anchor::root();
-                window.bottom_anchor = Anchor::root();
-                window.left_anchor = Anchor::root();
-                window.right_anchor = Anchor::root();
+                state.anchored_center = me;
             }
         }
 
@@ -627,41 +594,80 @@ namespace Imm
             window.rect.width = fmax(window.rect.width, state.style.inner_padding.x * 2);
             window.rect.height = fmax(window.rect.height, titlebar_rect.height + state.style.inner_padding.y * 2);
         }
-        if (window.top_anchor.type == Anchor::Type::ROOT)
+
+        if (state.anchored_up == me)
         {
             window.rect.y = 0;
+            if (state.anchored_left_priority > state.anchored_up_priority)
+                window.rect.x = state.windows[state.anchored_left].rect.width;
+            else
+                window.rect.x = 0;
+
+            if (state.anchored_right_priority > state.anchored_up_priority)
+                window.rect.width = state.target.width - (window.rect.x + state.windows[state.anchored_right].rect.width);
+            else
+                window.rect.width = state.target.width - window.rect.x;
         }
-        else if (window.top_anchor.type == Anchor::Type::WINDOW_1)
-        {
-            Window &other_window = state.windows[window.top_anchor.window];
-            window.rect.y = other_window.rect.y + other_window.rect.height;
-        }
-        if (window.bottom_anchor.type == Anchor::Type::ROOT)
+        if (state.anchored_down == me)
         {
             window.rect.height = state.target.height - window.rect.y;
+            if (state.anchored_left_priority > state.anchored_down_priority)
+                window.rect.x = state.windows[state.anchored_left].rect.width;
+            else
+                window.rect.x = 0;
+
+            if (state.anchored_right_priority > state.anchored_down_priority)
+                window.rect.width = state.target.width - (window.rect.x + state.windows[state.anchored_right].rect.width);
+            else
+                window.rect.width = state.target.width - window.rect.x;
         }
-        else if (window.bottom_anchor.type == Anchor::Type::WINDOW_0)
-        {
-            Window &other_window = state.windows[window.bottom_anchor.window];
-            window.rect.height = other_window.rect.y - window.rect.y;
-        }
-        if (window.left_anchor.type == Anchor::Type::ROOT)
+        if (state.anchored_left == me)
         {
             window.rect.x = 0;
+            if (state.anchored_up_priority > state.anchored_left_priority)
+                window.rect.y = state.windows[state.anchored_up].rect.height;
+            else
+                window.rect.y = 0;
+
+            if (state.anchored_down_priority > state.anchored_left_priority)
+                window.rect.height = state.target.height - (window.rect.y + state.windows[state.anchored_down].rect.height);
+            else
+                window.rect.height = state.target.height - window.rect.y;
         }
-        else if (window.left_anchor.type == Anchor::Type::WINDOW_1)
-        {
-            Window &other_window = state.windows[window.left_anchor.window];
-            window.rect.x = other_window.rect.x + other_window.rect.width;
-        }
-        if (window.right_anchor.type == Anchor::Type::ROOT)
+        if (state.anchored_right == me)
         {
             window.rect.width = state.target.width - window.rect.x;
+            if (state.anchored_up_priority > state.anchored_right_priority)
+                window.rect.y = state.windows[state.anchored_up].rect.height;
+            else
+                window.rect.y = 0;
+
+            if (state.anchored_down_priority > state.anchored_right_priority)
+                window.rect.height = state.target.height - (window.rect.y + state.windows[state.anchored_down].rect.height);
+            else
+                window.rect.height = state.target.height - window.rect.y;
         }
-        else if (window.right_anchor.type == Anchor::Type::WINDOW_0)
+        if (state.anchored_center == me)
         {
-            Window &other_window = state.windows[window.right_anchor.window];
-            window.rect.width = other_window.rect.x - window.rect.x;
+            if (state.anchored_up)
+                window.rect.y = state.windows[state.anchored_up].rect.height;
+            else
+                window.rect.y = 0;
+
+            if (state.anchored_down)
+                window.rect.height = state.target.height - (window.rect.y + state.windows[state.anchored_down].rect.height);
+            else
+                window.rect.height = state.target.height - window.rect.y;
+                
+            if (state.anchored_left)
+                window.rect.x = state.windows[state.anchored_left].rect.width;
+            else
+                window.rect.x = 0;
+
+            if (state.anchored_right)
+                window.rect.width = state.target.width - (window.rect.x + state.windows[state.anchored_right].rect.width);
+            else
+                window.rect.width = state.target.width - window.rect.x;
         }
 
         // recalculate some rects
@@ -699,23 +705,37 @@ namespace Imm
             state.windows[state.top_window_at_current_mouse_pos].z = 0;
         }
 
-        // ugly way of keeping snapped windows in the back
-        for (auto &[id, window] : state.windows)
+        // keep anchored windows at the bottom
+        auto shuffle_down = [](Window &window)
         {
-            if (window.top_anchor.type != Anchor::Type::NONE ||
-                window.bottom_anchor.type != Anchor::Type::NONE ||
-                window.left_anchor.type != Anchor::Type::NONE ||
-                window.right_anchor.type != Anchor::Type::NONE)
+            for (auto &[id, other_window] : state.windows)
             {
-                for (auto &[id, other_window] : state.windows)
+                if (other_window.z > window.z)
                 {
-                    if (other_window.z > window.z)
-                    {
-                        other_window.z -= 1;
-                    }
+                    other_window.z -= 1;
                 }
-                window.z = state.windows.size() - 1;
             }
+            window.z = state.windows.size() - 1;
+        };
+        if (state.anchored_up)
+        {
+            shuffle_down(state.windows[state.anchored_up]);
+        }
+        if (state.anchored_down)
+        {
+            shuffle_down(state.windows[state.anchored_down]);
+        }
+        if (state.anchored_left)
+        {
+            shuffle_down(state.windows[state.anchored_left]);
+        }
+        if (state.anchored_right)
+        {
+            shuffle_down(state.windows[state.anchored_right]);
+        }
+        if (state.anchored_center)
+        {
+            shuffle_down(state.windows[state.anchored_center]);
         }
 
         state.target.bind();
