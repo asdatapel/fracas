@@ -9,7 +9,6 @@ in vec2 frag_uv;
 
 void main()
 {
-  float dist = texture(tex, frag_uv).r;
-  float alpha = smoothstep(0.1, 0.25, dist);
-  FragColor = color * alpha;
+  float alpha = texture(tex, frag_uv).r;
+  FragColor = vec4(color.rgb, color.a * alpha);
 }

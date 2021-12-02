@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cmath>
 #include <algorithm>
+#include <inttypes.h>
 #include <stdint.h>
 
 #define DEBUG_PRINT printf
@@ -192,7 +193,7 @@ struct FreeList
         return current - data;
     }
 
-    T* emplace(T &value, int index)
+    T *emplace(T &value, int index)
     {
         if (next == &data[index])
         {
@@ -214,10 +215,9 @@ struct FreeList
 
     int index_of(T *ptr)
     {
-        return ((Element*)ptr - data);
+        return ((Element *)ptr - data);
     }
 };
-
 
 template <size_t N>
 struct AllocatedString
@@ -319,22 +319,43 @@ struct String
     {
         return len < o.len || strncmp(data, o.data, len) < 0;
     }
-    
+
+    uint64_t to_uint64()
+    {
+        uint64_t val = 0;
+        for (int i = 0; i < len; i++)
+        {
+            if (data[i] < '0' && data[i] > '9')
+                return val;
+            val = 10 * val + (data[i] - '0');
+        }
+        return val;
+    }
+
     static String from(int i, StackAllocator *allocator)
     {
         String ret;
-        ret.data = allocator->alloc(15); // should never be more than 15 digits, right 
+        ret.data = allocator->alloc(15); // should never be more than 15 digits, right
         _itoa_s(i, ret.data, 15, 10);
         ret.len = strlen(ret.data);
         return ret;
     }
-    
+
     static String from(float val, StackAllocator *allocator)
     {
         String ret;
         ret.data = allocator->alloc(40);
         ret.len = snprintf(ret.data, 40, "%f", val);
         allocator->free(ret.data + ret.len);
+        return ret;
+    }
+
+    static String from(uint64_t i, StackAllocator *allocator)
+    {
+        String ret;
+        ret.data = allocator->alloc(20); // should never be more than 15 digits, right
+        snprintf(ret.data, 20, "%" PRIu64, i);
+        ret.len = strlen(ret.data);
         return ret;
     }
 };
@@ -359,4 +380,3 @@ AllocatedString<N> float_to_allocated_string(float val)
     ret.len = snprintf(ret.data, N, "%g", val);
     return ret;
 }
-

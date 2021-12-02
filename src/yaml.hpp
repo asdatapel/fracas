@@ -374,4 +374,23 @@ namespace YAML
         return deserialize(&buf.data, buf.data + buf.len, alloc, 0);
     }
 
+        // some utility functions
+    Dict *new_dict(StackAllocator *alloc)
+    {
+        YAML::Dict *dict = (YAML::Dict *)alloc->alloc(sizeof(YAML::Dict));
+        new (dict) YAML::Dict;
+        return dict;
+    };
+    List *new_list(StackAllocator *alloc)
+    {
+        YAML::List *list = (YAML::List *)alloc->alloc(sizeof(YAML::List));
+        new (list) YAML::List;
+        return list;
+    };
+    Literal *new_literal(String val, StackAllocator *alloc)
+    {
+        YAML::Literal *lit = (YAML::Literal *)alloc->alloc(sizeof(YAML::Literal));
+        new (lit) YAML::Literal(val);
+        return lit;
+    };
 }

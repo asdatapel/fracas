@@ -117,36 +117,6 @@ namespace Imm
             buf.push_back(item);
         }
     };
-    struct Anchor
-    {
-        enum struct Type
-        {
-            NONE,
-            ROOT,
-            WINDOW_0, // top or left
-            WINDOW_1, // bottom or right
-        };
-
-        static Anchor none()
-        {
-            return {Type::NONE, 0};
-        }
-        static Anchor root()
-        {
-            return {Type::ROOT, 0};
-        }
-        static Anchor window_0(ImmId window)
-        {
-            return {Type::WINDOW_0, window};
-        }
-        static Anchor window_1(ImmId window)
-        {
-            return {Type::WINDOW_1, window};
-        }
-
-        Type type;
-        ImmId window;
-    };
     struct Window
     {
         Rect rect{};
@@ -159,11 +129,6 @@ namespace Imm
         int z;
         DrawList draw_list;
 
-        Anchor top_anchor = Anchor::none();
-        Anchor bottom_anchor = Anchor::none();
-        Anchor left_anchor = Anchor::none();
-        Anchor right_anchor = Anchor::none();
-
         Window() {}
         Window(Rect rect)
         {
@@ -173,12 +138,13 @@ namespace Imm
     struct ImmStyle
     {
         float title_font_size = 24;
-        float content_font_size = 24;
+        float content_font_size = 16;
         Vec2f inner_padding = {5, 5};
+        float window_control_border = 2;
         float element_gap = 1.5f;
 
-        Color content_default_text_color = {.2, .2, .2, 1};
-        Color content_highlighted_text_color = {.9, .9, .9, 1};
+        Color content_default_text_color = {0, 0, 0, 1};
+        Color content_highlighted_text_color = {1, 1, 1, 1};
         Color content_background_color = {.1, .1, .1, 1};
     };
     struct UiState
@@ -223,7 +189,6 @@ namespace Imm
         ImmId anchored_down = 0;
         int anchored_down_priority = 0;
         ImmId anchored_center = 0;
-        ImmId *ordered_anchors[5] = {};
     };
 
     UiState state;
@@ -340,10 +305,92 @@ namespace Imm
         return state.last_element_selected;
     }
 
+    void save_layout()
+    {
+        StackAllocator *a = &state.per_frame_alloc;
+
+        YAML::Dict *out_layout = YAML::new_dict(a);
+
+        YAML::List *out_windows = YAML::new_list(a);
+        for (auto [id, in_window] : state.windows)
+        {
+            YAML::Dict *window = YAML::new_dict(a);
+            window->push_back("id", YAML::new_literal(String::from(id, a), a), a);
+
+            YAML::Dict *rect = YAML::new_dict(a);
+            rect->push_back("x", YAML::new_literal(String::from(in_window.rect.x, a), a), a);
+            rect->push_back("y", YAML::new_literal(String::from(in_window.rect.y, a), a), a);
+            rect->push_back("width", YAML::new_literal(String::from(in_window.rect.width, a), a), a);
+            rect->push_back("height", YAML::new_literal(String::from(in_window.rect.height, a), a), a);
+            window->push_back("rect", rect, a);
+
+            out_windows->push_back(window, a);
+        }
+        out_layout->push_back("windows", out_windows, a);
+
+        YAML::Dict *out_anchors = YAML::new_dict(a);
+        out_anchors->push_back("anchored_left", YAML::new_literal(String::from(state.anchored_left, a), a), a);
+        out_anchors->push_back("anchored_left_priority", YAML::new_literal(String::from(state.anchored_left_priority, a), a), a);
+        out_anchors->push_back("anchored_right", YAML::new_literal(String::from(state.anchored_right, a), a), a);
+        out_anchors->push_back("anchored_right_priority", YAML::new_literal(String::from(state.anchored_right_priority, a), a), a);
+        out_anchors->push_back("anchored_up", YAML::new_literal(String::from(state.anchored_up, a), a), a);
+        out_anchors->push_back("anchored_up_priority", YAML::new_literal(String::from(state.anchored_up_priority, a), a), a);
+        out_anchors->push_back("anchored_down", YAML::new_literal(String::from(state.anchored_down, a), a), a);
+        out_anchors->push_back("anchored_down_priority", YAML::new_literal(String::from(state.anchored_down_priority, a), a), a);
+        out_anchors->push_back("anchored_center", YAML::new_literal(String::from(state.anchored_center, a), a), a);
+        out_layout->push_back("anchors", out_anchors, a);
+
+        String out;
+        out.data = a->next;
+        YAML::serialize(out_layout, a, 0, false);
+        out.len = a->next - out.data;
+        printf("%.*s\n", out.len, out.data);
+
+        write_file("resources/test/layout.yaml", out);
+    }
+    void load_layout()
+    {
+        StackAllocator *a = &state.per_frame_alloc;
+
+        FileData file = read_entire_file("resources/test/layout.yaml", a);
+
+        String in_str;
+        in_str.data = file.data;
+        in_str.len = file.length;
+        YAML::Dict *root = YAML::deserialize(in_str, a)->as_dict();
+
+        YAML::List *in_windows = root->get("windows")->as_list();
+        for (int i = 0; i < in_windows->len; i++)
+        {
+            YAML::Dict *in_window = in_windows->get(i)->as_dict();
+            ImmId id = in_window->get("id")->as_literal().to_uint64();
+
+            Window &window = state.windows[id];
+            YAML::Dict *rect = in_window->get("rect")->as_dict();
+            window.rect.x = atof(rect->get("x")->as_literal().to_char_array(a));
+            window.rect.y = atof(rect->get("y")->as_literal().to_char_array(a));
+            window.rect.width = atof(rect->get("width")->as_literal().to_char_array(a));
+            window.rect.height = atof(rect->get("height")->as_literal().to_char_array(a));
+        }
+
+        YAML::Dict *in_anchors = root->get("anchors")->as_dict();
+        state.anchored_left = in_anchors->get("anchored_left")->as_literal().to_uint64();
+        state.anchored_left_priority = in_anchors->get("anchored_left_priority")->as_literal().to_uint64();
+        state.anchored_right = in_anchors->get("anchored_right")->as_literal().to_uint64();
+        state.anchored_right_priority = in_anchors->get("anchored_right_priority")->as_literal().to_uint64();
+        state.anchored_up = in_anchors->get("anchored_up")->as_literal().to_uint64();
+        state.anchored_up_priority = in_anchors->get("anchored_up_priority")->as_literal().to_uint64();
+        state.anchored_down = in_anchors->get("anchored_down")->as_literal().to_uint64();
+        state.anchored_down_priority = in_anchors->get("anchored_down_priority")->as_literal().to_uint64();
+        state.anchored_center = in_anchors->get("anchored_center")->as_literal().to_uint64();
+    }
     void init()
     {
         state.per_frame_alloc.init(1034 * 1024 * 50); // 50mb
+
+        load_layout();
     }
+
     void start_frame(RenderTarget target, InputState *input, Assets *assets)
     {
         state.assets = assets;
@@ -381,6 +428,10 @@ namespace Imm
         ImmId me = imm_hash(title);
         ImmId resize_handle_id = me + 1; // I don't know the hash function very well, hopefully this is ok
         ImmId scrollbar_id = me + 2;
+        ImmId top_handle_id = me + 3;
+        ImmId bottom_handle_id = me + 4;
+        ImmId left_handle_id = me + 5;
+        ImmId right_handle_id = me + 6;
 
         state.current_window = me;
 
@@ -392,14 +443,20 @@ namespace Imm
         }
         Window &window = state.windows[me];
 
-        Rect titlebar_rect = {window.rect.x, window.rect.y, window.rect.width, state.style.title_font_size + state.style.inner_padding.y * 2};
-        Rect content_container_rect = {window.rect.x, window.rect.y + titlebar_rect.height, window.rect.width, window.rect.height - titlebar_rect.height};
+        Rect titlebar_rect = {window.rect.x + state.style.window_control_border,
+                              window.rect.y + state.style.window_control_border,
+                              window.rect.width - (state.style.window_control_border * 2),
+                              state.style.title_font_size + (state.style.inner_padding.y * 2) - state.style.window_control_border};
+        Rect content_container_rect = {window.rect.x + state.style.window_control_border,
+                                       window.rect.y + titlebar_rect.height,
+                                       window.rect.width - (state.style.window_control_border * 2),
+                                       window.rect.height - (titlebar_rect.height + state.style.window_control_border)};
         Color titlebar_color = {.9, .2, .3, 1};
 
         window.content_rect = {content_container_rect.x + state.style.inner_padding.x,
                                content_container_rect.y + state.style.inner_padding.y,
-                               content_container_rect.width - state.style.inner_padding.x * 2,
-                               content_container_rect.height - state.style.inner_padding.y * 2};
+                               content_container_rect.width - (state.style.inner_padding.x * 2),
+                               content_container_rect.height - (state.style.inner_padding.y * 2)};
         window.next_elem_pos = {window.content_rect.x, window.content_rect.y};
 
         // scrollbar
@@ -409,11 +466,12 @@ namespace Imm
             scrollbar_visible = true;
 
             float scrollbar_width = 10;
-            Rect scrollbar_area_rect = {content_container_rect.x + content_container_rect.width - scrollbar_width,
-                                        content_container_rect.y,
+            float scrollbar_gap = 2;
+            Rect scrollbar_area_rect = {window.content_rect.x + window.content_rect.width + scrollbar_gap - scrollbar_width,
+                                        window.content_rect.y,
                                         scrollbar_width,
-                                        content_container_rect.height};
-            window.content_rect.width -= scrollbar_width;
+                                        window.content_rect.height};
+            window.content_rect.width -= scrollbar_area_rect.width + scrollbar_gap;
 
             float scroll_vertical_range = window.last_height - window.content_rect.height;
             float scrollbar_height = window.content_rect.height / window.last_height * scrollbar_area_rect.height;
@@ -422,7 +480,7 @@ namespace Imm
             float scrollbar_ratio = scroll_vertical_range / scrollbar_vertical_range;
 
             Rect scrollbar_rect = {scrollbar_area_rect.x,
-                                   content_container_rect.y + (scrollbar_vertical_range * scrollbar_percent),
+                                   scrollbar_area_rect.y + (scrollbar_vertical_range * scrollbar_percent),
                                    scrollbar_width,
                                    scrollbar_height};
 
@@ -594,6 +652,64 @@ namespace Imm
             window.rect.width = fmax(window.rect.width, state.style.inner_padding.x * 2);
             window.rect.height = fmax(window.rect.height, titlebar_rect.height + state.style.inner_padding.y * 2);
         }
+        Rect control_border_top = {window.rect.x, window.rect.y, window.rect.width, state.style.window_control_border};
+        Color control_border_top_color = {0, 0, 0, 1};
+        Rect resize_handle_top = {control_border_top.x, control_border_top.y, control_border_top.width, control_border_top.height + 5};
+        Rect control_border_bottom = {window.rect.x, window.rect.y + window.rect.height - state.style.window_control_border, window.rect.width, state.style.window_control_border};
+        Color control_border_bottom_color = {0, 0, 0, 1};
+        Rect resize_handle_bottom = {control_border_bottom.x, control_border_bottom.y - 5, control_border_bottom.width, control_border_bottom.height + 5};
+        Rect control_border_left = {window.rect.x, window.rect.y, state.style.window_control_border, window.rect.height};
+        Color control_border_left_color = {0, 0, 0, 1};
+        Rect resize_handle_left = {control_border_left.x, control_border_left.y, control_border_left.width + 5, control_border_left.height};
+        Rect control_border_right = {window.rect.x + window.rect.width - state.style.window_control_border, window.rect.y, state.style.window_control_border, window.rect.height};
+        Color control_border_right_color = {0, 0, 0, 1};
+        Rect resize_handle_right = {control_border_right.x - 5, control_border_right.y, control_border_right.width + 5, control_border_right.height};
+        bool top_handle_hot = do_hoverable(top_handle_id, resize_handle_top);
+        bool top_handle_active = do_active(top_handle_id);
+        bool top_handle_dragging = do_draggable(top_handle_id);
+        bool bottom_handle_hot = do_hoverable(bottom_handle_id, resize_handle_bottom);
+        bool bottom_handle_active = do_active(bottom_handle_id);
+        bool bottom_handle_dragging = do_draggable(bottom_handle_id);
+        bool left_handle_hot = do_hoverable(left_handle_id, resize_handle_left);
+        bool left_handle_active = do_active(left_handle_id);
+        bool left_handle_dragging = do_draggable(left_handle_id);
+        bool right_handle_hot = do_hoverable(right_handle_id, resize_handle_right);
+        bool right_handle_active = do_active(right_handle_id);
+        bool right_handle_dragging = do_draggable(right_handle_id);
+        if (top_handle_hot)
+        {
+            control_border_top_color = {0, 0, 1, 1};
+        }
+        else if (bottom_handle_hot)
+        {
+            control_border_bottom_color = {0, 0, 1, 1};
+        }
+        else if (left_handle_hot)
+        {
+            control_border_left_color = {0, 0, 1, 1};
+        }
+        else if (right_handle_hot)
+        {
+            control_border_right_color = {0, 0, 1, 1};
+        }
+        if (top_handle_dragging)
+        {
+            window.rect.y += state.input->mouse_y - state.input->prev_mouse_y;
+            window.rect.height -= state.input->mouse_y - state.input->prev_mouse_y;
+        }
+        else if (bottom_handle_dragging)
+        {
+            window.rect.height += state.input->mouse_y - state.input->prev_mouse_y;
+        }
+        else if (left_handle_dragging)
+        {
+            window.rect.x += state.input->mouse_x - state.input->prev_mouse_x;
+            window.rect.width -= state.input->mouse_x - state.input->prev_mouse_x;
+        }
+        else if (right_handle_dragging)
+        {
+            window.rect.width += state.input->mouse_x - state.input->prev_mouse_x;
+        }
 
         if (state.anchored_up == me)
         {
@@ -658,7 +774,7 @@ namespace Imm
                 window.rect.height = state.target.height - (window.rect.y + state.windows[state.anchored_down].rect.height);
             else
                 window.rect.height = state.target.height - window.rect.y;
-                
+
             if (state.anchored_left)
                 window.rect.x = state.windows[state.anchored_left].rect.width;
             else
@@ -670,6 +786,10 @@ namespace Imm
                 window.rect.width = state.target.width - window.rect.x;
         }
 
+        // clamp size
+        window.rect.width = fmax(window.rect.width, 30);
+        window.rect.height = fmax(window.rect.height, 50);
+
         // recalculate some rects
         titlebar_rect = {window.rect.x, window.rect.y, window.rect.width, state.style.title_font_size + state.style.inner_padding.y * 2};
         content_container_rect = {window.rect.x, window.rect.y + titlebar_rect.height, window.rect.width, window.rect.height - titlebar_rect.height};
@@ -678,6 +798,11 @@ namespace Imm
         window.draw_list.push_rect(titlebar_rect, titlebar_color);
         window.draw_list.push_text(title, {titlebar_rect.x + state.style.inner_padding.x, titlebar_rect.y + state.style.inner_padding.y}, state.style.title_font_size, {1, 1, 1, 1});
         window.draw_list.push_rect(content_container_rect, {1, 1, 1, .8});
+
+        window.draw_list.push_rect(control_border_top, control_border_top_color);
+        window.draw_list.push_rect(control_border_bottom, control_border_bottom_color);
+        window.draw_list.push_rect(control_border_left, control_border_left_color);
+        window.draw_list.push_rect(control_border_right, control_border_right_color);
 
         window.draw_list.push_rect(resize_handle_rect, {.5, .5, .5, 1});
 
@@ -761,7 +886,7 @@ namespace Imm
                         break;
                         case DrawItem::Type::TEXT:
                         {
-                            Font *font = assets->get_font(FONT_ROBOTO_CONDENSED_LIGHT, item.text_draw_item.size);
+                            Font *font = assets->get_font(FONT_ROBOTO_CONDENSED_REGULAR, item.text_draw_item.size);
                             draw_text(*font, state.target, item.text_draw_item.text, item.text_draw_item.pos.x, item.text_draw_item.pos.y, item.text_draw_item.color);
                         }
                         break;
@@ -810,9 +935,8 @@ namespace Imm
                                    state.style.content_default_text_color);
     }
 
-    bool button(String text)
+    bool button(ImmId me, String text)
     {
-        ImmId me = imm_hash(text);
         Window &window = state.windows[state.current_window];
 
         float border = 5;
@@ -900,6 +1024,11 @@ namespace Imm
                                    state.style.content_highlighted_text_color);
 
         return triggered;
+    }
+    bool button(String text)
+    {
+        ImmId me = imm_hash(text);
+        return button(me, text);
     }
 
     bool list_item(ImmId me, String text, bool selected_flag = false)

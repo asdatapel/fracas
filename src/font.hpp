@@ -45,7 +45,7 @@ Font load_font(FileData file, float size, StackAllocator *tmp_allocator)
   stbtt_GetFontBoundingBox(&stb_font, &x0, &y0, &x1, &y1);
   font.baseline = size + (y0 * stb_scale);
 
-  int bitmap_width = 2048, bitmap_height = 2048;
+  int bitmap_width = 1024, bitmap_height = 1024;
   unsigned char *bitmap = (unsigned char *)tmp_allocator->alloc(bitmap_width * bitmap_height);
   stbtt_bakedchar cdata[96];
   int success = stbtt_BakeFontBitmap((unsigned char *)file.data, 0, size,
