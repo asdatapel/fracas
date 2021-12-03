@@ -1,6 +1,5 @@
 #pragma once
 
-#include "debug_ui2.hpp"
 #include "scene/scene.hpp"
 #include "scene/scene_manager.hpp"
 #include "spline.hpp"
@@ -21,8 +20,6 @@ struct Editor
     Entity *selected_entity = nullptr;
     int selected_spline_node = -1;
 
-    bool editor_visible = false;
-
     void init(SceneManager *scenes, Assets *assets, Memory mem)
     {
         this->editor_scenes = scenes;
@@ -38,23 +35,12 @@ struct Editor
     {
         if (playing)
         {
-            if (!imm_does_gui_have_focus())
-            {
-                // if (use_debug_camera)
-                // debug_camera.update(backbuffer, input);
-            }
-
             play_scenes.update_scripts(1 / 60.f, assets, rpc_client, input);
             play_scenes.update_and_draw(nullptr);
             debug_ui(&play_scenes, backbuffer, input, assets, mem);
         }
         else
         {
-            if (!imm_does_gui_have_focus())
-            {
-                // debug_camera.update(backbuffer, input);
-            }
-
             editor_scenes->update_and_draw(get_camera(&editor_scenes->main));
             debug_ui(editor_scenes, backbuffer, input, assets, mem);
         }
@@ -77,8 +63,6 @@ struct Editor
 
     void debug_ui(SceneManager *scenes, RenderTarget target, InputState *input, Assets *assets, Memory mem)
     {
-        imm_begin(target, *get_camera(&scenes->main), input);
-
         for (int i = 0; i < input->key_input.len; i++)
         {
             // save scene
@@ -98,7 +82,6 @@ struct Editor
 
             if (input->key_input[i] == Keys::F11)
             {
-                editor_visible = !editor_visible;
             }
 
             // add spline
@@ -144,150 +127,6 @@ struct Editor
             }
         }
 
-        if (editor_visible)
-        {
-            // imm_window("Entities", {0, 0, 300, 600});
-            // for (int i = 0; i < scenes->main.entities.size; i++)
-            // {
-            //     if (scenes->main.entities.data[i].assigned)
-            //     {
-            //         Entity &e = scenes->main.entities.data[i].value;
-            //         if (imm_list_item((ImmId)i + 1, e.debug_tag.name, selected_entity_i == i))
-            //         {
-            //             selected_entity = &e;
-            //             selected_entity_i = i;
-            //         }
-            //     }
-            // }
-
-            // if (selected_entity)
-            // {
-            //     imm_window("Deets", {target.width - 300.f, 0, 300, 400});
-            //     imm_textbox(&selected_entity->debug_tag.name);
-
-            //     imm_label("Position");
-            //     imm_num_input(&selected_entity->transform.position.x);
-            //     imm_num_input(&selected_entity->transform.position.y);
-            //     imm_num_input(&selected_entity->transform.position.z);
-            //     imm_label("Rotation");
-            //     imm_num_input(&selected_entity->transform.rotation.x);
-            //     imm_num_input(&selected_entity->transform.rotation.y);
-            //     imm_num_input(&selected_entity->transform.rotation.z);
-
-            //     if (selected_entity->type == EntityType::LIGHT)
-            //     {
-            //         imm_label("Light");
-            //         imm_num_input(&selected_entity->spot_light.inner_angle);
-            //         imm_num_input(&selected_entity->spot_light.outer_angle);
-            //     }
-            //     else if (selected_entity->type == EntityType::SPLINE)
-            //     {
-            //         draw_spline(selected_entity->spline, target, input, mem, get_camera(&scenes->main), true);
-
-            //         for (int i = 0; i < selected_entity->spline.points.len; i++)
-            //         {
-            //             if (imm_3d_point(&selected_entity->spline.points[i], selected_spline_node == i))
-            //             {
-            //                 selected_spline_node = i;
-
-            //                 Vec3f temp = selected_entity->spline.points[i];
-            //                 imm_label("Spline Node");
-            //                 imm_num_input(&temp.x);
-            //                 imm_num_input(&temp.y);
-            //                 imm_num_input(&temp.z);
-            //                 selected_entity->spline.points[i] = temp;
-            //             }
-            //         }
-
-            //         if (imm_button("Flip Spline"))
-            //         {
-            //             Vec3f p0 = selected_entity->spline.points[0];
-            //             Vec3f p1 = selected_entity->spline.points[1];
-            //             Vec3f p2 = selected_entity->spline.points[2];
-            //             Vec3f p3 = selected_entity->spline.points[3];
-
-            //             selected_entity->spline.points[0] = p3;
-            //             selected_entity->spline.points[1] = p2;
-            //             selected_entity->spline.points[2] = p1;
-            //             selected_entity->spline.points[3] = p0;
-            //         }
-            //     }
-            //     else if (selected_entity->type == EntityType::CAMERA)
-            //     {
-            //         imm_label("Camera");
-            //         if (imm_button("View from camera"))
-            //         {
-            //             if (!use_debug_camera && scenes->main.active_camera_id == selected_entity_i)
-            //             {
-            //                 use_debug_camera = true;
-            //                 scenes->main.active_camera_id = -1;
-            //             }
-            //             else
-            //             {
-            //                 scenes->main.active_camera_id = selected_entity_i;
-            //                 use_debug_camera = false;
-            //             }
-            //         }
-            //     }
-            // }
-
-            // if (imm_button("New Camera"))
-            // {
-            //     Entity new_e;
-            //     new_e.type = EntityType::CAMERA;
-            //     new_e.transform.position.x = (float)(rand() % 10000) / 10000 * 60 - 30;
-            //     new_e.transform.position.z = (float)(rand() % 10000) / 10000 * 60 - 30;
-            //     new_e.transform.position.y = (float)(rand() % 10000) / 10000 * 20;
-            //     new_e.transform.rotation.x = 0;
-            //     new_e.transform.rotation.z = 0;
-            //     new_e.transform.rotation.y = 0;
-            //     new_e.transform.scale.x = 1;
-            //     new_e.transform.scale.z = 1;
-            //     new_e.transform.scale.y = 1;
-            //     scene->entities.push_back(new_e);
-            // }
-            // if (imm_button("Set Camera"))
-            // {
-            //     if (selected_entity)
-            //         selected_camera = selected_entity->type == EntityType::CAMERA ? selected_entity : nullptr;
-            // }
-            // if (imm_button("Reset Camera"))
-            // {
-            //     selected_camera = nullptr;
-            // }
-
-            // std::vector<ScriptDefinition> scripts = scenes->game.get_script_defs();
-            // imm_window("Scripts", {0, target.height - 400.f, 300, 400});
-            // ScriptDefinition *selected_script = nullptr;
-            // for (int i = 0; i < scripts.size(); i++)
-            // {
-            //     ScriptDefinition *script = &scripts[i];
-            //     if (imm_list_item((ImmId)i + 1, script->name))
-            //     {
-            //         selected_script = script;
-            //     }
-            // }
-            // if (selected_script)
-            // {
-            //     imm_window("Script Deets", {target.width - 300.f, target.height - 400.f, 300, 400});
-            //     for (int i = 0; i < selected_script->inputs.size(); i++)
-            //     {
-            //         imm_label(selected_script->inputs[i].name);
-
-            //         Entity *input_entity = &scenes->main.entities.data[*selected_script->inputs[i].value].value;
-            //         if (imm_button((ImmId)selected_script->inputs[i].value, input_entity->debug_tag.name))
-            //         {
-            //             if (selected_entity && selected_entity->type == selected_script->inputs[i].entity_type)
-            //             {
-            //                 *selected_script->inputs[i].value = selected_entity_i;
-            //             }
-            //         }
-            //     }
-            // }
-
-            imm_end();
-        }
-
         Imm::start_frame(target, input, assets);
 
         Imm::start_window("Entities", {0, 0, 300, 600});
@@ -329,22 +168,22 @@ struct Editor
             {
                 draw_spline(selected_entity->spline, target, input, mem, get_camera(&scenes->main), true);
 
-                for (int i = 0; i < selected_entity->spline.points.len; i++)
-                {
-                    if (imm_3d_point(&selected_entity->spline.points[i], selected_spline_node == i))
-                    {
-                        selected_spline_node = i;
+                // for (int i = 0; i < selected_entity->spline.points.len; i++)
+                // {
+                //     if (imm_3d_point(&selected_entity->spline.points[i], selected_spline_node == i))
+                //     {
+                //         selected_spline_node = i;
 
-                        Vec3f temp = selected_entity->spline.points[i];
-                        Imm::label("Spline Node");
-                        Imm::num_input(&temp.x);
-                        Imm::num_input(&temp.y);
-                        Imm::num_input(&temp.z);
-                        selected_entity->spline.points[i] = temp;
-                    }
-                }
+                //         Vec3f temp = selected_entity->spline.points[i];
+                //         Imm::label("Spline Node");
+                //         Imm::num_input(&temp.x);
+                //         Imm::num_input(&temp.y);
+                //         Imm::num_input(&temp.z);
+                //         selected_entity->spline.points[i] = temp;
+                //     }
+                // }
 
-                if (imm_button("Flip Spline"))
+                if (Imm::button("Flip Spline"))
                 {
                     Vec3f p0 = selected_entity->spline.points[0];
                     Vec3f p1 = selected_entity->spline.points[1];

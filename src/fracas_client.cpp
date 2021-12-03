@@ -53,7 +53,6 @@ bool init_if_not()
         scenes.init(memory);
         editor.init(&scenes, &assets, memory);
 
-        imm_init(&assets, memory);
         Imm::init();
     }
 
