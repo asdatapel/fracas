@@ -16,6 +16,8 @@ struct Camera
     float pos_y = 0.f;
     float pos_z = 1.f;
 
+    static constexpr float fov = glm::radians(45.f);
+
     void update_from_transform(RenderTarget target, Transform transform)
     {
         pos_x = transform.position.x;
@@ -27,7 +29,7 @@ struct Camera
             glm::vec3(0, 0, -1));
 
         view = glm::lookAt(glm::vec3{pos_x, pos_y, pos_z}, glm::vec3{pos_x, pos_y, pos_z} + dir, {0.f, 1.f, 0.f});
-        perspective = glm::perspective(glm::radians(45.f), (float)target.width / (float)target.height, 0.01f, 100.0f);
+        perspective = glm::perspective(fov, (float)target.width / (float)target.height, 0.01f, 100.0f);
     }
 };
 

@@ -80,8 +80,9 @@ struct Editor
                 // deserialize(scene, game, mem.temp);
             }
 
-            if (input->key_input[i] == Keys::F11)
+            if (input->key_input[i] == Keys::F8)
             {
+                do_breakpoint = !do_breakpoint;
             }
 
             // add spline
@@ -127,7 +128,7 @@ struct Editor
             }
         }
 
-        Imm::start_frame(target, input, assets);
+        Imm::start_frame(target, input, assets, &debug_camera);
 
         Imm::start_window("Entities", {0, 0, 300, 600});
         for (int i = 0; i < scenes->main.entities.size; i++)
@@ -249,6 +250,25 @@ struct Editor
             Imm::end_window();
         }
 
+        Imm::start_window("Scene", {700, 250, 100, 300});
+        Imm::texture(&scenes->target.color_tex);
+        if (Imm::state.last_element_selected || Imm::state.last_element_active)
+        {
+            if (!playing || use_debug_camera)
+            {
+                debug_camera.update(scenes->target, input);
+            }
+        }
+        if (selected_entity)
+        {
+            Imm::imm_translation_gizmo(&selected_entity->transform.position);
+            // Vec3f diff = Imm::imm_3d_point(&selected_entity->transform.position);
+            // selected_entity->transform.position.x += diff.x;
+            // selected_entity->transform.position.y += diff.y;
+            // selected_entity->transform.position.z += diff.z;
+        }
+        Imm::end_window();
+
         Imm::start_window("Entitiesasd", {50, 50, 200, 500});
         Imm::label("asfasdf");
         if (Imm::button("do something"))
@@ -281,20 +301,7 @@ struct Editor
         Imm::list_item((ImmId)&w, "Four");
         Imm::end_window();
 
-        Imm::start_window("Scene", {700, 250, 100, 300});
-        Imm::texture(&scenes->target.color_tex);
-        if (Imm::state.last_element_selected || Imm::state.last_element_active)
-        {
-            if (!playing || use_debug_camera)
-            {
-                debug_camera.update(scenes->target, input);
-            }
-        }
-        Imm::end_window();
-
-        Imm::end_window();
-
-        Imm::end_frame(&debug_camera, assets);
+        Imm::end_frame(assets);
     }
 
     void start_play()
@@ -312,6 +319,8 @@ struct Editor
             to->render_planar = from->render_planar;
             to->planar_target = from->planar_target;
             to->planar_entity = from->planar_entity;
+
+            to->active_camera_id = from->active_camera_id;
         };
         copy_scene(&play_scenes.main, &editor_scenes->main);
         copy_scene(&play_scenes.xs, &editor_scenes->xs);

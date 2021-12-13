@@ -152,6 +152,7 @@ namespace Imm
         Assets *assets;
         RenderTarget target;
         InputState *input;
+        Camera *camera;
 
         ImmStyle style;
 
@@ -170,6 +171,8 @@ namespace Imm
         ImmId selected = 0;
         ImmId just_selected = 0;
         ImmId just_unselected = 0;
+
+        Vec3f gizmo_last_contact_point;
 
         bool last_element_hot = false;
         bool last_element_active = false;
@@ -209,10 +212,9 @@ namespace Imm
         return get_text_width(*font, text);
     }
 
-    bool do_hoverable(ImmId id, Rect rect, Rect mask = {})
+    bool do_hoverable(ImmId id, bool is_hot)
     {
-        if (state.top_window_at_current_mouse_pos == state.current_window &&
-            in_rect(Vec2f{state.input->mouse_x, state.input->mouse_y}, rect, mask))
+        if (is_hot)
         {
             state.hot = id;
         }
@@ -223,6 +225,13 @@ namespace Imm
         state.last_element_hot = (state.hot == id);
         return state.last_element_hot;
     }
+    bool do_hoverable(ImmId id, Rect rect, Rect mask = {})
+    {
+        bool is_hot = state.top_window_at_current_mouse_pos == state.current_window &&
+                      in_rect(Vec2f{state.input->mouse_x, state.input->mouse_y}, rect, mask);
+        return do_hoverable(id, is_hot);
+    }
+
     bool do_active(ImmId id)
     {
         if (state.input->mouse_up_event)
@@ -391,13 +400,47 @@ namespace Imm
         load_layout();
     }
 
-    void start_frame(RenderTarget target, InputState *input, Assets *assets)
+    void start_frame(RenderTarget target, InputState *input, Assets *assets, Camera *camera)
     {
+        state.per_frame_alloc.reset();
+
         state.assets = assets;
         state.input = input;
-        state.target = target;
+        state.camera = camera;
 
-        state.per_frame_alloc.reset();
+        // deal with rendertarget size changes
+        if ((target.width != state.target.width || target.height != state.target.height) && state.target.width != 0 && state.target.height != 0)
+        {
+            if (state.anchored_up != 0)
+            {
+                Window &window = state.windows[state.anchored_up];
+                float height_pct = window.rect.height / state.target.height;
+                float new_height = height_pct * target.height;
+                window.rect.height = new_height;
+            }
+            if (state.anchored_down != 0)
+            {
+                Window &window = state.windows[state.anchored_down];
+                float y_pct = window.rect.y / state.target.height;
+                float new_y = y_pct * target.height;
+                window.rect.y = new_y;
+            }
+            if (state.anchored_left != 0)
+            {
+                Window &window = state.windows[state.anchored_left];
+                float width_pct = window.rect.width / state.target.width;
+                float new_width = width_pct * target.width;
+                window.rect.width = new_width;
+            }
+            if (state.anchored_right != 0)
+            {
+                Window &window = state.windows[state.anchored_right];
+                float x_pct = window.rect.x / state.target.width;
+                float new_x = x_pct * target.width;
+                window.rect.x = new_x;
+            }
+        }
+        state.target = target;
 
         // find and cache the top window at the current position
         state.top_window_at_current_mouse_pos = 0;
@@ -814,7 +857,7 @@ namespace Imm
         window.draw_list.push_clip({0, 0, 0, 0});
     }
 
-    void end_frame(Camera *camera, Assets *assets)
+    void end_frame(Assets *assets)
     {
         // window ordering
         if (state.input->mouse_down_event && state.top_window_at_current_mouse_pos)
@@ -1182,5 +1225,183 @@ namespace Imm
         ImmId me = (ImmId)(uint64_t)val;
         Window &window = state.windows[state.current_window];
         texture(me, *val, {window.content_rect.x, window.content_rect.y, window.content_rect.width, window.content_rect.height});
+    }
+
+    bool imm_translation_gizmo(Vec3f *p)
+    {
+        Window &window = state.windows[state.current_window];
+        ImmId me = (ImmId)(uint64_t)p;
+
+        auto screen_to_world = [](Rect target_rect, Camera *camera, Vec3f p, float z = 0.f)
+        {
+            glm::vec4 gl_screen = {(p.x - target_rect.x) / (target_rect.width / 2.f) - 1,
+                                   -(p.y - target_rect.y) / (target_rect.height / 2.f) + 1,
+                                   z, 1.f};
+            glm::vec4 unprojects = glm::inverse(camera->perspective * camera->view) * gl_screen;
+            unprojects /= unprojects.w;
+
+            return Vec3f{unprojects.x, unprojects.y, unprojects.z};
+        };
+
+        float dist_from_camera_2 = powf(p->x - state.camera->pos_x, 2) + powf(p->y - state.camera->pos_y, 2) + powf(p->z - state.camera->pos_z, 2);
+        float dist_from_camera = sqrtf(dist_from_camera_2);
+        const float gizmoSize = 0.03f;
+        float scale = gizmoSize * (dist_from_camera / tanf((3.1415 / 6) / 2.0f));
+
+        Vec3f axes[3] = {{scale, 0, 0},
+                         {0, scale, 0},
+                         {0, 0, scale}};
+
+        int selected_axis = -1;
+        float min_distance = .1f;
+
+        Vec3f closest_point_on_axis[3];
+
+        Vec3f ray_origin = screen_to_world(window.content_rect, state.camera, {state.input->mouse_x, state.input->mouse_y});
+        Vec3f ray_end = screen_to_world(window.content_rect, state.camera, {state.input->mouse_x, state.input->mouse_y}, .5);
+        Vec3f ray_dir = {ray_end.x - ray_origin.x,
+                         ray_end.y - ray_origin.y,
+                         ray_end.z - ray_origin.z};
+
+        for (int i = 0; i < 3; i++)
+        {
+            Vec3f axis_origin = *p;
+            Vec3f axis_dir = axes[i];
+
+            // stole this from somewhere
+            float ray2 = ray_dir.x * ray_dir.x + ray_dir.y * ray_dir.y + ray_dir.z * ray_dir.z;
+            float axis2 = axis_dir.x * axis_dir.x + axis_dir.y * axis_dir.y + axis_dir.z * axis_dir.z;
+            float ray_axis = ray_dir.x * axis_dir.x + ray_dir.y * axis_dir.y + ray_dir.z * axis_dir.z;
+            float det = -((ray2 * axis2) - (ray_axis * ray_axis));
+
+            Vec3f d_origin = {ray_origin.x - axis_origin.x,
+                              ray_origin.y - axis_origin.y,
+                              ray_origin.z - axis_origin.z};
+            float ray_dorigin = ray_dir.x * d_origin.x + ray_dir.y * d_origin.y + ray_dir.z * d_origin.z;
+            float axis_dorigin = axis_dir.x * d_origin.x + axis_dir.y * d_origin.y + axis_dir.z * d_origin.z;
+
+            if (fabs(det) > 0.0000001)
+            {
+                float ray_t = ((axis2 * ray_dorigin) - (axis_dorigin * ray_axis)) / det;
+                float axis_t = (-(ray2 * axis_dorigin) + (ray_dorigin * ray_axis)) / det;
+
+                closest_point_on_axis[i] = {
+                    axis_origin.x + (axis_dir.x * axis_t),
+                    axis_origin.y + (axis_dir.y * axis_t),
+                    axis_origin.z + (axis_dir.z * axis_t),
+                };
+
+                if (axis_t >= 0 && axis_t <= 1)
+                {
+                    Vec3f p0 = {
+                        ray_origin.x + (ray_dir.x * ray_t),
+                        ray_origin.y + (ray_dir.y * ray_t),
+                        ray_origin.z + (ray_dir.z * ray_t),
+                    };
+                    Vec3f p1 = {
+                        axis_origin.x + (axis_dir.x * axis_t),
+                        axis_origin.y + (axis_dir.y * axis_t),
+                        axis_origin.z + (axis_dir.z * axis_t),
+                    };
+
+                    float dist2 = (p1.x - p0.x) * (p1.x - p0.x) +
+                                  (p1.y - p0.y) * (p1.y - p0.y) +
+                                  (p1.z - p0.z) * (p1.z - p0.z);
+
+                    if (dist2 < min_distance)
+                    {
+                        min_distance = dist2;
+                        selected_axis = i;
+                    }
+                }
+            }
+        }
+
+        {
+            auto ndc_to_screen = [](Rect draw_area, Vec3f p)
+            {
+                return Vec3f{(p.x + 1) * 0.5f * draw_area.width + draw_area.x, ((1 - p.y) * .5f * draw_area.height + draw_area.y), p.z};
+            };
+
+            glm::vec4 p_ndc = state.camera->perspective * state.camera->view * glm::vec4(p->x, p->y, p->z, 1.f);
+            if (fabs(p_ndc.w) > 0)
+            {
+                p_ndc /= p_ndc.w;
+                Vec3f p_screen = ndc_to_screen(window.content_rect, {p_ndc.x, p_ndc.y, p_ndc.z});
+
+                Rect view_rect = {p_screen.x - 5, p_screen.y - 5, 10, 10};
+                Rect interactive_rect = {p_screen.x - 15, p_screen.y - 15, 30, 30};
+
+                Color color = {1, 0, 0, 1};
+                window.draw_list.push_rect(view_rect, color);
+            }
+            Vec3f p_screen = ndc_to_screen(window.content_rect, {p_ndc.x, p_ndc.y, p_ndc.z});
+
+            auto draw_axis = [&](int axis_i, Vec3f axis, Color color, ImmId id)
+            {
+                float handle_length = 100;
+                glm::vec4 x_axis_offset_ndc = state.camera->perspective * state.camera->view * glm::vec4(p->x + axis.x, p->y + axis.y, p->z + axis.z, 1.f);
+                float w = x_axis_offset_ndc.w;
+                if (x_axis_offset_ndc.w > 0)
+                {
+                    x_axis_offset_ndc /= x_axis_offset_ndc.w;
+                }
+                Vec3f axis_offset_screen = ndc_to_screen(window.content_rect, {x_axis_offset_ndc.x, x_axis_offset_ndc.y, x_axis_offset_ndc.z});
+                Vec2f axis_dir_screen = normalize(Vec2f{axis_offset_screen.x - p_screen.x, axis_offset_screen.y - p_screen.y});
+
+                bool hot = do_hoverable(id, selected_axis == axis_i);
+                bool active = do_active(id);
+                bool dragging = do_draggable(id);
+
+                if (state.just_activated == id)
+                {
+                    state.gizmo_last_contact_point = closest_point_on_axis[axis_i];
+                }
+
+                if (hot)
+                {
+                    color = lighten(color, 0.5f);
+                }
+
+                Vec2f line_normal = {axis_dir_screen.y, -axis_dir_screen.x};
+                float line_thickness = 2;
+                Vec2f line_p0 = {axis_offset_screen.x + line_normal.x * line_thickness, axis_offset_screen.y + line_normal.y * line_thickness};
+                Vec2f line_p1 = {axis_offset_screen.x - line_normal.x * line_thickness, axis_offset_screen.y - line_normal.y * line_thickness};
+                Vec2f line_p2 = {p_screen.x + line_normal.x * line_thickness, p_screen.y + line_normal.y * line_thickness};
+                Vec2f line_p3 = {p_screen.x - line_normal.x * line_thickness, p_screen.y - line_normal.y * line_thickness};
+                window.draw_list.push_quad(line_p0, line_p1, line_p3, line_p2, color);
+
+                Vec2f arrow_p0 = {axis_offset_screen.x + line_normal.x * 5, axis_offset_screen.y + line_normal.y * 5};
+                Vec2f arrow_p1 = {axis_offset_screen.x - line_normal.x * 5, axis_offset_screen.y - line_normal.y * 5};
+                Vec2f arrow_p2 = {axis_offset_screen.x + axis_dir_screen.x * 10, axis_offset_screen.y + axis_dir_screen.y * 10};
+
+                window.draw_list.push_quad(arrow_p0, arrow_p1, arrow_p2, arrow_p2, color);
+
+                if (dragging)
+                {
+                    Vec3f diff = {closest_point_on_axis[axis_i].x - state.gizmo_last_contact_point.x,
+                                  closest_point_on_axis[axis_i].y - state.gizmo_last_contact_point.y,
+                                  closest_point_on_axis[axis_i].z - state.gizmo_last_contact_point.z};
+                    state.gizmo_last_contact_point = closest_point_on_axis[axis_i];
+                    return diff;
+                }
+                return Vec3f{0, 0, 0};
+            };
+
+            ImmId x_axis = me + 1;
+            ImmId y_axis = me + 2;
+            ImmId z_axis = me + 3;
+
+            Vec3f diff;
+            diff.x = draw_axis(0, axes[0], {.9, .2, .3, 1}, x_axis).x;
+            diff.y = draw_axis(1, axes[1], {.2, .9, .3, 1}, y_axis).y;
+            diff.z = draw_axis(2, axes[2], {.2, .3, .9, 1}, z_axis).z;
+
+            p->x += diff.x;
+            p->y += diff.y;
+            p->z += diff.z;
+        }
+
+        return false;
     }
 }

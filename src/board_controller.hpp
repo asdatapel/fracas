@@ -246,7 +246,6 @@ struct UiController
 
             glEnable(GL_BLEND);
             draw_text(*font, scene->target, banner_text, 10, scene->target.height - transition_offset, 1, 1);
-            glDisable(GL_BLEND);
 
             banner_t += timestep;
         }

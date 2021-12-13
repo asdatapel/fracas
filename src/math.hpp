@@ -191,19 +191,6 @@ struct Rect
     float x, y;
     float width, height;
 };
-
-Vec2f normalize(Vec2f v)
-{
-    float len = sqrt(v.x * v.x + v.y * v.y);
-    return {v.x / len, v.y / len};
-}
-
-Vec3f normalize(Vec3f v)
-{
-    float len = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-    return {v.x / len, v.y / len, v.z / len};
-}
-
 bool in_rect(Vec2f point, Rect rect, Rect mask = {})
 {
     if (mask.width == 0 || mask.height == 0)
@@ -219,6 +206,18 @@ bool in_rect(Vec2f point, Rect rect, Rect mask = {})
            point.x < mask.x + mask.width &&
            point.y > mask.y &&
            point.y < mask.y + mask.height;
+}
+
+Vec2f normalize(Vec2f v)
+{
+    float len = sqrt(v.x * v.x + v.y * v.y);
+    return {v.x / len, v.y / len};
+}
+
+Vec3f normalize(Vec3f v)
+{
+    float len = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+    return {v.x / len, v.y / len, v.z / len};
 }
 
 struct Transform
