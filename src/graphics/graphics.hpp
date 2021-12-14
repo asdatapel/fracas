@@ -16,8 +16,8 @@
 #include "framebuffer.hpp"
 #include "shader.hpp"
 
-// TODO move this to the asset loading system
 Shader basic_shader;
+Shader lines_shader;
 Shader textured_shader;
 Shader textured_mapped_shader;
 Shader blurred_colors_shader;
@@ -30,6 +30,7 @@ Shader tonemap_shader;
 Shader blur_shader;
 Shader twod_shader;
 
+// TODO move this to the asset loading system
 Shader bar_shader;
 Shader threed_shader;
 Shader threed_with_planar_shader;
@@ -68,6 +69,7 @@ void debug_end_immediate();
 void debug_draw_immediate(RenderTarget target, Vec2f v1, Vec2f v2, Vec2f v3, Vec2f v4, Color color);
 void debug_draw_immediate(RenderTarget target, Vec2f v1, Vec2f v2, Vec2f v3, Color color);
 void debug_draw_immediate(RenderTarget target, Rect rect, Color color);
+void debug_draw_lines(RenderTarget target, float *lines, int count);
 
 void draw(RenderTarget target, Shader shader, VertexBuffer buf);
 void draw_rect();

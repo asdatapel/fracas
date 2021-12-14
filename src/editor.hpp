@@ -63,6 +63,18 @@ struct Editor
 
     void debug_ui(SceneManager *scenes, RenderTarget target, InputState *input, Assets *assets, Memory mem)
     {
+        // copy depth buffer to top level target so we can draw some more stuff
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, scenes->main.target.gl_fbo);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, scenes->target.gl_fbo);
+        glBlitFramebuffer(0, 0, scenes->target.width, scenes->target.height,
+                          0, 0, scenes->target.width, scenes->target.height,
+                          GL_DEPTH_BUFFER_BIT,
+                          GL_NEAREST);
+
+        static Array<float, 1024 * 1024> lines;
+        lines.len = 0;
+
+
         for (int i = 0; i < input->key_input.len; i++)
         {
             // save scene
@@ -167,7 +179,28 @@ struct Editor
             }
             else if (selected_entity->type == EntityType::SPLINE)
             {
-                draw_spline(selected_entity->spline, target, input, mem, get_camera(&scenes->main), true);
+                // draw_spline(selected_entity->spline, target, input, mem, get_camera(&scenes->main), true);
+
+                Vec3f start = selected_entity->spline.points[1];
+                for (int i = 0; i < 100; i++)
+                {
+                    Vec3f end = catmull_rom_const_distance((i + 1) / 100.f, selected_entity->spline);
+                    lines.append(start.x);
+                    lines.append(start.y);
+                    lines.append(start.z);
+                    lines.append(0);
+                    lines.append(1);
+                    lines.append(0);
+                    lines.append(1);
+                    lines.append(end.x);
+                    lines.append(end.y);
+                    lines.append(end.z);
+                    lines.append(0);
+                    lines.append(1);
+                    lines.append(0);
+                    lines.append(1);
+                    start = end;
+                }
 
                 // for (int i = 0; i < selected_entity->spline.points.len; i++)
                 // {
@@ -250,25 +283,6 @@ struct Editor
             Imm::end_window();
         }
 
-        Imm::start_window("Scene", {700, 250, 100, 300});
-        Imm::texture(&scenes->target.color_tex);
-        if (Imm::state.last_element_selected || Imm::state.last_element_active)
-        {
-            if (!playing || use_debug_camera)
-            {
-                debug_camera.update(scenes->target, input);
-            }
-        }
-        if (selected_entity)
-        {
-            Imm::imm_translation_gizmo(&selected_entity->transform.position);
-            // Vec3f diff = Imm::imm_3d_point(&selected_entity->transform.position);
-            // selected_entity->transform.position.x += diff.x;
-            // selected_entity->transform.position.y += diff.y;
-            // selected_entity->transform.position.z += diff.z;
-        }
-        Imm::end_window();
-
         Imm::start_window("Entitiesasd", {50, 50, 200, 500});
         Imm::label("asfasdf");
         if (Imm::button("do something"))
@@ -299,6 +313,30 @@ struct Editor
         static float val = 1.432f;
         Imm::num_input(&val);
         Imm::list_item((ImmId)&w, "Four");
+        Imm::end_window();
+        
+
+        bind_shader(lines_shader);
+        glUniformMatrix4fv(lines_shader.uniform_handles[(int)UniformId::VIEW], 1, GL_FALSE, &debug_camera.view[0][0]);
+        glUniformMatrix4fv(lines_shader.uniform_handles[(int)UniformId::PROJECTION], 1, GL_FALSE, &debug_camera.perspective[0][0]);
+        debug_draw_lines(scenes->target, lines.arr, lines.len / (7 * 2));
+        Imm::start_window("Scene", {700, 250, 100, 300});
+        Imm::texture(&scenes->target.color_tex);
+        if (Imm::state.last_element_selected || Imm::state.last_element_active)
+        {
+            if (!playing || use_debug_camera)
+            {
+                debug_camera.update(scenes->target, input);
+            }
+        }
+        if (selected_entity)
+        {
+            Imm::imm_translation_gizmo(&selected_entity->transform.position);
+            // Vec3f diff = Imm::imm_3d_point(&selected_entity->transform.position);
+            // selected_entity->transform.position.x += diff.x;
+            // selected_entity->transform.position.y += diff.y;
+            // selected_entity->transform.position.z += diff.z;
+        }
         Imm::end_window();
 
         Imm::end_frame(assets);

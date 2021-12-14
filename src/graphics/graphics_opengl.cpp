@@ -10,6 +10,9 @@ const int LIGHTS_BUFFER_BINDING = 0;
 
 RenderTarget main_target;
 
+unsigned int debug_lines_vao;
+unsigned int debug_lines_vbo;
+
 unsigned int immediate_quad_vao;
 unsigned int immediate_quad_vbo;
 
@@ -168,6 +171,16 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
     glEnable(GL_CULL_FACE);
     glFrontFace(GL_CCW);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+    glLineWidth(3.f);
+
+    glGenVertexArrays(1, &debug_lines_vao);
+    glGenBuffers(1, &debug_lines_vbo);
+    glBindVertexArray(debug_lines_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, debug_lines_vbo);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void *)(3 * sizeof(float)));
 
     glGenVertexArrays(1, &immediate_quad_vao);
     glGenBuffers(1, &immediate_quad_vbo);
@@ -197,6 +210,7 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
     glBindVertexArray(0);
 
     basic_shader = load_shader(create_shader_program("resources/shaders/basic"));
+    lines_shader = load_shader(create_shader_program("resources/shaders/lines"));
     textured_shader = load_shader(create_shader_program("resources/shaders/textured"));
     textured_mapped_shader = load_shader(create_shader_program("resources/shaders/font_atlas"));
     blurred_colors_shader = load_shader(create_shader_program("resources2/shaders/blurred_colors"));
@@ -517,8 +531,17 @@ void start_scissor(RenderTarget target, Rect rect)
     glEnable(GL_SCISSOR_TEST);
     glScissor(rect.x, target.height - (rect.y + rect.height), rect.width, rect.height);
 }
-
 void end_scissor()
 {
     glDisable(GL_SCISSOR_TEST);
+}
+
+void debug_draw_lines(RenderTarget target, float *lines, int count)
+{
+    bind_shader(lines_shader);
+
+    glBindBuffer(GL_ARRAY_BUFFER, debug_lines_vbo);
+    glBufferData(GL_ARRAY_BUFFER, count * 2 * 7 * sizeof(float), lines, GL_DYNAMIC_DRAW);
+    glBindVertexArray(debug_lines_vao);
+    glDrawArrays(GL_LINES, 0, count * 2);
 }

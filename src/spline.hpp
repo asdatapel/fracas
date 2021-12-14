@@ -11,7 +11,7 @@ struct Segment
     Vec3f p0, p1, p2, p3;
 };
 
-void debug_draw_line(RenderTarget target, Vec2f start, Vec2f end, Color color = {.5, .2, .8, 1}, float thickness = 3)
+void debug_draw_sline(RenderTarget target, Vec2f start, Vec2f end, Color color = {.5, .2, .8, 1}, float thickness = 3)
 {
     Vec2f l = {end.x - start.x, end.y - start.y};
     Vec2f cross = normalize(Vec2f{-l.y, l.x});
@@ -159,6 +159,11 @@ float constant_distance_t(Spline3 spline, float t)
 
     return desired_segment + next_t;
 }
+Vec3f catmull_rom_const_distance(float t, Spline3 &spline)
+{
+    float const_t = constant_distance_t(spline, t) - 1;
+    return catmull_rom(const_t, spline);
+}
 
 void draw_spline(Spline3 &spline, RenderTarget target, InputState *input, Memory mem, Camera *camera, bool debug)
 {
@@ -184,7 +189,7 @@ void draw_spline(Spline3 &spline, RenderTarget target, InputState *input, Memory
 
                 if (line_start_screen.x >= 0 && line_end_screen.x >= 0)
                 {
-                    debug_draw_line(target, line_start_screen, line_end_screen, {.4, .8, .1, 1}, 3);
+                    debug_draw_sline(target, line_start_screen, line_end_screen, {.4, .8, .1, 1}, 3);
                 }
                 line_start_screen = line_end_screen;
             }
@@ -218,7 +223,7 @@ void draw_spline(Spline3 &spline, RenderTarget target, InputState *input, Memory
             Vec3f cross_p2_screen = to_screen_space(cross_p2, camera);
 
             if (cross_p1_screen.z > 0 && cross_p2_screen.z > 0)
-                debug_draw_line(target, cross_p1_screen.xy(), cross_p2_screen.xy(), {.4, .2, .9, 1}, 1.5);
+                debug_draw_sline(target, cross_p1_screen.xy(), cross_p2_screen.xy(), {.4, .2, .9, 1}, 1.5);
         }
     }
 
