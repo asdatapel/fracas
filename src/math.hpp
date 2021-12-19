@@ -188,9 +188,29 @@ struct Vec3f
 
 struct Rect
 {
-    float x, y;
-    float width, height;
+    float x = 0, y = 0;
+    float width = 0, height = 0;
+
+    void set_bottom(float down)
+    {
+        height = down - y;
+    }
+    void set_right(float right)
+    {
+        width = right - x;
+    }
 };
+inline bool operator==(const Rect &lhs, const Rect &rhs)
+{
+    return lhs.x == rhs.x &&
+           lhs.y == rhs.y &&
+           lhs.width == rhs.width &&
+           lhs.height == rhs.height;
+}
+inline bool operator!=(const Rect &lhs, const Rect &rhs)
+{
+    return !(lhs == rhs);
+}
 bool in_rect(Vec2f point, Rect rect, Rect mask = {})
 {
     if (mask.width == 0 || mask.height == 0)

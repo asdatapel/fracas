@@ -36,6 +36,7 @@ namespace Imm
             CLIP,
             TEXT,
             RECT,
+            RECT_PTR,
             QUAD,
             TEXTURE,
         };
@@ -56,6 +57,11 @@ namespace Imm
             Rect rect;
             Color color;
         };
+        struct RectPtrDrawItem
+        {
+            Rect *rect;
+            Color color;
+        };
         struct QuadDrawItem
         {
             Vec2f points[4];
@@ -73,6 +79,7 @@ namespace Imm
             ClipDrawItem clip_draw_item;
             TextDrawItem text_draw_item;
             RectDrawItem rect_draw_item;
+            RectPtrDrawItem rect_ptr_draw_item;
             QuadDrawItem quad_draw_item;
             TexDrawItem tex_draw_item;
         };
@@ -102,6 +109,13 @@ namespace Imm
             item.rect_draw_item = {rect, color};
             buf.push_back(item);
         }
+        void push_rect_ptr(Rect *rect, Color color)
+        {
+            DrawItem item;
+            item.type = DrawItem::Type::RECT_PTR;
+            item.rect_ptr_draw_item = {rect, color};
+            buf.push_back(item);
+        }
         void push_quad(Vec2f p0, Vec2f p1, Vec2f p2, Vec2f p3, Color color)
         {
             DrawItem item;
@@ -119,6 +133,8 @@ namespace Imm
     };
     struct Window
     {
+        AllocatedString<128> name;
+        bool visible = true;
         Rect rect{};
 
         Rect content_rect = {};
@@ -130,13 +146,16 @@ namespace Imm
         DrawList draw_list;
 
         Window() {}
-        Window(Rect rect)
+        Window(String name, Rect rect)
         {
+            this->name = string_to_allocated_string<128>(name);
             this->rect = rect;
         }
     };
     struct ImmStyle
     {
+        float menubar_height = 30.f;
+
         float title_font_size = 24;
         float content_font_size = 16;
         Vec2f inner_padding = {5, 5};
@@ -156,8 +175,19 @@ namespace Imm
 
         ImmStyle style;
 
+        bool menubar_visible = false;
+        ImmId current_menubar_menu = 0;
+        bool current_menubar_menu_selected = false;
+        float next_menubar_x = 0;
+        float next_menubar_menu_x = 0;
+        float next_menubar_menu_y = 0;
+        Rect menubar_menu_background_rect;
+
+        Rect content_rect;
+
+        ImmId current_window = 0;
+
         std::map<ImmId, Window> windows;
-        ImmId current_window;
         ImmId top_window_at_current_mouse_pos = 0;
 
         ImmId hot = 0;
@@ -179,10 +209,6 @@ namespace Imm
         bool last_element_dragging = false;
         bool last_element_selected = false;
 
-        AllocatedString<1024> in_progress_string;
-
-        StackAllocator per_frame_alloc;
-
         ImmId anchored_left = 0;
         int anchored_left_priority = 0;
         ImmId anchored_right = 0;
@@ -192,6 +218,12 @@ namespace Imm
         ImmId anchored_down = 0;
         int anchored_down_priority = 0;
         ImmId anchored_center = 0;
+
+        AllocatedString<1024> in_progress_string;
+
+        StackAllocator per_frame_alloc;
+
+        DrawList global_draw_list;
     };
 
     UiState state;
@@ -227,7 +259,11 @@ namespace Imm
     }
     bool do_hoverable(ImmId id, Rect rect, Rect mask = {})
     {
-        bool is_hot = state.top_window_at_current_mouse_pos == state.current_window &&
+        bool interactible = (state.current_menubar_menu == 0) ||
+                            (state.current_menubar_menu != 0 && state.current_window == 0);
+        bool in_top_window = state.current_window == 0 ||
+                             (state.top_window_at_current_mouse_pos == state.current_window);
+        bool is_hot = interactible && in_top_window &&
                       in_rect(Vec2f{state.input->mouse_x, state.input->mouse_y}, rect, mask);
         return do_hoverable(id, is_hot);
     }
@@ -325,6 +361,8 @@ namespace Imm
         {
             YAML::Dict *window = YAML::new_dict(a);
             window->push_back("id", YAML::new_literal(String::from(id, a), a), a);
+            window->push_back("name", YAML::new_literal(in_window.name, a), a);
+            window->push_back("visible", YAML::new_literal(in_window.visible ? (String) "true" : (String) "false", a), a);
 
             YAML::Dict *rect = YAML::new_dict(a);
             rect->push_back("x", YAML::new_literal(String::from(in_window.rect.x, a), a), a);
@@ -373,8 +411,11 @@ namespace Imm
         {
             YAML::Dict *in_window = in_windows->get(i)->as_dict();
             ImmId id = in_window->get("id")->as_literal().to_uint64();
-
+            
             Window &window = state.windows[id];
+            window.name = string_to_allocated_string<128>(in_window->get("name")->as_literal());
+            window.visible = in_window->get("visible") && strcmp(in_window->get("visible")->as_literal(), "true");
+
             YAML::Dict *rect = in_window->get("rect")->as_dict();
             window.rect.x = atof(rect->get("x")->as_literal().to_char_array(a));
             window.rect.y = atof(rect->get("y")->as_literal().to_char_array(a));
@@ -404,43 +445,53 @@ namespace Imm
     {
         state.per_frame_alloc.reset();
 
-        state.assets = assets;
+        state.target = target;
         state.input = input;
+        state.assets = assets;
         state.camera = camera;
 
+        Rect new_content_rect = {0, 0, (float)target.width, (float)target.height};
+        if (state.menubar_visible)
+        {
+            new_content_rect.y += state.style.menubar_height;
+            new_content_rect.height -= state.style.menubar_height;
+        }
+        state.menubar_visible = false;
+
         // deal with rendertarget size changes
-        if ((target.width != state.target.width || target.height != state.target.height) && state.target.width != 0 && state.target.height != 0)
+        if ((new_content_rect != state.content_rect) &&
+            state.content_rect.width != 0 && state.content_rect.height != 0)
         {
             if (state.anchored_up != 0)
             {
                 Window &window = state.windows[state.anchored_up];
-                float height_pct = window.rect.height / state.target.height;
-                float new_height = height_pct * target.height;
+                float height_pct = window.rect.height / state.content_rect.height;
+                float new_height = height_pct * new_content_rect.height;
                 window.rect.height = new_height;
             }
             if (state.anchored_down != 0)
             {
                 Window &window = state.windows[state.anchored_down];
-                float y_pct = window.rect.y / state.target.height;
-                float new_y = y_pct * target.height;
+                float y_pct = window.rect.y / state.content_rect.height;
+                float new_y = y_pct * new_content_rect.height;
                 window.rect.y = new_y;
             }
             if (state.anchored_left != 0)
             {
                 Window &window = state.windows[state.anchored_left];
-                float width_pct = window.rect.width / state.target.width;
-                float new_width = width_pct * target.width;
+                float width_pct = window.rect.width / state.content_rect.width;
+                float new_width = width_pct * new_content_rect.width;
                 window.rect.width = new_width;
             }
             if (state.anchored_right != 0)
             {
                 Window &window = state.windows[state.anchored_right];
-                float x_pct = window.rect.x / state.target.width;
-                float new_x = x_pct * target.width;
+                float x_pct = window.rect.x / state.content_rect.width;
+                float new_x = x_pct * new_content_rect.width;
                 window.rect.x = new_x;
             }
         }
-        state.target = target;
+        state.content_rect = new_content_rect;
 
         // find and cache the top window at the current position
         state.top_window_at_current_mouse_pos = 0;
@@ -455,6 +506,10 @@ namespace Imm
             }
         }
 
+        state.current_window = 0;
+
+        state.next_menubar_x = 0;
+
         state.just_activated = 0;
         state.just_deactivated = 0;
         state.just_stopped_dragging = 0;
@@ -466,6 +521,64 @@ namespace Imm
         state.last_element_dragging = false;
         state.last_element_selected = false;
     }
+
+    void start_menubar_menu(String name)
+    {
+        const float font_size = state.style.content_font_size;
+
+        ImmId me = imm_hash(name);
+
+        state.current_menubar_menu_selected = false;
+
+        if (!state.menubar_visible)
+        {
+            state.global_draw_list.push_rect({0, 0, (float)state.target.width, state.style.menubar_height}, {1, .141, 0, 1});
+            state.menubar_visible = true;
+        }
+
+        Rect interactive_rect = {state.next_menubar_x, 0, get_text_width(name, font_size) + (state.style.inner_padding.x * 2), state.style.menubar_height};
+        state.next_menubar_x += interactive_rect.width;
+
+        Vec2f text_pos = {interactive_rect.x + state.style.inner_padding.x,
+                          (interactive_rect.height / 2) - (font_size / 2)};
+
+        Color button_color = {0, 0, 1, 1};
+
+        bool hot = do_hoverable(me, interactive_rect);
+        bool active = do_active(me);
+        bool selected = do_selectable(me);
+
+        if (hot || selected)
+        {
+            button_color = lighten(button_color, 0.3f);
+        }
+
+        if (state.current_menubar_menu == me || state.just_selected == me)
+        {
+            state.top_window_at_current_mouse_pos = 0;
+            state.current_menubar_menu = me;
+            state.current_menubar_menu_selected = true;
+
+            if (state.input->mouse_down_event && !in_rect({state.input->mouse_x, state.input->mouse_y}, state.menubar_menu_background_rect))
+            {
+                state.current_menubar_menu = 0;
+            }
+
+            state.next_menubar_menu_x = interactive_rect.x + 5;
+            state.next_menubar_menu_y = interactive_rect.y + interactive_rect.height + 5;
+            state.menubar_menu_background_rect = {
+                interactive_rect.x,
+                interactive_rect.y + interactive_rect.height,
+                0,
+                10,
+            };
+            state.global_draw_list.push_rect_ptr(&state.menubar_menu_background_rect, {1, 0, 0, 1});
+        }
+
+        state.global_draw_list.push_rect(interactive_rect, button_color);
+        state.global_draw_list.push_text(name, text_pos, font_size, {1, 1, 1, 1});
+    }
+
     void start_window(String title, Rect rect)
     {
         ImmId me = imm_hash(title);
@@ -480,11 +593,17 @@ namespace Imm
 
         if (state.windows.count(me) == 0)
         {
-            Window window(rect);
+            Window window(title, rect);
             window.z = state.windows.size();
             state.windows[me] = window;
         }
         Window &window = state.windows[me];
+
+        // TODO this is not doing everything it needs to do to hide a window
+        if (!window.visible)
+        {
+            return;
+        }
 
         Rect titlebar_rect = {window.rect.x + state.style.window_control_border,
                               window.rect.y + state.style.window_control_border,
@@ -605,16 +724,6 @@ namespace Imm
                 state.anchored_center = 0;
             }
         }
-
-        // keep window in bounds
-        if (window.rect.x > state.target.width - 30)
-            window.rect.x = state.target.width - 30;
-        if (window.rect.y > state.target.height - 30)
-            window.rect.y = state.target.height - 30;
-        if (window.rect.x + window.rect.width < 30)
-            window.rect.x += 30 - (window.rect.x + window.rect.width);
-        if (window.rect.y < 0)
-            window.rect.y = 0;
 
         // snapping
         Rect top_handle = relative_to_absolute({0.45, 0, 0.1, 0.05});
@@ -758,76 +867,86 @@ namespace Imm
         {
             window.rect.y = 0;
             if (state.anchored_left_priority > state.anchored_up_priority)
-                window.rect.x = state.windows[state.anchored_left].rect.width;
+                window.rect.x = state.windows[state.anchored_left].rect.x + state.windows[state.anchored_left].rect.width;
             else
                 window.rect.x = 0;
 
             if (state.anchored_right_priority > state.anchored_up_priority)
-                window.rect.width = state.target.width - (window.rect.x + state.windows[state.anchored_right].rect.width);
+                window.rect.set_right(state.windows[state.anchored_right].rect.x);
             else
-                window.rect.width = state.target.width - window.rect.x;
+                window.rect.set_right(state.content_rect.x + state.content_rect.width);
         }
         if (state.anchored_down == me)
         {
-            window.rect.height = state.target.height - window.rect.y;
+            window.rect.set_bottom(state.content_rect.y + state.content_rect.height);
             if (state.anchored_left_priority > state.anchored_down_priority)
-                window.rect.x = state.windows[state.anchored_left].rect.width;
+                window.rect.x = state.windows[state.anchored_left].rect.x + state.windows[state.anchored_left].rect.width;
             else
                 window.rect.x = 0;
 
             if (state.anchored_right_priority > state.anchored_down_priority)
-                window.rect.width = state.target.width - (window.rect.x + state.windows[state.anchored_right].rect.width);
+                window.rect.set_right(state.windows[state.anchored_right].rect.x);
             else
-                window.rect.width = state.target.width - window.rect.x;
+                window.rect.set_right(state.content_rect.x + state.content_rect.width);
         }
         if (state.anchored_left == me)
         {
             window.rect.x = 0;
             if (state.anchored_up_priority > state.anchored_left_priority)
-                window.rect.y = state.windows[state.anchored_up].rect.height;
+                window.rect.y = state.windows[state.anchored_up].rect.y + state.windows[state.anchored_up].rect.height;
             else
-                window.rect.y = 0;
+                window.rect.y = state.content_rect.y;
 
             if (state.anchored_down_priority > state.anchored_left_priority)
-                window.rect.height = state.target.height - (window.rect.y + state.windows[state.anchored_down].rect.height);
+                window.rect.set_bottom(state.windows[state.anchored_down].rect.y);
             else
-                window.rect.height = state.target.height - window.rect.y;
+                window.rect.set_bottom(state.content_rect.y + state.content_rect.height);
         }
         if (state.anchored_right == me)
         {
-            window.rect.width = state.target.width - window.rect.x;
+            window.rect.set_right(state.content_rect.x + state.content_rect.width);
             if (state.anchored_up_priority > state.anchored_right_priority)
-                window.rect.y = state.windows[state.anchored_up].rect.height;
+                window.rect.y = state.windows[state.anchored_up].rect.y + state.windows[state.anchored_up].rect.height;
             else
-                window.rect.y = 0;
+                window.rect.y = state.content_rect.y;
 
             if (state.anchored_down_priority > state.anchored_right_priority)
-                window.rect.height = state.target.height - (window.rect.y + state.windows[state.anchored_down].rect.height);
+                window.rect.set_bottom(state.windows[state.anchored_down].rect.y);
             else
-                window.rect.height = state.target.height - window.rect.y;
+                window.rect.set_bottom(state.content_rect.y + state.content_rect.height);
         }
         if (state.anchored_center == me)
         {
             if (state.anchored_up)
-                window.rect.y = state.windows[state.anchored_up].rect.height;
+                window.rect.y = state.windows[state.anchored_up].rect.y + state.windows[state.anchored_up].rect.height;
             else
-                window.rect.y = 0;
+                window.rect.y = state.content_rect.y;
 
             if (state.anchored_down)
-                window.rect.height = state.target.height - (window.rect.y + state.windows[state.anchored_down].rect.height);
+                window.rect.set_bottom(state.windows[state.anchored_down].rect.y);
             else
-                window.rect.height = state.target.height - window.rect.y;
+                window.rect.set_bottom(state.content_rect.y + state.content_rect.height);
 
             if (state.anchored_left)
-                window.rect.x = state.windows[state.anchored_left].rect.width;
+                window.rect.x = state.windows[state.anchored_left].rect.x + state.windows[state.anchored_left].rect.width;
             else
                 window.rect.x = 0;
 
             if (state.anchored_right)
-                window.rect.width = state.target.width - (window.rect.x + state.windows[state.anchored_right].rect.width);
+                window.rect.set_right(state.windows[state.anchored_right].rect.x);
             else
-                window.rect.width = state.target.width - window.rect.x;
+                window.rect.set_right(state.content_rect.x + state.content_rect.width);
         }
+
+        // keep window in bounds
+        if (window.rect.x > state.content_rect.width - 30)
+            window.rect.x = state.content_rect.width - 30;
+        if (window.rect.y > state.content_rect.height - 30)
+            window.rect.y = state.content_rect.height - 30;
+        if (window.rect.x + window.rect.width < 30)
+            window.rect.x += 30 - (window.rect.x + window.rect.width);
+        if (window.rect.y < state.content_rect.y)
+            window.rect.y = state.content_rect.y;
 
         // clamp size
         window.rect.width = fmax(window.rect.width, 30);
@@ -908,58 +1027,68 @@ namespace Imm
 
         state.target.bind();
         debug_begin_immediate();
+        auto do_draw_list = [&](DrawList &draw_list)
+        {
+            for (int i = 0; i < draw_list.buf.size(); i++)
+            {
+                DrawItem item = draw_list.buf[i];
+                switch (item.type)
+                {
+                case DrawItem::Type::CLIP:
+                {
+                    if (item.clip_draw_item.rect.width == 0 && item.clip_draw_item.rect.height == 0)
+                        end_scissor();
+                    else
+                        start_scissor(state.target, item.clip_draw_item.rect);
+                }
+                break;
+                case DrawItem::Type::TEXT:
+                {
+                    Font *font = assets->get_font(FONT_ROBOTO_CONDENSED_REGULAR, item.text_draw_item.size);
+                    draw_text(*font, state.target, item.text_draw_item.text, item.text_draw_item.pos.x, item.text_draw_item.pos.y, item.text_draw_item.color);
+                }
+                break;
+                case DrawItem::Type::RECT:
+                {
+                    draw_rect(state.target, item.rect_draw_item.rect, item.rect_draw_item.color);
+                }
+                break;
+                case DrawItem::Type::RECT_PTR:
+                {
+                    draw_rect(state.target, *item.rect_ptr_draw_item.rect, item.rect_ptr_draw_item.color);
+                }
+                break;
+                case DrawItem::Type::QUAD:
+                {
+                    debug_draw_immediate(state.target,
+                                         item.quad_draw_item.points[0],
+                                         item.quad_draw_item.points[1],
+                                         item.quad_draw_item.points[2],
+                                         item.quad_draw_item.points[3],
+                                         item.quad_draw_item.color);
+                }
+                break;
+                case DrawItem::Type::TEXTURE:
+                {
+                    draw_textured_rect(state.target, item.tex_draw_item.rect, {1, 1, 1, 1}, item.tex_draw_item.texture);
+                }
+                break;
+                }
+            }
+            draw_list.buf.clear();
+            end_scissor();
+        };
         for (int z = state.windows.size() - 1; z >= 0; z--)
         {
             for (auto &[id, window] : state.windows)
             {
                 if (window.z == z)
                 {
-                    for (int i = 0; i < window.draw_list.buf.size(); i++)
-                    {
-                        DrawItem item = window.draw_list.buf[i];
-                        switch (item.type)
-                        {
-                        case DrawItem::Type::CLIP:
-                        {
-                            if (item.clip_draw_item.rect.width == 0 && item.clip_draw_item.rect.height == 0)
-                                end_scissor();
-                            else
-                                start_scissor(state.target, item.clip_draw_item.rect);
-                        }
-                        break;
-                        case DrawItem::Type::TEXT:
-                        {
-                            Font *font = assets->get_font(FONT_ROBOTO_CONDENSED_REGULAR, item.text_draw_item.size);
-                            draw_text(*font, state.target, item.text_draw_item.text, item.text_draw_item.pos.x, item.text_draw_item.pos.y, item.text_draw_item.color);
-                        }
-                        break;
-                        case DrawItem::Type::RECT:
-                        {
-                            draw_rect(state.target, item.rect_draw_item.rect, item.rect_draw_item.color);
-                        }
-                        break;
-                        case DrawItem::Type::QUAD:
-                        {
-                            debug_draw_immediate(state.target,
-                                                 item.quad_draw_item.points[0],
-                                                 item.quad_draw_item.points[1],
-                                                 item.quad_draw_item.points[2],
-                                                 item.quad_draw_item.points[3],
-                                                 item.quad_draw_item.color);
-                        }
-                        break;
-                        case DrawItem::Type::TEXTURE:
-                        {
-                            draw_textured_rect(state.target, item.tex_draw_item.rect, {1, 1, 1, 1}, item.tex_draw_item.texture);
-                        }
-                        break;
-                        }
-                    }
-                    window.draw_list.buf.clear();
-                    end_scissor();
+                    do_draw_list(window.draw_list);
                 }
             }
         }
+        do_draw_list(state.global_draw_list);
         debug_end_immediate();
     }
 
@@ -1074,33 +1203,69 @@ namespace Imm
         return button(me, text);
     }
 
-    bool list_item(ImmId me, String text, bool selected_flag = false)
+    bool list_item(ImmId me, String text, bool selected_flag = false, bool *as_checkbox = nullptr)
     {
-        Window &window = state.windows[state.current_window];
+        DrawList *draw_list;
+        Rect rect;
+        Rect container_rect;
 
-        Rect rect = {window.next_elem_pos.x,
-                     window.next_elem_pos.y,
-                     window.content_rect.width - state.style.inner_padding.x * 2,
-                     state.style.content_font_size + state.style.inner_padding.y * 2};
-        window.next_elem_pos.y += rect.height + state.style.element_gap;
-        window.last_height += rect.height + state.style.element_gap;
+        if (state.current_window != 0)
+        {
+            Window &window = state.windows[state.current_window];
+            draw_list = &window.draw_list;
 
-        bool hot = do_hoverable(me, rect, window.content_rect);
+            rect = {window.next_elem_pos.x,
+                    window.next_elem_pos.y,
+                    window.content_rect.width - state.style.inner_padding.x * 2,
+                    state.style.content_font_size + state.style.inner_padding.y * 2};
+            container_rect = window.content_rect;
+
+            window.next_elem_pos.y += rect.height + state.style.element_gap;
+            window.last_height += rect.height + state.style.element_gap;
+        }
+        else if (state.current_menubar_menu != 0 && state.current_menubar_menu_selected)
+        {
+            draw_list = &state.global_draw_list;
+            rect = {state.next_menubar_menu_x,
+                    state.next_menubar_menu_y,
+                    200,
+                    state.style.content_font_size + state.style.inner_padding.y * 2};
+            container_rect = {};
+
+            state.next_menubar_menu_y += rect.height;
+            state.menubar_menu_background_rect.width = fmax(rect.width + 10, state.menubar_menu_background_rect.width);
+            state.menubar_menu_background_rect.height += rect.height;
+        }
+        else
+        {
+            return false;
+        }
+
+        bool hot = do_hoverable(me, rect, container_rect);
         bool active = do_active(me);
         bool dragging = do_draggable(me);
         bool selected = do_selectable(me, true) || selected_flag;
 
+        if (as_checkbox)
+        {
+            if (state.just_selected == me)
+            {
+                *as_checkbox = !(*as_checkbox);
+            }
+            selected = *as_checkbox;
+        }
+
         Color text_color = state.style.content_default_text_color;
         if (selected)
         {
-            window.draw_list.push_rect(rect, state.style.content_background_color);
+            draw_list->push_rect(rect, state.style.content_background_color);
             text_color = state.style.content_highlighted_text_color;
         }
 
-        window.draw_list.push_text(text,
-                                   {rect.x + state.style.inner_padding.x, rect.y + state.style.inner_padding.y},
-                                   state.style.content_font_size,
-                                   text_color);
+        draw_list->push_text(text,
+                             {rect.x + state.style.inner_padding.x, rect.y + state.style.inner_padding.y},
+                             state.style.content_font_size,
+                             text_color);
 
         return selected;
     }
@@ -1403,5 +1568,14 @@ namespace Imm
         }
 
         return false;
+    }
+
+    void add_window_menubar_menu()
+    {
+        Imm::start_menubar_menu("Windows");
+        for (auto &[id, window] : state.windows)
+        {
+            list_item((ImmId)&window.visible, window.name, window.visible, &window.visible);
+        }
     }
 }

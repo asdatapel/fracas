@@ -142,6 +142,21 @@ struct Editor
 
         Imm::start_frame(target, input, assets, &debug_camera);
 
+        Imm::start_menubar_menu("Wind12312ows");
+
+        static bool menu_1 = false;
+        static bool menu_2 = false;
+        static bool menu_3 = false;
+        static bool menu_4 = false;
+        static bool menu_5 = false;
+        Imm::list_item((ImmId)&menu_1, "hello", menu_1, &menu_1);
+        Imm::list_item((ImmId)&menu_2, "hello2", menu_2, &menu_2);
+        Imm::list_item((ImmId)&menu_3, "hello3", menu_3, &menu_3);
+        Imm::list_item((ImmId)&menu_4, "hello4", menu_4, &menu_4);
+        Imm::list_item((ImmId)&menu_5, "hello5", menu_5, &menu_5);
+
+        Imm::add_window_menubar_menu();
+
         Imm::start_window("Entities", {0, 0, 300, 600});
         for (int i = 0; i < scenes->main.entities.size; i++)
         {
