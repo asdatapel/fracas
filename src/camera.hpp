@@ -12,29 +12,24 @@ struct Camera
     glm::mat4 view;
     glm::mat4 perspective;
 
-    float pos_x = 0.f;
-    float pos_y = 0.f;
-    float pos_z = 1.f;
-
     static constexpr float fov = glm::radians(45.f);
 
     void update_from_transform(RenderTarget target, Transform transform)
     {
-        pos_x = transform.position.x;
-        pos_y = transform.position.y;
-        pos_z = transform.position.z;
-
         glm::vec3 dir = glm::rotate(
             glm::quat(glm::vec3{transform.rotation.x, transform.rotation.y, transform.rotation.z}),
             glm::vec3(0, 0, -1));
 
-        view = glm::lookAt(glm::vec3{pos_x, pos_y, pos_z}, glm::vec3{pos_x, pos_y, pos_z} + dir, {0.f, 1.f, 0.f});
+        view = glm::lookAt(glm::vec3{transform.position.x, transform.position.y, transform.position.z}, glm::vec3{transform.position.x, transform.position.y, transform.position.z} + dir, {0.f, 1.f, 0.f});
         perspective = glm::perspective(fov, (float)target.width / (float)target.height, 0.01f, 100.0f);
     }
 };
 
 struct EditorCamera : Camera
 {
+    float pos_x = 0.f;
+    float pos_y = 0.f;
+    float pos_z = 1.f;
 
     float x_rot = 0.f;
     float y_rot = 0.f;
@@ -108,9 +103,9 @@ struct EditorCamera : Camera
     }
 };
 
-void bind_camera(Shader shader, Camera camera)
+void bind_camera(Shader shader, Camera camera, Vec3f camera_pos)
 {
     glUniformMatrix4fv(shader.uniform_handles[(int)UniformId::VIEW], 1, GL_FALSE, &camera.view[0][0]);
     glUniformMatrix4fv(shader.uniform_handles[(int)UniformId::PROJECTION], 1, GL_FALSE, &camera.perspective[0][0]);
-    glUniform3f(shader.uniform_handles[(int)UniformId::CAMERA_POSITION], camera.pos_x, camera.pos_y, camera.pos_z);
+    glUniform3f(shader.uniform_handles[(int)UniformId::CAMERA_POSITION], camera_pos.x, camera_pos.y, camera_pos.z);
 }

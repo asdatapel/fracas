@@ -2,6 +2,7 @@
 
 #include "scene/scene.hpp"
 #include "scene/scene_manager.hpp"
+#include "sequence.hpp"
 #include "spline.hpp"
 #include "animation.hpp"
 #include "yaml.hpp"
@@ -36,12 +37,14 @@ struct Editor
         if (playing)
         {
             play_scenes.update_scripts(1 / 60.f, assets, rpc_client, input);
-            play_scenes.update_and_draw(nullptr);
+            play_scenes.update_and_draw(nullptr, {});
             debug_ui(&play_scenes, backbuffer, input, assets, mem);
         }
         else
         {
-            editor_scenes->update_and_draw(get_camera(&editor_scenes->main));
+            Transform camera_transform;
+            Camera *camera = get_camera(&editor_scenes->main, &camera_transform);
+            editor_scenes->update_and_draw(camera, camera_transform.position);
             debug_ui(editor_scenes, backbuffer, input, assets, mem);
         }
 
@@ -73,7 +76,6 @@ struct Editor
 
         static Array<float, 1024 * 1024> lines;
         lines.len = 0;
-
 
         for (int i = 0; i < input->key_input.len; i++)
         {
@@ -143,7 +145,6 @@ struct Editor
         Imm::start_frame(target, input, assets, &debug_camera);
 
         Imm::start_menubar_menu("Wind12312ows");
-
         static bool menu_1 = false;
         static bool menu_2 = false;
         static bool menu_3 = false;
@@ -329,7 +330,62 @@ struct Editor
         Imm::num_input(&val);
         Imm::list_item((ImmId)&w, "Four");
         Imm::end_window();
-        
+
+        static KeyedAnimation seq{30};
+        static float play_t = 0;
+        static bool playing_timeline = false;
+        static int current_frame = 0;
+        Imm::start_window("Camera Timeline", {50, 50, 200, 500});
+        Imm::num_input(&current_frame);
+        if (Imm::button("Add camera key"))
+        {
+            Transform t;
+            Camera *camera = get_camera(&scenes->main, &t);
+            seq.add_key(t, current_frame);
+        }
+        if (Imm::button("play"))
+        {
+            if (selected_entity && selected_entity->type == EntityType::CAMERA)
+            {
+                playing_timeline = !playing_timeline;
+                play_t = 0;
+            }
+        }
+        if (playing_timeline)
+        {
+            selected_entity->transform = seq.eval(play_t);
+            play_t += 1 / 60.f;
+        }
+        for (int i = 0; i < seq.keys.len; i++)
+        {
+            Imm::label(String::from(i, mem.temp));
+            Imm::num_input(&seq.keys[i].frame);
+            Imm::num_input(&seq.keys[i].transform.position.x);
+        }
+        if (seq.keys.len)
+        {
+            Transform tr = seq.eval(0);
+            for (float t = 0; t < 50.f; t += 0.01f)
+            {
+                Transform trn = seq.eval(t);
+                lines.append(tr.position.x);
+                lines.append(tr.position.y);
+                lines.append(tr.position.z);
+                lines.append(0);
+                lines.append(1);
+                lines.append(0);
+                lines.append(1);
+                lines.append(trn.position.x);
+                lines.append(trn.position.y);
+                lines.append(trn.position.z);
+                lines.append(0);
+                lines.append(1);
+                lines.append(0);
+                lines.append(1);
+                tr = trn;
+            }
+        }
+        Imm::end_window();
 
         bind_shader(lines_shader);
         glUniformMatrix4fv(lines_shader.uniform_handles[(int)UniformId::VIEW], 1, GL_FALSE, &debug_camera.view[0][0]);
@@ -484,12 +540,22 @@ struct Editor
         }
     }
 
-    Camera *get_camera(Scene *scene)
+    Camera *get_camera(Scene *scene, Transform *transform_out)
     {
         if (use_debug_camera || scene->active_camera_id < 0)
+        {
+            transform_out->position = {debug_camera.pos_x, debug_camera.pos_y, debug_camera.pos_z};
+            transform_out->rotation = {glm::radians(debug_camera.y_rot), glm::radians(-(debug_camera.x_rot + 90)), 0};
             return &debug_camera;
+        }
         if (scene->active_camera_id > -1)
+        {
+            *transform_out = scene->entities.data[scene->active_camera_id].value.transform;
             return &scene->entities.data[scene->active_camera_id].value.camera;
+        }
+
+        transform_out->position = {debug_camera.pos_x, debug_camera.pos_y, debug_camera.pos_z};
+        transform_out->rotation = {glm::radians(debug_camera.y_rot), glm::radians(-(debug_camera.x_rot + 90)), 0};
         return &debug_camera;
     }
 };

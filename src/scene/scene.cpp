@@ -325,14 +325,16 @@ void Scene::serialize(const char *filename, Assets *assets, StackAllocator *allo
     write_file(filename, out);
 }
 
-void Scene::update_and_draw(Camera *editor_camera)
+void Scene::update_and_draw(Camera *editor_camera, Vec3f editor_camera_pos)
 {
     // TODO handle target resize
 
     Camera *camera;
+    Vec3f camera_pos;
     if (editor_camera)
     {
         camera = editor_camera;
+        camera_pos = editor_camera_pos;
     }
     else
     {
@@ -356,6 +358,7 @@ void Scene::update_and_draw(Camera *editor_camera)
             return; // cant draw without camera
         }
         camera = &entities.data[active_camera_id].value.camera;
+        camera_pos = entities.data[active_camera_id].value.transform.position;
     }
 
     for (int i = 0; i < entities.size; i++)
@@ -405,11 +408,11 @@ void Scene::update_and_draw(Camera *editor_camera)
                                     0, 0, 1, 0,                       //
                                     0, 0, 0, 1};
 
+        Vec3f flipped_camera_pos = {camera_pos.x, (2 * planar_position_y) - camera_pos.y, camera_pos.z};
         Camera flipped_camera = *camera;
         flipped_camera.view = reflection_mat * camera->view * reflection_mat;
-        flipped_camera.pos_y = (2 * planar_position_y) - camera->pos_y;
 
-        render_entities(&flipped_camera);
+        render_entities(&flipped_camera, flipped_camera_pos);
 
         bind_shader(*planar_entity->shader);
         bind_mat4(*planar_entity->shader, UniformId::REFLECTED_PROJECTION, flipped_camera.perspective * flipped_camera.view);
@@ -417,7 +420,7 @@ void Scene::update_and_draw(Camera *editor_camera)
 
     target.bind();
     target.clear();
-    render_entities(camera);
+    render_entities(camera, camera_pos);
 
     if (cubemap_visible)
     {
@@ -435,7 +438,7 @@ void Scene::set_planar_target(RenderTarget target)
     planar_target = target;
 }
 
-void Scene::render_entities(Camera *camera)
+void Scene::render_entities(Camera *camera, Vec3f camera_postion)
 {
     for (int i = 0; i < entities.size; i++)
     {
@@ -454,7 +457,7 @@ void Scene::render_entities(Camera *camera)
 
                 Shader shader = *e.shader;
                 bind_shader(shader);
-                bind_camera(shader, *camera);
+                bind_camera(shader, *camera, camera_postion);
                 bind_mat4(shader, UniformId::MODEL, model);
                 bind_material(shader, env_mat);
                 bind_material(shader, *e.material, 3);

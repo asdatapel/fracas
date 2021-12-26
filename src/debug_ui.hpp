@@ -171,7 +171,7 @@ namespace Imm
         Assets *assets;
         RenderTarget target;
         InputState *input;
-        Camera *camera;
+        EditorCamera *camera;
 
         ImmStyle style;
 
@@ -219,6 +219,7 @@ namespace Imm
         int anchored_down_priority = 0;
         ImmId anchored_center = 0;
 
+        float num_input_starting_val;
         AllocatedString<1024> in_progress_string;
 
         StackAllocator per_frame_alloc;
@@ -434,6 +435,7 @@ namespace Imm
         state.anchored_down_priority = in_anchors->get("anchored_down_priority")->as_literal().to_uint64();
         state.anchored_center = in_anchors->get("anchored_center")->as_literal().to_uint64();
     }
+    
     void init()
     {
         state.per_frame_alloc.init(1034 * 1024 * 50); // 50mb
@@ -441,7 +443,7 @@ namespace Imm
         load_layout();
     }
 
-    void start_frame(RenderTarget target, InputState *input, Assets *assets, Camera *camera)
+    void start_frame(RenderTarget target, InputState *input, Assets *assets, EditorCamera *camera)
     {
         state.per_frame_alloc.reset();
 
@@ -1328,7 +1330,8 @@ namespace Imm
         textbox(me, str);
     }
 
-    void num_input(float *val)
+    template <typename T>
+    void num_input(T *val)
     {
         ImmId me = (ImmId)(uint64_t)val;
         Window &window = state.windows[state.current_window];
@@ -1360,9 +1363,13 @@ namespace Imm
             window.next_elem_pos.y += rect.height + state.style.element_gap;
             window.last_height += rect.height + state.style.element_gap;
 
+            if (state.just_activated == me)
+            {
+                state.num_input_starting_val = *val;
+            }
             if (dragging)
             {
-                *val += (state.input->mouse_x - state.input->prev_mouse_x) / 50;
+                *val = state.num_input_starting_val + (state.drag_distance.x / 50);
             }
 
             AllocatedString<1024> val_str = float_to_allocated_string<1024>(*val);

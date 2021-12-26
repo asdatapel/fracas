@@ -24,11 +24,11 @@ struct Scene
     void init(Memory mem, TextureFormat texture_format = TextureFormat::RGB16F);
     void load(const char *filename, Assets *assets, Memory mem);
     void serialize(const char *filename, Assets *assets, StackAllocator *alloc);
-    void update_and_draw(Camera *editor_camera);
+    void update_and_draw(Camera *editor_camera, Vec3f editor_camera_pos);
 
     void set_planar_target(RenderTarget target);
 
-    void render_entities(Camera *camera);
+    void render_entities(Camera *camera, Vec3f camera_postion);
 };
 
 #include "scene.cpp"
