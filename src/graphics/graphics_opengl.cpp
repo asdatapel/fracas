@@ -171,7 +171,7 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
     glEnable(GL_CULL_FACE);
     glFrontFace(GL_CCW);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-    glLineWidth(3.f);
+    glLineWidth(5.f);
 
     glGenVertexArrays(1, &debug_lines_vao);
     glGenBuffers(1, &debug_lines_vbo);

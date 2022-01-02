@@ -412,7 +412,7 @@ namespace Imm
         {
             YAML::Dict *in_window = in_windows->get(i)->as_dict();
             ImmId id = in_window->get("id")->as_literal().to_uint64();
-            
+
             Window &window = state.windows[id];
             window.name = string_to_allocated_string<128>(in_window->get("name")->as_literal());
             window.visible = in_window->get("visible") && strcmp(in_window->get("visible")->as_literal(), "true");
@@ -435,7 +435,7 @@ namespace Imm
         state.anchored_down_priority = in_anchors->get("anchored_down_priority")->as_literal().to_uint64();
         state.anchored_center = in_anchors->get("anchored_center")->as_literal().to_uint64();
     }
-    
+
     void init()
     {
         state.per_frame_alloc.init(1034 * 1024 * 50); // 50mb
@@ -1399,21 +1399,10 @@ namespace Imm
         texture(me, *val, {window.content_rect.x, window.content_rect.y, window.content_rect.width, window.content_rect.height});
     }
 
-    bool imm_translation_gizmo(Vec3f *p)
+    bool translation_gizmo(Vec3f *p)
     {
         Window &window = state.windows[state.current_window];
         ImmId me = (ImmId)(uint64_t)p;
-
-        auto screen_to_world = [](Rect target_rect, Camera *camera, Vec3f p, float z = 0.f)
-        {
-            glm::vec4 gl_screen = {(p.x - target_rect.x) / (target_rect.width / 2.f) - 1,
-                                   -(p.y - target_rect.y) / (target_rect.height / 2.f) + 1,
-                                   z, 1.f};
-            glm::vec4 unprojects = glm::inverse(camera->perspective * camera->view) * gl_screen;
-            unprojects /= unprojects.w;
-
-            return Vec3f{unprojects.x, unprojects.y, unprojects.z};
-        };
 
         float dist_from_camera_2 = powf(p->x - state.camera->pos_x, 2) + powf(p->y - state.camera->pos_y, 2) + powf(p->z - state.camera->pos_z, 2);
         float dist_from_camera = sqrtf(dist_from_camera_2);
@@ -1575,6 +1564,167 @@ namespace Imm
         }
 
         return false;
+    }
+
+    void rotation_gizmo(Vec3f *rotation, Vec3f p)
+    {
+        Window &window = state.windows[state.current_window];
+        ImmId me = imm_hash("rotation gizmo");
+
+        Array<float, 5000> lines;
+        auto add_line = [&](Vec3f s, Vec3f e, Color c)
+        {
+            lines.append(s.x);
+            lines.append(s.y);
+            lines.append(s.z);
+            lines.append(c.r);
+            lines.append(c.g);
+            lines.append(c.b);
+            lines.append(c.a);
+            lines.append(e.x);
+            lines.append(e.y);
+            lines.append(e.z);
+            lines.append(c.r);
+            lines.append(c.g);
+            lines.append(c.b);
+            lines.append(c.a);
+        };
+
+        float dist_from_camera_2 = powf(p.x - state.camera->pos_x, 2) + powf(p.y - state.camera->pos_y, 2) + powf(p.z - state.camera->pos_z, 2);
+        float dist_from_camera = sqrtf(dist_from_camera_2);
+        const float gizmoSize = 0.03f;
+        float scale = gizmoSize * (dist_from_camera / tanf((3.1415 / 6) / 2.0f));
+
+        Vec3f ray_origin = screen_to_world(window.content_rect, state.camera, {state.input->mouse_x, state.input->mouse_y});
+        Vec3f ray_end = screen_to_world(window.content_rect, state.camera, {state.input->mouse_x, state.input->mouse_y}, .5);
+        Vec3f ray_dir = ray_end - ray_origin;
+
+        auto rotate_axis = [&](Vec3f axis)
+        {
+            glm::vec3 rotated_axis = glm::quat(glm::vec3(rotation->x, rotation->y, rotation->z)) * glm::vec3(axis.x, axis.y, axis.z);
+            return normalize(Vec3f{rotated_axis.x, rotated_axis.y, rotated_axis.z});
+        };
+        auto inverse_rotation = [&](Vec3f p)
+        {
+            glm::quat quat(glm::vec3(rotation->x, rotation->y, rotation->z));
+            glm::vec3 r_p = glm::vec3(p.x, p.y, p.z) * -quat;
+            return r_p;
+        };
+
+        Vec3f rotated_axes[4] =
+            {
+                rotate_axis({1, 0, 0}),
+                rotate_axis({0, 1, 0}),
+                rotate_axis({0, 0, 1}),
+                normalize(p - Vec3f{state.camera->pos_x, state.camera->pos_y, state.camera->pos_z}),
+            };
+        glm::vec3 unrotated_axes[4] =
+            {
+                {1, 0, 0},
+                {0, 1, 0},
+                {0, 0, 1},
+                inverse_rotation(rotated_axes[3]),
+            };
+        Color colors[4] =
+            {
+                {.9, .3, .2, 1},
+                {.3, .9, .2, 1},
+                {.3, .2, .9, 1},
+                {.9, .9, .9, 1},
+            };
+        float radiuses[4] =
+            {
+                1.f,
+                1.f,
+                1.f,
+                1.3f,
+            };
+
+        for (int i = 0; i < 4; i++)
+        {
+            glm::vec3 axis = unrotated_axes[i];
+            Vec3f rotated_axis = rotated_axes[i];
+            Color color = colors[i];
+            float radius = radiuses[i];
+
+            Vec3f plane_p = p;
+            Vec3f plane_n = {rotated_axis.x, rotated_axis.y, rotated_axis.z};
+            float numom = dot(plane_p - ray_origin, plane_n);
+            float denom = dot(ray_dir, plane_n);
+
+            if (numom == 0 && denom == 0)
+            {
+                // TODO line is in plane, maybe do a sphere test
+            }
+            else if (denom != 0)
+            {
+                float d = numom / denom;
+                Vec3f intersection = ray_origin + (ray_dir * d);
+
+                float distance_from_circle = fabs((intersection - p).len() - (scale * radius));
+                Vec3f dir = normalize(intersection - p);
+                Vec3f point_on_circle = p + dir * scale;
+
+                ImmId axis_id = me + i;
+                bool hot = do_hoverable(axis_id, distance_from_circle < scale / 10.f);
+                bool active = do_active(axis_id);
+                bool dragging = do_draggable(axis_id);
+
+                if ((state.dragging == 0 && hot) || dragging)
+                {
+                    color = lighten(color, 0.2f);
+                }
+
+                if (state.just_activated == axis_id)
+                {
+                    state.gizmo_last_contact_point = dir;
+                }
+
+                if (dragging)
+                {
+                    Vec3f old_dir_projected = normalize(cross(plane_n, cross(state.gizmo_last_contact_point, plane_n)));
+                    Vec3f new_dir_projected = normalize(cross(plane_n, cross(dir, plane_n)));
+                    state.gizmo_last_contact_point = dir;
+
+                    float angle = acos(clamp(dot(old_dir_projected, new_dir_projected), -1, 1));
+                    float sign = dot(cross(old_dir_projected, new_dir_projected), plane_n);
+                    if (angle > 0 && sign != 0)
+                    {
+                        sign = sign / fabs(sign);
+                        glm::quat quat = glm::rotate(glm::quat(glm::vec3(rotation->x, rotation->y, rotation->z)), sign * angle, axis);
+                        glm::vec3 new_rot_euler = glm::eulerAngles(quat);
+                        *rotation = {new_rot_euler.x, new_rot_euler.y, new_rot_euler.z};
+                    }
+                }
+            }
+
+            for (int i = 0; i < 50; i++)
+            {
+                auto circle = [&](float a)
+                {
+                    Vec3f p;
+                    p.x = (1 - rotated_axis.x) * sinf(a * 2 * 3.1415);
+                    p.y = (1 - rotated_axis.y) * (rotated_axis.x == 1 ? sinf(a * 2 * 3.1415) : cosf(a * 2 * 3.1415));
+                    p.z = (1 - rotated_axis.z) * cosf(a * 2 * 3.1415);
+
+                    Vec3f other_vector = {plane_n.y, plane_n.z, plane_n.x};
+                    Vec3f perpendicular_vector = normalize(cross(plane_n, other_vector));
+                    float angle = a * 2 * 3.1415;
+                    glm::mat4 rot_mat = glm::rotate(glm::mat4(1.0), angle, glm::vec3(plane_n.x, plane_n.y, plane_n.z));
+                    glm::vec4 rotated_point = glm::vec4(perpendicular_vector.x, perpendicular_vector.y, perpendicular_vector.z, 1.f) * rot_mat;
+                    return Vec3f{rotated_point.x, rotated_point.y, rotated_point.z};
+                };
+                Vec3f s = p + scale * radius * circle(i / 20.f);
+                Vec3f e = p + scale * radius * circle((i + 1.f) / 20);
+                add_line(s, e, color);
+            }
+        }
+
+        glDisable(GL_DEPTH_TEST);
+        bind_shader(lines_shader);
+        glUniformMatrix4fv(lines_shader.uniform_handles[(int)UniformId::VIEW], 1, GL_FALSE, &state.camera->view[0][0]);
+        glUniformMatrix4fv(lines_shader.uniform_handles[(int)UniformId::PROJECTION], 1, GL_FALSE, &state.camera->perspective[0][0]);
+        debug_draw_lines(state.target, lines.arr, lines.len / (7 * 2));
     }
 
     void add_window_menubar_menu()

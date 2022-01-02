@@ -142,7 +142,6 @@ struct Assets
             }
         }
 
-        
         if (auto in_fonts_val = root->get("fonts"))
         {
             YAML::List *in_fonts = in_fonts_val->as_list();

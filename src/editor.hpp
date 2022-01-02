@@ -337,15 +337,33 @@ struct Editor
         static int current_frame = 0;
         Imm::start_window("Camera Timeline", {50, 50, 200, 500});
         Imm::num_input(&current_frame);
-        if (Imm::button("Add camera key"))
+        if (Imm::button("Add camera key CONSTANT"))
         {
             Transform t;
             Camera *camera = get_camera(&scenes->main, &t);
-            seq.add_key(t, current_frame);
+            seq.add_key(t, current_frame, KeyedAnimation::Key::InterpolationType::CONSTANT);
+        }
+        if (Imm::button("Add camera key LINEAR"))
+        {
+            Transform t;
+            Camera *camera = get_camera(&scenes->main, &t);
+            seq.add_key(t, current_frame, KeyedAnimation::Key::InterpolationType::LINEAR);
+        }
+        if (Imm::button("Add camera key SMOOTHSTEP"))
+        {
+            Transform t;
+            Camera *camera = get_camera(&scenes->main, &t);
+            seq.add_key(t, current_frame, KeyedAnimation::Key::InterpolationType::SMOOTHSTEP);
+        }
+        if (Imm::button("Add camera key SPLINE"))
+        {
+            Transform t;
+            Camera *camera = get_camera(&scenes->main, &t);
+            seq.add_key(t, current_frame, KeyedAnimation::Key::InterpolationType::SPLINE);
         }
         if (Imm::button("play"))
         {
-            if (selected_entity && selected_entity->type == EntityType::CAMERA)
+            if (selected_entity)
             {
                 playing_timeline = !playing_timeline;
                 play_t = 0;
@@ -391,6 +409,7 @@ struct Editor
         glUniformMatrix4fv(lines_shader.uniform_handles[(int)UniformId::VIEW], 1, GL_FALSE, &debug_camera.view[0][0]);
         glUniformMatrix4fv(lines_shader.uniform_handles[(int)UniformId::PROJECTION], 1, GL_FALSE, &debug_camera.perspective[0][0]);
         debug_draw_lines(scenes->target, lines.arr, lines.len / (7 * 2));
+
         Imm::start_window("Scene", {700, 250, 100, 300});
         Imm::texture(&scenes->target.color_tex);
         if (Imm::state.last_element_selected || Imm::state.last_element_active)
@@ -402,11 +421,14 @@ struct Editor
         }
         if (selected_entity)
         {
-            Imm::imm_translation_gizmo(&selected_entity->transform.position);
-            // Vec3f diff = Imm::imm_3d_point(&selected_entity->transform.position);
-            // selected_entity->transform.position.x += diff.x;
-            // selected_entity->transform.position.y += diff.y;
-            // selected_entity->transform.position.z += diff.z;
+            if (input->keys[(int)Keys::LCTRL])
+            {
+                Imm::rotation_gizmo(&selected_entity->transform.rotation, selected_entity->transform.position);
+            }
+            else
+            {
+                Imm::translation_gizmo(&selected_entity->transform.position);
+            }
         }
         Imm::end_window();
 
@@ -546,6 +568,7 @@ struct Editor
         {
             transform_out->position = {debug_camera.pos_x, debug_camera.pos_y, debug_camera.pos_z};
             transform_out->rotation = {glm::radians(debug_camera.y_rot), glm::radians(-(debug_camera.x_rot + 90)), 0};
+            transform_out->scale = {1, 1, 1};
             return &debug_camera;
         }
         if (scene->active_camera_id > -1)
@@ -556,6 +579,7 @@ struct Editor
 
         transform_out->position = {debug_camera.pos_x, debug_camera.pos_y, debug_camera.pos_z};
         transform_out->rotation = {glm::radians(debug_camera.y_rot), glm::radians(-(debug_camera.x_rot + 90)), 0};
+        transform_out->scale = {1, 1, 1};
         return &debug_camera;
     }
 };

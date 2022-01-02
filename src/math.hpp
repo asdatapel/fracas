@@ -24,8 +24,12 @@ Color rgb_to_hsl(Color in)
         h = 0;
     }
 
+    if (max == min)
+    {
+        s = 0.f;
+    }
     // If L < 1/2, S=(Xmax - Xmin)/(Xmax + Xmin)
-    if (l < 0.5f)
+    else if (l < 0.5f)
     {
         s = (max - min) / (max + min);
     }
@@ -35,8 +39,12 @@ Color rgb_to_hsl(Color in)
         s = (max - min) / (2 - max - min);
     }
 
+    if (max == min)
+    {
+        h = 0.f;
+    }
     // If R=Xmax, H = (G-B)/(Xmax - Xmin)
-    if (in.r == max)
+    else if (in.r == max)
     {
         h = (in.g - in.b) / (max - min);
     }
@@ -64,63 +72,6 @@ Color rgb_to_hsl(Color in)
 
 Color hsl_to_rgb(Color in)
 {
-    // http://marcocorvi.altervista.org/games/imgpr/rgb-hsl.htm
-    // float r, g, b;
-    // // If S=0, define R, G, and B all to L
-    // if (in.g == 0)
-    // {
-    //     return {in.b, in.b, in.b, in.a};
-    // }
-
-    // float temp1, temp2;
-    // // If L < 1/2, temp2=L*(1+S)
-    // if (in.b < 0.5f)
-    // {
-    //     temp2 = in.b * (1 + in.g);
-    // }
-    // // Else, temp2=L+S - L*S
-    // else
-    // {
-    //     temp2 = (in.b + in.g) - (in.b * in.g);
-    // }
-
-    // // Let temp1 = 2 * L - temp2
-    // temp1 = 2 * in.b - temp2;
-
-    // // Convert H to the range 0-1
-    // in.r = in.r / 360.f;
-
-    // // For each of R, G, B, compute another temporary value, temp3, as follows:
-    // // for R, temp3=H+1/3; if temp3 > 1, temp3 = temp3 - 1
-    // // for G, temp3=H
-    // // for B, temp3=H-1/3; if temp3 < 0, temp3 = temp3 + 1
-    // // For each of R, G, B, do the following test:
-    // // If temp3 < 1/6, color=temp1+(temp2-temp1)*6*temp3
-    // // Else if temp3 < 1/2, color=temp2
-    // // Else if temp3 < 2/3, color=temp1+(temp2-temp1)*(2/3 - temp3)*6
-    // // Else color=temp1
-    // auto do_something = [=](float temp3) {
-    //     if (temp3 < 1 / 6.f)
-    //         return temp1 + (temp2 - temp1) * 6 * temp3;
-    //     if (temp3 < 1 / 2.f)
-    //         return temp2;
-    //     if (temp3 < 2 / 3.f)
-    //         return temp1 + (temp2 - temp1) * (2 / 3 - temp3) * 6;
-    //     return temp1;
-    // };
-    // float r_temp3 = in.r + (1 / 3.f);
-    // if (r_temp3 > 1)
-    //     r_temp3 = r_temp3 - 1;
-    // float g_temp3 = in.r;
-    // float b_temp3 = in.r - (1 / 3.f);
-    // if (b_temp3 < 0)
-    //     b_temp3 = b_temp3 + 1;
-
-    // return {do_something(r_temp3),
-    //         do_something(g_temp3),
-    //         do_something(b_temp3),
-    //         in.a};
-
     //https://stackoverflow.com/questions/2353211/hsl-to-rgb-color-conversion
     float h = in.r / 360.f;
     float s = in.g;
@@ -184,7 +135,60 @@ struct Vec3f
     {
         return {x, y};
     }
+
+    float len()
+    {
+        return sqrt(x * x + y * y + z * z);
+    }
 };
+inline Vec3f operator+(const Vec3f &lhs, const Vec3f &rhs)
+{
+    return {lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z};
+}
+inline Vec3f operator-(const Vec3f &lhs, const Vec3f &rhs)
+{
+    return {lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z};
+}
+inline Vec3f operator*(const Vec3f &lhs, const Vec3f &rhs)
+{
+    return {lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z};
+}
+inline Vec3f operator*(const Vec3f &lhs, const float &rhs)
+{
+    return lhs * Vec3f{rhs, rhs, rhs};
+}
+inline Vec3f operator*(const float &lhs, const Vec3f &rhs)
+{
+    return rhs * lhs;
+}
+inline Vec3f operator/(const Vec3f &lhs, const Vec3f &rhs)
+{
+    return {lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z};
+}
+inline float dot(const Vec3f &lhs, const Vec3f &rhs)
+{
+    return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
+}
+inline Vec3f cross(const Vec3f &lhs, const Vec3f &rhs)
+{
+    return {
+        lhs.y * rhs.z - lhs.z * rhs.y,
+        lhs.z * rhs.x - lhs.x * rhs.z,
+        lhs.x * rhs.y - lhs.y * rhs.x,
+    };
+}
+
+Vec2f normalize(Vec2f v)
+{
+    float len = sqrt(v.x * v.x + v.y * v.y);
+    return {v.x / len, v.y / len};
+}
+
+Vec3f normalize(Vec3f v)
+{
+    float len = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+    return {v.x / len, v.y / len, v.z / len};
+}
 
 struct Rect
 {
@@ -226,18 +230,6 @@ bool in_rect(Vec2f point, Rect rect, Rect mask = {})
            point.x < mask.x + mask.width &&
            point.y > mask.y &&
            point.y < mask.y + mask.height;
-}
-
-Vec2f normalize(Vec2f v)
-{
-    float len = sqrt(v.x * v.x + v.y * v.y);
-    return {v.x / len, v.y / len};
-}
-
-Vec3f normalize(Vec3f v)
-{
-    float len = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-    return {v.x / len, v.y / len, v.z / len};
 }
 
 struct Transform

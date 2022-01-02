@@ -8,14 +8,23 @@ struct KeyedAnimation
 {
     struct Key
     {
+        enum struct InterpolationType
+        {
+            CONSTANT,
+            LINEAR,
+            SMOOTHSTEP,
+            SPLINE,
+        };
+
         Transform transform;
         int frame;
+        InterpolationType interpolation_type;
     };
 
     int fps;
     Array<Key, 16> keys;
 
-    void add_key(Transform transform, int frame)
+    void add_key(Transform transform, int frame, Key::InterpolationType interpolation_type)
     {
         int pos = 0;
         while (pos < keys.len)
@@ -23,6 +32,7 @@ struct KeyedAnimation
             if (keys[pos].frame == frame)
             {
                 keys[pos].transform = transform;
+                keys[pos].interpolation_type = interpolation_type;
                 return;
             }
             if (keys[pos].frame > frame)
@@ -39,6 +49,7 @@ struct KeyedAnimation
         }
         keys[pos].transform = transform;
         keys[pos].frame = frame;
+        keys[pos].interpolation_type = interpolation_type;
     }
 
     Transform eval(float t)
@@ -69,42 +80,44 @@ struct KeyedAnimation
             {
                 float lerp_t = (frame - base_key.frame) / lerp_distance;
 
-                // linear interpolation
-                transform.position = lerp(base_key.transform.position, target_key.transform.position, lerp_t);
-                transform.rotation = lerp(base_key.transform.rotation, target_key.transform.rotation, lerp_t);
-                transform.scale = lerp(base_key.transform.scale, target_key.transform.scale, lerp_t);
-
-                // smooth interpolation
-                float smoothstep_t = clamp(lerp_t * lerp_t * (3.0 - 2.0 * lerp_t), 0.0, 1.0);
-                transform.position = lerp(base_key.transform.position, target_key.transform.position, smoothstep_t);
-                transform.rotation = lerp(base_key.transform.rotation, target_key.transform.rotation, smoothstep_t);
-                transform.scale = lerp(base_key.transform.scale, target_key.transform.scale, smoothstep_t);
-
-                // catmull clark spline interpolation
-                Key key_0 = base_key_i > 0 ? keys[base_key_i - 1] : base_key;
-                Key key_1 = base_key;
-                Key key_2 = target_key;
-                Key key_3 = base_key_i + 2 < keys.len ? keys[base_key_i + 2] : target_key;
-                Spline3 pos_spline = 
+                if (base_key.interpolation_type == Key::InterpolationType::LINEAR)
                 {
-                    {
-                        key_0.transform.position,
-                        key_1.transform.position,
-                        key_2.transform.position,
-                        key_3.transform.position,
-                    }
-                };
-                Spline3 rot_spline = 
+                    transform.position = lerp(base_key.transform.position, target_key.transform.position, lerp_t);
+                    transform.rotation = lerp(base_key.transform.rotation, target_key.transform.rotation, lerp_t);
+                    transform.scale = lerp(base_key.transform.scale, target_key.transform.scale, lerp_t);
+                }
+                else if (base_key.interpolation_type == Key::InterpolationType::SMOOTHSTEP)
                 {
-                    {
-                        key_0.transform.rotation,
-                        key_1.transform.rotation,
-                        key_2.transform.rotation,
-                        key_3.transform.rotation,
-                    }
-                };
-                transform.position = catmull_rom(lerp_t, pos_spline);
-                transform.rotation = catmull_rom(lerp_t, rot_spline);
+                    float smoothstep_t = clamp(lerp_t * lerp_t * (3.0 - 2.0 * lerp_t), 0.0, 1.0);
+                    transform.position = lerp(base_key.transform.position, target_key.transform.position, smoothstep_t);
+                    transform.rotation = lerp(base_key.transform.rotation, target_key.transform.rotation, smoothstep_t);
+                    transform.scale = lerp(base_key.transform.scale, target_key.transform.scale, smoothstep_t);
+                }
+                else if (base_key.interpolation_type == Key::InterpolationType::SPLINE)
+                {
+                    Key key_0 = base_key_i > 0 ? keys[base_key_i - 1] : base_key;
+                    Key key_1 = base_key;
+                    Key key_2 = target_key;
+                    Key key_3 = base_key_i + 2 < keys.len ? keys[base_key_i + 2] : target_key;
+                    Spline3 pos_spline =
+                        {
+                            {
+                                key_0.transform.position,
+                                key_1.transform.position,
+                                key_2.transform.position,
+                                key_3.transform.position,
+                            }};
+                    Spline3 rot_spline =
+                        {
+                            {
+                                key_0.transform.rotation,
+                                key_1.transform.rotation,
+                                key_2.transform.rotation,
+                                key_3.transform.rotation,
+                            }};
+                    transform.position = catmull_rom(lerp_t, pos_spline);
+                    transform.rotation = catmull_rom(lerp_t, rot_spline);
+                }
             }
         }
 

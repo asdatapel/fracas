@@ -109,3 +109,14 @@ void bind_camera(Shader shader, Camera camera, Vec3f camera_pos)
     glUniformMatrix4fv(shader.uniform_handles[(int)UniformId::PROJECTION], 1, GL_FALSE, &camera.perspective[0][0]);
     glUniform3f(shader.uniform_handles[(int)UniformId::CAMERA_POSITION], camera_pos.x, camera_pos.y, camera_pos.z);
 }
+
+Vec3f screen_to_world(Rect target_rect, Camera *camera, Vec3f p, float z = 0.f)
+{
+    glm::vec4 gl_screen = {(p.x - target_rect.x) / (target_rect.width / 2.f) - 1,
+                           -(p.y - target_rect.y) / (target_rect.height / 2.f) + 1,
+                           z, 1.f};
+    glm::vec4 unprojects = glm::inverse(camera->perspective * camera->view) * gl_screen;
+    unprojects /= unprojects.w;
+
+    return {unprojects.x, unprojects.y, unprojects.z};
+}
