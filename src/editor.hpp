@@ -47,21 +47,6 @@ struct Editor
             editor_scenes->update_and_draw(camera, camera_transform.position);
             debug_ui(editor_scenes, backbuffer, input, assets, mem);
         }
-
-        // static float debug_t = 0.f;
-        // static Animation anim = parse_animation(read_entire_file("resources/scenes/test/anim/anim.fanim"), mem);
-        // debug_t += 0.001f;
-        // anim.update(debug_t);
-
-        // std::array<glm::vec3, 14> bone_positions;
-        // bind_shader(assets->shaders.data[SHADER_THREED_SKINNING].value);
-        // for (int i = 0; i < anim.num_bones; i++)
-        // {
-        //     glm::mat4 transform = anim.mats[i];
-        //     std::string uniform_name = std::string("bone_transforms[") + std::to_string(i) + std::string("]");
-        //     int handle = glGetUniformLocation(threed_skinning_shader.shader_handle, uniform_name.c_str());
-        //     glUniformMatrix4fv(handle, 1, false, &transform[0][0]);
-        // }
     }
 
     void debug_ui(SceneManager *scenes, RenderTarget target, InputState *input, Assets *assets, Memory mem)
@@ -336,7 +321,7 @@ struct Editor
         static bool playing_timeline = false;
         static int current_frame = 0;
         Imm::start_window("Camera Timeline", {50, 50, 200, 500});
-        Imm::num_input(&current_frame);
+        Imm::label(String::from(current_frame, mem.temp));
         if (Imm::button("Add camera key CONSTANT"))
         {
             Transform t;
@@ -374,12 +359,12 @@ struct Editor
             selected_entity->transform = seq.eval(play_t);
             play_t += 1 / 60.f;
         }
-        for (int i = 0; i < seq.keys.len; i++)
-        {
-            Imm::label(String::from(i, mem.temp));
-            Imm::num_input(&seq.keys[i].frame);
-            Imm::num_input(&seq.keys[i].transform.position.x);
-        }
+        // for (int i = 0; i < seq.keys.len; i++)
+        // {
+        //     Imm::label(String::from(i, mem.temp));
+        //     Imm::num_input(&seq.keys[i].frame);
+        //     Imm::num_input(&seq.keys[i].transform.position.x);
+        // }
         if (seq.keys.len)
         {
             Transform tr = seq.eval(0);
@@ -403,6 +388,29 @@ struct Editor
                 tr = trn;
             }
         }
+        Imm::end_window();
+
+        Imm::start_window("Timeline", {1000, 500, 600, 400});
+        static float column_width = 200.f;
+        Imm::first_column(&column_width);
+        Imm::label2(String::from(current_frame, mem.temp));
+        Imm::list_item2(Imm::imm_hash("testasdasd"), "test");
+        Imm::list_item2(Imm::imm_hash("testasasddasd"), "tes2t");
+        Imm::button2(Imm::imm_hash("asdfcvbvbvx"), "vcbcvtest");
+        Imm::list_item2(Imm::imm_hash("testaxcvsdasd"), "test");
+        Imm::button2(Imm::imm_hash("asdfcvx"), "test");
+        Imm::button2(Imm::imm_hash("asdfcwq3erwevx"), "tesdfst");
+
+        Imm::next_column(nullptr);
+
+        static float timeline_start = 0;
+        static float timeline_width = 60;
+        Imm::start_timeline("testtimeline", &current_frame, &timeline_start, &timeline_width);
+        for (int i = 0; i < seq.keys.len; i++)
+        {
+            Imm::keyframe((ImmId)&seq.keys[i], &seq.keys[i].frame);
+        }
+        Imm::end_timeline();
         Imm::end_window();
 
         bind_shader(lines_shader);
@@ -431,6 +439,8 @@ struct Editor
             }
         }
         Imm::end_window();
+
+        scenes->target.color_tex.gen_mipmaps();
 
         Imm::end_frame(assets);
     }

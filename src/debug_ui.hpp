@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <map>
+#include <stack>
 
 #include "assets.hpp"
 #include "math.hpp"
@@ -228,7 +229,45 @@ namespace Imm
     };
 
     UiState state;
+}
 
+namespace Imm
+{
+    struct Container
+    {
+        Rect content_rect;
+        DrawList *draw_list;
+
+        Vec2f next_pos = {0, 0};
+    };
+
+    std::stack<Container> containers;
+
+    void push_container(Rect rect, DrawList *draw_list)
+    {
+        containers.push({rect, draw_list});
+    }
+
+    void push_subcontainer(Rect rect)
+    {
+        containers.push({rect, containers.top().draw_list});
+    }
+
+    Container pop_container()
+    {
+        auto top = containers.top();
+        containers.pop();
+        return top;
+    }
+
+    Container &get_current_container()
+    {
+        return containers.top();
+    }
+}
+
+namespace Imm
+{
     Rect relative_to_absolute(Rect relative)
     {
         return {
@@ -610,7 +649,7 @@ namespace Imm
         Rect titlebar_rect = {window.rect.x + state.style.window_control_border,
                               window.rect.y + state.style.window_control_border,
                               window.rect.width - (state.style.window_control_border * 2),
-                              state.style.title_font_size + (state.style.inner_padding.y * 2) - state.style.window_control_border};
+                               state.style.title_font_size + (state.style.inner_padding.y * 2) - state.style.window_control_border};
         Rect content_container_rect = {window.rect.x + state.style.window_control_border,
                                        window.rect.y + titlebar_rect.height,
                                        window.rect.width - (state.style.window_control_border * 2),
@@ -957,11 +996,12 @@ namespace Imm
         // recalculate some rects
         titlebar_rect = {window.rect.x, window.rect.y, window.rect.width, state.style.title_font_size + state.style.inner_padding.y * 2};
         content_container_rect = {window.rect.x, window.rect.y + titlebar_rect.height, window.rect.width, window.rect.height - titlebar_rect.height};
+        push_container(content_container_rect, &window.draw_list);
 
         // draw
         window.draw_list.push_rect(titlebar_rect, titlebar_color);
         window.draw_list.push_text(title, {titlebar_rect.x + state.style.inner_padding.x, titlebar_rect.y + state.style.inner_padding.y}, state.style.title_font_size, {1, 1, 1, 1});
-        window.draw_list.push_rect(content_container_rect, {1, 1, 1, .8});
+        window.draw_list.push_rect(content_container_rect, {1, 1, 1, .95});
 
         window.draw_list.push_rect(control_border_top, control_border_top_color);
         window.draw_list.push_rect(control_border_bottom, control_border_bottom_color);
@@ -976,6 +1016,8 @@ namespace Imm
     {
         Window &window = state.windows[state.current_window];
         window.draw_list.push_clip({0, 0, 0, 0});
+
+        pop_container();
     }
 
     void end_frame(Assets *assets)
@@ -1734,5 +1776,287 @@ namespace Imm
         {
             list_item((ImmId)&window.visible, window.name, window.visible, &window.visible);
         }
+    }
+}
+
+// timelines
+namespace Imm
+{
+    struct TimelineParameters
+    {
+        int duration;
+        String units;
+
+        bool horizontal;
+
+        bool clamp_start;
+        bool clamp_end;
+        float clamp_start_value;
+        float clamp_end_value;
+    };
+    TimelineParameters timeline_params;
+
+    ImmId timeline_id;
+    float *tstart;
+    float *twidth;
+    int *tcurrent_frame;
+    bool nothing_else_touched;
+
+    void start_timeline(String name, int *current_frame, float *start, float *width)
+    {
+        ImmId me = imm_hash(name);
+        timeline_id = me;
+
+        tstart = start;
+        twidth = width;
+        tcurrent_frame = current_frame;
+        nothing_else_touched = true;
+
+        auto c = get_current_container();
+
+        *start = fmax(*start, 0.f);
+        int left_bound = ((int)(*start / 5)) * 5;
+
+        for (int i = 0; i < *width / 5; i++)
+        {
+            int frame = left_bound + i * 5;
+            float pos = (frame - *start) / (*width) * c.content_rect.width;
+
+            float mark_height = 10;
+            if (frame % 10 == 0)
+            {
+                mark_height = 20;
+            }
+
+            float bar_width = 5;
+            c.draw_list->push_rect(
+                {
+                    c.content_rect.x + pos - (bar_width / 2.f),
+                    c.content_rect.y + 5,
+                    5,
+                    mark_height,
+                },
+                {.3, .3, .3, 1});
+            c.draw_list->push_text(String::from(frame, &state.per_frame_alloc), {c.content_rect.x + pos, c.content_rect.y + 5 + mark_height + 5}, 15, {0, 0, 0, 1});
+        }
+
+        float pointer_pos = (*tcurrent_frame - *start) / (*width) * c.content_rect.width;
+        c.draw_list->push_quad({c.content_rect.x + pointer_pos - (20 / 2.f), c.content_rect.y},
+                               {c.content_rect.x + pointer_pos + (20 / 2.f), c.content_rect.y},
+                               {c.content_rect.x + pointer_pos + (7 / 2.f), c.content_rect.y + (15 / 2.f)},
+                               {c.content_rect.x + pointer_pos - (7 / 2.f), c.content_rect.y + (15 / 2.f)},
+                               {.2, .3, .9, 1});
+        c.draw_list->push_rect(
+            {
+                c.content_rect.x + pointer_pos - (7 / 2.f),
+                c.content_rect.y + (15 / 2.f),
+                7,
+                c.content_rect.height - (15 / 2.f),
+            },
+            {.2, .3, .9, 1});
+    }
+
+    void keyframe(ImmId id, int *frame)
+    {
+        auto c = get_current_container();
+
+        float pos = (*frame - *tstart) / (*twidth) * c.content_rect.width;
+
+        Rect hot_rect = {c.content_rect.x + pos - (10 / 2.f),
+                         c.content_rect.y + 50 - (10 / 2.f),
+                         10,
+                         10};
+        bool hot = do_hoverable(id, hot_rect, c.content_rect);
+        bool active = do_active(id);
+        bool dragging = do_draggable(id);
+
+        Color color = {.2, .9, .3, 1};
+        if (hot)
+        {
+            nothing_else_touched = false;
+            color = lighten(color, .2);
+        }
+
+        if (dragging)
+        {
+            float pos = state.input->mouse_x - c.content_rect.x;
+            int new_frame = (pos / c.content_rect.width) * (*twidth) + (*tstart);
+            *frame = new_frame;
+        }
+
+        c.draw_list->push_quad({c.content_rect.x + pos - (10 / 2.f), 50 + c.content_rect.y},
+                               {c.content_rect.x + pos, 50 + c.content_rect.y - (10 / 2.f)},
+                               {c.content_rect.x + pos + (10 / 2.f), 50 + c.content_rect.y},
+                               {c.content_rect.x + pos, 50 + c.content_rect.y + (10 / 2.f)},
+                               color);
+    }
+
+    void end_timeline()
+    {
+        ImmId me = timeline_id;
+
+        auto c = get_current_container();
+
+        bool hot = do_hoverable(me, in_rect({state.input->mouse_x, state.input->mouse_y}, c.content_rect) && nothing_else_touched);
+        bool active = do_active(me);
+        bool dragging = do_draggable(me);
+
+        if ((dragging && hot) || (state.just_deactivated == me && hot && !dragging && !state.just_stopped_dragging))
+        {
+            // *tstart -= (state.input->mouse_x - state.input->prev_mouse_x) / 20.f;
+            float pos = state.input->mouse_x - c.content_rect.x;
+            int frame = (pos / c.content_rect.width) * (*twidth) + (*tstart);
+            *tcurrent_frame = frame;
+        }
+
+        if (state.input->keys[(int)Keys::LCTRL])
+        {
+            *twidth *= 1 + (state.input->scrollwheel_count / 50);
+        }
+        else
+        {
+            *tstart +=  (state.input->scrollwheel_count * 3.f);
+        }
+    }
+}
+
+namespace Imm
+{
+    void first_column(float *width)
+    {
+        Rect new_rect = get_current_container().content_rect;
+        new_rect.width = *width;
+        new_rect.width = width ? *width : (get_current_container().content_rect.x + get_current_container().content_rect.width) - new_rect.x;
+        push_subcontainer(new_rect);
+    }
+    void next_column(float *width)
+    {
+        Rect new_rect = pop_container().content_rect;
+        new_rect.x += new_rect.width;
+        new_rect.width = width ? *width : (get_current_container().content_rect.x + get_current_container().content_rect.width) - new_rect.x;
+        push_subcontainer(new_rect);
+    }
+
+    bool list_item2(ImmId me, String text, bool selected_flag = false, bool *as_checkbox = nullptr)
+    {
+        auto &c = get_current_container();
+
+        Rect rect = {c.content_rect.x + c.next_pos.x + state.style.inner_padding.x,
+                     c.content_rect.y + c.next_pos.y + state.style.inner_padding.y,
+                     c.content_rect.width - state.style.inner_padding.x * 2,
+                     state.style.content_font_size + state.style.inner_padding.y * 2};
+        c.next_pos.y += rect.height + state.style.element_gap;
+
+        bool hot = do_hoverable(me, rect, c.content_rect);
+        bool active = do_active(me);
+        bool dragging = do_draggable(me);
+        bool selected = do_selectable(me, true) || selected_flag;
+
+        if (as_checkbox)
+        {
+            if (state.just_selected == me)
+            {
+                *as_checkbox = !(*as_checkbox);
+            }
+            selected = *as_checkbox;
+        }
+
+        Color text_color = state.style.content_default_text_color;
+        if (selected)
+        {
+            c.draw_list->push_rect(rect, state.style.content_background_color);
+            text_color = state.style.content_highlighted_text_color;
+        }
+
+        c.draw_list->push_text(text,
+                               {rect.x + state.style.inner_padding.x, rect.y + state.style.inner_padding.y},
+                               state.style.content_font_size,
+                               text_color);
+
+        return selected;
+    }
+
+    bool button2(ImmId me, String text)
+    {
+        auto &c = get_current_container();
+
+        float border = 5;
+        float text_width = get_text_width(text, state.style.content_font_size);
+        Rect rect = {
+            c.content_rect.x + c.next_pos.x + border,
+            c.content_rect.y + c.next_pos.y + border,
+            text_width + border * 2,
+            state.style.content_font_size + border * 2,
+        };
+        c.next_pos.y += rect.height + state.style.element_gap;
+
+        bool hot = do_hoverable(me, rect, c.content_rect);
+        bool active = do_active(me);
+        bool triggered = (state.just_deactivated == me && hot);
+
+        Color color = {.9, .3, .2, 1};
+        Color light = lighten(color, .1);
+        Color lighter = lighten(color, .15);
+        Color dark = darken(color, .1);
+        Color darker = darken(color, .15);
+
+        Color top = lighter;
+        Color down = darker;
+        Color left = light;
+        Color right = dark;
+
+        float text_y_offset = 0;
+        if (active)
+        {
+            color = darken(color, 0.05f);
+
+            top = darker;
+            down = lighter;
+            left = dark;
+            right = light;
+
+            text_y_offset = 3.f;
+        }
+        else if (hot)
+        {
+            color = lighten(color, .05f);
+        }
+
+        float x1 = rect.x,
+              x2 = rect.x + border,
+              x3 = rect.x + rect.width - border,
+              x4 = rect.x + rect.width;
+
+        float y1 = rect.y,
+              y2 = rect.y + border,
+              y3 = rect.y + rect.height - border,
+              y4 = rect.y + rect.height;
+
+        c.draw_list->push_quad({x4, y1}, {x3, y2}, {x2, y2}, {x1, y1}, top);
+        c.draw_list->push_quad({x4, y4}, {x1, y4}, {x2, y3}, {x3, y3}, down);
+        c.draw_list->push_quad({x1, y4}, {x2, y3}, {x2, y2}, {x1, y1}, left);
+        c.draw_list->push_quad({x4, y4}, {x3, y3}, {x3, y2}, {x4, y1}, right);
+        c.draw_list->push_quad({x2, y2}, {x2, y3}, {x3, y3}, {x3, y2}, color);
+        c.draw_list->push_text(text,
+                               {rect.x + border, rect.y + border + text_y_offset},
+                               state.style.content_font_size,
+                               state.style.content_highlighted_text_color);
+
+        return triggered;
+    }
+
+    void label2(String text)
+    {
+        auto &c = get_current_container();
+
+        Rect rect = {c.content_rect.x + c.next_pos.x + state.style.inner_padding.x,
+                     c.content_rect.y + c.next_pos.y + state.style.inner_padding.y,
+                     c.content_rect.width, state.style.content_font_size};
+        c.next_pos.y += rect.height + state.style.element_gap;
+
+        c.draw_list->push_text(text,
+                               {rect.x, rect.y},
+                               state.style.content_font_size,
+                               state.style.content_default_text_color);
     }
 }

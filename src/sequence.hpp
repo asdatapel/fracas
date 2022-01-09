@@ -43,9 +43,9 @@ struct KeyedAnimation
         }
 
         keys.append({});
-        for (int i = pos; i < keys.len - 1; i++)
+        for (int i = keys.len - 1; i > pos; i--)
         {
-            keys[i + 1] = keys[i];
+            keys[i] = keys[i - 1];
         }
         keys[pos].transform = transform;
         keys[pos].frame = frame;
