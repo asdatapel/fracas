@@ -1,0 +1,7 @@
+BasedOnStyle: Google
+
+IncludeBlocks: Preserve
+
+ColumnLimit: 100
+
+AlignConsecutiveAssignments: Consecutive

@@ -348,6 +348,8 @@ struct Lobby
             broadcaster.broadcast(&RpcServer::InGameEggghhhh, InGameEggghhhhMessage{game.incorrects});
             set_next_stage(&Lobby::stage_end_round);
         }
+
+        printf("buzz_water - time_elapsed: %llu\n", waiter_elapsed);
     }
     void waiter_pass_or_play(Broadcaster broadcaster, uint64_t elapsed_micros)
     {
@@ -359,6 +361,7 @@ struct Lobby
             broadcaster.broadcast(&RpcServer::InGamePlayerChosePassOrPlay, InGameChoosePassOrPlayMessage{true});
             set_next_stage(&Lobby::stage_start_play);
         }
+        printf("waiter_pass_or_play - time_elapsed: %llu\n", waiter_elapsed);
     }
     void waiter_answer(Broadcaster broadcaster, uint64_t elapsed_micros)
     {
@@ -371,6 +374,7 @@ struct Lobby
 
             set_next_stage(&Lobby::stage_respond_to_answer);
         }
+        printf("waiter_answer - time_e lapsed: %llu\n", waiter_elapsed);
     }
     void waiter_all_ready(Broadcaster broadcaster, uint64_t elapsed_micros)
     {
@@ -379,6 +383,7 @@ struct Lobby
         {
             do_next_stage(broadcaster);
         }
+        printf("waiter_all_ready - time_elapsed: %llu\n", waiter_elapsed);
     }
     void waiter_end_game(Broadcaster broadcaster, uint64_t elapsed_micros)
     {
@@ -387,6 +392,7 @@ struct Lobby
         {
             ready_to_delete = true;
         }
+        printf("waiter_end_game - time_elapsed: %llu\n", waiter_elapsed);
     }
 
     void tick(Broadcaster broadcaster, uint64_t elapsed_time)

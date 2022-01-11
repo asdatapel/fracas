@@ -126,6 +126,11 @@ struct Vec2f
 {
     float x, y;
 };
+Vec2f normalize(Vec2f v)
+{
+    float len = sqrt(v.x * v.x + v.y * v.y);
+    return {v.x / len, v.y / len};
+}
 
 struct Vec3f
 {
@@ -177,18 +182,15 @@ inline Vec3f cross(const Vec3f &lhs, const Vec3f &rhs)
         lhs.x * rhs.y - lhs.y * rhs.x,
     };
 }
-
-Vec2f normalize(Vec2f v)
-{
-    float len = sqrt(v.x * v.x + v.y * v.y);
-    return {v.x / len, v.y / len};
-}
-
 Vec3f normalize(Vec3f v)
 {
     float len = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
     return {v.x / len, v.y / len, v.z / len};
 }
+
+struct Vec2B8 {
+    bool x, y;
+};
 
 struct Rect
 {

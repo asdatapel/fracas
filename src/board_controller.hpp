@@ -233,6 +233,9 @@ struct UiController
     float banner_duration;
     AllocatedString<256> banner_text;
 
+    float timer_value;
+    float timer_visible = false;
+
     void update(float timestep, Scene *scene, Assets *assets)
     {
         Font *font = assets->get_font(FONT_ROBOTO_CONDENSED_REGULAR, 64);
@@ -249,6 +252,13 @@ struct UiController
 
             banner_t += timestep;
         }
+
+        if (timer_visible) {
+            char buf[10];
+            int len = snprintf(buf, 10, "%f", timer_value);
+            String val = {buf, (uint16_t)len};
+            draw_text(*font, scene->target, val, 10, 10, 1, 1);
+        }
     }
 
     void popup_banner(String text, float duration = 5.f)
@@ -256,5 +266,11 @@ struct UiController
         banner_t = 0;
         banner_duration = duration;
         banner_text = string_to_allocated_string<256>(text);
+    }
+
+    void answer_timer(bool visible, float time = 0.f)
+    {
+        timer_visible = visible;
+        timer_value = time;
     }
 };

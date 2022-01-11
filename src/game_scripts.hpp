@@ -17,7 +17,7 @@
     if (!VARNAME(step))                \
     {                                  \
         VARNAME(step) = true;          \
-        __VA_ARGS__ ;                  \
+        __VA_ARGS__;                   \
     }
 
 struct Scenes
@@ -422,6 +422,7 @@ struct PromptForAnswerSequence : Sequence
 
     float t;
     const float length = 3.f;
+    float time_remaining;
 
     bool me_is_answering;
     TextBox2<32> textbox;
@@ -431,10 +432,15 @@ struct PromptForAnswerSequence : Sequence
     {
         this->me_is_answering = me_is_answering;
         this->answerer = answerer;
+        this->time_remaining = 10.f;
     }
     void update(float timestep, Scenes scenes, BoardController *board_controller, InputState *input_state, RpcClient *rpc_client)
     {
         Font *font = scenes.assets->get_font(FONT_ROBOTO_CONDENSED_REGULAR, 64);
+
+        time_remaining -= timestep;
+        scenes.ui_controller->answer_timer(true, time_remaining);
+        
         if (me_is_answering)
         {
             textbox.rect = {1000, 1000, 300, 100};
@@ -458,6 +464,7 @@ struct PromptForAnswerSequence : Sequence
                 AllocatedString<256> combined = answerer;
                 combined.append(" is answering.");
                 scenes.ui_controller->popup_banner(combined);)
+
         }
     }
     bool ready()
@@ -513,7 +520,7 @@ struct StartPlaySequence : Sequence
         // step (player_controller->end_faceoff) // walking away animations
         // camera on current player, move host to that position
         // repeat question
-        // 
+        //
     }
 
     bool ready()

@@ -5,6 +5,7 @@
 #include <stack>
 
 #include "assets.hpp"
+#include "common.hpp"
 #include "math.hpp"
 #include "graphics/graphics.hpp"
 #include "resources.hpp"
@@ -229,6 +230,11 @@ namespace Imm
     };
 
     UiState state;
+
+    Window *get_current_window() {
+      if (state.windows.count(state.current_window)) return &state.windows[state.current_window];
+      return nullptr;
+    }
 }
 
 namespace Imm
@@ -397,12 +403,13 @@ namespace Imm
         YAML::Dict *out_layout = YAML::new_dict(a);
 
         YAML::List *out_windows = YAML::new_list(a);
-        for (auto [id, in_window] : state.windows)
+        for (auto &[id, in_window] : state.windows)
         {
             YAML::Dict *window = YAML::new_dict(a);
             window->push_back("id", YAML::new_literal(String::from(id, a), a), a);
             window->push_back("name", YAML::new_literal(in_window.name, a), a);
             window->push_back("visible", YAML::new_literal(in_window.visible ? (String) "true" : (String) "false", a), a);
+            window->push_back("z", YAML::new_literal(String::from(in_window.z, a), a), a);
 
             YAML::Dict *rect = YAML::new_dict(a);
             rect->push_back("x", YAML::new_literal(String::from(in_window.rect.x, a), a), a);
@@ -455,6 +462,7 @@ namespace Imm
             Window &window = state.windows[id];
             window.name = string_to_allocated_string<128>(in_window->get("name")->as_literal());
             window.visible = in_window->get("visible") && strcmp(in_window->get("visible")->as_literal(), "true");
+            window.z = in_window->get("z") && atoi(in_window->get("z")->as_literal().to_char_array(a));
 
             YAML::Dict *rect = in_window->get("rect")->as_dict();
             window.rect.x = atof(rect->get("x")->as_literal().to_char_array(a));
@@ -539,12 +547,11 @@ namespace Imm
         int highest_z = INT_MAX;
         for (const auto &[id, window] : state.windows)
         {
-            if (window.z < highest_z &&
-                in_rect({state.input->mouse_x, state.input->mouse_y}, window.rect))
-            {
-                highest_z = window.z;
-                state.top_window_at_current_mouse_pos = id;
-            }
+          if (window.visible && window.z < highest_z &&
+              in_rect({state.input->mouse_x, state.input->mouse_y}, window.rect)) {
+            highest_z                             = window.z;
+            state.top_window_at_current_mouse_pos = id;
+          }
         }
 
         state.current_window = 0;
@@ -640,7 +647,6 @@ namespace Imm
         }
         Window &window = state.windows[me];
 
-        // TODO this is not doing everything it needs to do to hide a window
         if (!window.visible)
         {
             return;
@@ -660,75 +666,7 @@ namespace Imm
                                content_container_rect.y + state.style.inner_padding.y,
                                content_container_rect.width - (state.style.inner_padding.x * 2),
                                content_container_rect.height - (state.style.inner_padding.y * 2)};
-        window.next_elem_pos = {window.content_rect.x, window.content_rect.y};
-
-        // scrollbar
-        bool scrollbar_visible = false;
-        if (window.last_height > window.content_rect.height)
-        {
-            scrollbar_visible = true;
-
-            float scrollbar_width = 10;
-            float scrollbar_gap = 2;
-            Rect scrollbar_area_rect = {window.content_rect.x + window.content_rect.width + scrollbar_gap - scrollbar_width,
-                                        window.content_rect.y,
-                                        scrollbar_width,
-                                        window.content_rect.height};
-            window.content_rect.width -= scrollbar_area_rect.width + scrollbar_gap;
-
-            float scroll_vertical_range = window.last_height - window.content_rect.height;
-            float scrollbar_height = window.content_rect.height / window.last_height * scrollbar_area_rect.height;
-            float scrollbar_vertical_range = scrollbar_area_rect.height - scrollbar_height;
-            float scrollbar_percent = -window.scroll / scroll_vertical_range;
-            float scrollbar_ratio = scroll_vertical_range / scrollbar_vertical_range;
-
-            Rect scrollbar_rect = {scrollbar_area_rect.x,
-                                   scrollbar_area_rect.y + (scrollbar_vertical_range * scrollbar_percent),
-                                   scrollbar_width,
-                                   scrollbar_height};
-
-            bool scrollbar_hot = do_hoverable(scrollbar_id, scrollbar_rect);
-            bool scrollbar_active = do_active(scrollbar_id);
-            bool scrollbar_dragging = do_draggable(scrollbar_id);
-
-            Color scrollbar_color = {0, 1, 0, 1};
-            if (scrollbar_hot)
-            {
-                scrollbar_color = lighten(scrollbar_color, 0.2f);
-            }
-            if (scrollbar_active)
-            {
-                scrollbar_color = lighten(scrollbar_color, 0.2f);
-            }
-            if (scrollbar_dragging)
-            {
-                window.scroll -= scrollbar_ratio * (state.input->mouse_y - state.input->prev_mouse_y);
-            }
-            if (in_rect(Vec2f{state.input->mouse_x, state.input->mouse_y}, content_container_rect))
-            {
-                window.scroll += state.input->scrollwheel_count * 20;
-            }
-
-            if (window.scroll > 0)
-            {
-                window.scroll = 0;
-                scrollbar_percent = 0;
-            }
-            if (-window.scroll > scroll_vertical_range)
-            {
-                scrollbar_percent = 1;
-                window.scroll = -scroll_vertical_range;
-            }
-
-            window.next_elem_pos.y += window.scroll;
-
-            window.draw_list.push_rect(scrollbar_rect, scrollbar_color);
-        }
-        else
-        {
-            window.scroll = 0;
-        }
-        window.last_height = 0;
+        window.next_elem_pos = {0, 0};
 
         // moving window
         bool hot = do_hoverable(me, titlebar_rect);
@@ -904,15 +842,21 @@ namespace Imm
             window.rect.width += state.input->mouse_x - state.input->prev_mouse_x;
         }
 
+        auto constrained = [](i32 my_priority, ImmId other_window, i32 other_priority) {
+            return other_window && state.windows[other_window].visible && other_priority > my_priority;
+        };
         if (state.anchored_up == me)
         {
             window.rect.y = 0;
-            if (state.anchored_left_priority > state.anchored_up_priority)
-                window.rect.x = state.windows[state.anchored_left].rect.x + state.windows[state.anchored_left].rect.width;
+            if (constrained(state.anchored_up_priority, state.anchored_left,
+                            state.anchored_left_priority))
+              window.rect.x = state.windows[state.anchored_left].rect.x +
+                              state.windows[state.anchored_left].rect.width;
             else
                 window.rect.x = 0;
 
-            if (state.anchored_right_priority > state.anchored_up_priority)
+            if (constrained(state.anchored_up_priority, state.anchored_right,
+                            state.anchored_right_priority))
                 window.rect.set_right(state.windows[state.anchored_right].rect.x);
             else
                 window.rect.set_right(state.content_rect.x + state.content_rect.width);
@@ -920,12 +864,14 @@ namespace Imm
         if (state.anchored_down == me)
         {
             window.rect.set_bottom(state.content_rect.y + state.content_rect.height);
-            if (state.anchored_left_priority > state.anchored_down_priority)
+            if (constrained(state.anchored_down_priority, state.anchored_left,
+                            state.anchored_left_priority))
                 window.rect.x = state.windows[state.anchored_left].rect.x + state.windows[state.anchored_left].rect.width;
             else
                 window.rect.x = 0;
 
-            if (state.anchored_right_priority > state.anchored_down_priority)
+            if (constrained(state.anchored_down_priority, state.anchored_right,
+                            state.anchored_right_priority))
                 window.rect.set_right(state.windows[state.anchored_right].rect.x);
             else
                 window.rect.set_right(state.content_rect.x + state.content_rect.width);
@@ -933,12 +879,14 @@ namespace Imm
         if (state.anchored_left == me)
         {
             window.rect.x = 0;
-            if (state.anchored_up_priority > state.anchored_left_priority)
+            if (constrained(state.anchored_left_priority, state.anchored_up,
+                            state.anchored_up_priority))
                 window.rect.y = state.windows[state.anchored_up].rect.y + state.windows[state.anchored_up].rect.height;
             else
                 window.rect.y = state.content_rect.y;
 
-            if (state.anchored_down_priority > state.anchored_left_priority)
+            if (constrained(state.anchored_left_priority, state.anchored_down,
+                            state.anchored_down_priority))
                 window.rect.set_bottom(state.windows[state.anchored_down].rect.y);
             else
                 window.rect.set_bottom(state.content_rect.y + state.content_rect.height);
@@ -946,37 +894,40 @@ namespace Imm
         if (state.anchored_right == me)
         {
             window.rect.set_right(state.content_rect.x + state.content_rect.width);
-            if (state.anchored_up_priority > state.anchored_right_priority)
+            if (constrained(state.anchored_right_priority, state.anchored_up,
+                            state.anchored_up_priority))
                 window.rect.y = state.windows[state.anchored_up].rect.y + state.windows[state.anchored_up].rect.height;
             else
                 window.rect.y = state.content_rect.y;
 
-            if (state.anchored_down_priority > state.anchored_right_priority)
+            if (constrained(state.anchored_right_priority, state.anchored_down,
+                            state.anchored_down_priority))
                 window.rect.set_bottom(state.windows[state.anchored_down].rect.y);
             else
                 window.rect.set_bottom(state.content_rect.y + state.content_rect.height);
         }
         if (state.anchored_center == me)
         {
-            if (state.anchored_up)
+            if (constrained(0, state.anchored_up, state.anchored_up_priority))
                 window.rect.y = state.windows[state.anchored_up].rect.y + state.windows[state.anchored_up].rect.height;
             else
                 window.rect.y = state.content_rect.y;
 
-            if (state.anchored_down)
-                window.rect.set_bottom(state.windows[state.anchored_down].rect.y);
+            if (constrained(0, state.anchored_down, state.anchored_down_priority))
+              window.rect.set_bottom(state.windows[state.anchored_down].rect.y);
             else
-                window.rect.set_bottom(state.content_rect.y + state.content_rect.height);
+              window.rect.set_bottom(state.content_rect.y + state.content_rect.height);
 
-            if (state.anchored_left)
-                window.rect.x = state.windows[state.anchored_left].rect.x + state.windows[state.anchored_left].rect.width;
+            if (constrained(0, state.anchored_left, state.anchored_left_priority))
+              window.rect.x = state.windows[state.anchored_left].rect.x +
+                              state.windows[state.anchored_left].rect.width;
             else
-                window.rect.x = 0;
+              window.rect.x = 0;
 
-            if (state.anchored_right)
-                window.rect.set_right(state.windows[state.anchored_right].rect.x);
+            if (constrained(0, state.anchored_right, state.anchored_right_priority))
+              window.rect.set_right(state.windows[state.anchored_right].rect.x);
             else
-                window.rect.set_right(state.content_rect.x + state.content_rect.width);
+              window.rect.set_right(state.content_rect.x + state.content_rect.width);
         }
 
         // keep window in bounds
@@ -996,12 +947,86 @@ namespace Imm
         // recalculate some rects
         titlebar_rect = {window.rect.x, window.rect.y, window.rect.width, state.style.title_font_size + state.style.inner_padding.y * 2};
         content_container_rect = {window.rect.x, window.rect.y + titlebar_rect.height, window.rect.width, window.rect.height - titlebar_rect.height};
+        window.content_rect = {content_container_rect.x + state.style.inner_padding.x,
+                                content_container_rect.y + state.style.inner_padding.y,
+                                content_container_rect.width - (state.style.inner_padding.x * 2),
+                                content_container_rect.height - (state.style.inner_padding.y * 2)};
         push_container(content_container_rect, &window.draw_list);
+        
+        // scrollbar
+        bool scrollbar_visible = false;
+        Rect scrollbar_rect;
+            Color scrollbar_color = {0, 1, 0, 1};
+        if (window.last_height > window.content_rect.height)
+        {
+            scrollbar_visible = true;
+
+            float scrollbar_width = 10;
+            float scrollbar_gap = 2;
+            Rect scrollbar_area_rect = {window.content_rect.x + window.content_rect.width + scrollbar_gap - scrollbar_width,
+                                        window.content_rect.y,
+                                        scrollbar_width,
+                                        window.content_rect.height};
+            window.content_rect.width -= scrollbar_area_rect.width + scrollbar_gap;
+
+            float scroll_vertical_range = window.last_height - window.content_rect.height;
+            float scrollbar_height = window.content_rect.height / window.last_height * scrollbar_area_rect.height;
+            float scrollbar_vertical_range = scrollbar_area_rect.height - scrollbar_height;
+            float scrollbar_percent = -window.scroll / scroll_vertical_range;
+            float scrollbar_ratio = scroll_vertical_range / scrollbar_vertical_range;
+
+            scrollbar_rect = {
+                scrollbar_area_rect.x,
+                scrollbar_area_rect.y + (scrollbar_vertical_range * scrollbar_percent),
+                scrollbar_width, scrollbar_height};
+
+            bool scrollbar_hot = do_hoverable(scrollbar_id, scrollbar_rect);
+            bool scrollbar_active = do_active(scrollbar_id);
+            bool scrollbar_dragging = do_draggable(scrollbar_id);
+
+            if (scrollbar_hot)
+            {
+                scrollbar_color = lighten(scrollbar_color, 0.2f);
+            }
+            if (scrollbar_active)
+            {
+                scrollbar_color = lighten(scrollbar_color, 0.2f);
+            }
+            if (scrollbar_dragging)
+            {
+                window.scroll -= scrollbar_ratio * (state.input->mouse_y - state.input->prev_mouse_y);
+            }
+            if (in_rect(Vec2f{state.input->mouse_x, state.input->mouse_y}, content_container_rect))
+            {
+                window.scroll += state.input->scrollwheel_count * 20;
+            }
+
+            if (window.scroll > 0)
+            {
+                window.scroll = 0;
+                scrollbar_percent = 0;
+            }
+            if (-window.scroll > scroll_vertical_range)
+            {
+                scrollbar_percent = 1;
+                window.scroll = -scroll_vertical_range;
+            }
+
+            window.next_elem_pos.y += window.scroll;
+        }
+        else
+        {
+            window.scroll = 0;
+        }
+        window.last_height = 0;
 
         // draw
         window.draw_list.push_rect(titlebar_rect, titlebar_color);
         window.draw_list.push_text(title, {titlebar_rect.x + state.style.inner_padding.x, titlebar_rect.y + state.style.inner_padding.y}, state.style.title_font_size, {1, 1, 1, 1});
         window.draw_list.push_rect(content_container_rect, {1, 1, 1, .95});
+
+        if (scrollbar_visible)
+        window.draw_list.push_rect(scrollbar_rect, scrollbar_color);
 
         window.draw_list.push_rect(control_border_top, control_border_top_color);
         window.draw_list.push_rect(control_border_bottom, control_border_bottom_color);
@@ -1140,7 +1165,7 @@ namespace Imm
     {
         Window &window = state.windows[state.current_window];
 
-        Rect rect = {window.next_elem_pos.x, window.next_elem_pos.y,
+        Rect rect = {window.content_rect.x + window.next_elem_pos.x, window.content_rect.y + window.next_elem_pos.y,
                      window.content_rect.width, state.style.content_font_size};
         window.next_elem_pos.y += rect.height + state.style.element_gap;
         window.last_height += rect.height + state.style.element_gap;
@@ -1158,8 +1183,8 @@ namespace Imm
         float border = 5;
         float text_width = get_text_width(text, state.style.content_font_size);
         Rect rect = {
-            window.next_elem_pos.x,
-            window.next_elem_pos.y,
+            window.content_rect.x + window.next_elem_pos.x,
+            window.content_rect.y + window.next_elem_pos.y,
             text_width + border * 2,
             state.style.content_font_size + border * 2,
         };
@@ -1258,8 +1283,8 @@ namespace Imm
             Window &window = state.windows[state.current_window];
             draw_list = &window.draw_list;
 
-            rect = {window.next_elem_pos.x,
-                    window.next_elem_pos.y,
+            rect = {window.content_rect.x + window.next_elem_pos.x,
+                    window.content_rect.y + window.next_elem_pos.y,
                     window.content_rect.width - state.style.inner_padding.x * 2,
                     state.style.content_font_size + state.style.inner_padding.y * 2};
             container_rect = window.content_rect;
@@ -1320,8 +1345,8 @@ namespace Imm
     {
         Window &window = state.windows[state.current_window];
 
-        Rect rect = {window.next_elem_pos.x,
-                     window.next_elem_pos.y,
+        Rect rect = {window.content_rect.x + window.next_elem_pos.x,
+                     window.content_rect.y + window.next_elem_pos.y,
                      window.content_rect.width - state.style.inner_padding.x * 2,
                      state.style.content_font_size + state.style.inner_padding.y * 2};
         window.next_elem_pos.y += rect.height + state.style.element_gap;
@@ -1378,8 +1403,8 @@ namespace Imm
         ImmId me = (ImmId)(uint64_t)val;
         Window &window = state.windows[state.current_window];
 
-        Rect rect = {window.next_elem_pos.x,
-                     window.next_elem_pos.y,
+        Rect rect = {window.content_rect.x + window.next_elem_pos.x,
+                     window.content_rect.y + window.next_elem_pos.y,
                      window.content_rect.width - state.style.inner_padding.x * 2,
                      state.style.content_font_size + state.style.inner_padding.y * 2};
 
@@ -1494,7 +1519,7 @@ namespace Imm
                     axis_origin.z + (axis_dir.z * axis_t),
                 };
 
-                if (axis_t >= 0 && axis_t <= 1)
+                if (axis_t >= 0 && axis_t <= 1 && ray_t > 0)
                 {
                     Vec3f p0 = {
                         ray_origin.x + (ray_dir.x * ray_t),
@@ -1527,7 +1552,7 @@ namespace Imm
             };
 
             glm::vec4 p_ndc = state.camera->perspective * state.camera->view * glm::vec4(p->x, p->y, p->z, 1.f);
-            if (fabs(p_ndc.w) > 0)
+            if (p_ndc.w > 0)
             {
                 p_ndc /= p_ndc.w;
                 Vec3f p_screen = ndc_to_screen(window.content_rect, {p_ndc.x, p_ndc.y, p_ndc.z});
@@ -1535,50 +1560,49 @@ namespace Imm
                 Rect view_rect = {p_screen.x - 5, p_screen.y - 5, 10, 10};
                 Rect interactive_rect = {p_screen.x - 15, p_screen.y - 15, 30, 30};
 
-                Color color = {1, 0, 0, 1};
+                Color color = {1, 1, 0, 1};
                 window.draw_list.push_rect(view_rect, color);
             }
             Vec3f p_screen = ndc_to_screen(window.content_rect, {p_ndc.x, p_ndc.y, p_ndc.z});
 
             auto draw_axis = [&](int axis_i, Vec3f axis, Color color, ImmId id)
             {
-                float handle_length = 100;
+                bool hot = do_hoverable(id, selected_axis == axis_i);
+                bool active = do_active(id);
+                bool dragging = do_draggable(id);
+
                 glm::vec4 x_axis_offset_ndc = state.camera->perspective * state.camera->view * glm::vec4(p->x + axis.x, p->y + axis.y, p->z + axis.z, 1.f);
                 float w = x_axis_offset_ndc.w;
                 if (x_axis_offset_ndc.w > 0)
                 {
                     x_axis_offset_ndc /= x_axis_offset_ndc.w;
+                    Vec3f axis_offset_screen = ndc_to_screen(window.content_rect, {x_axis_offset_ndc.x, x_axis_offset_ndc.y, x_axis_offset_ndc.z});
+                    Vec2f axis_dir_screen = normalize(Vec2f{axis_offset_screen.x - p_screen.x, axis_offset_screen.y - p_screen.y});
+
+                    if (state.just_activated == id)
+                    {
+                        state.gizmo_last_contact_point = closest_point_on_axis[axis_i];
+                    }
+
+                    if (hot)
+                    {
+                        color = lighten(color, 0.5f);
+                    }
+
+                    Vec2f line_normal = {axis_dir_screen.y, -axis_dir_screen.x};
+                    float line_thickness = 2;
+                    Vec2f line_p0 = {axis_offset_screen.x + line_normal.x * line_thickness, axis_offset_screen.y + line_normal.y * line_thickness};
+                    Vec2f line_p1 = {axis_offset_screen.x - line_normal.x * line_thickness, axis_offset_screen.y - line_normal.y * line_thickness};
+                    Vec2f line_p2 = {p_screen.x + line_normal.x * line_thickness, p_screen.y + line_normal.y * line_thickness};
+                    Vec2f line_p3 = {p_screen.x - line_normal.x * line_thickness, p_screen.y - line_normal.y * line_thickness};
+                    window.draw_list.push_quad(line_p0, line_p1, line_p3, line_p2, color);
+
+                    Vec2f arrow_p0 = {axis_offset_screen.x + line_normal.x * 5, axis_offset_screen.y + line_normal.y * 5};
+                    Vec2f arrow_p1 = {axis_offset_screen.x - line_normal.x * 5, axis_offset_screen.y - line_normal.y * 5};
+                    Vec2f arrow_p2 = {axis_offset_screen.x + axis_dir_screen.x * 10, axis_offset_screen.y + axis_dir_screen.y * 10};
+
+                    window.draw_list.push_quad(arrow_p0, arrow_p1, arrow_p2, arrow_p2, color);
                 }
-                Vec3f axis_offset_screen = ndc_to_screen(window.content_rect, {x_axis_offset_ndc.x, x_axis_offset_ndc.y, x_axis_offset_ndc.z});
-                Vec2f axis_dir_screen = normalize(Vec2f{axis_offset_screen.x - p_screen.x, axis_offset_screen.y - p_screen.y});
-
-                bool hot = do_hoverable(id, selected_axis == axis_i);
-                bool active = do_active(id);
-                bool dragging = do_draggable(id);
-
-                if (state.just_activated == id)
-                {
-                    state.gizmo_last_contact_point = closest_point_on_axis[axis_i];
-                }
-
-                if (hot)
-                {
-                    color = lighten(color, 0.5f);
-                }
-
-                Vec2f line_normal = {axis_dir_screen.y, -axis_dir_screen.x};
-                float line_thickness = 2;
-                Vec2f line_p0 = {axis_offset_screen.x + line_normal.x * line_thickness, axis_offset_screen.y + line_normal.y * line_thickness};
-                Vec2f line_p1 = {axis_offset_screen.x - line_normal.x * line_thickness, axis_offset_screen.y - line_normal.y * line_thickness};
-                Vec2f line_p2 = {p_screen.x + line_normal.x * line_thickness, p_screen.y + line_normal.y * line_thickness};
-                Vec2f line_p3 = {p_screen.x - line_normal.x * line_thickness, p_screen.y - line_normal.y * line_thickness};
-                window.draw_list.push_quad(line_p0, line_p1, line_p3, line_p2, color);
-
-                Vec2f arrow_p0 = {axis_offset_screen.x + line_normal.x * 5, axis_offset_screen.y + line_normal.y * 5};
-                Vec2f arrow_p1 = {axis_offset_screen.x - line_normal.x * 5, axis_offset_screen.y - line_normal.y * 5};
-                Vec2f arrow_p2 = {axis_offset_screen.x + axis_dir_screen.x * 10, axis_offset_screen.y + axis_dir_screen.y * 10};
-
-                window.draw_list.push_quad(arrow_p0, arrow_p1, arrow_p2, arrow_p2, color);
 
                 if (dragging)
                 {
@@ -1856,14 +1880,15 @@ namespace Imm
             {.2, .3, .9, 1});
     }
 
-    void keyframe(ImmId id, int *frame)
+    void keyframe(ImmId id, int *frame, int track_i = 0)
     {
         auto c = get_current_container();
 
         float pos = (*frame - *tstart) / (*twidth) * c.content_rect.width;
+        float vertical_offset = track_i * 15;
 
         Rect hot_rect = {c.content_rect.x + pos - (10 / 2.f),
-                         c.content_rect.y + 50 - (10 / 2.f),
+                         c.content_rect.y + 50 - (10 / 2.f) + vertical_offset,
                          10,
                          10};
         bool hot = do_hoverable(id, hot_rect, c.content_rect);
@@ -1884,10 +1909,10 @@ namespace Imm
             *frame = new_frame;
         }
 
-        c.draw_list->push_quad({c.content_rect.x + pos - (10 / 2.f), 50 + c.content_rect.y},
-                               {c.content_rect.x + pos, 50 + c.content_rect.y - (10 / 2.f)},
-                               {c.content_rect.x + pos + (10 / 2.f), 50 + c.content_rect.y},
-                               {c.content_rect.x + pos, 50 + c.content_rect.y + (10 / 2.f)},
+        c.draw_list->push_quad({c.content_rect.x + pos - (10 / 2.f), 50 + c.content_rect.y + vertical_offset},
+                               {c.content_rect.x + pos, 50 + c.content_rect.y - (10 / 2.f) + vertical_offset},
+                               {c.content_rect.x + pos + (10 / 2.f), 50 + c.content_rect.y + vertical_offset},
+                               {c.content_rect.x + pos, 50 + c.content_rect.y + (10 / 2.f) + vertical_offset},
                                color);
     }
 
@@ -1939,6 +1964,9 @@ namespace Imm
 
     bool list_item2(ImmId me, String text, bool selected_flag = false, bool *as_checkbox = nullptr)
     {
+        Window *window = get_current_window();
+        if (!window || !window->visible) return false;
+
         auto &c = get_current_container();
 
         Rect rect = {c.content_rect.x + c.next_pos.x + state.style.inner_padding.x,
@@ -1978,44 +2006,46 @@ namespace Imm
 
     bool button2(ImmId me, String text)
     {
-        auto &c = get_current_container();
+      Window *window = get_current_window();
+      if (!window || !window->visible) return false;
 
-        float border = 5;
-        float text_width = get_text_width(text, state.style.content_font_size);
-        Rect rect = {
-            c.content_rect.x + c.next_pos.x + border,
-            c.content_rect.y + c.next_pos.y + border,
-            text_width + border * 2,
-            state.style.content_font_size + border * 2,
-        };
-        c.next_pos.y += rect.height + state.style.element_gap;
+      auto &c = get_current_container();
 
-        bool hot = do_hoverable(me, rect, c.content_rect);
-        bool active = do_active(me);
-        bool triggered = (state.just_deactivated == me && hot);
+      float border     = 5;
+      float text_width = get_text_width(text, state.style.content_font_size);
+      Rect rect        = {
+          c.content_rect.x + c.next_pos.x + border,
+          c.content_rect.y + c.next_pos.y + border,
+          text_width + border * 2,
+          state.style.content_font_size + border * 2,
+      };
+      c.next_pos.y += rect.height + state.style.element_gap;
 
-        Color color = {.9, .3, .2, 1};
-        Color light = lighten(color, .1);
-        Color lighter = lighten(color, .15);
-        Color dark = darken(color, .1);
-        Color darker = darken(color, .15);
+      bool hot       = do_hoverable(me, rect, c.content_rect);
+      bool active    = do_active(me);
+      bool triggered = (state.just_deactivated == me && hot);
 
-        Color top = lighter;
-        Color down = darker;
-        Color left = light;
-        Color right = dark;
+      Color color   = {.9, .3, .2, 1};
+      Color light   = lighten(color, .1);
+      Color lighter = lighten(color, .15);
+      Color dark    = darken(color, .1);
+      Color darker  = darken(color, .15);
 
-        float text_y_offset = 0;
-        if (active)
-        {
-            color = darken(color, 0.05f);
+      Color top   = lighter;
+      Color down  = darker;
+      Color left  = light;
+      Color right = dark;
 
-            top = darker;
-            down = lighter;
-            left = dark;
-            right = light;
+      float text_y_offset = 0;
+      if (active) {
+        color = darken(color, 0.05f);
 
-            text_y_offset = 3.f;
+        top   = darker;
+        down  = lighter;
+        left  = dark;
+        right = light;
+
+        text_y_offset = 3.f;
         }
         else if (hot)
         {
@@ -2047,6 +2077,9 @@ namespace Imm
 
     void label2(String text)
     {
+        Window *window = get_current_window();
+        if (!window || !window->visible) return;
+
         auto &c = get_current_container();
 
         Rect rect = {c.content_rect.x + c.next_pos.x + state.style.inner_padding.x,
