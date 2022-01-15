@@ -64,7 +64,7 @@ struct RenderTarget : Asset
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, color_tex.gl_type, color_tex.gl_ref, mip_level);
     }
 
-    void clear(Color color = {.2f, .3f, .9f, 0.f})
+    void clear(Color color = {.3f, .35f, .4f, 0.f})
     {
         bind();
 

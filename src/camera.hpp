@@ -28,10 +28,10 @@ struct Camera
 struct EditorCamera : Camera
 {
     float pos_x = 0.f;
-    float pos_y = 0.f;
-    float pos_z = 1.f;
+    float pos_y = 4.f;
+    float pos_z = 4.f;
 
-    float x_rot = 0.f;
+    float x_rot = -90.f;
     float y_rot = 0.f;
 
     Vec3f get_dir()

@@ -31,6 +31,9 @@ struct Editor
         play_scenes.init(mem);
 
         deserialize(&scenes->game, mem.temp);
+
+        InputState tmp;
+        debug_camera.update(scenes->target, &tmp);
     }
 
     void update_and_draw(Assets *assets, RpcClient *rpc_client, RenderTarget backbuffer, InputState *input, Memory mem)
@@ -130,17 +133,19 @@ struct Editor
 
         Imm::start_frame(target, input, assets, &debug_camera);
 
-        Imm::start_menubar_menu("Wind12312ows");
-        static bool menu_1 = false;
-        static bool menu_2 = false;
-        static bool menu_3 = false;
-        static bool menu_4 = false;
-        static bool menu_5 = false;
-        Imm::list_item((ImmId)&menu_1, "hello", menu_1, &menu_1);
-        Imm::list_item((ImmId)&menu_2, "hello2", menu_2, &menu_2);
-        Imm::list_item((ImmId)&menu_3, "hello3", menu_3, &menu_3);
-        Imm::list_item((ImmId)&menu_4, "hello4", menu_4, &menu_4);
-        Imm::list_item((ImmId)&menu_5, "hello5", menu_5, &menu_5);
+        if (Imm::start_menubar_menu("Wind12312ows")) {
+            static bool menu_1 = false;
+            static bool menu_2 = false;
+            static bool menu_3 = false;
+            static bool menu_4 = false;
+            static bool menu_5 = false;
+            Imm::list_item((ImmId)&menu_1, "hello", menu_1, &menu_1);
+            Imm::list_item((ImmId)&menu_2, "hello2", menu_2, &menu_2);
+            Imm::list_item((ImmId)&menu_3, "hello3", menu_3, &menu_3);
+            Imm::list_item((ImmId)&menu_4, "hello4", menu_4, &menu_4);
+            Imm::list_item((ImmId)&menu_5, "hello5", menu_5, &menu_5);
+        }
+        Imm::end_menubar_menu();
 
         Imm::add_window_menubar_menu();
 
@@ -395,18 +400,18 @@ struct Editor
         Imm::start_window("Timeline", {1000, 500, 600, 400});
         static float column_width = 200.f;
         Imm::first_column(&column_width);
-        if (Imm::button2(Imm::imm_hash("Add Track"), "Add Track")) {
+        if (Imm::button(Imm::hash("Add Track"), "Add Track")) {
             if (selected_entity) seq.add_track(selected_entity_i);
         }
         if (selected_track) {
-          if (Imm::button2(Imm::imm_hash("Add Key From Camera Transform"), "Add Key From Camera Transform")) {
+          if (Imm::button(Imm::hash("Add Key From Camera Transform"), "Add Key From Camera Transform")) {
             Transform t;
             Camera *camera = get_camera(&scenes->main, &t);
             selected_track->add_key(
                 t, current_frame,
                 KeyedAnimationTrack::Key::InterpolationType::LINEAR);
           }
-          if (Imm::button2(Imm::imm_hash("asdfcvbvbvx"), "Add Key From Entity Transform")) {
+          if (Imm::button(Imm::hash("asdfcvbvbvx"), "Add Key From Entity Transform")) {
             Entity *entity = scenes->main.get(selected_track->entity_id);
             Transform t = entity->transform;
             selected_track->add_key(
@@ -417,8 +422,8 @@ struct Editor
 
         for (u32 track_i = 0; track_i < seq.tracks.len; track_i++) {
           KeyedAnimationTrack *track = &seq.tracks[track_i];
-          if (Imm::list_item2(
-                  (ImmId)&track,
+          if (Imm::list_item(
+                  (ImmId) track,
                   scenes->main.get(track->entity_id)->debug_tag.name,
                   track_i == selected_track_i))
             selected_track_i = track_i;
@@ -436,6 +441,7 @@ struct Editor
             }
         }
         Imm::end_timeline();
+        Imm::end_columns();
         Imm::end_window();
 
         bind_shader(lines_shader);

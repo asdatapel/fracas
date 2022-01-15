@@ -188,6 +188,11 @@ Vec3f normalize(Vec3f v)
     return {v.x / len, v.y / len, v.z / len};
 }
 
+struct Vec4f
+{
+    float x, y, z, w;
+};
+
 struct Vec2B8 {
     bool x, y;
 };
