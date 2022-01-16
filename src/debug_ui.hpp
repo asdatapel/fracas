@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <deque>
 #include <map>
 #include <stack>
 
@@ -306,7 +307,6 @@ namespace Imm {
 struct Popup {
   Vec2f pos;
   Vec2f size;
-  bool visible;
 };
 
 // - there is only one layer of popups, they shouldn't overlap
@@ -314,28 +314,8 @@ struct Popup {
 //
 // - id need only be unique to popups
 std::map<ImmId, Popup> popups;
+std::deque<ImmId> open_popups;
 std::stack<ImmId> popup_stack;
-
-// totally fine if width / height = 0
-Container *start_popup(ImmId id, Rect initial_rect, bool visible) {
-  if (popups.count(id) == 0) {
-    popups[id] = {{initial_rect.x, initial_rect.y}, {initial_rect.width, initial_rect.height}};
-  }
-  Popup *popup   = &popups[id];
-  popup->visible = visible;
-  if (visible) popup_stack.push(id);
-
-  Container *c      = push_container({initial_rect.x, initial_rect.y, popup->size.x, popup->size.y},
-                                &state.global_draw_list);
-  c->visible        = visible;
-  c->final_size_ptr = &popup->size;
-
-  return c;
-}
-
-void end_popup() {
-  if (pop_container().visible) popup_stack.pop();
-}
 
 ImmId get_current_popup() {
   if (popup_stack.size()) {
@@ -344,10 +324,71 @@ ImmId get_current_popup() {
   return 0;
 }
 
+bool is_popup_open(ImmId id) {
+  for (int i = 0; i < open_popups.size(); i++) {
+    if (open_popups[i] == id) return true;
+  }
+  return false;
+}
+
+void start_frame_popups() {
+  // TODO: this doesn't need to be done for every popup, can be done once a frame
+  if (state.input->mouse_down_event && state.popup_at_current_mouse_pos == 0) {
+    open_popups.clear();
+  }
+}
+
+void open_popup(ImmId id) {
+  open_popups.clear();
+  open_popups.push_back(id);
+}
+void open_popup(String name) {
+  ImmId id = hash(name);
+  open_popup(id);
+}
+
+void close_popup() {
+  ImmId id = get_current_popup();
+  while (open_popups.back() != id) {
+    open_popups.pop_back();
+  }
+}
+
+// TODO: might be able to merge popups and subpopups
+void open_subpopup() {}
+
+// totally fine if width / height = 0
+Container *start_popup(ImmId id, Rect initial_rect) {
+  if (popups.count(id) == 0) {
+    popups[id] = {
+        {initial_rect.x, initial_rect.y},
+        {initial_rect.width, initial_rect.height},
+    };
+  }
+  Popup *popup = &popups[id];
+
+  Container *c      = push_container({initial_rect.x, initial_rect.y, popup->size.x, popup->size.y},
+                                &state.global_draw_list);
+  c->final_size_ptr = &popup->size;
+
+  bool visible = is_popup_open(id);
+  if (visible) {
+    popup_stack.push(id);
+    c->draw_list->push_rect(c->content_rect, {1, 0, 0, 1});
+  }
+  c->visible = visible;
+
+  return c;
+}
+
+void end_popup() {
+  if (pop_container().visible) popup_stack.pop();
+}
+
 ImmId get_popup_at_position(Vec2f pos) {
   for (auto &[id, popup] : popups) {
     Rect rect = {popup.pos.x, popup.pos.y, popup.size.x, popup.size.y};
-    if (popup.visible && in_rect(pos, rect)) {
+    if (in_rect(pos, rect) && is_popup_open(id)) {
       return id;
     }
   }
@@ -520,6 +561,8 @@ void start_frame(RenderTarget target, InputState *input, Assets *assets, EditorC
   state.last_element_active   = false;
   state.last_element_dragging = false;
   state.last_element_selected = false;
+
+   start_frame_popups();
 }
 
 void start_window(String title, Rect rect) {
@@ -1601,6 +1644,7 @@ void keyframe(ImmId id, int *frame, int track_i = 0) {
   bool hot      = do_hoverable(id, hot_rect, c->content_rect);
   bool active   = do_active(id);
   bool dragging = do_draggable(id);
+  do_right_clickable(id);
 
   Color color = {.2, .9, .3, 1};
   if (hot) {
@@ -1703,27 +1747,23 @@ bool start_menubar_menu(String name) {
   bool selected = do_selectable(me, true);
 
   auto c = start_popup(
-      me, {interactive_rect.x + 5, interactive_rect.y + interactive_rect.height + 5, 200, 0},
-      state.current_menubar_menu == me);
+      me, {interactive_rect.x + 5, interactive_rect.y + interactive_rect.height + 5, 200, 0});
 
-  if (hot && state.current_menubar_menu != 0) {
-    state.current_menubar_menu = me;
-  }
-
-  if (state.just_selected == me) {
-    if (state.current_menubar_menu == me)
+  if (c->visible) {
+    if (state.just_selected == me) {
       state.current_menubar_menu = 0;
-    else
-      state.current_menubar_menu = me;
-  } else if (state.current_menubar_menu == me) {
-    if (state.input->mouse_down_event &&
-        !in_rect({state.input->mouse_x, state.input->mouse_y}, c->content_rect)) {
-      state.current_menubar_menu = 0;
+      close_popup();
     }
-  }
-
-  if (state.current_menubar_menu == me) {
-    c->draw_list->push_rect(c->content_rect, {1, 0, 0, 1});
+  } else {
+    if (state.current_menubar_menu == me) {
+      state.current_menubar_menu = 0;
+    } else if (state.just_selected == me) {
+      state.current_menubar_menu = me;
+      open_popup(me);
+    } else if (hot && state.current_menubar_menu != 0) {
+      state.current_menubar_menu = me;
+      open_popup(me);
+    }
   }
 
   Vec2f text_pos     = {interactive_rect.x + state.style.inner_padding.x,
@@ -1853,12 +1893,16 @@ void init() {
 // utility
 namespace Imm {
 
+// for now this is also displaying some debug stuff
 void add_window_menubar_menu() {
   if (Imm::start_menubar_menu("Windows")) {
     for (auto &[id, window] : state.windows) {
       list_item((ImmId)&window.visible, window.name, window.visible, &window.visible);
     }
     label(String::from(popup_stack.size(), &state.per_frame_alloc));
+    if (button("printf")) {
+      printf("%llu\n", open_popups.size());
+    }
   }
   Imm::end_menubar_menu();
 }
