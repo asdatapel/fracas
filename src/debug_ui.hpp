@@ -333,7 +333,8 @@ bool is_popup_open(ImmId id) {
 
 void start_frame_popups() {
   // TODO: this doesn't need to be done for every popup, can be done once a frame
-  if (state.input->mouse_down_event && state.popup_at_current_mouse_pos == 0) {
+  if (state.input->mouse_button_down_events[(int)MouseButton::LEFT] &&
+      state.popup_at_current_mouse_pos == 0) {
     open_popups.clear();
   }
 }
@@ -421,24 +422,23 @@ bool do_hoverable(ImmId id, Rect rect, Rect mask = {}) {
   bool in_top_container = state.popup_at_current_mouse_pos
                               ? state.popup_at_current_mouse_pos == get_current_popup()
                               : state.top_window_at_current_mouse_pos == state.current_window;
-  bool is_hot =
-      in_top_container && in_rect(Vec2f{state.input->mouse_x, state.input->mouse_y}, rect, mask);
+  bool is_hot           = in_top_container && in_rect(state.input->mouse_pos, rect, mask);
   return do_hoverable(id, is_hot);
 }
 
 bool do_active(ImmId id) {
-  if (state.input->mouse_up_event) {
+  if (state.input->mouse_button_up_events[(int)MouseButton::LEFT]) {
     if (state.active == id) {
       state.active           = 0;
       state.just_deactivated = id;
     }
   }
 
-  if (state.input->mouse_down_event) {
+  if (state.input->mouse_button_down_events[(int)MouseButton::LEFT]) {
     if (state.hot == id) {
       state.active          = id;
       state.just_activated  = id;
-      state.active_position = {state.input->mouse_x, state.input->mouse_y};
+      state.active_position = state.input->mouse_pos;
     } else {
       if (state.active == id) {
         state.active = 0;
@@ -451,12 +451,10 @@ bool do_active(ImmId id) {
 bool do_draggable(ImmId id) {
   bool active = state.active == id;
   if (active) {
-    if (abs(state.input->mouse_x - state.active_position.x) > 2 ||
-        abs(state.input->mouse_y - state.active_position.y) > 2) {
+    if ((state.input->mouse_pos - state.active_position).len() > 2) {
       state.dragging = id;
     }
-    state.drag_distance         = {state.input->mouse_x - state.active_position.x,
-                           state.input->mouse_y - state.active_position.y};
+    state.drag_distance         = state.input->mouse_pos - state.active_position;
     state.last_element_dragging = (state.dragging == id);
     return (state.dragging == id);
   } else if (state.dragging == id) {
@@ -476,7 +474,7 @@ bool do_selectable(ImmId id, bool on_down = false) {
     state.selected      = id;
     state.just_selected = id;
   } else {
-    if (state.input->mouse_down_event) {
+    if (state.input->mouse_button_down_events[(int)MouseButton::LEFT]) {
       if (state.selected == id) {
         state.just_unselected = id;
         state.selected        = 0;
@@ -537,15 +535,13 @@ void start_frame(RenderTarget target, InputState *input, Assets *assets, EditorC
   state.top_window_at_current_mouse_pos = 0;
   int highest_z                         = INT_MAX;
   for (const auto &[id, window] : state.windows) {
-    if (window.visible && window.z < highest_z &&
-        in_rect({state.input->mouse_x, state.input->mouse_y}, window.rect)) {
+    if (window.visible && window.z < highest_z && in_rect(state.input->mouse_pos, window.rect)) {
       highest_z                             = window.z;
       state.top_window_at_current_mouse_pos = id;
     }
   }
   // find and cache the top popup at the current position
-  state.popup_at_current_mouse_pos =
-      get_popup_at_position({state.input->mouse_x, state.input->mouse_y});
+  state.popup_at_current_mouse_pos = get_popup_at_position(state.input->mouse_pos);
 
   state.current_window = 0;
 
@@ -562,7 +558,7 @@ void start_frame(RenderTarget target, InputState *input, Assets *assets, EditorC
   state.last_element_dragging = false;
   state.last_element_selected = false;
 
-   start_frame_popups();
+  start_frame_popups();
 }
 
 void start_window(String title, Rect rect) {
@@ -596,8 +592,8 @@ void start_window(String title, Rect rect) {
   bool active   = do_active(me);
   bool dragging = do_draggable(me);
   if (dragging) {
-    window.rect.x += state.input->mouse_x - state.input->prev_mouse_x;
-    window.rect.y += state.input->mouse_y - state.input->prev_mouse_y;
+    window.rect.x += state.input->mouse_pos_delta.x;
+    window.rect.y += state.input->mouse_pos_delta.y;
     titlebar_color = darken(titlebar_color, 0.2f);
 
     if (state.anchored_up == me) {
@@ -650,23 +646,23 @@ void start_window(String title, Rect rect) {
       }
       *new_top = 5;
     };
-    if (in_rect({state.input->mouse_x, state.input->mouse_y}, top_handle)) {
+    if (in_rect(state.input->mouse_pos, top_handle)) {
       state.anchored_up = me;
       top_priority(&state.anchored_up_priority);
     }
-    if (in_rect({state.input->mouse_x, state.input->mouse_y}, bottom_handle)) {
+    if (in_rect(state.input->mouse_pos, bottom_handle)) {
       state.anchored_down = me;
       top_priority(&state.anchored_down_priority);
     }
-    if (in_rect({state.input->mouse_x, state.input->mouse_y}, left_handle)) {
+    if (in_rect(state.input->mouse_pos, left_handle)) {
       state.anchored_left = me;
       top_priority(&state.anchored_left_priority);
     }
-    if (in_rect({state.input->mouse_x, state.input->mouse_y}, right_handle)) {
+    if (in_rect(state.input->mouse_pos, right_handle)) {
       state.anchored_right = me;
       top_priority(&state.anchored_right_priority);
     }
-    if (in_rect({state.input->mouse_x, state.input->mouse_y}, center_handle)) {
+    if (in_rect(state.input->mouse_pos, center_handle)) {
       state.anchored_center = me;
     }
   }
@@ -682,8 +678,8 @@ void start_window(String title, Rect rect) {
   bool resize_handle_active   = do_active(resize_handle_id);
   bool resize_handle_dragging = do_draggable(resize_handle_id);
   if (resize_handle_dragging) {
-    window.rect.width += state.input->mouse_x - state.input->prev_mouse_x;
-    window.rect.height += state.input->mouse_y - state.input->prev_mouse_y;
+    window.rect.width += state.input->mouse_pos_delta.x;
+    window.rect.height += state.input->mouse_pos_delta.y;
     window.rect.width = fmax(window.rect.width, state.style.inner_padding.x * 2);
     window.rect.height =
         fmax(window.rect.height, titlebar_rect.height + state.style.inner_padding.y * 2);
@@ -732,15 +728,15 @@ void start_window(String title, Rect rect) {
     control_border_right_color = {0, 0, 1, 1};
   }
   if (top_handle_dragging) {
-    window.rect.y += state.input->mouse_y - state.input->prev_mouse_y;
-    window.rect.height -= state.input->mouse_y - state.input->prev_mouse_y;
+    window.rect.y += state.input->mouse_pos_delta.y;
+    window.rect.height -= state.input->mouse_pos_delta.y;
   } else if (bottom_handle_dragging) {
-    window.rect.height += state.input->mouse_y - state.input->prev_mouse_y;
+    window.rect.height += state.input->mouse_pos_delta.y;
   } else if (left_handle_dragging) {
-    window.rect.x += state.input->mouse_x - state.input->prev_mouse_x;
-    window.rect.width -= state.input->mouse_x - state.input->prev_mouse_x;
+    window.rect.x += state.input->mouse_pos_delta.x;
+    window.rect.width -= state.input->mouse_pos_delta.x;
   } else if (right_handle_dragging) {
-    window.rect.width += state.input->mouse_x - state.input->prev_mouse_x;
+    window.rect.width += state.input->mouse_pos_delta.x;
   }
 
   auto constrained = [](i32 my_priority, ImmId other_window, i32 other_priority) {
@@ -882,9 +878,9 @@ void start_window(String title, Rect rect) {
       scrollbar_color = lighten(scrollbar_color, 0.05f);
     }
     if (scrollbar_dragging) {
-      window.scroll -= scrollbar_ratio * (state.input->mouse_y - state.input->prev_mouse_y);
+      window.scroll -= scrollbar_ratio * state.input->mouse_pos_delta.y;
     }
-    if (in_rect(Vec2f{state.input->mouse_x, state.input->mouse_y}, content_container_rect)) {
+    if (in_rect(state.input->mouse_pos, content_container_rect)) {
       window.scroll += state.input->scrollwheel_count * 20;
     }
 
@@ -941,7 +937,8 @@ void end_window() {
 
 void end_frame(Assets *assets) {
   // window ordering
-  if (state.input->mouse_down_event && state.top_window_at_current_mouse_pos) {
+  if (state.input->mouse_button_down_events[(int)MouseButton::LEFT] &&
+      state.top_window_at_current_mouse_pos) {
     int focused_window_z = state.windows[state.top_window_at_current_mouse_pos].z;
     for (auto &[id, window] : state.windows) {
       if (window.z <= focused_window_z) {
@@ -1252,10 +1249,8 @@ bool translation_gizmo(Vec3f *p) {
 
   Vec3f closest_point_on_axis[3];
 
-  Vec3f ray_origin = screen_to_world(window.content_rect, state.camera,
-                                     {state.input->mouse_x, state.input->mouse_y});
-  Vec3f ray_end    = screen_to_world(window.content_rect, state.camera,
-                                  {state.input->mouse_x, state.input->mouse_y}, .5);
+  Vec3f ray_origin = screen_to_world(window.content_rect, state.camera, state.input->mouse_pos);
+  Vec3f ray_end    = screen_to_world(window.content_rect, state.camera, state.input->mouse_pos, .5);
   Vec3f ray_dir    = {ray_end.x - ray_origin.x, ray_end.y - ray_origin.y, ray_end.z - ray_origin.z};
 
   for (int i = 0; i < 3; i++) {
@@ -1428,10 +1423,8 @@ void rotation_gizmo(Vec3f *rotation, Vec3f p) {
   const float gizmoSize  = 0.03f;
   float scale            = gizmoSize * (dist_from_camera / tanf((3.1415 / 6) / 2.0f));
 
-  Vec3f ray_origin = screen_to_world(window.content_rect, state.camera,
-                                     {state.input->mouse_x, state.input->mouse_y});
-  Vec3f ray_end    = screen_to_world(window.content_rect, state.camera,
-                                  {state.input->mouse_x, state.input->mouse_y}, .5);
+  Vec3f ray_origin = screen_to_world(window.content_rect, state.camera, state.input->mouse_pos);
+  Vec3f ray_end    = screen_to_world(window.content_rect, state.camera, state.input->mouse_pos, .5);
   Vec3f ray_dir    = ray_end - ray_origin;
 
   auto rotate_axis = [&](Vec3f axis) {
@@ -1644,7 +1637,6 @@ void keyframe(ImmId id, int *frame, int track_i = 0) {
   bool hot      = do_hoverable(id, hot_rect, c->content_rect);
   bool active   = do_active(id);
   bool dragging = do_draggable(id);
-  do_right_clickable(id);
 
   Color color = {.2, .9, .3, 1};
   if (hot) {
@@ -1653,7 +1645,7 @@ void keyframe(ImmId id, int *frame, int track_i = 0) {
   }
 
   if (dragging) {
-    float pos     = state.input->mouse_x - c->content_rect.x;
+    float pos     = state.input->mouse_pos.x - c->content_rect.x;
     int new_frame = (pos / c->content_rect.width) * (*twidth) + (*tstart);
     *frame        = new_frame;
   }
@@ -1672,8 +1664,7 @@ void end_timeline() {
   if (!c || !c->visible) return;
 
   bool hot =
-      do_hoverable(me, nothing_else_touched &&
-                           in_rect({state.input->mouse_x, state.input->mouse_y}, c->content_rect) &&
+      do_hoverable(me, nothing_else_touched && in_rect(state.input->mouse_pos, c->content_rect) &&
                            state.top_window_at_current_mouse_pos == state.current_window);
   bool active   = do_active(me);
   bool dragging = do_draggable(me);
@@ -1681,7 +1672,7 @@ void end_timeline() {
   if ((dragging && hot) ||
       (state.just_deactivated == me && hot && !dragging && !state.just_stopped_dragging)) {
     // *tstart -= (state.input->mouse_x - state.input->prev_mouse_x) / 20.f;
-    float pos       = state.input->mouse_x - c->content_rect.x;
+    float pos       = state.input->mouse_pos.x - c->content_rect.x;
     int frame       = (pos / c->content_rect.width) * (*twidth) + (*tstart);
     *tcurrent_frame = frame;
   }

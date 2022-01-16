@@ -117,6 +117,10 @@ Color darken(Color in, float val)
     return hsl_to_rgb({hsl.r, hsl.g, hsl.b - val, hsl.a});
 }
 
+struct Vec2B8 {
+    bool x, y;
+};
+
 struct Vec4i
 {
     uint8_t x, y, z, w;
@@ -125,7 +129,48 @@ struct Vec4i
 struct Vec2f
 {
     float x, y;
+
+    float len() {
+        return sqrt(x * x + y * y);
+    }
 };
+inline Vec2f operator+(const Vec2f &lhs, const Vec2f &rhs)
+{
+    return {lhs.x + rhs.x, lhs.y + rhs.y};
+}
+inline Vec2f operator-(const Vec2f &lhs, const Vec2f &rhs)
+{
+    return {lhs.x - rhs.x, lhs.y - rhs.y};
+}
+inline Vec2f operator*(const Vec2f &lhs, const Vec2f &rhs)
+{
+    return {lhs.x * rhs.x, lhs.y * rhs.y};
+}
+inline Vec2f operator*(const Vec2f &lhs, const float &rhs)
+{
+    return lhs * Vec2f{rhs, rhs};
+}
+inline Vec2f operator*(const float &lhs, const Vec2f &rhs)
+{
+    return rhs * lhs;
+}
+inline Vec2f operator/(const Vec2f &lhs, const Vec2f &rhs)
+{
+    return {lhs.x / rhs.x, lhs.y / rhs.y};
+}
+inline float dot(const Vec2f &lhs, const Vec2f &rhs)
+{
+    return lhs.x * rhs.x + lhs.y * rhs.y;
+}
+inline Vec2B8 operator<(const Vec2f &lhs, const Vec2f &rhs)
+{
+    return {lhs.x < rhs.x, lhs.y < rhs.y};
+}
+inline Vec2B8 operator>(const Vec2f &lhs, const Vec2f &rhs)
+{
+    return {lhs.x > rhs.x, lhs.y > rhs.y};
+}
+
 Vec2f normalize(Vec2f v)
 {
     float len = sqrt(v.x * v.x + v.y * v.y);
@@ -191,10 +236,6 @@ Vec3f normalize(Vec3f v)
 struct Vec4f
 {
     float x, y, z, w;
-};
-
-struct Vec2B8 {
-    bool x, y;
 };
 
 struct Rect

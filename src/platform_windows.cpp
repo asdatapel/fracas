@@ -42,25 +42,26 @@ struct GlfwState
 void fill_input_state(GLFWwindow *window, InputState *state)
 {
     // reset per frame data
-    state->text_input = {};
-    state->key_input = {};
-    state->mouse_down_event = false;
-    state->mouse_up_event = false;
-    state->scrollwheel_count = 0;
-
-    double mouse_x;
-    double mouse_y;
-    state->prev_mouse_x = state->mouse_x;
-    state->prev_mouse_y = state->mouse_y;
-    glfwGetCursorPos(window, &mouse_x, &mouse_y);
-    state->mouse_x = mouse_x;
-    state->mouse_y = mouse_y;
-
     for (int i = 0; i < (int)Keys::INVALID; i++)
     {
         state->key_down_events[i] = false;
         state->key_up_events[i] = false;
     }
+    for (int i = 0; i < (int)MouseButton::COUNT; i++)
+    {
+        state->mouse_button_down_events[i] = false;
+        state->mouse_button_up_events[i] = false;
+    }
+    state->text_input = {};
+    state->key_input = {};
+    state->scrollwheel_count = 0;
+
+    double mouse_x;
+    double mouse_y;
+    glfwGetCursorPos(window, &mouse_x, &mouse_y);
+    state->mouse_pos_prev = state->mouse_pos;
+    state->mouse_pos = {(float)mouse_x, (float)mouse_y};
+    state->mouse_pos_delta = state->mouse_pos - state->mouse_pos_prev;
 }
 
 void character_input_callback(GLFWwindow *window, unsigned int codepoint)
@@ -233,19 +234,29 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
     InputState *input_state = static_cast<GlfwState *>(glfwGetWindowUserPointer(window))->input_state;
 
+    MouseButton mouse_button;
     switch (button)
     {
     case (GLFW_MOUSE_BUTTON_LEFT):
     {
-        input_state->mouse_left = action == GLFW_PRESS;
-
-        if (action == GLFW_PRESS)
-            input_state->mouse_down_event = true;
-        else
-            input_state->mouse_up_event = true;
+        mouse_button = MouseButton::LEFT;
     }
     break;
+    case (GLFW_MOUSE_BUTTON_RIGHT):
+    {
+        mouse_button = MouseButton::RIGHT;
     }
+    break;
+    default:
+      return;
+    }
+    
+    input_state->mouse_buttons[(int)mouse_button] = action == GLFW_PRESS;
+
+    if (action == GLFW_PRESS)
+        input_state->mouse_button_down_events[(int)mouse_button] = true;
+    else
+        input_state->mouse_button_up_events[(int)mouse_button] = true;
 }
 
 void scroll_callback(GLFWwindow *window, double x_offset, double y_offset)

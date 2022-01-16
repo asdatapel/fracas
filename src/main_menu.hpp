@@ -18,9 +18,9 @@ struct Selectable
     {
         Selectable ret = prev;
         ret.just_selected = false;
-        ret.hot = in_rect({(float)input->mouse_x, (float)input->mouse_y}, rect, mask);
+        ret.hot = in_rect(input->mouse_pos, rect, mask);
 
-        if (input->mouse_down_event)
+        if (input->mouse_button_down_events[(int)MouseButton::LEFT])
         {
             if (ret.hot)
             {
@@ -36,7 +36,7 @@ struct Selectable
                 ret.selected = false;
             }
         }
-        if (input->mouse_up_event)
+        if (input->mouse_button_up_events[(int)MouseButton::LEFT])
         {
             if (ret.hot)
             {
@@ -269,7 +269,7 @@ struct List : SelectionGroup
                                    scrollbar_height};
             scrollbar_selectable = Selectable::check(input, scrollbar_rect, scrollbar_selectable);
             if (scrollbar_selectable.focus_started)
-                scrollbar_y_offset += input->mouse_y - input->prev_mouse_y;
+                scrollbar_y_offset += input->mouse_pos_delta.y;
             for (int i = 0; i < input->key_input.len; i++)
             {
                 if (input->key_input[i] == Keys::UP)

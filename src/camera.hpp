@@ -43,13 +43,10 @@ struct EditorCamera : Camera
 
     void update(RenderTarget target, InputState *input)
     {
-        if (input->mouse_left)
+        if (input->mouse_buttons[(int)MouseButton::LEFT])
         {
-            float diff_x = input->mouse_x - input->prev_mouse_x;
-            float diff_y = input->mouse_y - input->prev_mouse_y;
-
-            x_rot -= diff_x * 0.1f;
-            y_rot += diff_y * 0.1f;
+            x_rot -= input->mouse_pos_delta.x * 0.1f;
+            y_rot += input->mouse_pos_delta.y * 0.1f;
 
             if (y_rot >= 89.0f)
                 y_rot = 89.0f;
@@ -110,8 +107,9 @@ void bind_camera(Shader shader, Camera camera, Vec3f camera_pos)
     glUniform3f(shader.uniform_handles[(int)UniformId::CAMERA_POSITION], camera_pos.x, camera_pos.y, camera_pos.z);
 }
 
-Vec3f screen_to_world(Rect target_rect, Camera *camera, Vec3f p, float z = 0.f)
+Vec3f screen_to_world(Rect target_rect, Camera *camera, Vec2f screen_pos, float z = 0.f)
 {
+    Vec3f p = {screen_pos.x, screen_pos.y, 0};
     glm::vec4 gl_screen = {(p.x - target_rect.x) / (target_rect.width / 2.f) - 1,
                            -(p.y - target_rect.y) / (target_rect.height / 2.f) + 1,
                            z, 1.f};

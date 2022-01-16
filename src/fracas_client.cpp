@@ -17,7 +17,6 @@
 #include "platform.hpp"
 #include "scene/scene.hpp"
 #include "editor.hpp"
-#include "ui.hpp"
 
 #include "graphics/graphics_opengl.cpp"
 #include "platform_windows.cpp"
