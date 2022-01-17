@@ -179,6 +179,9 @@ struct UiState {
   ImmId just_selected         = 0;
   ImmId just_unselected       = 0;
 
+  ImmId right_click_started        = 0;
+  bool was_last_item_right_clicked = false;
+
   Vec3f gizmo_last_contact_point;
 
   bool last_element_hot      = false;
@@ -202,6 +205,8 @@ struct UiState {
   StackAllocator per_frame_alloc;
 
   DrawList global_draw_list;
+
+  u64 frame = 0;
 };
 
 UiState state;
@@ -307,6 +312,8 @@ namespace Imm {
 struct Popup {
   Vec2f pos;
   Vec2f size;
+
+  u64 last_frame = 0;
 };
 
 // - there is only one layer of popups, they shouldn't overlap
@@ -316,6 +323,8 @@ struct Popup {
 std::map<ImmId, Popup> popups;
 std::deque<ImmId> open_popups;
 std::stack<ImmId> popup_stack;
+
+std::map<ImmId, Vec2f> uninitted_popups;
 
 ImmId get_current_popup() {
   if (popup_stack.size()) {
@@ -343,9 +352,22 @@ void open_popup(ImmId id) {
   open_popups.clear();
   open_popups.push_back(id);
 }
+void open_popup(ImmId id, Vec2f new_pos) {
+  open_popups.clear();
+  open_popups.push_back(id);
+  if (popups.count(id)) {
+    popups[id].pos = new_pos;
+  } else {
+    uninitted_popups[id] = new_pos;
+  }
+}
 void open_popup(String name) {
   ImmId id = hash(name);
   open_popup(id);
+}
+void open_popup(String name, Vec2f new_pos) {
+  ImmId id = hash(name);
+  open_popup(id, new_pos);
 }
 
 void close_popup() {
@@ -353,6 +375,7 @@ void close_popup() {
   while (open_popups.back() != id) {
     open_popups.pop_back();
   }
+  open_popups.pop_back();
 }
 
 // TODO: might be able to merge popups and subpopups
@@ -365,17 +388,22 @@ Container *start_popup(ImmId id, Rect initial_rect) {
         {initial_rect.x, initial_rect.y},
         {initial_rect.width, initial_rect.height},
     };
+
+    if (uninitted_popups.count(id)) {
+      popups[id].pos = uninitted_popups[id];
+      uninitted_popups.erase(id);
+    }
   }
   Popup *popup = &popups[id];
 
-  Container *c      = push_container({initial_rect.x, initial_rect.y, popup->size.x, popup->size.y},
-                                &state.global_draw_list);
+  Container *c      = push_container({popup->pos, popup->size}, &state.global_draw_list);
   c->final_size_ptr = &popup->size;
 
-  bool visible = is_popup_open(id);
+  bool visible = is_popup_open(id) && popup->last_frame != state.frame;
   if (visible) {
     popup_stack.push(id);
     c->draw_list->push_rect(c->content_rect, {1, 0, 0, 1});
+    popup->last_frame = state.frame;
   }
   c->visible = visible;
 
@@ -409,6 +437,12 @@ float get_text_width(String text, float size) {
   return get_text_width(*font, text);
 }
 
+bool in_top_container() {
+  return state.popup_at_current_mouse_pos
+             ? state.popup_at_current_mouse_pos == get_current_popup()
+             : state.top_window_at_current_mouse_pos == state.current_window;
+}
+
 bool do_hoverable(ImmId id, bool is_hot) {
   if (is_hot) {
     state.hot = id;
@@ -419,10 +453,7 @@ bool do_hoverable(ImmId id, bool is_hot) {
   return state.last_element_hot;
 }
 bool do_hoverable(ImmId id, Rect rect, Rect mask = {}) {
-  bool in_top_container = state.popup_at_current_mouse_pos
-                              ? state.popup_at_current_mouse_pos == get_current_popup()
-                              : state.top_window_at_current_mouse_pos == state.current_window;
-  bool is_hot           = in_top_container && in_rect(state.input->mouse_pos, rect, mask);
+  bool is_hot = in_top_container() && in_rect(state.input->mouse_pos, rect, mask);
   return do_hoverable(id, is_hot);
 }
 
@@ -433,7 +464,6 @@ bool do_active(ImmId id) {
       state.just_deactivated = id;
     }
   }
-
   if (state.input->mouse_button_down_events[(int)MouseButton::LEFT]) {
     if (state.hot == id) {
       state.active          = id;
@@ -446,6 +476,7 @@ bool do_active(ImmId id) {
     }
   }
   state.last_element_active = (state.active == id);
+
   return state.last_element_active;
 }
 bool do_draggable(ImmId id) {
@@ -464,6 +495,22 @@ bool do_draggable(ImmId id) {
   return false;
 }
 bool do_selectable(ImmId id, bool on_down = false) {
+  // right click
+  {
+    state.was_last_item_right_clicked = false;
+    if (state.input->mouse_button_up_events[(int)MouseButton::RIGHT]) {
+      if (state.right_click_started == id) {
+        if (state.hot == id) {
+          state.was_last_item_right_clicked = true;
+        }
+        state.right_click_started = 0;
+      }
+    }
+    if (state.input->mouse_button_down_events[(int)MouseButton::RIGHT]) {
+      if (state.hot == id) state.right_click_started = id;
+    }
+  }
+
   bool hot                   = state.hot == id;
   bool triggered             = on_down ? state.just_activated == id : state.just_deactivated == id;
   bool just_stopped_dragging = state.just_stopped_dragging == id;
@@ -487,6 +534,8 @@ bool do_selectable(ImmId id, bool on_down = false) {
 }
 
 void start_frame(RenderTarget target, InputState *input, Assets *assets, EditorCamera *camera) {
+  state.frame++;
+
   state.per_frame_alloc.reset();
 
   state.target = target;
@@ -1552,6 +1601,12 @@ void rotation_gizmo(Vec3f *rotation, Vec3f p) {
 // timelines
 namespace Imm {
 
+enum struct KeyframeShape {
+  DIAMOND,
+  SQUARE,
+  TRIANGLE,
+};
+
 struct TimelineParameters {
   int duration;
   String units;
@@ -1637,6 +1692,7 @@ void keyframe(ImmId id, int *frame, int track_i = 0) {
   bool hot      = do_hoverable(id, hot_rect, c->content_rect);
   bool active   = do_active(id);
   bool dragging = do_draggable(id);
+  bool selected = do_selectable(id);
 
   Color color = {.2, .9, .3, 1};
   if (hot) {
@@ -1665,7 +1721,7 @@ void end_timeline() {
 
   bool hot =
       do_hoverable(me, nothing_else_touched && in_rect(state.input->mouse_pos, c->content_rect) &&
-                           state.top_window_at_current_mouse_pos == state.current_window);
+                           in_top_container());
   bool active   = do_active(me);
   bool dragging = do_draggable(me);
 

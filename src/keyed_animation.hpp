@@ -64,7 +64,7 @@ struct KeyedAnimationTrack {
 
     if (base_key_i + 1 < keys.len) {
       Key target_key    = keys[base_key_i + 1];
-      f32 lerp_distance = target_key.frame - base_key.frame;
+      i32 lerp_distance = target_key.frame - base_key.frame;
 
       if (lerp_distance != 0) {
         f32 lerp_t = (frame - base_key.frame) / lerp_distance;
@@ -93,8 +93,8 @@ struct KeyedAnimationTrack {
                                  key_2.transform.position, key_3.transform.position}};
           Spline3 rot_spline   = {{key_0.transform.rotation, key_1.transform.rotation,
                                  key_2.transform.rotation, key_3.transform.rotation}};
-          Spline3 scale_spline = {{key_0.transform.rotation, key_1.transform.rotation,
-                                   key_2.transform.rotation, key_3.transform.rotation}};
+          Spline3 scale_spline = {{key_0.transform.scale, key_1.transform.scale,
+                                   key_2.transform.scale, key_3.transform.scale}};
 
           transform.position = catmull_rom(lerp_t, pos_spline);
           transform.rotation = catmull_rom(lerp_t, rot_spline);
@@ -125,8 +125,8 @@ struct KeyedAnimation {
     for (u32 i = 0; i < tracks.len; i++) {
       KeyedAnimationTrack &track = tracks[i];
       Entity *entity             = scene->get(track.entity_id);
-      
-      entity->transform          = track.eval(t, fps);
+
+      entity->transform = track.eval(t, fps);
     }
   }
   void apply(Scene *scene, i32 frame) {

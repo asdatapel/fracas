@@ -243,6 +243,20 @@ struct Rect
     float x = 0, y = 0;
     float width = 0, height = 0;
 
+    Rect() {}
+    Rect(float x, float y, float width, float height) {
+        this->x = x;
+        this->y = y;
+        this->width  = width;
+        this->height = height;
+    }
+    Rect(Vec2f pos, Vec2f size) {
+        this->x = pos.x;
+        this->y = pos.y;
+        this->width  = size.x;
+        this->height = size.y;
+    }
+
     void set_bottom(float down)
     {
         height = down - y;

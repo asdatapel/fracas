@@ -438,8 +438,32 @@ struct Editor
             KeyedAnimationTrack &track = seq.tracks[track_i];
             for (int i = 0; i < track.keys.len; i++) {
                 Imm::keyframe((ImmId)&track.keys[i], &track.keys[i].frame, track_i);
+                if (Imm::state.was_last_item_right_clicked) {
+                    Imm::open_popup((ImmId)&track.keys[i], input->mouse_pos);
+                }
+                if (Imm::start_popup((ImmId)&track.keys[i], {})) {
+                    auto add_list_item = [&](ImmId id, String name,
+                                            KeyedAnimationTrack::Key::InterpolationType type) {
+                      if (Imm::list_item(id, name, track.keys[i].interpolation_type == type)) {
+                        track.keys[i].interpolation_type = type;
+                      }
+                      if (Imm::state.just_selected == id) Imm::close_popup();
+                    };
+                    ImmId id = (ImmId)&track.keys[i].interpolation_type;
+                    add_list_item(id + 0, "Constant",
+                                  KeyedAnimationTrack::Key::InterpolationType::CONSTANT);
+                    add_list_item(id + 1, "Linear",
+                                  KeyedAnimationTrack::Key::InterpolationType::LINEAR);
+                    add_list_item(id + 2, "Smoothstep",
+                                  KeyedAnimationTrack::Key::InterpolationType::SMOOTHSTEP);
+                    add_list_item(id + 3, "Spline",
+                                  KeyedAnimationTrack::Key::InterpolationType::SPLINE);
+                }
+                Imm::end_popup();
             }
         }
+
+
         Imm::end_timeline();
         Imm::end_columns();
         Imm::end_window();
