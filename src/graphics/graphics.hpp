@@ -28,6 +28,7 @@ Shader env_filter_shader;
 Shader brdf_lut_shader;
 Shader tonemap_shader;
 Shader blur_shader;
+Shader add_shader;
 Shader twod_shader;
 
 // TODO move this to the asset loading system

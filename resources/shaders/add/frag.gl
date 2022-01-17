@@ -1,0 +1,12 @@
+#version 430 core
+out vec4 FragColor;
+
+uniform sampler2D source_a;
+uniform sampler2D source_b;
+
+in vec2 frag_uv;
+
+void main()
+{
+    FragColor = texture(source_a, frag_uv) + texture(source_b, frag_uv);
+} 
