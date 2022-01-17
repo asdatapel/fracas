@@ -46,9 +46,12 @@ struct Editor
         }
         else
         {
+            static float exposure = 1.f;
+            if (input->keys[(int)Keys::LEFT]) exposure -= 0.01f;
+            if (input->keys[(int)Keys::RIGHT]) exposure += 0.01f;
             Transform camera_transform;
             Camera *camera = get_camera(&editor_scenes->main, &camera_transform);
-            editor_scenes->update_and_draw(camera, camera_transform.position);
+            editor_scenes->update_and_draw(camera, camera_transform.position, exposure);
             debug_ui(editor_scenes, backbuffer, input, assets, mem);
         }
     }

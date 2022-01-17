@@ -29,7 +29,7 @@ struct SceneManager
         game.update(timestep, {&main, &xs, assets}, rpc_client, input);
     }
 
-    void update_and_draw(Camera *debug_camera, Vec3f debug_camera_pos)
+    void update_and_draw(Camera *debug_camera, Vec3f debug_camera_pos, float exposure = 1.f)
     {
         main.update_and_draw(debug_camera, debug_camera_pos);
 
@@ -47,11 +47,11 @@ struct SceneManager
         bloomer.do_bloom(main.target);
 
         bind_shader(tonemap_shader);
-        bind_1f(tonemap_shader, UniformId::EXPOSURE, 1);
+        bind_1f(tonemap_shader, UniformId::EXPOSURE, exposure);
         bind_texture(tonemap_shader, UniformId::BASE, main.target.color_tex);
         bind_texture(tonemap_shader, UniformId::BLOOM, bloomer.get_final().color_tex);
-        target.bind();
 
+        target.bind();
         glDisable(GL_DEPTH_TEST);
         draw_rect();
         glEnable(GL_DEPTH_TEST);

@@ -40,7 +40,7 @@ void main()
 {
     vec3 hdr_color = texture(base, frag_uv).rgb;
     vec3 bloom_color = texture(bloom, frag_uv).rgb;
-    vec3 color = mix(hdr_color, bloom_color, 0.1);
+    vec3 color = mix(hdr_color, bloom_color, 0.05);
     color *= exposure;  // Hardcoded Exposure Adjustment
 
    float ExposureBias = 2.0f;

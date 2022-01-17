@@ -7,8 +7,8 @@ shader_files += ["\\".join([root, f]) for root,dirs,files in os.walk("./shaders"
 for filename in shader_files:
     file = open(filename, 'r')
     split_lines = [line.split() for line in file if line.startswith("uniform")]
-    uniform_names = [l[-1][:-1] for l in split_lines if not l[1].startswith("sampler")]
-    sampler_names = [l[-1][:-1] for l in split_lines if l[1].startswith("sampler")]
+    uniform_names = [l[-1][:-1] for l in split_lines if not l[-2].startswith("sampler")]
+    sampler_names = [l[-1][:-1] for l in split_lines if l[-2].startswith("sampler")]
 
     for u in uniform_names:
         all_uniforms[u] = False

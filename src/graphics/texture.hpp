@@ -119,9 +119,9 @@ struct Texture2D : Texture
         auto [gl_internalformat, gl_format] = format_to_opengl(format);
         glTexImage2D(GL_TEXTURE_2D, 0, gl_internalformat, width, height, 0, gl_format, GL_UNSIGNED_BYTE, 0);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, want_mipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, want_mipmaps ? GL_LINEAR : GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
+        // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
