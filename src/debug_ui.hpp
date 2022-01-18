@@ -276,13 +276,12 @@ struct Container {
 
 std::stack<Container> containers;
 
-Container *push_container(Rect rect, DrawList *draw_list) {
-  containers.push({rect, draw_list});
-  return &containers.top();
-}
 Container *push_container(Container container) {
   containers.push(container);
   return &containers.top();
+}
+Container *push_container(Rect rect, DrawList *draw_list) {
+  return push_container({rect, draw_list});
 }
 
 void push_subcontainer(Rect rect) {
@@ -1637,6 +1636,7 @@ void start_timeline(String name, int *current_frame, float *start, float *width)
 
   auto c = get_current_container();
   if (!c || !c->visible) return;
+  c->draw_list->push_clip(c->content_rect);
 
   *start         = fmax(*start, 0.f);
   int left_bound = ((int)(*start / 5)) * 5;
