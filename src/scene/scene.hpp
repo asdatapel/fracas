@@ -3,6 +3,8 @@
 #include <array>
 
 #include "../animation.hpp"
+#include "../assets.hpp"
+#include "entity.hpp"
 
 struct Scene
 {
@@ -29,6 +31,10 @@ struct Scene
     void set_planar_target(RenderTarget target);
 
     void render_entities(Camera *camera, Vec3f camera_postion);
+
+    void apply_keyed_animation(KeyedAnimation *keyed_anim, f32 t);
+    void apply_keyed_animation(KeyedAnimation *keyed_anim, i32 frame);
+
 };
 
 #include "scene.cpp"

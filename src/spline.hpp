@@ -1,10 +1,6 @@
 #pragma once
 
-#include "camera.hpp"
-#include "debug_ui.hpp"
-#include "graphics/graphics.hpp"
 #include "math.hpp"
-#include "scene/entity.hpp"
 
 struct Segment
 {

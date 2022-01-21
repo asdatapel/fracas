@@ -2,7 +2,9 @@
 
 #include "../animation.hpp"
 #include "../camera.hpp"
+#include "../common.hpp"
 #include "../math.hpp"
+#include "../material.hpp"
 #include "../util.hpp"
 
 enum struct EntityType

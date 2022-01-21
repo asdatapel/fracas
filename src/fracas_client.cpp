@@ -6,16 +6,11 @@
 #include <ws2tcpip.h>
 
 #include "assets.hpp"
-#include "camera.hpp"
-#include "debug_ui.hpp"
-#include "font.hpp"
 #include "game_scripts.hpp"
-#include "mesh.hpp"
 #include "main_menu.hpp"
 #include "net/net.hpp"
 #include "net/generated_rpc_client.hpp"
 #include "platform.hpp"
-#include "scene/scene.hpp"
 #include "editor.hpp"
 
 #include "graphics/graphics_opengl.cpp"
@@ -28,6 +23,7 @@ Editor editor;
 Assets assets;
 SceneManager scenes;
 
+StackAllocator main_memory;
 StackAllocator allocator;
 StackAllocator temp;
 Memory memory{&allocator, &temp};
@@ -44,10 +40,11 @@ bool init_if_not()
         init_net();
         server.open("127.0.0.1", 6519, false);
 
+        main_memory.init(1024ull * 1024 * 1024 * 2);
         allocator.init(1024ull * 1024 * 1024 * 2); // 2gb
         temp.init(1024 * 1024 * 100);              // 100 mb
 
-        assets.load("resources/test/main_assets.yaml", memory);
+        assets.load("resources/test/main_assets.yaml", &main_memory);
 
         scenes.init(memory);
         editor.init(&scenes, &assets, memory);

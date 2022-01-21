@@ -4,14 +4,15 @@
 
 #include <stb/stb_image.hpp>
 
+#include <scene_def.hpp>
+
 #include "../assets.hpp"
 #include "../camera.hpp"
-#include "../debug_ui.hpp"
 #include "../graphics/graphics.hpp"
 #include "../graphics/framebuffer.hpp"
 #include "../graphics/bloomer.hpp"
 #include "../material.hpp"
-#include <scene_def.hpp>
+#include "../yaml.hpp"
 
 const char *debug_hdr = "resources/hdri/Newport_Loft_Ref.hdr";
 Texture2D load_hdri(const char *file)
@@ -478,4 +479,17 @@ void Scene::render_entities(Camera *camera, Vec3f camera_postion)
             }
         }
     }
+}
+
+void Scene::apply_keyed_animation(KeyedAnimation *keyed_anim, f32 t) {
+  for (u32 i = 0; i < keyed_anim->tracks.count; i++) {
+    KeyedAnimationTrack &track = keyed_anim->tracks[i];
+    Entity *entity             = get(track.entity_id);
+
+    entity->transform = track.eval(t, keyed_anim->fps);
+  }
+}
+void Scene::apply_keyed_animation(KeyedAnimation *keyed_anim, i32 frame) {
+  i32 t = frame / keyed_anim->fps; 
+  apply_keyed_animation(keyed_anim, t);
 }

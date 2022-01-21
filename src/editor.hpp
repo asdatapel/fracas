@@ -1,6 +1,7 @@
 #pragma once
 
 #include "animation.hpp"
+#include "debug_ui.hpp"
 #include "keyed_animation.hpp"
 #include "scene/scene.hpp"
 #include "scene/scene_manager.hpp"
@@ -136,7 +137,16 @@ struct Editor
 
         Imm::start_frame(target, input, assets, &debug_camera);
 
-        if (Imm::start_menubar_menu("Wind12312ows")) {
+        if (Imm::start_menubar_menu("File")) {
+            if (Imm::button("Save")) {
+                const char *script_file = "resources/test/scripts.yaml";
+                String out = serialize(&editor_scenes->game, mem.temp);
+                write_file(script_file, out);
+
+                editor_scenes->main.serialize("resources/test/main_scene.yaml", assets, mem.temp);
+
+                Imm::close_popup();
+            }
             static bool menu_1 = false;
             static bool menu_2 = false;
             static bool menu_3 = false;
@@ -324,42 +334,37 @@ struct Editor
         Imm::list_item((ImmId)&w, "Four");
         Imm::end_window();
 
-        static KeyedAnimation seq{30};
+
+        KeyedAnimationTrack *selected_track = nullptr;
         static i32 selected_track_i = -1;
+        static KeyedAnimation *selected_keyed_animation = nullptr;
         static float play_t = 0;
         static bool playing_timeline = false;
         static int current_frame = 0;
+
+        Imm::start_window("Assets", {1000, 500, 600, 400});
+        if (Imm::button("Add KeyedAnimation")) {
+          KeyedAnimation anim(30);
+          assets->keyed_animations.push_back(anim);
+        }
+        for (int i = 0; i < assets->keyed_animations.size; i++) {
+          if (assets->keyed_animations.data[i].assigned) {
+            KeyedAnimation *ka = &assets->keyed_animations.data[i].value;
+            Imm::list_item((ImmId)ka, String::from(i, mem.temp),
+                               ka == selected_keyed_animation);
+            if (Imm::state.last_element_just_selected) {
+              selected_keyed_animation = ka;
+              selected_track_i = -1;
+            }
+          }
+        }
+        Imm::end_window();
+
         Imm::start_window("Camera Timeline", {50, 50, 200, 500});
         Imm::label(String::from(current_frame, mem.temp));
-
-        KeyedAnimationTrack *selected_track = nullptr;
-        if (selected_track_i >= 0) {
-            selected_track = &seq.tracks[selected_track_i];
-        }
-        if (selected_track) {
-            if (Imm::button("Add camera key CONSTANT"))
-            {
-                Transform t;
-                Camera *camera = get_camera(&scenes->main, &t);
-                selected_track->add_key(t, current_frame, KeyedAnimationTrack::Key::InterpolationType::CONSTANT);
-            }
-            if (Imm::button("Add camera key LINEAR"))
-            {
-                Transform t;
-                Camera *camera = get_camera(&scenes->main, &t);
-                selected_track->add_key(t, current_frame, KeyedAnimationTrack::Key::InterpolationType::LINEAR);
-            }
-            if (Imm::button("Add camera key SMOOTHSTEP"))
-            {
-                Transform t;
-                Camera *camera = get_camera(&scenes->main, &t);
-                selected_track->add_key(t, current_frame, KeyedAnimationTrack::Key::InterpolationType::SMOOTHSTEP);
-            }
-            if (Imm::button("Add camera key SPLINE"))
-            {
-                Transform t;
-                Camera *camera = get_camera(&scenes->main, &t);
-                selected_track->add_key(t, current_frame, KeyedAnimationTrack::Key::InterpolationType::SPLINE);
+        if (selected_keyed_animation) {
+            if (selected_track_i >= 0) {
+                selected_track = &selected_keyed_animation->tracks[selected_track_i];
             }
             if (Imm::button("play"))
             {
@@ -369,104 +374,105 @@ struct Editor
                     play_t = 0;
                 }
             }
-        }
-        if (selected_track && selected_track->keys.len)
-        {
-            Transform tr = seq.eval(selected_track_i, 0);
-            for (float t = 0; t < 50.f; t += 0.01f)
+            if (selected_track && selected_track->keys.count)
             {
-                Transform trn =  seq.eval(selected_track_i, t);
-                lines.append(tr.position.x);
-                lines.append(tr.position.y);
-                lines.append(tr.position.z);
-                lines.append(0);
-                lines.append(1);
-                lines.append(0);
-                lines.append(1);
-                lines.append(trn.position.x);
-                lines.append(trn.position.y);
-                lines.append(trn.position.z);
-                lines.append(0);
-                lines.append(1);
-                lines.append(0);
-                lines.append(1);
-                tr = trn;
+                Transform tr = selected_keyed_animation->eval(selected_track_i, 0);
+                for (float t = 0; t < 50.f; t += 0.01f)
+                {
+                    Transform trn =  selected_keyed_animation->eval(selected_track_i, t);
+                    lines.append(tr.position.x);
+                    lines.append(tr.position.y);
+                    lines.append(tr.position.z);
+                    lines.append(0);
+                    lines.append(1);
+                    lines.append(0);
+                    lines.append(1);
+                    lines.append(trn.position.x);
+                    lines.append(trn.position.y);
+                    lines.append(trn.position.z);
+                    lines.append(0);
+                    lines.append(1);
+                    lines.append(0);
+                    lines.append(1);
+                    tr = trn;
+                }
             }
-        }
-        if (playing_timeline)
-        {
-            seq.apply(&scenes->main, play_t);
-            play_t += 1 / 60.f;
+            if (playing_timeline)
+            {
+                scenes->main.apply_keyed_animation(selected_keyed_animation, play_t);
+                play_t += 1 / 60.f;
+            }
         }
         Imm::end_window();
 
         Imm::start_window("Timeline", {1000, 500, 600, 400});
         static float column_width = 200.f;
         Imm::first_column(&column_width);
-        if (Imm::button(Imm::hash("Add Track"), "Add Track")) {
-            if (selected_entity) seq.add_track(selected_entity_i);
-        }
-        if (selected_track) {
-          if (Imm::button(Imm::hash("Add Key From Camera Transform"), "Add Key From Camera Transform")) {
-            Transform t;
-            Camera *camera = get_camera(&scenes->main, &t);
-            selected_track->add_key(
-                t, current_frame,
-                KeyedAnimationTrack::Key::InterpolationType::LINEAR);
-          }
-          if (Imm::button(Imm::hash("asdfcvbvbvx"), "Add Key From Entity Transform")) {
-            Entity *entity = scenes->main.get(selected_track->entity_id);
-            Transform t = entity->transform;
-            selected_track->add_key(
-                t, current_frame,
-                KeyedAnimationTrack::Key::InterpolationType::LINEAR);
-          }
-        }
+        if (selected_keyed_animation) {
+            if (Imm::button(Imm::hash("Add Track"), "Add Track")) {
+              if (selected_entity) selected_keyed_animation->add_track(selected_entity_i);
+            }
+            if (selected_track) {
+                if (Imm::button(Imm::hash("Add Key From Camera Transform"), "Add Key From Camera Transform")) {
+                    Transform t;
+                    Camera *camera = get_camera(&scenes->main, &t);
+                    selected_track->add_key(
+                        t, current_frame,
+                        KeyedAnimationTrack::Key::InterpolationType::LINEAR);
+                }
+                if (Imm::button(Imm::hash("asdfcvbvbvx"), "Add Key From Entity Transform")) {
+                    Entity *entity = scenes->main.get(selected_track->entity_id);
+                    Transform t = entity->transform;
+                    selected_track->add_key(
+                        t, current_frame,
+                        KeyedAnimationTrack::Key::InterpolationType::LINEAR);
+                }
+            }
 
-        for (u32 track_i = 0; track_i < seq.tracks.len; track_i++) {
-          KeyedAnimationTrack *track = &seq.tracks[track_i];
-          if (Imm::list_item(
-                  (ImmId) track,
-                  scenes->main.get(track->entity_id)->debug_tag.name,
-                  track_i == selected_track_i))
-            selected_track_i = track_i;
+            for (u32 track_i = 0; track_i < selected_keyed_animation->tracks.count; track_i++) {
+            KeyedAnimationTrack *track = &selected_keyed_animation->tracks[track_i];
+            if (Imm::list_item(
+                    (ImmId) track,
+                    scenes->main.get(track->entity_id)->debug_tag.name,
+                    track_i == selected_track_i))
+                selected_track_i = track_i;
+            }
         }
-
         Imm::next_column(nullptr);
 
         static float timeline_start = 0;
         static float timeline_width = 60;
         Imm::start_timeline("testtimeline", &current_frame, &timeline_start, &timeline_width);
-        for (int track_i = 0; track_i < seq.tracks.len; track_i++) {
-            KeyedAnimationTrack &track = seq.tracks[track_i];
-            for (int i = 0; i < track.keys.len; i++) {
-                Imm::keyframe((ImmId)&track.keys[i], &track.keys[i].frame, track_i);
-                if (Imm::state.was_last_item_right_clicked) {
-                    Imm::open_popup((ImmId)&track.keys[i], input->mouse_pos);
+        if (selected_keyed_animation) {
+            for (int track_i = 0; track_i < selected_keyed_animation->tracks.count; track_i++) {
+                KeyedAnimationTrack &track = selected_keyed_animation->tracks[track_i];
+                for (int i = 0; i < track.keys.count; i++) {
+                    Imm::keyframe((ImmId)&track.keys[i], &track.keys[i].frame, track_i);
+                    if (Imm::state.was_last_item_right_clicked) {
+                        Imm::open_popup((ImmId)&track.keys[i], input->mouse_pos);
+                    }
+                    if (Imm::start_popup((ImmId)&track.keys[i], {})) {
+                        auto add_list_item = [&](ImmId id, String name,
+                                                KeyedAnimationTrack::Key::InterpolationType type) {
+                        if (Imm::list_item(id, name, track.keys[i].interpolation_type == type)) {
+                            track.keys[i].interpolation_type = type;
+                        }
+                        if (Imm::state.just_selected == id) Imm::close_popup();
+                        };
+                        ImmId id = (ImmId)&track.keys[i].interpolation_type;
+                        add_list_item(id + 0, "Constant",
+                                    KeyedAnimationTrack::Key::InterpolationType::CONSTANT);
+                        add_list_item(id + 1, "Linear",
+                                    KeyedAnimationTrack::Key::InterpolationType::LINEAR);
+                        add_list_item(id + 2, "Smoothstep",
+                                    KeyedAnimationTrack::Key::InterpolationType::SMOOTHSTEP);
+                        add_list_item(id + 3, "Spline",
+                                    KeyedAnimationTrack::Key::InterpolationType::SPLINE);
+                    }
+                    Imm::end_popup();
                 }
-                if (Imm::start_popup((ImmId)&track.keys[i], {})) {
-                    auto add_list_item = [&](ImmId id, String name,
-                                            KeyedAnimationTrack::Key::InterpolationType type) {
-                      if (Imm::list_item(id, name, track.keys[i].interpolation_type == type)) {
-                        track.keys[i].interpolation_type = type;
-                      }
-                      if (Imm::state.just_selected == id) Imm::close_popup();
-                    };
-                    ImmId id = (ImmId)&track.keys[i].interpolation_type;
-                    add_list_item(id + 0, "Constant",
-                                  KeyedAnimationTrack::Key::InterpolationType::CONSTANT);
-                    add_list_item(id + 1, "Linear",
-                                  KeyedAnimationTrack::Key::InterpolationType::LINEAR);
-                    add_list_item(id + 2, "Smoothstep",
-                                  KeyedAnimationTrack::Key::InterpolationType::SMOOTHSTEP);
-                    add_list_item(id + 3, "Spline",
-                                  KeyedAnimationTrack::Key::InterpolationType::SPLINE);
-                }
-                Imm::end_popup();
             }
         }
-
-
         Imm::end_timeline();
         Imm::end_columns();
         Imm::end_window();

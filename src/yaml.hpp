@@ -1,7 +1,9 @@
 #pragma once
 
+#include "math.hpp"
 #include "platform.hpp"
 #include "util.hpp"
+#include <cctype>
 
 namespace YAML
 {

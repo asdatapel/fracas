@@ -2,7 +2,51 @@
 
 #include "util.hpp"
 
+#include "global_allocators.hpp"
 #include "scene/entity.hpp"
+#include "spline.hpp"
+
+template <typename T>
+struct DynamicArray {
+  T *elements        = nullptr;
+  u32 count          = 0;
+  u32 allocated_size = 0;
+
+  StackAllocator *allocator;
+
+  DynamicArray(StackAllocator *allocator) {
+    this->allocator = allocator;
+
+    allocated_size = 2;
+    elements       = (T *)allocator->alloc(sizeof(T) * allocated_size);
+  }
+
+  void resize(u32 new_size) {
+    T *new_elements       = (T *)allocator->resize((char *)elements, sizeof(T) * new_size);
+
+    if (new_elements != elements) {
+      u32 to_copy_n = std::min(allocated_size, new_size);
+      memcpy(new_elements, elements, to_copy_n * sizeof(T));
+    }
+
+    allocated_size = new_size;
+    elements = new_elements;
+  }
+
+  T &push_back(T val) {
+    if (count >= allocated_size) {
+      resize(allocated_size * 2);
+    }
+    elements[count] = val;
+    count++;
+    return elements[count - 1];
+  }
+
+  T &operator[](u32 i) {
+    assert(i < count);
+    return elements[i];
+  }
+};
 
 struct KeyedAnimationTrack {
   struct Key {
@@ -19,11 +63,15 @@ struct KeyedAnimationTrack {
   };
 
   EntityId entity_id;
-  Array<Key, 16> keys;
+  DynamicArray<Key> keys;
+
+  KeyedAnimationTrack() : 
+  keys(&assets_allocator)
+   {}
 
   void add_key(Transform transform, i32 frame, Key::InterpolationType interpolation_type) {
     i32 pos = 0;
-    while (pos < keys.len) {
+    while (pos < keys.count) {
       if (keys[pos].frame == frame) {
         keys[pos].transform          = transform;
         keys[pos].interpolation_type = interpolation_type;
@@ -35,8 +83,8 @@ struct KeyedAnimationTrack {
       pos++;
     }
 
-    keys.append({});
-    for (i32 i = keys.len - 1; i > pos; i--) {
+    keys.push_back({});
+    for (i32 i = keys.count - 1; i > pos; i--) {
       keys[i] = keys[i - 1];
     }
     keys[pos].transform          = transform;
@@ -45,13 +93,13 @@ struct KeyedAnimationTrack {
   }
 
   Transform eval(f32 t, i32 fps) {
-    if (keys.len == 0) return {};
+    if (keys.count == 0) return {};
 
     f32 frame = t * fps;
 
     i32 base_key_i = 0;
-    while (base_key_i < keys.len) {
-      if (base_key_i == keys.len - 1 || keys[base_key_i + 1].frame >= frame) {
+    while (base_key_i < keys.count) {
+      if (base_key_i == keys.count - 1 || keys[base_key_i + 1].frame >= frame) {
         break;
       }
       base_key_i++;
@@ -62,7 +110,7 @@ struct KeyedAnimationTrack {
     // default to constant interpolation
     Transform transform = base_key.transform;
 
-    if (base_key_i + 1 < keys.len) {
+    if (base_key_i + 1 < keys.count) {
       Key target_key    = keys[base_key_i + 1];
       i32 lerp_distance = target_key.frame - base_key.frame;
 
@@ -87,7 +135,7 @@ struct KeyedAnimationTrack {
           Key key_0 = base_key_i > 0 ? keys[base_key_i - 1] : base_key;
           Key key_1 = base_key;
           Key key_2 = target_key;
-          Key key_3 = base_key_i + 2 < keys.len ? keys[base_key_i + 2] : target_key;
+          Key key_3 = base_key_i + 2 < keys.count ? keys[base_key_i + 2] : target_key;
 
           Spline3 pos_spline   = {{key_0.transform.position, key_1.transform.position,
                                  key_2.transform.position, key_3.transform.position}};
@@ -109,33 +157,22 @@ struct KeyedAnimationTrack {
 
 struct KeyedAnimation {
   u32 fps = 30;
-  Array<KeyedAnimationTrack, 16> tracks;
+  DynamicArray<KeyedAnimationTrack> tracks;
+
+  KeyedAnimation(u32 fps) : fps(fps), tracks(&assets_allocator) {}
 
   void add_track(EntityId entity_id) {
-    for (i32 i = 0; i < tracks.len; i++) {
+    for (i32 i = 0; i < tracks.count; i++) {
       if (tracks[i].entity_id == entity_id) return;
     }
 
     KeyedAnimationTrack track;
     track.entity_id = entity_id;
-    tracks.append(track);
+    tracks.push_back(track);
   }
 
-  void apply(Scene *scene, f32 t) {
-    for (u32 i = 0; i < tracks.len; i++) {
-      KeyedAnimationTrack &track = tracks[i];
-      Entity *entity             = scene->get(track.entity_id);
-
-      entity->transform = track.eval(t, fps);
-    }
-  }
-  void apply(Scene *scene, i32 frame) {
-    i32 t = frame / fps;
-    apply(scene, t);
-  }
-
-  Transform eval(u32 track_i, float t) {
-    assert(track_i < tracks.len);
+  Transform eval(u32 track_i, f32 t) {
+    assert(track_i < tracks.count);
     return tracks[track_i].eval(t, fps);
   }
 };

@@ -10,6 +10,7 @@
 #include "graphics/graphics.hpp"
 #include "math.hpp"
 #include "resources.hpp"
+#include "yaml.hpp"
 #include "util.hpp"
 
 typedef u64 ImmId;
@@ -188,6 +189,7 @@ struct UiState {
   bool last_element_active   = false;
   bool last_element_dragging = false;
   bool last_element_selected = false;
+  bool last_element_just_selected = false;
 
   ImmId anchored_left         = 0;
   int anchored_left_priority  = 0;
@@ -528,6 +530,7 @@ bool do_selectable(ImmId id, bool on_down = false) {
     }
   }
 
+  state.last_element_just_selected = (state.just_selected == id);
   state.last_element_selected = (state.selected == id);
   return state.last_element_selected;
 }

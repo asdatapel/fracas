@@ -12,6 +12,16 @@ struct StackAllocator
 {
     char *beg, *end, *next;
 
+    char *last_allocation = nullptr;
+    uint32_t last_allocation_size = 0;
+
+    void init(StackAllocator *from, uint64_t size)
+    {
+        beg = (char *)from->alloc(size);
+        next = beg;
+        end = beg + size;
+    }
+
     void init(uint32_t size)
     {
         beg = (char *)malloc(size);
@@ -30,7 +40,20 @@ struct StackAllocator
 
         char *ret = next;
         next += size;
+
+        last_allocation = ret;
+        last_allocation_size = size;
+
         return ret;
+    }
+
+    char *resize(char *ptr, uint32_t size)
+    {
+        if (ptr != last_allocation) return alloc(size);
+
+        last_allocation_size = size;
+        next = last_allocation + size;
+        return ptr;
     }
 
     void free(void *loc)
@@ -73,6 +96,10 @@ struct Temp
     static Temp start(Memory mem)
     {
         return Temp(mem);
+    }
+    static Temp start(StackAllocator *alloc)
+    {
+        return Temp(alloc);
     }
 };
 
@@ -147,6 +174,7 @@ struct Array
     const static size_t MAX_LEN = N;
 };
 
+// TODO this isn't really a freelist, more just a object pool
 template <typename T>
 struct FreeList
 {
