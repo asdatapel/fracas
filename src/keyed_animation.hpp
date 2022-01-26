@@ -6,36 +6,35 @@
 #include "scene/entity.hpp"
 #include "spline.hpp"
 
-template <typename T>
+template <typename T, u32 INITIAL_CAPACITY = 2>
 struct DynamicArray {
-  T *elements        = nullptr;
-  u32 count          = 0;
-  u32 allocated_size = 0;
+  T *elements  = nullptr;
+  u32 count    = 0;
+  u32 capacity = INITIAL_CAPACITY;
 
   StackAllocator *allocator;
 
+  DynamicArray() {}
   DynamicArray(StackAllocator *allocator) {
     this->allocator = allocator;
-
-    allocated_size = 2;
-    elements       = (T *)allocator->alloc(sizeof(T) * allocated_size);
+    elements        = (T *)allocator->alloc(sizeof(T) * capacity);
   }
 
   void resize(u32 new_size) {
-    T *new_elements       = (T *)allocator->resize((char *)elements, sizeof(T) * new_size);
+    T *new_elements = (T *)allocator->resize((char *)elements, sizeof(T) * new_size);
 
     if (new_elements != elements) {
-      u32 to_copy_n = std::min(allocated_size, new_size);
+      u32 to_copy_n = std::min(capacity, new_size);
       memcpy(new_elements, elements, to_copy_n * sizeof(T));
     }
 
-    allocated_size = new_size;
+    capacity = new_size;
     elements = new_elements;
   }
 
   T &push_back(T val) {
-    if (count >= allocated_size) {
-      resize(allocated_size * 2);
+    if (count >= capacity) {
+      resize(capacity * 2);
     }
     elements[count] = val;
     count++;
@@ -65,9 +64,7 @@ struct KeyedAnimationTrack {
   EntityId entity_id;
   DynamicArray<Key> keys;
 
-  KeyedAnimationTrack() : 
-  keys(&assets_allocator)
-   {}
+  KeyedAnimationTrack() : keys(&assets_allocator) {}
 
   void add_key(Transform transform, i32 frame, Key::InterpolationType interpolation_type) {
     i32 pos = 0;
@@ -155,7 +152,7 @@ struct KeyedAnimationTrack {
   }
 };
 
-struct KeyedAnimation {
+struct KeyedAnimation : Asset {
   u32 fps = 30;
   DynamicArray<KeyedAnimationTrack> tracks;
 

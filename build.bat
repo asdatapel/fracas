@@ -1,7 +1,5 @@
 @echo off
 set PATH=%PATH%;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\Llvm\x64\bin
-python .\pipeline\assets.py
-python .\pipeline\scene.py
 python .\src\net\rpc_parse.py .\src\net\messages.rpc .\src\net
 if not exist build mkdir build
 pushd src

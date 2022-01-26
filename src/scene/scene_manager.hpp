@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../game_scripts.hpp"
+
 struct SceneManager
 {
     Scene main;
@@ -29,13 +31,14 @@ struct SceneManager
         game.update(timestep, {&main, &xs, assets}, rpc_client, input);
     }
 
-    void update_and_draw(Camera *debug_camera, Vec3f debug_camera_pos, float exposure = 1.f)
+    void update_and_draw(float timestep, Camera *debug_camera, Vec3f debug_camera_pos, float exposure = 1.f)
     {
-        main.update_and_draw(debug_camera, debug_camera_pos);
+        main.update(timestep);
+        main.render(debug_camera, debug_camera_pos);
 
         if (xs.visible)
         {
-            xs.update_and_draw(debug_camera, debug_camera_pos);
+            xs.render(debug_camera, debug_camera_pos);
             main.target.bind();
             glEnable(GL_BLEND);
             glDisable(GL_DEPTH_TEST);

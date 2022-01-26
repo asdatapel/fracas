@@ -6,6 +6,8 @@
 #include <inttypes.h>
 #include <stdint.h>
 
+#include "common.hpp"
+
 #define DEBUG_PRINT printf
 
 struct StackAllocator
@@ -22,7 +24,7 @@ struct StackAllocator
         end = beg + size;
     }
 
-    void init(uint32_t size)
+    void init(u64 size)
     {
         beg = (char *)malloc(size);
         next = beg;
@@ -101,6 +103,10 @@ struct Temp
     {
         return Temp(alloc);
     }
+
+    operator StackAllocator*() {
+        return allocator;
+    }
 };
 
 template <typename T>
@@ -145,7 +151,7 @@ struct Array
     {
         if (len >= MAX_LEN)
         {
-            DEBUG_PRINT("reached max client count\n");
+            DEBUG_PRINT("Array overfull\n");
             return -1;
         }
 
@@ -205,7 +211,7 @@ struct FreeList
         }
     }
 
-    int push_back(T &value)
+    int push_back(T value)
     {
         Element *current = next;
         if (!current)
@@ -290,6 +296,8 @@ struct AllocatedString
     uint16_t len = 0;
     static const uint16_t MAX_LEN = N;
 };
+// TODO: move this somewhere more appropriate
+typedef AllocatedString<64> PlayerName;
 
 struct String
 {
@@ -359,8 +367,17 @@ struct String
         }
         return val;
     }
+    
+    static String copy(String other, StackAllocator *allocator)
+    {
+        String ret;
+        ret.len = other.len;
+        ret.data = allocator->alloc(other.len);
+        memcpy(ret.data, other.data, ret.len);
+        return ret;
+    }
 
-    static String from(int i, StackAllocator *allocator)
+    static String from(u32 i, StackAllocator *allocator)
     {
         String ret;
         ret.data = allocator->alloc(15); // should never be more than 15 digits, right
@@ -369,7 +386,16 @@ struct String
         return ret;
     }
 
-    static String from(float val, StackAllocator *allocator)
+    static String from(i32 i, StackAllocator *allocator)
+    {
+        String ret;
+        ret.data = allocator->alloc(15); // should never be more than 15 digits, right
+        _itoa_s(i, ret.data, 15, 10);
+        ret.len = strlen(ret.data);
+        return ret;
+    }
+
+    static String from(f32 val, StackAllocator *allocator)
     {
         String ret;
         ret.data = allocator->alloc(40);
@@ -381,7 +407,7 @@ struct String
     static String from(uint64_t i, StackAllocator *allocator)
     {
         String ret;
-        ret.data = allocator->alloc(20); // should never be more than 15 digits, right
+        ret.data = allocator->alloc(20); // should never be more than 20 digits, right
         snprintf(ret.data, 20, "%" PRIu64, i);
         ret.len = strlen(ret.data);
         return ret;
@@ -408,3 +434,31 @@ AllocatedString<N> float_to_allocated_string(float val)
     ret.len = snprintf(ret.data, N, "%g", val);
     return ret;
 }
+template <uint16_t N>
+AllocatedString<N> i32_to_allocated_string(i32 val)
+{
+    AllocatedString<N> ret;
+    ret.len = snprintf(ret.data, N, "%i", val);
+    return ret;
+}
+
+String filepath_concat(String str1, String str2, StackAllocator *alloc) {
+    if (str1.data[str1.len - 1] == '/') {
+        str1.len--;
+    }
+    if (str2.data[0] == '/') {
+        str2.len--;
+        str2.data++;
+    }
+
+    String ret;
+    ret.len = str1.len + str2.len + 1;
+    ret.data = alloc->alloc(ret.len);
+
+    ret.data[str1.len] = '/';
+    memcpy(ret.data, str1.data, str1.len);
+    memcpy(ret.data + str1.len + 1, str2.data, str2.len);
+
+    return ret;
+}
+

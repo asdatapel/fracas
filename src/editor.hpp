@@ -42,7 +42,7 @@ struct Editor
         if (playing)
         {
             play_scenes.update_scripts(1 / 60.f, assets, rpc_client, input);
-            play_scenes.update_and_draw(nullptr, {});
+            play_scenes.update_and_draw(1 / 60.f, nullptr, {});
             debug_ui(&play_scenes, backbuffer, input, assets, mem);
         }
         else
@@ -52,7 +52,7 @@ struct Editor
             if (input->keys[(int)Keys::RIGHT]) exposure += 0.01f;
             Transform camera_transform;
             Camera *camera = get_camera(&editor_scenes->main, &camera_transform);
-            editor_scenes->update_and_draw(camera, camera_transform.position, exposure);
+            editor_scenes->update_and_draw(1 / 60.f, camera, camera_transform.position, exposure);
             debug_ui(editor_scenes, backbuffer, input, assets, mem);
         }
     }
@@ -140,8 +140,10 @@ struct Editor
         if (Imm::start_menubar_menu("File")) {
             if (Imm::button("Save")) {
                 const char *script_file = "resources/test/scripts.yaml";
-                String out = serialize(&editor_scenes->game, mem.temp);
-                write_file(script_file, out);
+                String script_data = serialize(&editor_scenes->game, mem.temp);
+                write_file(script_file, script_data);
+
+                assets->save(filepath_concat(RESOURCE_PATH, "assets_out.yaml", &assets_temp_allocator));
 
                 editor_scenes->main.serialize("resources/test/main_scene.yaml", assets, mem.temp);
 
@@ -337,23 +339,23 @@ struct Editor
 
         KeyedAnimationTrack *selected_track = nullptr;
         static i32 selected_track_i = -1;
-        static KeyedAnimation *selected_keyed_animation = nullptr;
-        static float play_t = 0;
-        static bool playing_timeline = false;
-        static int current_frame = 0;
+        // static KeyedAnimation *selected_keyed_animation = nullptr;
+        // static float play_t = 0;
+        // static bool playing_timeline = false;
+        // static int current_frame = 0;
 
         Imm::start_window("Assets", {1000, 500, 600, 400});
         if (Imm::button("Add KeyedAnimation")) {
-          KeyedAnimation anim(30);
-          assets->keyed_animations.push_back(anim);
+            assets->create_keyed_animation(RESOURCE_PATH);
         }
         for (int i = 0; i < assets->keyed_animations.size; i++) {
           if (assets->keyed_animations.data[i].assigned) {
             KeyedAnimation *ka = &assets->keyed_animations.data[i].value;
-            Imm::list_item((ImmId)ka, String::from(i, mem.temp),
-                               ka == selected_keyed_animation);
+            Imm::list_item((ImmId)ka, ka->asset_name, ka == editor_scenes->main.current_sequence);
             if (Imm::state.last_element_just_selected) {
-              selected_keyed_animation = ka;
+              editor_scenes->main.stop_sequence();
+              editor_scenes->main.set_sequence(ka);
+
               selected_track_i = -1;
             }
           }
@@ -361,25 +363,21 @@ struct Editor
         Imm::end_window();
 
         Imm::start_window("Camera Timeline", {50, 50, 200, 500});
-        Imm::label(String::from(current_frame, mem.temp));
-        if (selected_keyed_animation) {
+        if (editor_scenes->main.current_sequence) {
             if (selected_track_i >= 0) {
-                selected_track = &selected_keyed_animation->tracks[selected_track_i];
+                selected_track = &editor_scenes->main.current_sequence->tracks[selected_track_i];
             }
             if (Imm::button("play"))
             {
-                if (selected_entity)
-                {
-                    playing_timeline = !playing_timeline;
-                    play_t = 0;
-                }
+                if (!editor_scenes->main.playing_sequence) editor_scenes->main.play_sequence();
+                else editor_scenes->main.stop_sequence();
             }
             if (selected_track && selected_track->keys.count)
             {
-                Transform tr = selected_keyed_animation->eval(selected_track_i, 0);
+                Transform tr = editor_scenes->main.current_sequence->eval(selected_track_i, 0);
                 for (float t = 0; t < 50.f; t += 0.01f)
                 {
-                    Transform trn =  selected_keyed_animation->eval(selected_track_i, t);
+                    Transform trn =  editor_scenes->main.current_sequence->eval(selected_track_i, t);
                     lines.append(tr.position.x);
                     lines.append(tr.position.y);
                     lines.append(tr.position.z);
@@ -397,40 +395,35 @@ struct Editor
                     tr = trn;
                 }
             }
-            if (playing_timeline)
-            {
-                scenes->main.apply_keyed_animation(selected_keyed_animation, play_t);
-                play_t += 1 / 60.f;
-            }
         }
         Imm::end_window();
 
         Imm::start_window("Timeline", {1000, 500, 600, 400});
         static float column_width = 200.f;
         Imm::first_column(&column_width);
-        if (selected_keyed_animation) {
+        if (editor_scenes->main.current_sequence) {
             if (Imm::button(Imm::hash("Add Track"), "Add Track")) {
-              if (selected_entity) selected_keyed_animation->add_track(selected_entity_i);
+              if (selected_entity) editor_scenes->main.current_sequence->add_track(selected_entity_i);
             }
             if (selected_track) {
                 if (Imm::button(Imm::hash("Add Key From Camera Transform"), "Add Key From Camera Transform")) {
                     Transform t;
                     Camera *camera = get_camera(&scenes->main, &t);
                     selected_track->add_key(
-                        t, current_frame,
+                        t, editor_scenes->main.get_frame(),
                         KeyedAnimationTrack::Key::InterpolationType::LINEAR);
                 }
                 if (Imm::button(Imm::hash("asdfcvbvbvx"), "Add Key From Entity Transform")) {
                     Entity *entity = scenes->main.get(selected_track->entity_id);
                     Transform t = entity->transform;
                     selected_track->add_key(
-                        t, current_frame,
+                        t, editor_scenes->main.get_frame(),
                         KeyedAnimationTrack::Key::InterpolationType::LINEAR);
                 }
             }
 
-            for (u32 track_i = 0; track_i < selected_keyed_animation->tracks.count; track_i++) {
-            KeyedAnimationTrack *track = &selected_keyed_animation->tracks[track_i];
+            for (u32 track_i = 0; track_i < editor_scenes->main.current_sequence->tracks.count; track_i++) {
+            KeyedAnimationTrack *track = &editor_scenes->main.current_sequence->tracks[track_i];
             if (Imm::list_item(
                     (ImmId) track,
                     scenes->main.get(track->entity_id)->debug_tag.name,
@@ -442,10 +435,11 @@ struct Editor
 
         static float timeline_start = 0;
         static float timeline_width = 60;
+        i32 current_frame = editor_scenes->main.current_sequence ? editor_scenes->main.get_frame() : -1;
         Imm::start_timeline("testtimeline", &current_frame, &timeline_start, &timeline_width);
-        if (selected_keyed_animation) {
-            for (int track_i = 0; track_i < selected_keyed_animation->tracks.count; track_i++) {
-                KeyedAnimationTrack &track = selected_keyed_animation->tracks[track_i];
+        if (editor_scenes->main.current_sequence) {
+            for (int track_i = 0; track_i < editor_scenes->main.current_sequence->tracks.count; track_i++) {
+                KeyedAnimationTrack &track = editor_scenes->main.current_sequence->tracks[track_i];
                 for (int i = 0; i < track.keys.count; i++) {
                     Imm::keyframe((ImmId)&track.keys[i], &track.keys[i].frame, track_i);
                     if (Imm::state.was_last_item_right_clicked) {
@@ -474,6 +468,13 @@ struct Editor
             }
         }
         Imm::end_timeline();
+        if (editor_scenes->main.current_sequence &&
+            current_frame != editor_scenes->main.get_frame()) {
+          editor_scenes->main.set_frame(current_frame);
+          editor_scenes->main.apply_keyed_animation(editor_scenes->main.current_sequence,
+                                                    (i32)editor_scenes->main.get_frame());
+        }
+
         Imm::end_columns();
         Imm::end_window();
 
