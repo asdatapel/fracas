@@ -55,7 +55,7 @@ bool init_if_not() {
     assets.load("resources/test/main_assets.yaml", &main_memory);
     assets.load("resources/test/assets_out.yaml");
 
-    scenes.init(memory);
+    scenes.init(&assets, memory);
     editor.init(&scenes, &assets, memory);
 
     Imm::init();

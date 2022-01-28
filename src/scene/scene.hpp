@@ -48,7 +48,7 @@ struct Scene
     void set_sequence(KeyedAnimation *seq);
     void play_sequence();
     void stop_sequence();
-    void set_t(float t);
+    void set_t(f32 t);
     u32 get_frame();
     void set_frame(u32 frame);
     void apply_keyed_animation(KeyedAnimation *keyed_anim, f32 t);

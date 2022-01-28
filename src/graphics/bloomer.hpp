@@ -41,7 +41,6 @@ struct Bloomer
             draw_rect();
             hor.color_tex.gen_mipmaps();
 
-            // FIXME theres one vertical one extra happening
             ver.bind();
             ver.clear();
             bind_1i(blur_shader, UniformId::HORIZONTAL, 0);

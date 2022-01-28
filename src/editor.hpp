@@ -29,7 +29,7 @@ struct Editor
 
         scenes->main.load("resources/test/main_scene.yaml", assets, mem);
         scenes->xs.load("resources/test/eeegghhh_scene.yaml", assets, mem);
-        play_scenes.init(mem);
+        play_scenes.init(assets, mem);
 
         deserialize(&scenes->game, mem.temp);
 
@@ -42,7 +42,7 @@ struct Editor
         if (playing)
         {
             play_scenes.update_scripts(1 / 60.f, assets, rpc_client, input);
-            play_scenes.update_and_draw(1 / 60.f, nullptr, {});
+            play_scenes.update_and_draw(1 / 60.f, nullptr, {}, 1);
             debug_ui(&play_scenes, backbuffer, input, assets, mem);
         }
         else
@@ -123,7 +123,7 @@ struct Editor
             // play / pause
             if (input->key_input[i] == Keys::SPACE)
             {
-                playing ? stop_play() : start_play();
+                playing ? stop_play() : start_play(assets);
             }
 
             if (input->key_input[i] == Keys::ESCAPE)
@@ -345,18 +345,23 @@ struct Editor
         // static int current_frame = 0;
 
         Imm::start_window("Assets", {1000, 500, 600, 400});
+        static i32 renaming = -1;
         if (Imm::button("Add KeyedAnimation")) {
             assets->create_keyed_animation(RESOURCE_PATH);
         }
         for (int i = 0; i < assets->keyed_animations.size; i++) {
           if (assets->keyed_animations.data[i].assigned) {
             KeyedAnimation *ka = &assets->keyed_animations.data[i].value;
-            Imm::list_item((ImmId)ka, ka->asset_name, ka == editor_scenes->main.current_sequence);
-            if (Imm::state.last_element_just_selected) {
-              editor_scenes->main.stop_sequence();
-              editor_scenes->main.set_sequence(ka);
+            AllocatedString<64> tmp = string_to_allocated_string<64>(ka->asset_name);
+            Imm::listitem_with_editing((ImmId)ka, &tmp, ka == editor_scenes->main.current_sequence);
+            if (Imm::state.just_activated == (ImmId)ka) {               
+                editor_scenes->main.stop_sequence();
+                editor_scenes->main.set_sequence(ka);
 
-              selected_track_i = -1;
+                selected_track_i = -1;
+            }
+            if (!strcmp(tmp, ka->asset_name)) {
+                ka->asset_name = String::copy(tmp, &assets_allocator);
             }
           }
         }
@@ -451,7 +456,7 @@ struct Editor
                         if (Imm::list_item(id, name, track.keys[i].interpolation_type == type)) {
                             track.keys[i].interpolation_type = type;
                         }
-                        if (Imm::state.just_selected == id) Imm::close_popup();
+                        if (Imm::state.just_activated == id) Imm::close_popup();
                         };
                         ImmId id = (ImmId)&track.keys[i].interpolation_type;
                         add_list_item(id + 0, "Constant",
@@ -510,7 +515,7 @@ struct Editor
         Imm::end_frame(assets);
     }
 
-    void start_play()
+    void start_play(Assets *assets)
     {
         auto copy_scene = [](Scene *to, Scene *from)
         {
@@ -542,9 +547,10 @@ struct Editor
                 *dst.inputs[input_i].value = *src.inputs[input_i].value;
             }
         }
-        play_scenes.game.init({&play_scenes.main, &play_scenes.xs});
 
         playing = true;
+        play_scenes.game.init({&play_scenes.main, &play_scenes.xs, assets});
+        play_scenes.game.reset({&play_scenes.main, &play_scenes.xs, assets});
     }
 
     void stop_play()

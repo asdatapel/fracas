@@ -13,7 +13,7 @@ struct SceneManager
 
     RenderTarget target;
 
-    void init(Memory mem)
+    void init(Assets *assets, Memory mem)
     {
         target = RenderTarget(1920, 1080, TextureFormat::RGB8, TextureFormat::DEPTH24);
 
@@ -21,7 +21,7 @@ struct SceneManager
         main.visible = true;
         xs.init(mem, TextureFormat::RGBA16F);
 
-        game.init({&main, &xs});
+        game.init({&main, &xs, assets});
 
         bloomer = Bloomer(main.target.width, main.target.height);
     }

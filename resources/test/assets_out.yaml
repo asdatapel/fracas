@@ -118,3 +118,129 @@ keyed_animations:
                 z: 1.000000
             interpolation_type: 1
             frame: 41
+  - asset_id: 2
+    asset_name: resources/test/intro
+    fps: 30
+    tracks: 
+      - entity_id: 87
+        keys: 
+          - transform: 
+              position: 
+                x: -0.208730
+                y: 7.572361
+                z: 23.368685
+              rotation: 
+                x: -0.034906
+                y: -0.006981
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 0
+          - transform: 
+              position: 
+                x: -0.326813
+                y: 3.402734
+                z: 15.229551
+              rotation: 
+                x: -0.387462
+                y: -0.027924
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 71
+          - transform: 
+              position: 
+                x: -0.137735
+                y: 2.043550
+                z: 3.937706
+              rotation: 
+                x: -0.085521
+                y: -0.026177
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 0
+            frame: 149
+          - transform: 
+              position: 
+                x: -0.137735
+                y: 2.043550
+                z: 3.937706
+              rotation: 
+                x: -0.085521
+                y: -0.026177
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 0
+            frame: 150
+          - transform: 
+              position: 
+                x: 4.190726
+                y: 1.869507
+                z: 10.986722
+              rotation: 
+                x: -0.179769
+                y: -0.586430
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 2
+            frame: 192
+          - transform: 
+              position: 
+                x: 0.169764
+                y: 1.935539
+                z: 4.108328
+              rotation: 
+                x: -0.050614
+                y: -1.308996
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 0
+            frame: 270
+          - transform: 
+              position: 
+                x: -2.942712
+                y: 2.111760
+                z: 9.799559
+              rotation: 
+                x: -0.181514
+                y: -5.427972
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 2
+            frame: 321
+          - transform: 
+              position: 
+                x: -0.376916
+                y: 1.901626
+                z: 3.463197
+              rotation: 
+                x: -0.190240
+                y: -4.574503
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 1
+            frame: 401

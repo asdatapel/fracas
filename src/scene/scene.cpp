@@ -487,7 +487,7 @@ void Scene::set_sequence(KeyedAnimation *seq) {
 }
 void Scene::play_sequence() { playing_sequence = true; }
 void Scene::stop_sequence() { playing_sequence = false; }
-void Scene::set_t(float t) { sequence_t = t; }
+void Scene::set_t(f32 t) { sequence_t = t; }
 void Scene::set_frame(u32 frame) {
   assert(current_sequence);
   sequence_t = (f32)frame / current_sequence->fps;

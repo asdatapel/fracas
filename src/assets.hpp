@@ -352,4 +352,14 @@ struct Assets {
 
     return anim;
   }
+
+  //TODO: maybe assets ids should include asset type
+  KeyedAnimation *get_keyed_animation(String name) {
+    for (int i = 0; i < keyed_animations.size; i++) {
+      if (strcmp(name, keyed_animations.data[i].value.asset_name)) return &keyed_animations.data[i].value;
+    }
+
+    assert(false);
+    return nullptr;
+  }
 };

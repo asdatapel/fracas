@@ -80,6 +80,9 @@ struct IntroSequence : Sequence
     void reset(Scenes scenes)
     {
         t = 0;
+        scenes.main->set_sequence(scenes.assets->get_keyed_animation("resources/test/intro"));
+        scenes.main->play_sequence();
+        scenes.main->set_t(0);
     }
 
     void update(float timestep, Scenes scenes, BoardController *board_controller, InputState *input_state, RpcClient *rpc_client)
@@ -91,11 +94,9 @@ struct IntroSequence : Sequence
         }
 
         Entity *camera = scenes.main->get(input.camera);
-        Entity *path = scenes.main->get(input.path);
-        if (camera && path && path->type == EntityType::SPLINE)
+        if (camera)
         {
             scenes.main->active_camera_id = input.camera;
-            camera->transform.position = catmull_rom(constant_distance_t(path->spline, t / length) - 1, path->spline);
         }
 
         step(
@@ -842,7 +843,8 @@ struct Game
 
         // TODO ask server for player avatars?
         ask_question_sequence.init(scenes);
-
+    }
+    void reset(Scenes scenes) {
         // start intro cinematic
         intro_sequence.reset(scenes);
         current_sequence = &intro_sequence;

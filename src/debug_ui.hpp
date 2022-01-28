@@ -516,17 +516,15 @@ bool do_selectable(ImmId id, bool on_down = false) {
   bool triggered             = on_down ? state.just_activated == id : state.just_deactivated == id;
   bool just_stopped_dragging = state.just_stopped_dragging == id;
   if (hot && triggered && !just_stopped_dragging) {
-    if (state.selected != 0) {
+    if (state.selected != id) {
       state.just_unselected = state.selected;
     }
     state.selected      = id;
     state.just_selected = id;
-  } else {
-    if (state.input->mouse_button_down_events[(int)MouseButton::LEFT]) {
-      if (state.selected == id) {
-        state.just_unselected = id;
-        state.selected        = 0;
-      }
+  } else if (!hot && state.input->mouse_button_down_events[(int)MouseButton::LEFT]) {
+    if (state.selected == id) {
+      state.just_unselected = id;
+      state.selected        = 0;
     }
   }
 
@@ -1153,11 +1151,10 @@ bool list_item(ImmId me, String text, bool selected_flag = false, bool *as_check
 
   bool hot      = do_hoverable(me, rect, c->content_rect);
   bool active   = do_active(me);
-  bool dragging = do_draggable(me);
-  bool selected = do_selectable(me, true) || selected_flag;
+  bool selected = active || selected_flag;
 
   if (as_checkbox) {
-    if (state.just_selected == me) {
+    if (state.just_activated == me) {
       *as_checkbox = !(*as_checkbox);
     }
     selected = *as_checkbox;
@@ -1174,6 +1171,35 @@ bool list_item(ImmId me, String text, bool selected_flag = false, bool *as_check
       state.style.content_font_size, text_color);
 
   return selected;
+}
+
+template <u64 N>
+bool listitem_with_editing(ImmId me, AllocatedString<N> *text, bool selected_flag = false) {
+  auto c = get_current_container();
+  if (!c || !c->visible) return false;
+
+  Rect rect = c->place({c->content_rect.width - state.style.inner_padding.x * 2,
+                        state.style.content_font_size + state.style.inner_padding.y * 2},
+                       false);
+                        
+  if (state.selected == me) {
+    if (textbox(me, &state.in_progress_string)) {
+      *text = state.in_progress_string;
+      state.selected = 0;
+    }
+    return true;
+  }
+
+  bool hot      = do_hoverable(me, rect, c->content_rect);
+  bool active   = do_active(me);
+ 
+  if (selected_flag) {
+    if (state.just_activated == me) {
+      state.selected = me;
+      state.in_progress_string = *text;
+    }
+  } 
+  return list_item(me, *text, selected_flag);
 }
 
 // returns true on submit
@@ -1217,9 +1243,9 @@ bool textbox(ImmId me, AllocatedString<N> *str) {
   return false;
 }
 template <size_t N>
-void textbox(AllocatedString<N> *str) {
+bool textbox(AllocatedString<N> *str) {
   ImmId me = (ImmId)(uint64_t)str;
-  textbox(me, str);
+  return textbox(me, str);
 }
 
 template <typename T>
