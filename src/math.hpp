@@ -265,6 +265,11 @@ struct Rect
     {
         width = right - x;
     }
+
+    static Rect from_ends(Vec2f a, Vec2f b) {
+      return Rect(Vec2f{std::min(a.x, b.x), std::min(a.y, b.y)},
+                  Vec2f{fabs(b.x - a.x), fabs(b.y - a.y)});
+    }
 };
 inline bool operator==(const Rect &lhs, const Rect &rhs)
 {
@@ -306,6 +311,10 @@ float lerp(float a, float b, float t)
     return (1 - t) * a + t * b;
 }
 
+Vec2f lerp(Vec2f a, Vec2f b, float t)
+{
+    return {lerp(a.x, b.x, t), lerp(a.y, b.y, t)};
+}
 Vec3f lerp(Vec3f a, Vec3f b, float t)
 {
     return {lerp(a.x, b.x, t), lerp(a.y, b.y, t), lerp(a.z, b.z, t)};
