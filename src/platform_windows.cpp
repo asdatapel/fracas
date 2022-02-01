@@ -143,26 +143,83 @@ void key_input_callback(GLFWwindow *window, int key, int scancode, int action, i
     case GLFW_KEY_ENTER:
         append_if_press(Keys::ENTER);
         break;
-    case GLFW_KEY_W:
-        append_if_press(Keys::W);
-        break;
     case GLFW_KEY_A:
         append_if_press(Keys::A);
         break;
-    case GLFW_KEY_S:
-        append_if_press(Keys::S);
+    case GLFW_KEY_B:
+        append_if_press(Keys::B);
+        break;
+    case GLFW_KEY_C:
+        append_if_press(Keys::C);
         break;
     case GLFW_KEY_D:
         append_if_press(Keys::D);
         break;
-    case GLFW_KEY_Z:
-        append_if_press(Keys::Z);
+    case GLFW_KEY_E:
+        append_if_press(Keys::E);
+        break;
+    case GLFW_KEY_F:
+        append_if_press(Keys::F);
+        break;
+    case GLFW_KEY_G:
+        append_if_press(Keys::G);
+        break;
+    case GLFW_KEY_H:
+        append_if_press(Keys::H);
+        break;
+    case GLFW_KEY_I:
+        append_if_press(Keys::I);
+        break;
+    case GLFW_KEY_J:
+        append_if_press(Keys::J);
+        break;
+    case GLFW_KEY_K:
+        append_if_press(Keys::K);
+        break;
+    case GLFW_KEY_L:
+        append_if_press(Keys::L);
+        break;
+    case GLFW_KEY_M:
+        append_if_press(Keys::M);
+        break;
+    case GLFW_KEY_N:
+        append_if_press(Keys::N);
+        break;
+    case GLFW_KEY_O:
+        append_if_press(Keys::O);
+        break;
+    case GLFW_KEY_P:
+        append_if_press(Keys::P);
+        break;
+    case GLFW_KEY_Q:
+        append_if_press(Keys::Q);
+        break;
+    case GLFW_KEY_R:
+        append_if_press(Keys::R);
+        break;
+    case GLFW_KEY_S:
+        append_if_press(Keys::S);
+        break;
+    case GLFW_KEY_T:
+        append_if_press(Keys::T);
+        break;
+    case GLFW_KEY_U:
+        append_if_press(Keys::U);
+        break;
+    case GLFW_KEY_V:
+        append_if_press(Keys::V);
+        break;
+    case GLFW_KEY_W:
+        append_if_press(Keys::W);
         break;
     case GLFW_KEY_X:
         append_if_press(Keys::X);
         break;
-    case GLFW_KEY_C:
-        append_if_press(Keys::C);
+    case GLFW_KEY_Y:
+        append_if_press(Keys::Y);
+        break;
+    case GLFW_KEY_Z:
+        append_if_press(Keys::Z);
         break;
     case GLFW_KEY_UP:
         append_if_press(Keys::UP);
@@ -226,6 +283,24 @@ void key_input_callback(GLFWwindow *window, int key, int scancode, int action, i
         break;
     case GLFW_KEY_ESCAPE:
         append_if_press(Keys::ESCAPE);
+        break;
+    case GLFW_KEY_INSERT:
+        append_if_press(Keys::INS);
+        break;
+    case GLFW_KEY_DELETE:
+        append_if_press(Keys::DEL);
+        break;
+    case GLFW_KEY_HOME:
+        append_if_press(Keys::HOME);
+        break;
+    case GLFW_KEY_END:
+        append_if_press(Keys::END);
+        break;
+    case GLFW_KEY_PAGE_UP:
+        append_if_press(Keys::PAGEUP);
+        break;
+    case GLFW_KEY_PAGE_DOWN:
+        append_if_press(Keys::PAGEDOWN);
         break;
     }
 }

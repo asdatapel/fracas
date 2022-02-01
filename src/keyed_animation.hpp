@@ -14,7 +14,7 @@ struct DynamicArray {
 
   StackAllocator *allocator;
 
-  DynamicArray() {}
+  DynamicArray() = default;
   DynamicArray(StackAllocator *allocator) {
     this->allocator = allocator;
     elements        = (T *)allocator->alloc(sizeof(T) * capacity);
@@ -39,6 +39,16 @@ struct DynamicArray {
     elements[count] = val;
     count++;
     return elements[count - 1];
+  }
+
+  void remove(u32 i) {
+    assert(i < count);
+    memcpy(elements + i, elements + i + 1, (count - (i + 1)) * sizeof(T));
+    count--;
+  }
+
+  void clear() {
+    count = 0;
   }
 
   T &operator[](u32 i) {
@@ -66,13 +76,13 @@ struct KeyedAnimationTrack {
 
   KeyedAnimationTrack() : keys(&assets_allocator) {}
 
-  void add_key(Transform transform, i32 frame, Key::InterpolationType interpolation_type) {
+  u32 add_key(Transform transform, i32 frame, Key::InterpolationType interpolation_type) {
     i32 pos = 0;
     while (pos < keys.count) {
       if (keys[pos].frame == frame) {
         keys[pos].transform          = transform;
         keys[pos].interpolation_type = interpolation_type;
-        return;
+        return pos;
       }
       if (keys[pos].frame > frame) {
         break;
@@ -87,6 +97,11 @@ struct KeyedAnimationTrack {
     keys[pos].transform          = transform;
     keys[pos].frame              = frame;
     keys[pos].interpolation_type = interpolation_type;
+
+    return pos;
+  }
+  u32 add_key(Key key) {
+    return add_key(key.transform, key.frame, key.interpolation_type);
   }
 
   Transform eval(f32 t, i32 fps) {

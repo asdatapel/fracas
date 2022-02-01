@@ -4,14 +4,15 @@
 #include <deque>
 #include <map>
 #include <stack>
+#include <unordered_set>
 
 #include "assets.hpp"
 #include "common.hpp"
 #include "graphics/graphics.hpp"
 #include "math.hpp"
 #include "resources.hpp"
-#include "yaml.hpp"
 #include "util.hpp"
+#include "yaml.hpp"
 
 typedef u64 ImmId;
 
@@ -27,6 +28,13 @@ ImmId hash(String str) {
 
   return hash;
 }
+
+enum struct Shape {
+  DIAMOND,
+  SQUARE,
+  TRIANGLE,
+  BAR,
+};
 
 struct DrawItem {
   DrawItem() {}
@@ -47,6 +55,7 @@ struct DrawItem {
     Vec2f pos;
     float size;
     Color color;
+    Vec2B8 center;
   };
   struct RectDrawItem {
     Rect rect;
@@ -84,10 +93,11 @@ struct DrawList {
     item.clip_draw_item = {rect};
     buf.push_back(item);
   }
-  void push_text(String text, Vec2f pos, float size, Color color) {
+  void push_text(String text, Vec2f pos, float size, Color color, Vec2B8 center = {}) {
     DrawItem item;
-    item.type           = DrawItem::Type::TEXT;
-    item.text_draw_item = {string_to_allocated_string<128>(text), pos, size, color};
+    item.type                  = DrawItem::Type::TEXT;
+    item.text_draw_item        = {string_to_allocated_string<128>(text), pos, size, color};
+    item.text_draw_item.center = center;
     buf.push_back(item);
   }
   void push_rect(Rect rect, Color color) {
@@ -113,6 +123,29 @@ struct DrawList {
     item.type          = DrawItem::Type::TEXTURE;
     item.tex_draw_item = {texture, rect};
     buf.push_back(item);
+  }
+
+  
+  void push_shape(Shape shape, Vec2f center, f32 size, Color color) {
+    f32 half = size / 2;
+    switch (shape) {
+      case (Shape::TRIANGLE):
+        push_quad(center + Vec2f{-half, half}, center + Vec2f{half, half}, center + Vec2f{0, -half},
+                  center + Vec2f{0, -half}, color);
+        break;
+      case (Shape::SQUARE):
+        push_quad(center + Vec2f{-half, -half}, center + Vec2f{half, -half}, center + Vec2f{half, half},
+                  center + Vec2f{-half, half}, color);
+        break;
+      case (Shape::BAR):
+        push_quad(center + Vec2f{-half / 2, -half}, center + Vec2f{half / 2, -half}, center + Vec2f{half / 2, half},
+                  center + Vec2f{-half / 2, half}, color);
+        break;
+      case (Shape::DIAMOND):
+        push_quad(center + Vec2f{-half, 0}, center + Vec2f{0, -half}, center + Vec2f{half, 0},
+                  center + Vec2f{0, half}, color);
+        break;
+    }
   }
 };
 struct Window {
@@ -185,10 +218,10 @@ struct UiState {
 
   Vec3f gizmo_last_contact_point;
 
-  bool last_element_hot      = false;
-  bool last_element_active   = false;
-  bool last_element_dragging = false;
-  bool last_element_selected = false;
+  bool last_element_hot           = false;
+  bool last_element_active        = false;
+  bool last_element_dragging      = false;
+  bool last_element_selected      = false;
   bool last_element_just_selected = false;
 
   ImmId anchored_left         = 0;
@@ -254,6 +287,15 @@ struct Container {
       if (stretch && rect.x + rect.width < content_rect.width) {
         rect.width += content_rect.width - (rect.x + rect.width);
       }
+    } else {
+      rect.x      = next_elem_pos.x;
+      rect.y      = next_elem_pos.y;
+      rect.width  = size.x;
+      rect.height = size.y;
+
+      if (stretch && rect.x + rect.width < content_rect.width) {
+        rect.width += content_rect.width - (rect.x + rect.width);
+      }
     }
 
     if (commit) {
@@ -273,6 +315,10 @@ struct Container {
     }
 
     return {content_rect.x + rect.x, content_rect.y + rect.y, rect.width, rect.height};
+  }
+
+  Rect get_remaining_rect() {
+    return {content_rect.x, content_rect.y + next_line_y, content_rect.width, content_rect.height - next_line_y};
   }
 };
 
@@ -373,10 +419,12 @@ void open_popup(String name, Vec2f new_pos) {
 
 void close_popup() {
   ImmId id = get_current_popup();
-  while (open_popups.back() != id) {
+  while (open_popups.size() && open_popups.back() != id) {
     open_popups.pop_back();
   }
-  open_popups.pop_back();
+  if (open_popups.size()) {
+    open_popups.pop_back();
+  }
 }
 
 // TODO: might be able to merge popups and subpopups
@@ -410,6 +458,10 @@ Container *start_popup(ImmId id, Rect initial_rect) {
 
   return c;
 }
+Container *start_popup(String name, Rect initial_rect) {
+  return start_popup(hash(name), initial_rect);
+}
+
 
 void end_popup() {
   if (pop_container().visible) popup_stack.pop();
@@ -495,6 +547,14 @@ bool do_draggable(ImmId id) {
   }
   return false;
 }
+
+void set_selected(ImmId id) {
+  if (state.selected != id) {
+    state.just_unselected = id;
+  }
+  state.selected      = id;
+  state.just_selected = id;
+}
 bool do_selectable(ImmId id, bool on_down = false) {
   // right click
   {
@@ -516,20 +576,15 @@ bool do_selectable(ImmId id, bool on_down = false) {
   bool triggered             = on_down ? state.just_activated == id : state.just_deactivated == id;
   bool just_stopped_dragging = state.just_stopped_dragging == id;
   if (hot && triggered && !just_stopped_dragging) {
-    if (state.selected != id) {
-      state.just_unselected = state.selected;
-    }
-    state.selected      = id;
-    state.just_selected = id;
+    set_selected(id);
   } else if (!hot && state.input->mouse_button_down_events[(int)MouseButton::LEFT]) {
     if (state.selected == id) {
-      state.just_unselected = id;
-      state.selected        = 0;
+      set_selected(0);
     }
   }
 
   state.last_element_just_selected = (state.just_selected == id);
-  state.last_element_selected = (state.selected == id);
+  state.last_element_selected      = (state.selected == id);
   return state.last_element_selected;
 }
 
@@ -1036,8 +1091,15 @@ void end_frame(Assets *assets) {
         } break;
         case DrawItem::Type::TEXT: {
           Font *font = assets->get_font(FONT_ROBOTO_CONDENSED_REGULAR, item.text_draw_item.size);
-          draw_text(*font, state.target, item.text_draw_item.text, item.text_draw_item.pos.x,
-                    item.text_draw_item.pos.y, item.text_draw_item.color);
+          Vec2f pos  = item.text_draw_item.pos;
+          if (item.text_draw_item.center.x) {
+            pos.x -= get_text_width(*font, item.text_draw_item.text) / 2;
+          }
+          if (item.text_draw_item.center.y) {
+            pos.y -= item.text_draw_item.size / 2;
+          }
+          draw_text(*font, state.target, item.text_draw_item.text, pos.x, pos.y,
+                    item.text_draw_item.color);
         } break;
         case DrawItem::Type::RECT: {
           draw_rect(state.target, item.rect_draw_item.rect, item.rect_draw_item.color);
@@ -1140,9 +1202,15 @@ bool button(String text) {
   return button(me, text);
 }
 
-bool list_item(ImmId me, String text, bool selected_flag = false, bool *as_checkbox = nullptr) {
+b8 list_item(ImmId me, String text, bool selected_flag = false, bool *as_checkbox = nullptr) {
   auto c = get_current_container();
-  if (!c || !c->visible) return false;
+  if (!c || !c->visible) {
+    if (state.active == me) {
+      state.active = 0;
+      state.just_deactivated = me;
+    }
+    return false;
+  }
 
   float want_width =
       get_text_width(text, state.style.content_font_size) + state.style.inner_padding.x * 2;
@@ -1172,6 +1240,9 @@ bool list_item(ImmId me, String text, bool selected_flag = false, bool *as_check
 
   return selected;
 }
+b8 list_item(String text, bool selected_flag = false, bool *as_checkbox = nullptr) {
+  return list_item(hash(text), text, selected_flag, as_checkbox);
+}
 
 template <u64 N>
 bool listitem_with_editing(ImmId me, AllocatedString<N> *text, bool selected_flag = false) {
@@ -1181,24 +1252,24 @@ bool listitem_with_editing(ImmId me, AllocatedString<N> *text, bool selected_fla
   Rect rect = c->place({c->content_rect.width - state.style.inner_padding.x * 2,
                         state.style.content_font_size + state.style.inner_padding.y * 2},
                        false);
-                        
+
   if (state.selected == me) {
     if (textbox(me, &state.in_progress_string)) {
-      *text = state.in_progress_string;
+      *text          = state.in_progress_string;
       state.selected = 0;
     }
     return true;
   }
 
-  bool hot      = do_hoverable(me, rect, c->content_rect);
-  bool active   = do_active(me);
- 
+  bool hot    = do_hoverable(me, rect, c->content_rect);
+  bool active = do_active(me);
+
   if (selected_flag) {
     if (state.just_activated == me) {
-      state.selected = me;
+      state.selected           = me;
       state.in_progress_string = *text;
     }
-  } 
+  }
   return list_item(me, *text, selected_flag);
 }
 
@@ -1629,153 +1700,240 @@ void rotation_gizmo(Vec3f *rotation, Vec3f p) {
 // timelines
 namespace Imm {
 
-enum struct KeyframeShape {
-  DIAMOND,
-  SQUARE,
-  TRIANGLE,
+struct TimelineState {
+  ImmId id;
+  float start;
+  float width;
 };
+TimelineState timeline_state;
 
-struct TimelineParameters {
-  int duration;
-  String units;
-
-  bool horizontal;
-
-  bool clamp_start;
-  bool clamp_end;
-  float clamp_start_value;
-  float clamp_end_value;
-};
-TimelineParameters timeline_params;
-
-ImmId timeline_id;
-float *tstart;
-float *twidth;
-int *tcurrent_frame;
-bool nothing_else_touched;
+std::unordered_set<ImmId> selected_keyframes;
 
 void start_timeline(String name, int *current_frame, float *start, float *width) {
-  ImmId me    = hash(name);
-  timeline_id = me;
-
-  tstart               = start;
-  twidth               = width;
-  tcurrent_frame       = current_frame;
-  nothing_else_touched = true;
+  ImmId me       = hash(name);
+  ImmId scrubber = me + 1;
 
   auto c = get_current_container();
   if (!c || !c->visible) return;
   c->draw_list->push_clip(c->content_rect);
 
-  *start         = fmax(*start, 0.f);
-  int left_bound = ((int)(*start / 5)) * 5;
+  Rect number_bar = {c->content_rect.x, c->content_rect.y, c->content_rect.width, 20};
+  c->draw_list->push_rect(number_bar, {.7, .7, .7, 1});
 
-  for (int i = 0; i < *width / 5; i++) {
-    int frame = left_bound + i * 5;
-    float pos = (frame - *start) / (*width) * c->content_rect.width;
-
-    float mark_height = 10;
-    if (frame % 10 == 0) {
-      mark_height = 20;
-    }
-
-    float bar_width = 5;
+  if (*start < 0) {
+    f32 zero_position = (-*start) / (*width) * c->content_rect.width;
     c->draw_list->push_rect(
         {
-            c->content_rect.x + pos - (bar_width / 2.f),
-            c->content_rect.y + 5,
-            5,
-            mark_height,
+            number_bar.x,
+            number_bar.y + number_bar.height,
+            zero_position,
+            c->content_rect.height,
         },
-        {.3, .3, .3, 1});
-    c->draw_list->push_text(String::from(frame, &state.per_frame_alloc),
-                            {c->content_rect.x + pos, c->content_rect.y + 5 + mark_height + 5}, 15,
-                            {0, 0, 0, 1});
+        {.5, .5, .5, 1});
   }
 
-  float pointer_pos = (*tcurrent_frame - *start) / (*width) * c->content_rect.width;
-  c->draw_list->push_quad(
-      {c->content_rect.x + pointer_pos - (20 / 2.f), c->content_rect.y},
-      {c->content_rect.x + pointer_pos + (20 / 2.f), c->content_rect.y},
-      {c->content_rect.x + pointer_pos + (7 / 2.f), c->content_rect.y + (15 / 2.f)},
-      {c->content_rect.x + pointer_pos - (7 / 2.f), c->content_rect.y + (15 / 2.f)},
+  b8 scrubber_hot      = do_hoverable(scrubber, number_bar, c->content_rect);
+  b8 scrubber_active   = do_active(scrubber);
+  b8 scrubber_dragging = do_draggable(scrubber);
+  if (scrubber_dragging || (state.just_deactivated == scrubber && scrubber_hot &&
+                            !scrubber_dragging && !state.just_stopped_dragging)) {
+    f32 pos        = state.input->mouse_pos.x - c->content_rect.x;
+    i32 frame      = (pos / c->content_rect.width) * (*width) + (*start);
+    frame          = std::clamp(frame, (i32)*start, (i32)(*start + *width));
+    *current_frame = frame;
+  }
+
+  Rect main_rect = {number_bar.x, number_bar.y + number_bar.height, c->content_rect.width,
+                    c->content_rect.height - number_bar.height};
+
+  b8 main_hot      = do_hoverable(me, main_rect, c->content_rect);
+  b8 main_active   = do_active(me);
+  b8 main_dragging = do_draggable(me);
+  b8 main_selected = do_selectable(me);
+  if (main_dragging) {
+    auto push_line = [&](Vec2f from, Vec2f to, f32 thickness, Color color) {
+      Vec2f dir     = to - from;
+      Vec2f tangent = normalize(Vec2f{dir.y, -dir.x}) * thickness;
+      Vec2f p0      = from - tangent;
+      Vec2f p1      = from + tangent;
+      Vec2f p2      = to + tangent;
+      Vec2f p3      = to - tangent;
+
+      c->draw_list->push_quad(p0, p1, p2, p3, color);
+    };
+
+    auto push_dashed_line = [&](Vec2f from, Vec2f to, f32 thickness, Color color) {
+      const f32 dash_length = 5.f;
+
+      f32 solid_increment_t = dash_length / (to - from).len();
+      for (f32 t = 0; t < 1; t += solid_increment_t * 2) {
+        Vec2f a = lerp(from, to, t);
+        Vec2f b = lerp(from, to, std::min(1.f, t + solid_increment_t));
+
+        push_line(a, b, thickness, color);
+      }
+    };
+
+    Vec2f p0 = state.active_position;
+    Vec2f p1 = {state.active_position.x, state.input->mouse_pos.y};
+    Vec2f p2 = {state.input->mouse_pos.x, state.active_position.y};
+    Vec2f p3 = state.input->mouse_pos;
+    push_dashed_line(p0, p1, 1, {1, 0, 1, 1});
+    push_dashed_line(p0, p2, 1, {1, 0, 1, 1});
+    push_dashed_line(p3, p1, 1, {1, 0, 1, 1});
+    push_dashed_line(p3, p2, 1, {1, 0, 1, 1});
+  }
+  if (state.just_selected == me || state.just_stopped_dragging == me) {
+    selected_keyframes.clear();
+    set_selected(me);
+  }
+
+  if (scrubber_hot || main_hot) {
+    if (state.input->keys[(i32)Keys::LCTRL]) {
+      *start -= (state.input->scrollwheel_count * (*width / 75));
+    } else {
+      *width *= 1 - (state.input->scrollwheel_count / 40);
+    }
+  }
+
+  u32 big_intervals[]            = {1, 2, 5, 10, 20, 50, 100, 200, 500, 1000};
+  u32 small_intervals[]          = {1, 1, 1, 5, 5, 25, 25, 50, 100, 200};
+  u32 acceptable_intervals_count = 10;
+  u32 big_marker_interval        = big_intervals[acceptable_intervals_count - 1];
+  u32 small_marker_interval      = small_intervals[acceptable_intervals_count - 1];
+  for (u32 i = 0; i < acceptable_intervals_count - 1; i++) {
+    if ((*width / 10) < big_intervals[i + 1]) {
+      big_marker_interval   = big_intervals[i];
+      small_marker_interval = small_intervals[i];
+      break;
+    }
+  }
+
+  u32 big_markers_count      = *width / big_marker_interval + 1;
+  i32 first_big_marker_frame = big_marker_interval * (((i32)*start / (i32)big_marker_interval));
+  u32 small_markers_count    = *width / small_marker_interval + 1;
+  i32 first_small_marker_frame =
+      small_marker_interval * (((i32)*start / (i32)small_marker_interval));
+
+  for (u32 i = 0; i < small_markers_count; i++) {
+    i32 frame = first_small_marker_frame + (i * small_marker_interval);
+    f32 pos   = (frame - *start) / (*width) * c->content_rect.width;
+
+    f32 bar_width = 0.5f;
+    c->draw_list->push_rect(
+        {
+            number_bar.x + pos - (bar_width / 2.f),
+            number_bar.y + number_bar.height,
+            bar_width,
+            c->content_rect.height,
+        },
+        {.1, .1, .1, 1});
+  }
+  for (u32 i = 0; i < big_markers_count; i++) {
+    i32 frame = first_big_marker_frame + (i * big_marker_interval);
+    f32 pos   = (frame - *start) / (*width) * c->content_rect.width;
+
+    c->draw_list->push_text(String::from(frame, &state.per_frame_alloc),
+                            {number_bar.x + pos, number_bar.y + (number_bar.height - 15) / 2}, 15,
+                            {0, 0, 0, 1}, {true, false});
+    f32 bar_width = 1;
+    c->draw_list->push_rect(
+        {
+            number_bar.x + pos - (bar_width / 2.f),
+            number_bar.y + number_bar.height,
+            bar_width,
+            c->content_rect.height,
+        },
+        {.1, .1, .1, 1});
+  }
+
+  f32 pointer_pos        = (*current_frame - *start) / (*width) * c->content_rect.width;
+  String pointer_text    = String::from(*current_frame, &state.per_frame_alloc);
+  f32 pointer_text_width = get_text_width(pointer_text, 15);
+  c->draw_list->push_rect(
+      {c->content_rect.x + pointer_pos - (30 / 2.f), number_bar.y + 2, 30, number_bar.height - 4},
       {.2, .3, .9, 1});
   c->draw_list->push_rect(
       {
-          c->content_rect.x + pointer_pos - (7 / 2.f),
+          c->content_rect.x + pointer_pos - (4 / 2.f),
           c->content_rect.y + (15 / 2.f),
-          7,
+          4,
           c->content_rect.height - (15 / 2.f),
       },
       {.2, .3, .9, 1});
+  c->draw_list->push_text(String::from(*current_frame, &state.per_frame_alloc),
+                          {number_bar.x + pointer_pos, number_bar.y + (number_bar.height - 15) / 2},
+                          15, {1, 1, 1, 1}, {true, false});
+
+  timeline_state.id    = me;
+  timeline_state.start = *start;
+  timeline_state.width = *width;
 }
 
-void keyframe(ImmId id, int *frame, int track_i = 0) {
+b8 keyframe(ImmId id, int *frame, int track_i = 0, Shape shape = Shape::DIAMOND) {
   auto c = get_current_container();
+  if (!c || !c->visible) return false;
+  c->draw_list->push_clip(c->content_rect);
 
-  float pos             = (*frame - *tstart) / (*twidth) * c->content_rect.width;
-  float vertical_offset = track_i * 15;
+  f32 pos             = (*frame - timeline_state.start) / (timeline_state.width)*c->content_rect.width;
+  f32 vertical_offset = track_i * 20;
+  Vec2f screen_pos    = {c->content_rect.x + pos, c->content_rect.y + 50 + vertical_offset};
+
+  Color color = {.15, .4, .1, 1};
+  if (state.dragging == timeline_state.id) {
+    if (in_rect(screen_pos, Rect::from_ends(state.input->mouse_pos, state.active_position),
+                c->content_rect)) {
+          c->draw_list->push_shape(shape, screen_pos, 15, darken(color, .2f));
+    }
+  } else if (state.just_stopped_dragging == timeline_state.id) {
+    if (in_rect(screen_pos, Rect::from_ends(state.input->mouse_pos, state.active_position),
+                c->content_rect)) {
+      selected_keyframes.insert(id);
+    }
+  }
+
+  bool in_selection = false;
+  if (selected_keyframes.count(id)) {
+    in_selection = true;
+  }
 
   Rect hot_rect = {c->content_rect.x + pos - (10 / 2.f),
                    c->content_rect.y + 50 - (10 / 2.f) + vertical_offset, 10, 10};
-  bool hot      = do_hoverable(id, hot_rect, c->content_rect);
-  bool active   = do_active(id);
-  bool dragging = do_draggable(id);
-  bool selected = do_selectable(id);
+  b8 hot        = do_hoverable(id, hot_rect, c->content_rect);
+  b8 active     = do_active(id);
+  b8 dragging   = do_draggable(id);
+  b8 selected   = do_selectable(id) || in_selection || active;
 
-  Color color = {.2, .9, .3, 1};
+  if (selected && !in_selection) {
+    selected_keyframes.clear();
+    selected_keyframes.insert(id);
+  }
+
   if (hot) {
-    nothing_else_touched = false;
-    color                = lighten(color, .2);
+    color = lighten(color, .2);
   }
 
   if (dragging) {
-    float pos     = state.input->mouse_pos.x - c->content_rect.x;
-    int new_frame = (pos / c->content_rect.width) * (*twidth) + (*tstart);
+    f32 pos       = state.input->mouse_pos.x - c->content_rect.x;
+    i32 new_frame = (pos / c->content_rect.width) * (timeline_state.width) + (timeline_state.start);
     *frame        = new_frame;
   }
 
-  c->draw_list->push_quad(
-      {c->content_rect.x + pos - (10 / 2.f), 50 + c->content_rect.y + vertical_offset},
-      {c->content_rect.x + pos, 50 + c->content_rect.y - (10 / 2.f) + vertical_offset},
-      {c->content_rect.x + pos + (10 / 2.f), 50 + c->content_rect.y + vertical_offset},
-      {c->content_rect.x + pos, 50 + c->content_rect.y + (10 / 2.f) + vertical_offset}, color);
+  if (selected) {
+    c->draw_list->push_shape(shape, screen_pos, 15, darken(color, .2f));
+  }
+  c->draw_list->push_shape(shape, screen_pos, 10, color);
+
+  return selected;
 }
 
-void end_timeline() {
-  ImmId me = timeline_id;
-
-  auto c = get_current_container();
-  if (!c || !c->visible) return;
-
-  bool hot =
-      do_hoverable(me, nothing_else_touched && in_rect(state.input->mouse_pos, c->content_rect) &&
-                           in_top_container());
-  bool active   = do_active(me);
-  bool dragging = do_draggable(me);
-
-  if ((dragging && hot) ||
-      (state.just_deactivated == me && hot && !dragging && !state.just_stopped_dragging)) {
-    // *tstart -= (state.input->mouse_x - state.input->prev_mouse_x) / 20.f;
-    float pos       = state.input->mouse_pos.x - c->content_rect.x;
-    int frame       = (pos / c->content_rect.width) * (*twidth) + (*tstart);
-    *tcurrent_frame = frame;
-  }
-
-  if (hot) {
-    if (state.input->keys[(int)Keys::LCTRL]) {
-      *twidth *= 1 + (state.input->scrollwheel_count / 50);
-    } else {
-      *tstart += (state.input->scrollwheel_count * 3.f);
-    }
-  }
-}
+void end_timeline() {}
 
 }  // namespace Imm
 
 namespace Imm {
 void first_column(float *width) {
-  Rect new_rect  = get_current_container()->content_rect;
+  Rect new_rect  = get_current_container()->get_remaining_rect();
   new_rect.width = *width;
   new_rect.width = width ? *width
                          : (get_current_container()->content_rect.x +

@@ -462,3 +462,29 @@ String filepath_concat(String str1, String str2, StackAllocator *alloc) {
     return ret;
 }
 
+struct NoVal {};
+template <typename T = b8>
+struct Optional {
+    b8 exists = false;
+    T value;
+
+    Optional(b8 exists, T value) {
+        this->exists = exists;
+        this->value = value;
+    }
+
+    Optional(const NoVal& empty) {
+        exists = false;
+    }
+
+    Optional(const T& value) {
+        exists = true;
+        this->value = value;
+    }
+
+    static Optional of(T value) {
+        return {true, value};
+    }
+
+    constexpr static NoVal empty = {};
+};
