@@ -16,9 +16,9 @@ enum struct RoundStage
 };
 struct PlayerData
 {
-    ClientId id = 0;
+    ClientId id = -1;
     PlayerName name;
-    int team = -1;
+    int family = -1;
     bool ready = false;
 };
 struct AnswerState
@@ -64,17 +64,29 @@ struct GameState
         return nullptr;
     }
 
+    i32 get_player_position(ClientId id) {
+      i32 family_counts[2] = {0, 0};
+      for (int i = 0; i < players.len; i++) {
+        if (players[i].id == id) {
+          return family_counts[players[i].family];
+        }
+        family_counts[players[i].family]++;
+      }
+
+      return -1;
+    }
+
     int num_players()
     {
         return players.len;
     }
 
-    int num_players(int team)
+    int num_players(int family)
     {
         int count = 0;
         for (int i = 0; i < players.len; i++)
         {
-            if (players[i].team == team)
+            if (players[i].family == family)
             {
                 count++;
             }
@@ -94,24 +106,24 @@ struct GameState
         return true;
     }
 
-    ClientId get_indexed_player(int team, int index)
+    PlayerData *get_indexed_player(int family, int index)
     {
         int count = 0;
         for (int i = 0; i < players.len; i++)
         {
-            if (players[i].team == team)
+            if (players[i].family == family)
             {
                 if (count == index)
                 {
-                    return players[i].id;
+                    return &players[i];
                 }
                 count++;
             }
         }
-        return -1;
+        return nullptr;
     }
 
-    std::pair<ClientId, ClientId> faceoff_players()
+    std::pair<PlayerData*, PlayerData*> faceoff_players()
     {
         int family1Index = round % num_players(0);
         int family2Index = round % num_players(1);
@@ -124,7 +136,7 @@ struct GameState
                buzzing_family == -1;
     }
 
-    ClientId who_buzzed()
+    PlayerData *who_buzzed()
     {
         auto faceoffers = faceoff_players();
 
@@ -138,11 +150,11 @@ struct GameState
         }
         else
         {
-            return -1;
+            return nullptr;
         }
     }
 
-    ClientId who_didnt_buzz()
+    PlayerData *who_didnt_buzz()
     {
         auto faceoffers = faceoff_players();
         if (buzzing_family == 1)
@@ -155,11 +167,11 @@ struct GameState
         }
         else
         {
-            return -1;
+            return nullptr;
         }
     }
 
-    ClientId who_won_faceoff()
+    PlayerData *who_won_faceoff()
     {
         auto faceoffers = faceoff_players();
 
@@ -173,11 +185,11 @@ struct GameState
         }
         else
         {
-            return -1;
+            return nullptr;
         }
     }
 
-    ClientId whose_turn()
+    PlayerData *whose_turn()
     {
         int index = current_players[playing_family] % num_players(playing_family);
         return get_indexed_player(playing_family, index);
@@ -189,18 +201,18 @@ struct GameState
         {
             if (players[i].id == client_id)
             {
-                return players[i].team;
+                return players[i].family;
             }
         }
         return -1;
     }
 
-    ClientId who_can_answer()
+    PlayerData *who_can_answer()
     {
         if (round_stage == RoundStage::FACEOFF)
         {
             if (buzzing_family == -1) // no one has buzzed
-                return -1;
+                return nullptr;
             else if (this_round_points == 0 && incorrects == 0) // no one has answered yet
             {
                 // only the buzzer can answer
@@ -223,7 +235,7 @@ struct GameState
         }
 
         // can't answer during any of the other stages
-        return -1;
+        return nullptr;
     }
 
     // return rank of answer, -1 if incorrect
@@ -231,8 +243,7 @@ struct GameState
     {
         for (int i = 0; i < answers.len; ++i)
         {
-            auto &a = answers[i];
-            if (strcmp(last_answer, answers[i].answer))
+            if (strcmp(last_answer, answers[i].answer) && !answers[i].revealed)
             {
                 return i;
             }
@@ -260,5 +271,29 @@ struct GameState
 struct ClientGameData
 {
     ClientId my_id;
-    GameState game_state;
+    GameId game_id;
+    
+    Array<PlayerName, 2> family_names = {{}, {}};
+    Array<PlayerData, MAX_PLAYERS_PER_GAME> players = {};
+    PlayerData *get_player_data(ClientId client_id)
+    {
+        for (int i = 0; i < players.len; i++)
+        {
+            if (players[i].id == client_id)
+            {
+                return &players[i];
+            }
+        }
+
+        return nullptr;
+    }
+
+    AllocatedString<128> question;
+    Array<AnswerState, 8> answers;
+
+    i32 round = -1;
+    RoundStage round_stage;
+
+    std::pair<ClientId, ClientId> faceoffers;
+    i32 buzzing_family = -1;
 };

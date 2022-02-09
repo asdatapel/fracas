@@ -45,62 +45,6 @@ StandardPbrEnvMaterial create_env_mat(RenderTarget temp_target, Texture unfilter
   return env_mat;
 }
 
-// void draw_bar_overlay(Scene *scene, RenderTarget previous_target, int index, String answer, int
-// score)
-// {
-//     RenderTarget target = scene->bars[index].target;
-//     target.bind();
-//     target.clear();
-
-//     float aspect_ratio = 2.f;
-//     float text_scale = 4.f;
-//     {
-//         float target_border = 0.05f;
-//         Rect sub_target = {0, 0,
-//                            .8f * target.width,
-//                            .5f * target.height};
-//         draw_centered_text(scene->font, target, answer, sub_target, target_border, text_scale,
-//         aspect_ratio);
-//     }
-
-//     {
-//         assert(score > 0 && score < 100);
-//         char buf[3];
-//         _itoa_s(score, buf, 10);
-//         String text;
-//         text.data = buf;
-//         text.len = strlen(buf);
-
-//         float border = 0.025f;
-//         Rect sub_target = {(1 - .19f) * target.width,
-//                            0,
-//                            .19f * target.width,
-//                            .5f * target.height};
-//         draw_centered_text(scene->font, target, text, sub_target, border, text_scale,
-//         aspect_ratio);
-//     }
-
-//     {
-//         Texture num_tex = scene->bars[index].num_tex;
-//         float img_width = (float)num_tex.width / target.width;
-//         float img_height = (float)num_tex.height / target.height;
-
-//         float border = .04f;
-//         float scale = (.5f - (border * 2.f)) / (img_height * aspect_ratio);
-//         float height = img_height * scale;
-//         float width = img_width * scale;
-
-//         float top = .5f + border;
-//         float left = (1.f - width) / 2.f;
-
-//         Rect rect = {left * target.width, top * target.height, target.width * width,
-//         target.height * height * aspect_ratio}; draw_textured_rect(target, rect, {}, num_tex);
-//     }
-
-//     target.color_tex.gen_mipmaps();
-//     previous_target.bind();
-// }
-
 Entity *Scene::get(int id) {
   return entities.data[id].assigned ? &entities.data[id].value : nullptr;
 }
@@ -487,6 +431,7 @@ void Scene::set_sequence(KeyedAnimation *seq) {
 }
 void Scene::play_sequence() { playing_sequence = true; }
 void Scene::stop_sequence() { playing_sequence = false; }
+bool Scene::is_sequence_finished() { return get_frame() > current_sequence->end_frame; }
 void Scene::set_t(f32 t) { sequence_t = t; }
 void Scene::set_frame(u32 frame) {
   assert(current_sequence);

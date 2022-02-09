@@ -73,6 +73,9 @@ struct RpcClient : public BaseRpcClient
     using BaseRpcClient::BaseRpcClient;
     bool handle_rpc(char*, int);
 
+    bool msg_received();
+    void clear_msgs();
+
 $server_rpc_decls
 
 $client_recv_decls
@@ -90,6 +93,16 @@ $rpc_cases
     }
 
     return true;
+}
+
+bool RpcClient::msg_received() {
+    $msg_received_conditionals
+
+    return false;
+}
+
+void RpcClient::clear_msgs() {
+    $clear_messages
 }
 
 $server_rpc_defs
@@ -127,6 +140,12 @@ $msg_type *RpcClient::get_${rpc}_msg()
     got_${rpc}_msg = false;
     return msg;
 }
+""")
+client_msg_received_conditionals_template = Template("""
+    if (got_${rpc}_msg) return true;
+""")
+client_clear_messages_template = Template("""
+    got_${rpc}_msg = false;
 """)
 
 ##################
@@ -299,12 +318,22 @@ client_client_recv_defs = [client_recv_def_template.substitute(
     for rpc in server_rpcs] + [client_recv_def_template.substitute(
         {'rpc': rpc.name, 'msg_type': rpc.req_type})
     for rpc in client_rpcs]
+client_msg_received_conditionals = [client_msg_received_conditionals_template.substitute(
+    {'rpc': rpc.name}) for rpc in server_rpcs] + [client_msg_received_conditionals_template.substitute(
+        {'rpc': rpc.name})
+    for rpc in client_rpcs]
+client_clear_messages = [client_clear_messages_template.substitute(
+    {'rpc': rpc.name}) for rpc in server_rpcs] + [client_clear_messages_template.substitute(
+        {'rpc': rpc.name})
+    for rpc in client_rpcs]
 client_text = client_file_template.substitute({
     'server_rpc_decls': "".join(client_server_rpc_decls),
     'client_recv_decls': "".join(client_recv_decls),
     'rpc_cases': "".join(client_rpc_cases),
     'server_rpc_defs': "".join(client_server_rpc_defs),
     'client_recv_defs': "".join(client_client_recv_defs),
+    'msg_received_conditionals': "".join(client_msg_received_conditionals),
+    'clear_messages':  "".join(client_clear_messages),
 })
 
 

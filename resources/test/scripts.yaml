@@ -25,18 +25,59 @@ scripts:
         id: 1
   - name: Ask Question Sequence
     inputs: 
-      - name: faceoff_camera
-        value: 87
-        id: 0
-      - name: board_closeup_camera
-        value: 90
-        id: 1
   - name: PlayerBuzzedSequence
     inputs: 
+  - name: PrepForPromptForAnswerSequence
+    inputs: 
+      - name: camera_faceoff_main
+        value: 94
+        id: 0
+      - name: camera_family_0_player_0
+        value: 95
+        id: 1
+      - name: camera_family_0_player_1
+        value: 96
+        id: 2
+      - name: camera_family_0_player_2
+        value: 97
+        id: 3
+      - name: camera_family_0_player_3
+        value: 98
+        id: 4
+      - name: camera_family_0_player_4
+        value: 99
+        id: 5
+      - name: camera_family_1_player_0
+        value: 0
+        id: 6
+      - name: camera_family_1_player_1
+        value: 0
+        id: 7
+      - name: camera_family_1_player_2
+        value: 0
+        id: 8
+      - name: camera_family_1_player_3
+        value: 0
+        id: 9
+      - name: camera_family_1_player_4
+        value: 0
+        id: 10
   - name: PromptForAnswerSequence
     inputs: 
+      - name: camera_faceoff_left
+        value: 92
+        id: 0
+      - name: camera_faceoff_right
+        value: 93
+        id: 1
   - name: Pass Or Play Sequence
     inputs: 
+      - name: camera_faceoff_left
+        value: 0
+        id: 0
+      - name: camera_faceoff_right
+        value: 0
+        id: 1
   - name: StartPlaySequence
     inputs: 
       - name: camera
@@ -57,33 +98,9 @@ scripts:
     inputs: 
   - name: FlipAnswerSequence
     inputs: 
-      - name: bar 1
-        value: 71
-        id: 0
-      - name: bar 2
-        value: 72
-        id: 1
-      - name: bar 3
-        value: 73
-        id: 2
-      - name: bar 4
-        value: 74
-        id: 3
-      - name: bar 5
-        value: 75
-        id: 4
-      - name: bar 6
-        value: 76
-        id: 5
-      - name: bar 7
-        value: 77
-        id: 6
-      - name: bar 8
-        value: 78
-        id: 7
       - name: camera
         value: 90
-        id: 8
+        id: 0
   - name: EeeeeggghhhhSequence
     inputs: 
       - name: camera

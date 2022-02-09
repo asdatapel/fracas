@@ -41,8 +41,8 @@ struct Editor
     {
         if (playing)
         {
-            play_scenes.update_scripts(1 / 60.f, assets, rpc_client, input);
-            play_scenes.update_and_draw(1 / 60.f, nullptr, {}, 1);
+            play_scenes.update_scripts(1 / 60.f, assets, get_rpc_client(rpc_client), input);
+            play_scenes.update_and_draw(1 / 60.f, nullptr, {}, input, assets, 1);
             debug_ui(&play_scenes, backbuffer, input, assets, mem);
         }
         else
@@ -52,7 +52,7 @@ struct Editor
             if (input->keys[(int)Keys::RIGHT]) exposure += 0.01f;
             Transform camera_transform;
             Camera *camera = get_camera(&editor_scenes->main, &camera_transform);
-            editor_scenes->update_and_draw(1 / 60.f, camera, camera_transform.position, exposure);
+            editor_scenes->update_and_draw(1 / 60.f, camera, camera_transform.position, input, assets, exposure);
             debug_ui(editor_scenes, backbuffer, input, assets, mem);
         }
     }
@@ -180,6 +180,23 @@ struct Editor
         Imm::end_window();
 
         Imm::start_window("Deets", {target.width - 300.f, 0, 300, 400});
+        
+        // TODO this should be in another window, probably the main entities window
+        if (Imm::button("Add Camera")) {
+              Entity new_e;
+              new_e.type = EntityType::CAMERA;
+              new_e.transform.position.x = 0;
+              new_e.transform.position.z = 0;
+              new_e.transform.position.y = 10;
+              new_e.transform.rotation.x = 0;
+              new_e.transform.rotation.z = 0;
+              new_e.transform.rotation.y = 0;
+              new_e.transform.scale.x = 1;
+              new_e.transform.scale.z = 1;
+              new_e.transform.scale.y = 1;
+              scenes->main.entities.push_back(new_e);
+        }
+
         if (selected_entity)
         {
             Imm::textbox(&selected_entity->debug_tag.name);
@@ -337,16 +354,11 @@ struct Editor
         Imm::end_window();
 
 
-        // static KeyedAnimation *selected_keyed_animation = nullptr;
-        // static float play_t = 0;
-        // static bool playing_timeline = false;
-        // static int current_frame = 0;
-
         Imm::start_window("Assets", {1000, 500, 600, 400});
-        static i32 renaming = -1;
         if (Imm::button("Add KeyedAnimation")) {
             assets->create_keyed_animation(RESOURCE_PATH);
         }
+
         for (int i = 0; i < assets->keyed_animations.size; i++) {
           if (assets->keyed_animations.data[i].assigned) {
             KeyedAnimation *ka = &assets->keyed_animations.data[i].value;
@@ -356,14 +368,29 @@ struct Editor
                 editor_scenes->main.stop_sequence();
                 editor_scenes->main.set_sequence(ka);
             }
+
             if (!strcmp(tmp, ka->asset_name)) {
                 ka->asset_name = String::copy(tmp, &assets_allocator);
             }
+            
+            if (Imm::state.was_last_item_right_clicked) {
+              Imm::open_popup((ImmId)ka, input->mouse_pos);
+            }
+            if (Imm::start_popup((ImmId)ka, {})->visible) {
+              if (Imm::button("Delete")) {
+                assets->keyed_animations.free(&assets->keyed_animations.data[i]);
+                Imm::close_popup();
+              }
+            }
+            Imm::end_popup();
           }
         }
         Imm::end_window();
+        
 
         window_timeline(scenes, assets, input);
+
+        window_game();
 
         bind_shader(lines_shader);
         glUniformMatrix4fv(lines_shader.uniform_handles[(int)UniformId::VIEW], 1, GL_FALSE, &debug_camera.view[0][0]);
@@ -406,6 +433,9 @@ struct Editor
                 to->entities.data[i].assigned = from->entities.data[i].assigned;
                 to->entities.data[i].value = from->entities.data[i].value;
             }
+
+            to->active_camera_id = from->active_camera_id;
+
             to->unfiltered_cubemap = from->unfiltered_cubemap;
             to->env_mat = from->env_mat;
 
@@ -413,7 +443,8 @@ struct Editor
             to->planar_target = from->planar_target;
             to->planar_entity = from->planar_entity;
 
-            to->active_camera_id = from->active_camera_id;
+            to->cubemap_visible = from->cubemap_visible;
+
         };
         copy_scene(&play_scenes.main, &editor_scenes->main);
         copy_scene(&play_scenes.xs, &editor_scenes->xs);
@@ -431,8 +462,6 @@ struct Editor
         }
 
         playing = true;
-        play_scenes.game.init({&play_scenes.main, &play_scenes.xs, assets});
-        play_scenes.game.reset({&play_scenes.main, &play_scenes.xs, assets});
     }
 
     void stop_play()
@@ -544,6 +573,11 @@ struct Editor
         transform_out->rotation = {glm::radians(debug_camera.y_rot), glm::radians(-(debug_camera.x_rot + 90)), 0};
         transform_out->scale = {1, 1, 1};
         return &debug_camera;
+    }
+
+    RpcClient *playing_client = nullptr;
+    RpcClient *get_rpc_client(RpcClient *main) {
+      return playing_client ? playing_client : main;
     }
 
     void window_timeline(SceneManager *scenes, Assets *assets, InputState *input) {
@@ -675,13 +709,18 @@ struct Editor
           }
         }
       }
+
+      if (editor_scenes->main.current_sequence)
+        Imm::label(String::from(editor_scenes->main.current_sequence->end_frame, &assets_temp_allocator));
       Imm::next_column(nullptr);
 
       static f32 timeline_start = 0;
       static f32 timeline_width = 60;
       i32 current_frame =
           editor_scenes->main.current_sequence ? editor_scenes->main.get_frame() : -1;
-      Imm::start_timeline("timeline", &current_frame, &timeline_start, &timeline_width);
+      Imm::start_timeline("timeline", &current_frame, &timeline_start, &timeline_width,
+                          editor_scenes->main.current_sequence ? &editor_scenes->main.current_sequence->start_frame : nullptr,
+                          editor_scenes->main.current_sequence ? &editor_scenes->main.current_sequence->end_frame : nullptr);
 
       if (Imm::state.was_last_item_right_clicked) {
         Imm::open_popup("timeline_group_edit", input->mouse_pos);
@@ -823,5 +862,101 @@ struct Editor
           }
         }
       }
+    }
+
+    RpcClient clients[8];
+    GameId game_id = -1;
+    GameState game_state;
+
+    void window_game() {
+      
+      for (int i = 0; i < 8; i++) {
+        if (clients[i].peer.is_connected()) {
+          int msg_len;
+          char msg[MAX_MSG_SIZE];
+          if ((msg_len = clients[i].peer.recieve_msg(msg)) > 0) {
+            if (clients[i].handle_rpc(msg, msg_len)) {
+              clients[i].peer.pop_message();
+            }
+          }
+        }
+      }
+
+      if (playing_client) {
+        for (i32 i = 0; i < 8; i++) {
+          RpcClient *client = &clients[i];
+          if (playing_client != client) {
+            if (client->peer.is_connected() && client->msg_received()) {
+              client->InGameReady({});
+              client->clear_msgs();
+            }
+          }
+        }
+      }
+
+      Imm::start_window("Game", {100, 100, 200, 400});
+
+      static i32 num_players = 2;
+      num_players            = std::clamp(num_players, 1, 8);
+      Imm::num_input(&num_players);
+
+      if (Imm::button("Create Game")) {
+        clients[0].connect("127.0.0.1", 6666);
+
+        CreateGameRequest req;
+        req.owner_name = string_to_allocated_string<64>("host");
+        req.name = string_to_allocated_string<64>(String::from(rand(), &assets_temp_allocator));
+        req.is_self_hosted = true;
+        clients[0].CreateGame(req);
+      }
+      if (Imm::button("Start Game")) {
+        StartGameRequest req;
+        req.game_id = game_id;
+        clients[0].StartGame(req);
+      }
+      
+      if (CreateGameResponse *resp = clients[0].get_CreateGame_msg())
+      {
+        game_id = resp->game_id;
+
+        for (i32 i = 1; i < num_players; i++) {
+          JoinGameRequest req;
+          req.game_id     = resp->game_id;
+          req.player_name = string_to_allocated_string<64>(String("player_").concat(
+              String::from(i, &assets_temp_allocator), &assets_temp_allocator));
+
+          clients[i].connect("127.0.0.1", 6666);
+          clients[i].JoinGame(req);
+        }
+
+        clients[0].GetGame({game_id});
+        playing_client = &clients[0];
+      }
+
+      if (game_id > -1) {
+        if (clients[0].got_GetGame_msg) {
+          auto resp = clients[0].get_GetGame_msg();
+          game_state.players.clear();
+
+          for (i32 i = 0; i < resp->players.size(); i++) {
+            PlayerData pd;
+            pd.name  = resp->players[i].name;
+            pd.id = resp->players[i].user_id;
+            pd.family = resp->players[i].family;
+            game_state.players.append(pd);
+          }
+          
+          clients[0].GetGame({game_id});
+        }
+      }
+
+      static i32 selected_player = -1;
+      for (i32 i = 0; i < game_state.players.len; i++) {
+        if (Imm::list_item(game_state.players[i].name, selected_player == i)) {
+          selected_player = i;
+          playing_client = &clients[i];
+        }
+      }
+      Imm::end_window();
     }
 };

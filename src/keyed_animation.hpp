@@ -169,6 +169,9 @@ struct KeyedAnimationTrack {
 
 struct KeyedAnimation : Asset {
   u32 fps = 30;
+  u32 start_frame = 0;
+  u32 end_frame = 100;  
+  
   DynamicArray<KeyedAnimationTrack> tracks;
 
   KeyedAnimation(u32 fps) : fps(fps), tracks(&assets_allocator) {}

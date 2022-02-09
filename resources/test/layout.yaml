@@ -2,70 +2,70 @@ windows:
   - id: 218538426
     name: Deets
     visible: true
-    z: 7
+    z: 8
     rect: 
-      x: 1545.750000
+      x: 1611.750000
       y: 30.000000
-      width: 374.250000
-      height: 738.055542
+      width: 308.250000
+      height: 705.000000
   - id: 236255155
     name: Scene
     visible: true
-    z: 8
+    z: 9
     rect: 
       x: 194.500000
       y: 30.000000
-      width: 1351.250000
-      height: 738.055542
+      width: 1417.250000
+      height: 705.000000
   - id: 654973730
     name: Entitiesasd
     visible: true
     z: 0
     rect: 
-      x: 1572.000000
-      y: 83.000000
+      x: 1616.000000
+      y: 168.000000
       width: 289.000000
       height: 303.000000
   - id: 1396417418
     name: Entities
     visible: true
-    z: 6
+    z: 7
     rect: 
       x: 0.000000
       y: 30.000000
       width: 194.500000
-      height: 1050.000000
-  - id: 2086616133
-    name: Camera Timeline
-    visible: true
-    z: 2
-    rect: 
-      x: 1551.000000
-      y: 503.000000
-      width: 355.000000
-      height: 245.000000
-  - id: 2576551068
-    name: Timeline
+      height: 705.000000
+  - id: 2089134463
+    name: Game
     visible: true
     z: 5
     rect: 
-      x: 194.500000
-      y: 768.055542
-      width: 1725.500000
-      height: 311.944458
+      x: 100.000000
+      y: 100.000000
+      width: 200.000000
+      height: 400.000000
+  - id: 2576551068
+    name: Timeline
+    visible: true
+    z: 6
+    rect: 
+      x: 0.000000
+      y: 735.000000
+      width: 1920.000000
+      height: 345.000000
   - id: 2816484408
     name: Assets
     visible: true
     z: 1
     rect: 
-      x: 1641.000000
-      y: 658.000000
+      x: 1651.000000
+      y: 536.000000
       width: 168.000000
       height: 176.000000
   - id: 3894046541
     name: Scripts
     visible: false
-    z: 2
+    z: 3
     rect: 
       x: 1582.500000
       y: 568.660400
@@ -74,7 +74,7 @@ windows:
   - id: 3959454927
     name: Script Deets
     visible: false
-    z: 2
+    z: 3
     rect: 
       x: 1576.000000
       y: 792.000000
@@ -82,11 +82,11 @@ windows:
       height: 212.000000
 anchors: 
   anchored_left: 1396417418
-  anchored_left_priority: 5
+  anchored_left_priority: 3
   anchored_right: 218538426
-  anchored_right_priority: 3
+  anchored_right_priority: 4
   anchored_up: 0
   anchored_up_priority: 0
   anchored_down: 2576551068
-  anchored_down_priority: 4
+  anchored_down_priority: 5
   anchored_center: 236255155

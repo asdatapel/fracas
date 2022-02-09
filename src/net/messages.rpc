@@ -17,7 +17,7 @@ server ListGames ListGamesRequest ListGamesResponse
 message Player
 user_id int
 name string
-team bool
+family int
 
 message GetGameRequest
 game_id int
@@ -94,6 +94,12 @@ server InGameChoosePassOrPlay InGameChoosePassOrPlayMessage
 message InGameStartRoundMessage
 round int
 
+message GameStatePingMessage
+my_id int
+players list Player
+
+client GameStatePing GameStatePingMessage
+
 client InGameStartRound InGameStartRoundMessage
 
 message InGameStartFaceoffMessage 
@@ -112,8 +118,15 @@ client InGamePromptPassOrPlay
 
 message InGamePlayerBuzzedMessage
 user_id int
+buzzing_family int
 
 client InGamePlayerBuzzed InGamePlayerBuzzedMessage
+
+message InGamePrepForPromptForAnswerMessage
+family int
+player_position int
+
+client InGamePrepForPromptForAnswer InGamePrepForPromptForAnswerMessage
 
 message InGamePromptForAnswerMessage
 user_id int
@@ -121,12 +134,12 @@ user_id int
 client InGamePromptForAnswer InGamePromptForAnswerMessage
 
 message InGameStartPlayMessage
-team int
+family int
 
 client InGameStartPlay InGameStartPlayMessage
 
 message InGameStartStealMessage
-team int
+family int
 
 client InGameStartSteal InGameStartStealMessage
 

@@ -534,7 +534,7 @@ struct LobbyPage : MenuPage
             std::vector<List::Item> family_2_list_items;
             for (auto p : get_game_resp->players)
             {
-                if (!p.team)
+                if (p.family == 0)
                     family_1_list_items.push_back({p.user_id, p.name});
                 else
                     family_2_list_items.push_back({p.user_id, p.name});
@@ -566,11 +566,11 @@ struct LobbyPage : MenuPage
             game_data->my_id = msg->your_id;
             for (int i = 0; i < family_1_list.items.size(); i++)
             {
-                game_data->game_state.players.append({family_1_list.items[i].id, family_1_list.items[i].name, 0});
+                game_data->players.append({family_1_list.items[i].id, family_1_list.items[i].name, 0});
             }
             for (int i = 0; i < family_2_list.items.size(); i++)
             {
-                game_data->game_state.players.append({family_2_list.items[i].id, family_2_list.items[i].name, 1});
+                game_data->players.append({family_2_list.items[i].id, family_2_list.items[i].name, 1});
             }
 
             menu->current = nullptr;

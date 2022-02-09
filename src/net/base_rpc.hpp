@@ -19,10 +19,19 @@ struct BaseRpcClient
 {
     ClientData *client_data;
     Peer peer;
+    BaseRpcClient() = default;
     BaseRpcClient(const char *address, uint16_t port)
     {
         peer.open(address, port, false);
     }
+
+    void connect(const char *address, uint16_t port) {
+        if (peer.is_connected()) {
+            peer.close();
+        }
+        peer.open(address, port, false);
+    }
+    
 };
 
 struct Lobby;

@@ -1,126 +1,85 @@
 keyed_animations: 
   - asset_id: 0
-    asset_name: resources/test/0
-    fps: 30
-    tracks: 
-      - entity_id: 38
-        keys: 
-          - transform: 
-              position: 
-                x: -9.319868
-                y: 0.000000
-                z: 3.498086
-              rotation: 
-                x: 0.000000
-                y: 1.288841
-                z: 0.000000
-              scale: 
-                x: 0.777317
-                y: 0.777317
-                z: 0.777317
-            interpolation_type: 1
-            frame: 0
-          - transform: 
-              position: 
-                x: -9.319868
-                y: 0.000000
-                z: 3.498086
-              rotation: 
-                x: 0.000000
-                y: 1.288841
-                z: 0.000000
-              scale: 
-                x: 0.777317
-                y: 0.777317
-                z: 0.777317
-            interpolation_type: 1
-            frame: 19
-      - entity_id: 40
-        keys: 
-          - transform: 
-              position: 
-                x: -6.780331
-                y: 1.208912
-                z: 4.447721
-              rotation: 
-                x: -2.996711
-                y: 1.156400
-                z: 0.719928
-              scale: 
-                x: 0.777317
-                y: 0.777317
-                z: 0.777317
-            interpolation_type: 1
-            frame: 0
-          - transform: 
-              position: 
-                x: -6.780331
-                y: 6.322080
-                z: 13.054407
-              rotation: 
-                x: -0.058432
-                y: -0.095878
-                z: -2.548834
-              scale: 
-                x: 0.777317
-                y: 0.777317
-                z: 0.777317
-            interpolation_type: 1
-            frame: 19
-  - asset_id: 1
-    asset_name: resources/test/1
-    fps: 30
-    tracks: 
-      - entity_id: 49
-        keys: 
-          - transform: 
-              position: 
-                x: 0.000000
-                y: 3.500000
-                z: 0.000000
-              rotation: 
-                x: 2.646530
-                y: -0.000000
-                z: 0.000000
-              scale: 
-                x: 1.000000
-                y: 1.000000
-                z: 1.000000
-            interpolation_type: 3
-            frame: 0
-          - transform: 
-              position: 
-                x: 2.069988
-                y: 5.630795
-                z: 8.735184
-              rotation: 
-                x: 2.646530
-                y: -0.000000
-                z: 0.000000
-              scale: 
-                x: 1.000000
-                y: 1.000000
-                z: 1.000000
-            interpolation_type: 3
-            frame: 5
-          - transform: 
-              position: 
-                x: -2.239833
-                y: 3.574431
-                z: 11.085793
-              rotation: 
-                x: 2.646530
-                y: -0.000000
-                z: 0.000000
-              scale: 
-                x: 1.000000
-                y: 1.000000
-                z: 1.000000
-            interpolation_type: 1
-            frame: 41
-  - asset_id: 2
     asset_name: resources/test/intro
     fps: 30
+    start_frame: 0
+    end_frame: 326
+    tracks: 
+      - entity_id: 87
+        keys: 
+          - transform: 
+              position: 
+                x: 14.387388
+                y: 8.380891
+                z: 17.006573
+              rotation: 
+                x: -0.272271
+                y: 0.757474
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 2
+            frame: 0
+          - transform: 
+              position: 
+                x: -10.532612
+                y: 8.380891
+                z: 17.006573
+              rotation: 
+                x: -0.272271
+                y: -0.542526
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 1
+            frame: 300
+  - asset_id: 1
+    asset_name: resources/test/round_start
+    fps: 30
+    start_frame: 0
+    end_frame: 100
+    tracks: 
+      - entity_id: 87
+        keys: 
+          - transform: 
+              position: 
+                x: 0.000000
+                y: 1.600000
+                z: 3.501438
+              rotation: 
+                x: 0.000000
+                y: 0.000000
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 1
+            frame: 0
+          - transform: 
+              position: 
+                x: 0.000000
+                y: 1.584279
+                z: 3.393321
+              rotation: 
+                x: 0.000000
+                y: 0.000000
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 1
+            frame: 60
+  - asset_id: 2
+    asset_name: resources/test/faceoff_start
+    fps: 30
+    start_frame: 0
+    end_frame: 190
     tracks: 
       - entity_id: 87
         keys: 
@@ -244,3 +203,41 @@ keyed_animations:
                 z: 1.000000
             interpolation_type: 1
             frame: 401
+  - asset_id: 3
+    asset_name: resources/test/question_start
+    fps: 30
+    start_frame: 0
+    end_frame: 155
+    tracks: 
+      - entity_id: 87
+        keys: 
+          - transform: 
+              position: 
+                x: 0.000000
+                y: 6.420000
+                z: 1.077185
+              rotation: 
+                x: 0.000000
+                y: 0.000000
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 0
+            frame: 0
+          - transform: 
+              position: 
+                x: 0.000000
+                y: 1.445736
+                z: 2.657185
+              rotation: 
+                x: 0.000000
+                y: 0.000000
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 0
+            frame: 150
