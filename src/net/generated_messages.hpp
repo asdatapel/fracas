@@ -26,9 +26,11 @@ enum struct Message : char
 	InGameAnswerMessage,
 	InGameChoosePassOrPlayMessage,
 	InGameStartRoundMessage,
+	GameStatePingMessage,
 	InGameStartFaceoffMessage,
 	InGameAskQuestionMessage,
 	InGamePlayerBuzzedMessage,
+	InGamePrepForPromptForAnswerMessage,
 	InGamePromptForAnswerMessage,
 	InGameStartPlayMessage,
 	InGameStartStealMessage,
@@ -209,13 +211,13 @@ struct Player
 {
     int32_t user_id = {};
     AllocatedString<64> name = {};
-    bool team = false;
+    int32_t family = {};
 };
 void append(MessageBuilder *msg, Player &in)
 {
     append(msg, in.user_id);
     append(msg, in.name);
-    append(msg, in.team);
+    append(msg, in.family);
 }
 uint32_t read(MessageReader *msg, Player *out)
 {
@@ -223,7 +225,7 @@ uint32_t read(MessageReader *msg, Player *out)
 
     len += read(msg, &out->user_id);
     len += read(msg, &out->name);
-    len += read(msg, &out->team);
+    len += read(msg, &out->family);
     return len;
 }
 void append(MessageBuilder *msg, std::vector<Player> &in)
@@ -895,6 +897,48 @@ uint32_t read(MessageReader *msg, std::vector<InGameStartRoundMessage> *out)
 	return len;
 };
 
+struct GameStatePingMessage 
+{
+    int32_t my_id = {};
+    std::vector<Player> players = {};
+};
+void append(MessageBuilder *msg, GameStatePingMessage &in)
+{
+    append(msg, in.my_id);
+    append(msg, in.players);
+}
+uint32_t read(MessageReader *msg, GameStatePingMessage *out)
+{
+    uint32_t len = 0;
+
+    len += read(msg, &out->my_id);
+    len += read(msg, &out->players);
+    return len;
+}
+void append(MessageBuilder *msg, std::vector<GameStatePingMessage> &in)
+{
+	append(msg, (uint16_t)in.size());
+	for (auto &it : in)
+    {
+        append(msg, it);
+    }
+};
+uint32_t read(MessageReader *msg, std::vector<GameStatePingMessage> *out)
+{
+	uint32_t len = 0;
+
+	uint16_t list_len;
+	len += read(msg, &list_len);
+	for (int i = 0; i < list_len; i++)
+    {
+		GameStatePingMessage elem;
+        len += read(msg, &elem);
+        out->push_back(elem);
+	}
+
+	return len;
+};
+
 struct InGameStartFaceoffMessage 
 {
     int32_t faceoffer_0_id = {};
@@ -982,16 +1026,19 @@ uint32_t read(MessageReader *msg, std::vector<InGameAskQuestionMessage> *out)
 struct InGamePlayerBuzzedMessage 
 {
     int32_t user_id = {};
+    int32_t buzzing_family = {};
 };
 void append(MessageBuilder *msg, InGamePlayerBuzzedMessage &in)
 {
     append(msg, in.user_id);
+    append(msg, in.buzzing_family);
 }
 uint32_t read(MessageReader *msg, InGamePlayerBuzzedMessage *out)
 {
     uint32_t len = 0;
 
     len += read(msg, &out->user_id);
+    len += read(msg, &out->buzzing_family);
     return len;
 }
 void append(MessageBuilder *msg, std::vector<InGamePlayerBuzzedMessage> &in)
@@ -1011,6 +1058,48 @@ uint32_t read(MessageReader *msg, std::vector<InGamePlayerBuzzedMessage> *out)
 	for (int i = 0; i < list_len; i++)
     {
 		InGamePlayerBuzzedMessage elem;
+        len += read(msg, &elem);
+        out->push_back(elem);
+	}
+
+	return len;
+};
+
+struct InGamePrepForPromptForAnswerMessage 
+{
+    int32_t family = {};
+    int32_t player_position = {};
+};
+void append(MessageBuilder *msg, InGamePrepForPromptForAnswerMessage &in)
+{
+    append(msg, in.family);
+    append(msg, in.player_position);
+}
+uint32_t read(MessageReader *msg, InGamePrepForPromptForAnswerMessage *out)
+{
+    uint32_t len = 0;
+
+    len += read(msg, &out->family);
+    len += read(msg, &out->player_position);
+    return len;
+}
+void append(MessageBuilder *msg, std::vector<InGamePrepForPromptForAnswerMessage> &in)
+{
+	append(msg, (uint16_t)in.size());
+	for (auto &it : in)
+    {
+        append(msg, it);
+    }
+};
+uint32_t read(MessageReader *msg, std::vector<InGamePrepForPromptForAnswerMessage> *out)
+{
+	uint32_t len = 0;
+
+	uint16_t list_len;
+	len += read(msg, &list_len);
+	for (int i = 0; i < list_len; i++)
+    {
+		InGamePrepForPromptForAnswerMessage elem;
         len += read(msg, &elem);
         out->push_back(elem);
 	}
@@ -1059,17 +1148,17 @@ uint32_t read(MessageReader *msg, std::vector<InGamePromptForAnswerMessage> *out
 
 struct InGameStartPlayMessage 
 {
-    int32_t team = {};
+    int32_t family = {};
 };
 void append(MessageBuilder *msg, InGameStartPlayMessage &in)
 {
-    append(msg, in.team);
+    append(msg, in.family);
 }
 uint32_t read(MessageReader *msg, InGameStartPlayMessage *out)
 {
     uint32_t len = 0;
 
-    len += read(msg, &out->team);
+    len += read(msg, &out->family);
     return len;
 }
 void append(MessageBuilder *msg, std::vector<InGameStartPlayMessage> &in)
@@ -1098,17 +1187,17 @@ uint32_t read(MessageReader *msg, std::vector<InGameStartPlayMessage> *out)
 
 struct InGameStartStealMessage 
 {
-    int32_t team = {};
+    int32_t family = {};
 };
 void append(MessageBuilder *msg, InGameStartStealMessage &in)
 {
-    append(msg, in.team);
+    append(msg, in.family);
 }
 uint32_t read(MessageReader *msg, InGameStartStealMessage *out)
 {
     uint32_t len = 0;
 
-    len += read(msg, &out->team);
+    len += read(msg, &out->family);
     return len;
 }
 void append(MessageBuilder *msg, std::vector<InGameStartStealMessage> &in)
@@ -1235,11 +1324,13 @@ enum struct Rpc : char
 	InGameChoosePassOrPlay,
 	GameStarted,
 	PlayerLeft,
+	GameStatePing,
 	InGameStartRound,
 	InGameStartFaceoff,
 	InGameAskQuestion,
 	InGamePromptPassOrPlay,
 	InGamePlayerBuzzed,
+	InGamePrepForPromptForAnswer,
 	InGamePromptForAnswer,
 	InGameStartPlay,
 	InGameStartSteal,

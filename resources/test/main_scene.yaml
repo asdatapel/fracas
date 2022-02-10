@@ -1120,7 +1120,7 @@ entities:
     transform: 
       position: 
         x: 6.486586
-        y: 0.880000
+        y: 0.020058
         z: 7.310973
       rotation: 
         x: 0.000000
@@ -1140,7 +1140,7 @@ entities:
     transform: 
       position: 
         x: 5.921393
-        y: 0.880000
+        y: -0.461727
         z: 6.176170
       rotation: 
         x: 0.000000
@@ -1160,7 +1160,7 @@ entities:
     transform: 
       position: 
         x: 5.358194
-        y: 0.880000
+        y: -0.830464
         z: 5.107086
       rotation: 
         x: 0.000000
@@ -1180,7 +1180,7 @@ entities:
     transform: 
       position: 
         x: 4.890990
-        y: 0.880000
+        y: -0.995875
         z: 4.220221
       rotation: 
         x: 0.000000
@@ -1200,7 +1200,7 @@ entities:
     transform: 
       position: 
         x: 4.255131
-        y: 0.880000
+        y: -0.917461
         z: 3.013209
       rotation: 
         x: 0.000000
@@ -1240,7 +1240,7 @@ entities:
     transform: 
       position: 
         x: -6.925821
-        y: 0.880000
+        y: 0.020058
         z: 7.077949
       rotation: 
         x: 0.000000
@@ -1260,7 +1260,7 @@ entities:
     transform: 
       position: 
         x: -6.404263
-        y: 0.880000
+        y: -0.461727
         z: 6.180739
       rotation: 
         x: 0.000000
@@ -1280,7 +1280,7 @@ entities:
     transform: 
       position: 
         x: -5.751476
-        y: 0.880000
+        y: -0.830464
         z: 5.132319
       rotation: 
         x: 0.000000
@@ -1300,7 +1300,7 @@ entities:
     transform: 
       position: 
         x: -5.021178
-        y: 0.880000
+        y: -0.995875
         z: 4.142471
       rotation: 
         x: 0.000000
@@ -1320,7 +1320,7 @@ entities:
     transform: 
       position: 
         x: -4.399708
-        y: 0.880000
+        y: -0.917461
         z: 2.926009
       rotation: 
         x: 0.000000
@@ -1802,12 +1802,12 @@ entities:
     type: CAMERA
     transform: 
       position: 
-        x: -29.754000
-        y: 12.668000
-        z: 20.802002
+        x: -10.532612
+        y: 8.380891
+        z: 17.006573
       rotation: 
-        x: 0.000000
-        y: 0.000000
+        x: -0.272271
+        y: -0.542526
         z: 0.000000
       scale: 
         x: 1.000000
@@ -1907,7 +1907,215 @@ entities:
       mesh: 25
       material: 33
       shader: 3
-active_camera_id: -1
+  - id: 92
+    name: camera_faceoff_left
+    type: CAMERA
+    transform: 
+      position: 
+        x: 0.240000
+        y: 1.460000
+        z: 2.060000
+      rotation: 
+        x: 0.000000
+        y: 0.740000
+        z: 0.000000
+      scale: 
+        x: 1.000000
+        y: 1.000000
+        z: 1.000000
+  - id: 93
+    name: camera_faceoff_right
+    type: CAMERA
+    transform: 
+      position: 
+        x: -0.320000
+        y: 1.460000
+        z: 2.060000
+      rotation: 
+        x: 0.000000
+        y: -0.740000
+        z: 0.000000
+      scale: 
+        x: 1.000000
+        y: 1.000000
+        z: 1.000000
+  - id: 94
+    name: camera_faceoff_main
+    type: CAMERA
+    transform: 
+      position: 
+        x: -0.056756
+        y: 1.495399
+        z: 3.000000
+      rotation: 
+        x: 0.000000
+        y: 0.000000
+        z: 0.000000
+      scale: 
+        x: 1.000000
+        y: 1.000000
+        z: 1.000000
+  - id: 95
+    name: camera_family0_player0
+    type: CAMERA
+    transform: 
+      position: 
+        x: -2.240000
+        y: 1.380000
+        z: 5.100000
+      rotation: 
+        x: 0.000000
+        y: 0.400000
+        z: 0.000000
+      scale: 
+        x: 1.000000
+        y: 1.000000
+        z: 1.000000
+  - id: 96
+    name: camera_family0_player1
+    type: CAMERA
+    transform: 
+      position: 
+        x: -2.788073
+        y: 1.480430
+        z: 6.774555
+      rotation: 
+        x: 0.000000
+        y: 0.420000
+        z: 0.000000
+      scale: 
+        x: 1.000000
+        y: 1.000000
+        z: 1.000000
+  - id: 97
+    name: camera_family0_player2
+    type: CAMERA
+    transform: 
+      position: 
+        x: -3.183376
+        y: 1.376237
+        z: 7.167129
+      rotation: 
+        x: 0.000000
+        y: 0.500000
+        z: 0.000000
+      scale: 
+        x: 1.000000
+        y: 1.000000
+        z: 1.000000
+  - id: 98
+    name: camera_family0_player3
+    type: CAMERA
+    transform: 
+      position: 
+        x: -3.825977
+        y: 1.476357
+        z: 8.425317
+      rotation: 
+        x: 0.000000
+        y: 0.460000
+        z: 0.000000
+      scale: 
+        x: 1.000000
+        y: 1.000000
+        z: 1.000000
+  - id: 99
+    name: camera_family0_player4
+    type: CAMERA
+    transform: 
+      position: 
+        x: -4.365987
+        y: 1.531818
+        z: 8.968006
+      rotation: 
+        x: 0.000000
+        y: 0.600000
+        z: 0.000000
+      scale: 
+        x: 1.000000
+        y: 1.000000
+        z: 1.000000
+  - id: 100
+    name: camera_family1_player0
+    type: CAMERA
+    transform: 
+      position: 
+        x: 0.000000
+        y: 10.000000
+        z: 0.000000
+      rotation: 
+        x: 0.000000
+        y: 0.000000
+        z: 0.000000
+      scale: 
+        x: 1.000000
+        y: 1.000000
+        z: 1.000000
+  - id: 101
+    name: camera_family1_player1
+    type: CAMERA
+    transform: 
+      position: 
+        x: 0.000000
+        y: 10.000000
+        z: 0.000000
+      rotation: 
+        x: 0.000000
+        y: 0.000000
+        z: 0.000000
+      scale: 
+        x: 1.000000
+        y: 1.000000
+        z: 1.000000
+  - id: 102
+    name: camera_family1_player2
+    type: CAMERA
+    transform: 
+      position: 
+        x: 0.000000
+        y: 10.000000
+        z: 0.000000
+      rotation: 
+        x: 0.000000
+        y: 0.000000
+        z: 0.000000
+      scale: 
+        x: 1.000000
+        y: 1.000000
+        z: 1.000000
+  - id: 103
+    name: camera_family1_player3
+    type: CAMERA
+    transform: 
+      position: 
+        x: 0.000000
+        y: 10.000000
+        z: 0.000000
+      rotation: 
+        x: 0.000000
+        y: 0.000000
+        z: 0.000000
+      scale: 
+        x: 1.000000
+        y: 1.000000
+        z: 1.000000
+  - id: 104
+    name: camera_family1_player4
+    type: CAMERA
+    transform: 
+      position: 
+        x: 0.000000
+        y: 10.000000
+        z: 0.000000
+      rotation: 
+        x: 0.000000
+        y: 0.000000
+        z: 0.000000
+      scale: 
+        x: 1.000000
+        y: 1.000000
+        z: 1.000000
+active_camera_id: 95
 hdr: resources/hdri/Newport_Loft_Ref.hdr
 cubemap_visible: true
 planar_reflector: 

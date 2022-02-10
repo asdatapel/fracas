@@ -511,6 +511,24 @@ bool do_hoverable(ImmId id, Rect rect, Rect mask = {}) {
 }
 
 bool do_active(ImmId id) {
+  // right click
+  {
+    state.was_last_item_right_clicked = false;
+    if (state.input->mouse_button_up_events[(int)MouseButton::RIGHT]) {
+      if (state.right_click_started == id) {
+        if (state.hot == id) {
+          state.was_last_item_right_clicked = true;
+        } else {
+          state.right_click_started = 0;
+        }
+      }
+    }
+    if (state.input->mouse_button_down_events[(int)MouseButton::RIGHT]) {
+      if (state.hot == id)
+       state.right_click_started = id;
+    }
+  }
+
   if (state.input->mouse_button_up_events[(int)MouseButton::LEFT]) {
     if (state.active == id) {
       state.active           = 0;
@@ -556,22 +574,6 @@ void set_selected(ImmId id) {
   state.just_selected = id;
 }
 bool do_selectable(ImmId id, bool on_down = false) {
-  // right click
-  {
-    state.was_last_item_right_clicked = false;
-    if (state.input->mouse_button_up_events[(int)MouseButton::RIGHT]) {
-      if (state.right_click_started == id) {
-        if (state.hot == id) {
-          state.was_last_item_right_clicked = true;
-        }
-        state.right_click_started = 0;
-      }
-    }
-    if (state.input->mouse_button_down_events[(int)MouseButton::RIGHT]) {
-      if (state.hot == id) state.right_click_started = id;
-    }
-  }
-
   bool hot                   = state.hot == id;
   bool triggered             = on_down ? state.just_activated == id : state.just_deactivated == id;
   bool just_stopped_dragging = state.just_stopped_dragging == id;
@@ -1709,9 +1711,11 @@ TimelineState timeline_state;
 
 std::unordered_set<ImmId> selected_keyframes;
 
-void start_timeline(String name, int *current_frame, float *start, float *width) {
+void start_timeline(String name, int *current_frame, float *start, float *width, u32 *sequence_start_frame, u32 *sequence_end_frame) {
   ImmId me       = hash(name);
   ImmId scrubber = me + 1;
+  ImmId start_stick = me + 2;
+  ImmId end_stick = me + 3;
 
   auto c = get_current_container();
   if (!c || !c->visible) return;
@@ -1719,18 +1723,6 @@ void start_timeline(String name, int *current_frame, float *start, float *width)
 
   Rect number_bar = {c->content_rect.x, c->content_rect.y, c->content_rect.width, 20};
   c->draw_list->push_rect(number_bar, {.7, .7, .7, 1});
-
-  if (*start < 0) {
-    f32 zero_position = (-*start) / (*width) * c->content_rect.width;
-    c->draw_list->push_rect(
-        {
-            number_bar.x,
-            number_bar.y + number_bar.height,
-            zero_position,
-            c->content_rect.height,
-        },
-        {.5, .5, .5, 1});
-  }
 
   b8 scrubber_hot      = do_hoverable(scrubber, number_bar, c->content_rect);
   b8 scrubber_active   = do_active(scrubber);
@@ -1741,6 +1733,70 @@ void start_timeline(String name, int *current_frame, float *start, float *width)
     i32 frame      = (pos / c->content_rect.width) * (*width) + (*start);
     frame          = std::clamp(frame, (i32)*start, (i32)(*start + *width));
     *current_frame = frame;
+  }
+
+  Rect start_stick_rect;
+  if (sequence_start_frame) {
+    start_stick_rect = {
+        c->content_rect.x + (*sequence_start_frame - *start) / (*width) * c->content_rect.width,
+        number_bar.y,
+        10,
+        number_bar.height,
+    };
+    b8 start_stick_hot      = do_hoverable(start_stick, start_stick_rect, c->content_rect);
+    b8 start_stick_active   = do_active(start_stick);
+    b8 start_stick_dragging = do_draggable(start_stick);
+    if (start_stick_dragging) {
+      f32 pos               = state.input->mouse_pos.x - c->content_rect.x;
+      i32 frame             = (pos / c->content_rect.width) * (*width) + (*start);
+      frame                 = std::clamp(frame, (i32)*start, (i32)(*start + *width));
+      *sequence_start_frame = frame;
+    }
+  }
+  Rect end_stick_rect;
+  if (sequence_end_frame) {
+    end_stick_rect = {
+        c->content_rect.x + (*sequence_end_frame - *start) / (*width) * c->content_rect.width - 10,
+        number_bar.y,
+        10,
+        number_bar.height,
+    };
+    b8 end_stick_hot      = do_hoverable(end_stick, end_stick_rect, c->content_rect);
+    b8 end_stick_active   = do_active(end_stick);
+    b8 end_stick_dragging = do_draggable(end_stick);
+    if (end_stick_dragging) {
+      f32 pos             = state.input->mouse_pos.x - c->content_rect.x;
+      i32 frame           = (pos / c->content_rect.width) * (*width) + (*start);
+      frame               = std::clamp(frame, (i32)*start, (i32)(*start + *width));
+      *sequence_end_frame = frame;
+    }
+  }
+
+  if (sequence_start_frame) {
+    if (*start < *sequence_start_frame) {
+      f32 zero_position = (*sequence_start_frame - *start) / (*width) * c->content_rect.width;
+      c->draw_list->push_rect(
+          {
+              number_bar.x,
+              number_bar.y + number_bar.height,
+              zero_position,
+              c->content_rect.height,
+          },
+          {.5, .5, .5, 1});
+    }
+  }
+  if (sequence_end_frame) {
+    if (*start + *width > *sequence_end_frame) {
+      f32 end_position = (*sequence_end_frame - *start) / (*width) * c->content_rect.width;
+      c->draw_list->push_rect(
+          {
+              number_bar.x + end_position,
+              number_bar.y + number_bar.height,
+              c->content_rect.width - end_position,
+              c->content_rect.height,
+          },
+          {.5, .5, .5, 1});
+    }
   }
 
   Rect main_rect = {number_bar.x, number_bar.y + number_bar.height, c->content_rect.width,
@@ -1864,6 +1920,29 @@ void start_timeline(String name, int *current_frame, float *start, float *width)
   c->draw_list->push_text(String::from(*current_frame, &state.per_frame_alloc),
                           {number_bar.x + pointer_pos, number_bar.y + (number_bar.height - 15) / 2},
                           15, {1, 1, 1, 1}, {true, false});
+
+  if (sequence_start_frame) {
+    c->draw_list->push_rect(start_stick_rect, {0, 1, 0, 1});
+    c->draw_list->push_rect(
+        {
+            start_stick_rect.x,
+            start_stick_rect.y,
+            3,
+            c->content_rect.height,
+        },
+        {0, 1, 0, 1});
+  }
+  if (sequence_end_frame) {
+    c->draw_list->push_rect(end_stick_rect, {1, 0, 0, 1});
+    c->draw_list->push_rect(
+        {
+            end_stick_rect.x + end_stick_rect.width - 3,
+            end_stick_rect.y,
+            3,
+            c->content_rect.height,
+        },
+        {1, 0, 0, 1});
+  }
 
   timeline_state.id    = me;
   timeline_state.start = *start;

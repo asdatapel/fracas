@@ -175,6 +175,10 @@ struct Array
         len--;
     }
 
+    void clear() {
+        len = 0;
+    }
+
     T arr[N];
     size_t len = 0;
     const static size_t MAX_LEN = N;

@@ -74,4 +74,4 @@ entities:
         z: 1
 active_camera_id: 3
 hdr: resources/hdri/Newport_Loft_Ref.hdr
-draw_cubemap: false
+cubemap_visible: false

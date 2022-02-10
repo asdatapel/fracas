@@ -8,6 +8,9 @@ struct RpcClient : public BaseRpcClient
     using BaseRpcClient::BaseRpcClient;
     bool handle_rpc(char*, int);
 
+    bool msg_received();
+    void clear_msgs();
+
 
     void ListGames(ListGamesRequest);
 
@@ -85,6 +88,10 @@ struct RpcClient : public BaseRpcClient
     bool got_PlayerLeft_msg = false;
     PlayerLeftMessage PlayerLeft_msg;
 
+    GameStatePingMessage *get_GameStatePing_msg();
+    bool got_GameStatePing_msg = false;
+    GameStatePingMessage GameStatePing_msg;
+
     InGameStartRoundMessage *get_InGameStartRound_msg();
     bool got_InGameStartRound_msg = false;
     InGameStartRoundMessage InGameStartRound_msg;
@@ -104,6 +111,10 @@ struct RpcClient : public BaseRpcClient
     InGamePlayerBuzzedMessage *get_InGamePlayerBuzzed_msg();
     bool got_InGamePlayerBuzzed_msg = false;
     InGamePlayerBuzzedMessage InGamePlayerBuzzed_msg;
+
+    InGamePrepForPromptForAnswerMessage *get_InGamePrepForPromptForAnswer_msg();
+    bool got_InGamePrepForPromptForAnswer_msg = false;
+    InGamePrepForPromptForAnswerMessage InGamePrepForPromptForAnswer_msg;
 
     InGamePromptForAnswerMessage *get_InGamePromptForAnswer_msg();
     bool got_InGamePromptForAnswer_msg = false;
@@ -241,6 +252,13 @@ bool RpcClient::handle_rpc(char *data, int msg_len)
             got_PlayerLeft_msg = true;
         }
         break;
+        case Rpc::GameStatePing:
+        {
+            GameStatePing_msg = {};
+            read(&in, &GameStatePing_msg);
+            got_GameStatePing_msg = true;
+        }
+        break;
         case Rpc::InGameStartRound:
         {
             InGameStartRound_msg = {};
@@ -274,6 +292,13 @@ bool RpcClient::handle_rpc(char *data, int msg_len)
             InGamePlayerBuzzed_msg = {};
             read(&in, &InGamePlayerBuzzed_msg);
             got_InGamePlayerBuzzed_msg = true;
+        }
+        break;
+        case Rpc::InGamePrepForPromptForAnswer:
+        {
+            InGamePrepForPromptForAnswer_msg = {};
+            read(&in, &InGamePrepForPromptForAnswer_msg);
+            got_InGamePrepForPromptForAnswer_msg = true;
         }
         break;
         case Rpc::InGamePromptForAnswer:
@@ -344,6 +369,132 @@ bool RpcClient::handle_rpc(char *data, int msg_len)
     }
 
     return true;
+}
+
+bool RpcClient::msg_received() {
+    
+    if (got_ListGames_msg) return true;
+
+    if (got_GetGame_msg) return true;
+
+    if (got_CreateGame_msg) return true;
+
+    if (got_JoinGame_msg) return true;
+
+    if (got_SwapTeam_msg) return true;
+
+    if (got_LeaveGame_msg) return true;
+
+    if (got_StartGame_msg) return true;
+
+    if (got_InGameReady_msg) return true;
+
+    if (got_InGameAnswer_msg) return true;
+
+    if (got_InGameBuzz_msg) return true;
+
+    if (got_InGameChoosePassOrPlay_msg) return true;
+
+    if (got_GameStarted_msg) return true;
+
+    if (got_PlayerLeft_msg) return true;
+
+    if (got_GameStatePing_msg) return true;
+
+    if (got_InGameStartRound_msg) return true;
+
+    if (got_InGameStartFaceoff_msg) return true;
+
+    if (got_InGameAskQuestion_msg) return true;
+
+    if (got_InGamePromptPassOrPlay_msg) return true;
+
+    if (got_InGamePlayerBuzzed_msg) return true;
+
+    if (got_InGamePrepForPromptForAnswer_msg) return true;
+
+    if (got_InGamePromptForAnswer_msg) return true;
+
+    if (got_InGameStartPlay_msg) return true;
+
+    if (got_InGameStartSteal_msg) return true;
+
+    if (got_InGamePlayerChosePassOrPlay_msg) return true;
+
+    if (got_InGamePlayerAnswered_msg) return true;
+
+    if (got_InGameFlipAnswer_msg) return true;
+
+    if (got_InGameEggghhhh_msg) return true;
+
+    if (got_InGameEndRound_msg) return true;
+
+    if (got_InGameEndGame_msg) return true;
+
+
+    return false;
+}
+
+void RpcClient::clear_msgs() {
+    
+    got_ListGames_msg = false;
+
+    got_GetGame_msg = false;
+
+    got_CreateGame_msg = false;
+
+    got_JoinGame_msg = false;
+
+    got_SwapTeam_msg = false;
+
+    got_LeaveGame_msg = false;
+
+    got_StartGame_msg = false;
+
+    got_InGameReady_msg = false;
+
+    got_InGameAnswer_msg = false;
+
+    got_InGameBuzz_msg = false;
+
+    got_InGameChoosePassOrPlay_msg = false;
+
+    got_GameStarted_msg = false;
+
+    got_PlayerLeft_msg = false;
+
+    got_GameStatePing_msg = false;
+
+    got_InGameStartRound_msg = false;
+
+    got_InGameStartFaceoff_msg = false;
+
+    got_InGameAskQuestion_msg = false;
+
+    got_InGamePromptPassOrPlay_msg = false;
+
+    got_InGamePlayerBuzzed_msg = false;
+
+    got_InGamePrepForPromptForAnswer_msg = false;
+
+    got_InGamePromptForAnswer_msg = false;
+
+    got_InGameStartPlay_msg = false;
+
+    got_InGameStartSteal_msg = false;
+
+    got_InGamePlayerChosePassOrPlay_msg = false;
+
+    got_InGamePlayerAnswered_msg = false;
+
+    got_InGameFlipAnswer_msg = false;
+
+    got_InGameEggghhhh_msg = false;
+
+    got_InGameEndRound_msg = false;
+
+    got_InGameEndGame_msg = false;
+
 }
 
 
@@ -517,6 +668,13 @@ PlayerLeftMessage *RpcClient::get_PlayerLeft_msg()
     return msg;
 }
 
+GameStatePingMessage *RpcClient::get_GameStatePing_msg()
+{
+    auto msg = got_GameStatePing_msg ? &GameStatePing_msg : nullptr;
+    got_GameStatePing_msg = false;
+    return msg;
+}
+
 InGameStartRoundMessage *RpcClient::get_InGameStartRound_msg()
 {
     auto msg = got_InGameStartRound_msg ? &InGameStartRound_msg : nullptr;
@@ -549,6 +707,13 @@ InGamePlayerBuzzedMessage *RpcClient::get_InGamePlayerBuzzed_msg()
 {
     auto msg = got_InGamePlayerBuzzed_msg ? &InGamePlayerBuzzed_msg : nullptr;
     got_InGamePlayerBuzzed_msg = false;
+    return msg;
+}
+
+InGamePrepForPromptForAnswerMessage *RpcClient::get_InGamePrepForPromptForAnswer_msg()
+{
+    auto msg = got_InGamePrepForPromptForAnswer_msg ? &InGamePrepForPromptForAnswer_msg : nullptr;
+    got_InGamePrepForPromptForAnswer_msg = false;
     return msg;
 }
 

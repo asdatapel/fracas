@@ -31,7 +31,7 @@ struct SceneManager
         game.update(timestep, {&main, &xs, assets}, rpc_client, input);
     }
 
-    void update_and_draw(float timestep, Camera *debug_camera, Vec3f debug_camera_pos, float exposure = 1.f)
+    void update_and_draw(float timestep, Camera *debug_camera, Vec3f debug_camera_pos, InputState *input, Assets *assets, float exposure = 1.f)
     {
         main.update(timestep);
         main.render(debug_camera, debug_camera_pos);
@@ -58,6 +58,11 @@ struct SceneManager
         glDisable(GL_DEPTH_TEST);
         draw_rect();
         glEnable(GL_DEPTH_TEST);
+
+        // TODO find a better place for this
+        game.board_controller.update(timestep, &main, assets);
+        game.player_controller.update(timestep, &main, assets);
+        game.ui_controller.update(timestep, target, input, assets);
 
         target.color_tex.gen_mipmaps();
     }

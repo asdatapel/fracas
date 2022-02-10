@@ -48,6 +48,7 @@ struct Scene
     void set_sequence(KeyedAnimation *seq);
     void play_sequence();
     void stop_sequence();
+    bool is_sequence_finished();
     void set_t(f32 t);
     u32 get_frame();
     void set_frame(u32 frame);

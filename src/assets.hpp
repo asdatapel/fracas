@@ -201,6 +201,9 @@ struct Assets {
             String::copy(in_keyed_animation->get("asset_name")->as_literal(), &assets_allocator);
         ka.fps = atoi(in_keyed_animation->get("fps")->as_literal().to_char_array(tmp));
 
+        ka.start_frame = atoi(in_keyed_animation->get("start_frame")->as_literal().to_char_array(tmp));
+        ka.end_frame = atoi(in_keyed_animation->get("end_frame")->as_literal().to_char_array(tmp));
+
         auto tracks_in = in_keyed_animation->get("tracks")->as_list();
         for (u32 track_i = 0; track_i < tracks_in->len; track_i++) {
           auto track_in = tracks_in->get(track_i)->as_dict();
@@ -260,6 +263,11 @@ struct Assets {
             "asset_id", YAML::new_literal(String::from(ka->asset_id, tmp), tmp), tmp);
         keyed_animation_out->push_back("asset_name", YAML::new_literal(ka->asset_name, tmp), tmp);
         keyed_animation_out->push_back("fps", YAML::new_literal(String::from(ka->fps, tmp), tmp),
+                                       tmp);
+                                       
+        keyed_animation_out->push_back("start_frame", YAML::new_literal(String::from(ka->start_frame, tmp), tmp),
+                                       tmp);
+        keyed_animation_out->push_back("end_frame", YAML::new_literal(String::from(ka->end_frame, tmp), tmp),
                                        tmp);
 
         auto tracks_out = YAML::new_list(tmp);

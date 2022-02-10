@@ -7,6 +7,10 @@
 #include "net/net.hpp"
 #include "net/generated_rpc_server.hpp"
 
+void error(String msg) {
+    printf("%.*s\n", msg.len, msg.data);
+}
+
 const uint64_t second = 1000000000;
 
 struct ServerData
@@ -42,6 +46,8 @@ struct Lobby
     uint64_t waiter_deadline = 0;
     uint64_t waiter_elapsed = 0;
 
+    u64 ping_elapsed = 0;
+
     bool ready_to_delete = false;
 
     Lobby() = default;
@@ -73,11 +79,13 @@ struct Lobby
         if (game.is_player_in_this_game(client_id))
         {
             // TODO maybe return error
+            error("player is already in this game");
             return;
         }
         if (game.num_players() >= MAX_PLAYERS_PER_GAME)
         {
             // TODO return error GAME_FULL
+            error("game is full");
             return;
         }
 
@@ -173,6 +181,7 @@ struct Lobby
 
         game.last_answer.len = 0;
 
+        game.answers.clear();
         game.question = string_to_allocated_string<128>("name a color bitch bitch stupid bitch?");
         game.answers.append({false, 98, "RED"});
         game.answers.append({false, 87, "GREEN"});
@@ -191,20 +200,31 @@ struct Lobby
         game.round_stage = RoundStage::FACEOFF;
 
         auto faceoffers = game.faceoff_players();
-        broadcaster.broadcast(&RpcServer::InGameStartFaceoff, InGameStartFaceoffMessage{faceoffers.first, faceoffers.second});
+        broadcaster.broadcast(&RpcServer::InGameStartFaceoff, InGameStartFaceoffMessage{faceoffers.first->id, faceoffers.second->id});
         set_next_stage(&Lobby::stage_ask_question);
     }
 
     void stage_ask_question(Broadcaster broadcaster)
     {
         broadcaster.broadcast(&RpcServer::InGameAskQuestion, InGameAskQuestionMessage{game.question, (int32_t) game.answers.len});
-        set_waiter(&Lobby::waiter_buzz, 10 * second);
+        set_waiter(&Lobby::waiter_buzz, 25 * second);
+    }
+
+    void stage_prep_for_prompt_for_answer(Broadcaster broadcaster)
+    {
+        auto answerer = game.who_can_answer();
+        InGamePrepForPromptForAnswerMessage msg;
+        msg.family = answerer->family;
+        msg.player_position = game.get_player_position(game.who_can_answer()->id);
+        broadcaster.broadcast(&RpcServer::InGamePrepForPromptForAnswer, msg);
+        set_next_stage(&Lobby::stage_prompt_for_answer);
     }
 
     void stage_prompt_for_answer(Broadcaster broadcaster)
     {
-        broadcaster.broadcast(&RpcServer::InGamePromptForAnswer, InGamePromptForAnswerMessage{game.who_can_answer()});
-
+        InGamePromptForAnswerMessage msg;
+        msg.user_id = game.who_can_answer()->id;
+        broadcaster.broadcast(&RpcServer::InGamePromptForAnswer, msg);
         set_waiter(&Lobby::waiter_answer, 15 * second); // TODO increase this
     }
 
@@ -240,7 +260,7 @@ struct Lobby
                 }
                 else
                 {
-                    set_next_stage(&Lobby::stage_prompt_for_answer);
+                    set_next_stage(&Lobby::stage_prep_for_prompt_for_answer);
                 }
             }
             else
@@ -295,7 +315,7 @@ struct Lobby
                 }
                 else
                 {
-                    set_next_stage(&Lobby::stage_prompt_for_answer);
+                    set_next_stage(&Lobby::stage_prep_for_prompt_for_answer);
                 }
             }
         }
@@ -311,14 +331,14 @@ struct Lobby
     {
         game.round_stage = RoundStage::PLAY;
         broadcaster.broadcast(&RpcServer::InGameStartPlay, InGameStartPlayMessage{game.faceoff_winning_family});
-        set_next_stage(&Lobby::stage_prompt_for_answer);
+        set_next_stage(&Lobby::stage_prep_for_prompt_for_answer);
     }
 
     void stage_start_steal(Broadcaster broadcaster)
     {
         game.round_stage = RoundStage::STEAL;
         broadcaster.broadcast(&RpcServer::InGameStartSteal, InGameStartStealMessage{1 - game.faceoff_winning_family});
-        set_next_stage(&Lobby::stage_prompt_for_answer);
+        set_next_stage(&Lobby::stage_prep_for_prompt_for_answer);
     }
 
     void stage_end_round(Broadcaster broadcaster)
@@ -349,7 +369,7 @@ struct Lobby
             set_next_stage(&Lobby::stage_end_round);
         }
 
-        printf("buzz_water - time_elapsed: %llu\n", waiter_elapsed);
+        printf("buzz_waiter - time_elapsed: %llu\n", waiter_elapsed);
     }
     void waiter_pass_or_play(Broadcaster broadcaster, uint64_t elapsed_micros)
     {
@@ -381,9 +401,10 @@ struct Lobby
         waiter_elapsed += elapsed_micros;
         if (waiter_elapsed >= waiter_deadline)
         {
+            printf("waiter_all_ready - timeout\n");
             do_next_stage(broadcaster);
         }
-        printf("waiter_all_ready - time_elapsed: %llu\n", waiter_elapsed);
+        // printf("waiter_all_ready - time_elapsed: %llu\n", waiter_elapsed);
     }
     void waiter_end_game(Broadcaster broadcaster, uint64_t elapsed_micros)
     {
@@ -392,7 +413,7 @@ struct Lobby
         {
             ready_to_delete = true;
         }
-        printf("waiter_end_game - time_elapsed: %llu\n", waiter_elapsed);
+        //printf("waiter_end_game - time_elapsed: %llu\n", waiter_elapsed);
     }
 
     void tick(Broadcaster broadcaster, uint64_t elapsed_time)
@@ -400,6 +421,24 @@ struct Lobby
         if (waiter)
         {
             (this->*waiter)(broadcaster, elapsed_time);
+        }
+
+        ping_elapsed += elapsed_time;
+        if (ping_elapsed > 1 * second) {
+            ping_elapsed = 0;
+
+
+            GameStatePingMessage msg;
+            for (int i = 0; i < game.players.len; i++) {
+              msg.players.push_back(
+                  {game.players[i].id, game.players[i].name, game.players[i].family == 1});
+            }
+            for (int i = 0; i < game.players.len; i++)
+            {
+                Peer *peer = &broadcaster.rpc_server->server_data->clients.at(game.players[i].id).peer;
+                msg.my_id = game.players[i].id;
+                ((RpcServer *)broadcaster.rpc_server)->GameStatePing(peer, msg);
+            }
         }
     }
 };
@@ -426,6 +465,7 @@ ClientId add_client(ServerData *server_data, SOCKET s)
     if (server_data->clients.size() > MAX_CLIENTS)
     {
         // TODO send error message SERVER_FULL
+        error("too many connections");
         return 0;
     }
 
@@ -516,6 +556,7 @@ void RpcServer::HandleGetGame(ClientId client_id, GetGameRequest *req, GetGameRe
     if (server_data->lobbies.count(req->game_id) == 0)
     {
         // TODO send NOT_FOUND
+        error("game not found");
         return;
     }
 
@@ -529,7 +570,7 @@ void RpcServer::HandleGetGame(ClientId client_id, GetGameRequest *req, GetGameRe
     {
         resp->players.push_back({lobby->game.players[i].id,
                                  lobby->game.players[i].name,
-                                 lobby->game.players[i].team == 1});
+                                 lobby->game.players[i].family == 1});
     }
 }
 
@@ -546,14 +587,17 @@ void RpcServer::HandleCreateGame(ClientId client_id, CreateGameRequest *req, Cre
     auto owner_name = sanitize_name(req->owner_name);
     if (game_name.len == 0)
     {
+        error("invalid game name");
         return; // TODO invalid name
     }
     if (owner_name.len == 0)
     {
+        error("invalid ownder name");
         return; // TODO invalid name
     }
     if (!req->is_self_hosted)
     {
+        error("invalid game name");
         return; // TODO temporary
     }
 
@@ -631,7 +675,7 @@ void RpcServer::HandleSwapTeam(ClientId client_id, SwapTeamRequest *req, Empty *
     {
         if (lobby->game.players[i].id == req->user_id)
         {
-            lobby->game.players[i].team = 1 - lobby->game.players[i].team;
+            lobby->game.players[i].family = 1 - lobby->game.players[i].family;
         }
     }
 }
@@ -725,11 +769,11 @@ void RpcServer::HandleInGameBuzz(ClientId client_id, Empty *req, Empty *resp)
     }
 
     auto [fp0, fp1] = lobby->game.faceoff_players();
-    if (client_id == fp0)
+    if (client_id == fp0->id)
     {
         lobby->game.buzzing_family = 0;
     }
-    else if (client_id == fp1)
+    else if (client_id == fp1->id)
     {
         lobby->game.buzzing_family = 1;
     }
@@ -738,8 +782,8 @@ void RpcServer::HandleInGameBuzz(ClientId client_id, Empty *req, Empty *resp)
         return;
     }
 
-    Broadcaster{this, lobby}.broadcast(&RpcServer::InGamePlayerBuzzed, InGamePlayerBuzzedMessage{client_id});
-    lobby->set_next_stage(&Lobby::stage_prompt_for_answer);
+    Broadcaster{this, lobby}.broadcast(&RpcServer::InGamePlayerBuzzed, InGamePlayerBuzzedMessage{client_id, lobby->game.buzzing_family});
+    lobby->set_next_stage(&Lobby::stage_prep_for_prompt_for_answer);
 }
 
 void RpcServer::HandleInGameAnswer(ClientId client_id, InGameAnswerMessage *req, Empty *resp)
@@ -758,7 +802,7 @@ void RpcServer::HandleInGameAnswer(ClientId client_id, InGameAnswerMessage *req,
     {
         return;
     }
-    if (client_id != lobby->game.who_can_answer())
+    if (client_id != lobby->game.who_can_answer()->id)
     {
         // TODO PERMISSION_DENIED
         return;
@@ -794,7 +838,7 @@ void RpcServer::HandleInGameChoosePassOrPlay(ClientId client_id, InGameChoosePas
     {
         return;
     }
-    if (client_id != lobby->game.who_won_faceoff())
+    if (client_id != lobby->game.who_won_faceoff()->id)
     {
         return;
     }

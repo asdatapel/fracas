@@ -125,8 +125,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        // printf("Sleeping...\n");
-        Sleep(1000);
+        // Sleep(1000);
     }
 
     closesocket(s);

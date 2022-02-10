@@ -26,6 +26,8 @@ struct RpcServer : public BaseRpcServer
 
     void PlayerLeft(Peer *, PlayerLeftMessage);
 
+    void GameStatePing(Peer *, GameStatePingMessage);
+
     void InGameStartRound(Peer *, InGameStartRoundMessage);
 
     void InGameStartFaceoff(Peer *, InGameStartFaceoffMessage);
@@ -35,6 +37,8 @@ struct RpcServer : public BaseRpcServer
     void InGamePromptPassOrPlay(Peer *, Empty);
 
     void InGamePlayerBuzzed(Peer *, InGamePlayerBuzzedMessage);
+
+    void InGamePrepForPromptForAnswer(Peer *, InGamePrepForPromptForAnswerMessage);
 
     void InGamePromptForAnswer(Peer *, InGamePromptForAnswerMessage);
 
@@ -206,6 +210,14 @@ void RpcServer::PlayerLeft(Peer *peer, PlayerLeftMessage req)
 }
 
 
+void RpcServer::GameStatePing(Peer *peer, GameStatePingMessage req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::GameStatePing);
+    append(&out, req); out.send(peer);
+}
+
+
 void RpcServer::InGameStartRound(Peer *peer, InGameStartRoundMessage req)
 {
     MessageBuilder out;
@@ -242,6 +254,14 @@ void RpcServer::InGamePlayerBuzzed(Peer *peer, InGamePlayerBuzzedMessage req)
 {
     MessageBuilder out;
     append(&out, (char) Rpc::InGamePlayerBuzzed);
+    append(&out, req); out.send(peer);
+}
+
+
+void RpcServer::InGamePrepForPromptForAnswer(Peer *peer, InGamePrepForPromptForAnswerMessage req)
+{
+    MessageBuilder out;
+    append(&out, (char) Rpc::InGamePrepForPromptForAnswer);
     append(&out, req); out.send(peer);
 }
 
