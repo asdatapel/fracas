@@ -141,6 +141,7 @@ void key_input_callback(GLFWwindow *window, int key, int scancode, int action, i
         append_if_press(Keys::BACKSPACE);
         break;
     case GLFW_KEY_ENTER:
+    case GLFW_KEY_KP_ENTER:
         append_if_press(Keys::ENTER);
         break;
     case GLFW_KEY_A:

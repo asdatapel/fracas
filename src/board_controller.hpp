@@ -5,36 +5,38 @@
 
 #include "main_menu.hpp"
 
-
 struct BoardController
 {
-    int bar_1 = 71;
-    int bar_2 = 72;
-    int bar_3 = 73;
-    int bar_4 = 74;
-    int bar_5 = 75;
-    int bar_6 = 76;
-    int bar_7 = 77;
-    int bar_8 = 78;
+    i32 bar_1 = 71;
+    i32 bar_2 = 72;
+    i32 bar_3 = 73;
+    i32 bar_4 = 74;
+    i32 bar_5 = 75;
+    i32 bar_6 = 76;
+    i32 bar_7 = 77;
+    i32 bar_8 = 78;
 
-    int num_active = 0;
-    float activation_t = 0.f;
-    const float ACTIVATION_DURATION = 2.f;
+    i32 num_active = 0;
+    f32 activation_t = 0.f;
+    const f32 ACTIVATION_DURATION = 2.f;
 
-    int currently_flipping = -1;
-    float flip_timer = 0;
-    const float FLIP_DURATION = .7f;
+    i32 currently_flipping = -1;
+    f32 flip_timer = 0;
+    const f32 FLIP_DURATION = .7f;
 
-    void update(float timestep, Scene *scene, Assets *assets)
+    b8 resetting = false;
+    f32 resetting_t = 0.f;
+
+    void update(f32 timestep, Scene *scene, Assets *assets)
     {
         activation_t += timestep / ACTIVATION_DURATION;
-        for (int i = 0; i < num_active; i++)
+        for (i32 i = 0; i < num_active; i++)
         {
             Entity *bar_entity = scene->get(index_to_id(i));
             bar_entity->material->parameters[0].uniform_id = UniformId::RIPPLE_T;
             bar_entity->material->parameters[0].value = fmin(activation_t - (i * 0.08), 1.f);
         }
-        for (int i = num_active; i < 8; i++)
+        for (i32 i = num_active; i < 8; i++)
         {
             Entity *bar_entity = scene->get(index_to_id(i));
             bar_entity->material->parameters[0].uniform_id = UniformId::RIPPLE_T;
@@ -44,8 +46,8 @@ struct BoardController
         if (currently_flipping >= 0)
         {
             flip_timer += timestep;
-            float rotation = 180 * (flip_timer / FLIP_DURATION);
-            bool complete = false;
+            f32 rotation = 180 * (flip_timer / FLIP_DURATION);
+            b8 complete = false;
             if (rotation >= 180.f)
             {
                 rotation = 180.f;
@@ -54,8 +56,30 @@ struct BoardController
             Entity *bar = scene->get(index_to_id(currently_flipping));
             bar->transform.rotation.x = glm::radians(rotation);
 
-            if (complete)
-                currently_flipping = -1;
+            if (complete) currently_flipping = -1;
+        }
+
+        if (resetting) {
+            resetting_t += timestep;
+
+            b8 all_reset = true;
+            for (i32 i = 0; i < 8; i++) {
+                Entity *bar_entity = scene->get(index_to_id(i));
+                if (bar_entity->transform.rotation.x > 0.f) {
+                    all_reset = false;
+
+                    f32 rotation = 180 * (1 - resetting_t / FLIP_DURATION);
+                    if (rotation < 0.f)
+                    {
+                        rotation = 0.f;
+                    }
+                    bar_entity->transform.rotation.x = glm::radians(rotation);
+                }
+            }
+
+            if (all_reset) {
+                resetting = false;
+            }
         }
     }
 
@@ -114,11 +138,9 @@ struct BoardController
 
     void reset(Scene *scene)
     {
-        for (int i = 0; i < 8; i++)
-        {
-            Entity *bar_entity = scene->get(index_to_id(i));
-            bar_entity->transform.rotation.x = 0;
-        }
+        resetting_t = 0;
+        resetting = true;
+        num_active = 0;
     }
 
     int index_to_id(int index)
@@ -180,13 +202,11 @@ struct PlayerController
         {
             int player_id = index_to_id(0, i);
             Entity *entity = scene->get(player_id);
-            entity->transform.position.y = sinf(t * 1.f + (i * 0.5f));
         }
         for (int i = 0; i < 5; i++)
         {
             int player_id = index_to_id(1, i);
             Entity *entity = scene->get(player_id);
-            entity->transform.position.y = sinf(t * 1.f + (i * 0.5f));
         }
 
         Entity *left = scene->get(left_faceoffer);
@@ -282,38 +302,38 @@ struct UiController
             char buf[10];
             int len = snprintf(buf, 10, "%f", timer_value);
             String val = {buf, (uint16_t)len};
-            draw_text(*font, target, val, 10, target.width - (get_text_width(*font, val) + 10), 1, 1);
+            draw_text(*font, target, val, target.width - (get_text_width(*font, val) + 10), 10, 1, 1);
         }
 
         if (answer_textbox_visible) {
-            answer_textbox.rect = {1000, 1000, 300, 100};
+            // TODO: alternative for XInput
+
+            answer_textbox.rect = anchor_bottom_right({600, 100}, {25.f, 25.f});
             answer_textbox.update_and_draw(target, input, font);
 
+            // TODO: allow (A) to buzz
             answer_submitted = input->key_down_events[(i32)Keys::ENTER];
         }
 
         if (buzz_button_visible) {
           buzz_button.rect =
-              anchor_bottom_right({0.2f * 1920, 0.2f * 1920 * 9.f / 16.f / 2.f}, {25.f, 25.f});
-          buzz_button.text = "BUZZ";
+              anchor_bottom_right({400, 110}, {25.f, 25.f});
+        
+          // TODO: use Space or (A) to buzz
+          buzz_button.text = "Buzz";
           buzz_button_pressed = buzz_button.update_and_draw(target, input, font);
         }
 
         if (pass_play_buttons_visible) {
-            play_button.rect = {
-                25.f,
-                1080 - 25.f,
-                0.2f * 1920,
-                0.2f * 1920 * 9.f / 16.f / 2.f,
-            };
-            play_button.text = "PLAY";
-            pass_button.rect = anchor_bottom_right(
-                {0.2f * 1920, 0.2f * 1920 * 9.f / 16.f / 2.f},
-                {25.f, 25.f});
             pass_button.text = "PASS";
+            pass_button.rect = anchor_bottom_right({400, 110}, {25.f, 25.f});
+            
+            play_button.text = "PLAY";
+            play_button.rect = pass_button.rect;
+            play_button.rect.x -= play_button.rect.width + 25;
 
-            play_button_pressed = play_button.update_and_draw(target, input, font);
             pass_button_pressed = pass_button.update_and_draw(target, input, font);
+            play_button_pressed = play_button.update_and_draw(target, input, font);
         }
 
         glEnable(GL_DEPTH_TEST);
@@ -328,6 +348,10 @@ struct UiController
     }
 
     void show_buzz_button(b8 visible) {
+        pass_play_buttons_visible = false;
+        answer_textbox_visible = false;
+        timer_visible = false;
+        
         buzz_button_visible = visible;
     }
 
@@ -338,6 +362,9 @@ struct UiController
     }
 
     void show_answer_textbox(b8 visible) {
+        pass_play_buttons_visible = false;
+        buzz_button_visible = false;
+        
         answer_textbox_visible = visible;
     }
 
@@ -349,6 +376,8 @@ struct UiController
 
     void pass_or_play(b8 visible) {
         buzz_button_visible = false;
+        answer_textbox_visible = false;
+        timer_visible = false;
 
         pass_play_buttons_visible = visible;
     }

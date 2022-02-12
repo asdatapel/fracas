@@ -296,4 +296,6 @@ struct ClientGameData
 
     std::pair<ClientId, ClientId> faceoffers;
     i32 buzzing_family = -1;
+
+    Array<i32, 2> scores = {{}, {}};
 };

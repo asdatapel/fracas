@@ -186,7 +186,7 @@ struct Lobby
         game.answers.append({false, 98, "RED"});
         game.answers.append({false, 87, "GREEN"});
         game.answers.append({false, 76, "BLUE"});
-        game.answers.append({false, 65, "ORANE"});
+        game.answers.append({false, 65, "ORANGE"});
         game.answers.append({false, 54, "PINK"});
         game.answers.append({false, 43, "PURPLE"});
         game.answers.append({false, 32, "MUAVE"});
@@ -270,7 +270,7 @@ struct Lobby
                     // both faceoffers failed, move on to next round
                     set_next_stage(&Lobby::stage_end_round);
                 }
-                else if (score > game.this_round_points)
+                else if (score >= game.this_round_points / 2)
                 {
                     // non-buzzer wins
                     game.faceoff_winning_family = 1 - game.buzzing_family;
@@ -350,7 +350,11 @@ struct Lobby
             game.scores[game.round_winner] += game.this_round_points;
         }
 
-        broadcaster.broadcast(&RpcServer::InGameEndRound, Empty{});
+        InGameEndRoundMessage msg;
+        msg.round_winner = game.round_winner;
+        msg.family0_score = game.scores[0];
+        msg.family1_score = game.scores[1];
+        broadcaster.broadcast(&RpcServer::InGameEndRound, msg);
         set_next_stage(&Lobby::stage_start_round);
     }
 

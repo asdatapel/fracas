@@ -48,19 +48,19 @@ scripts:
         value: 99
         id: 5
       - name: camera_family_1_player_0
-        value: 0
+        value: 100
         id: 6
       - name: camera_family_1_player_1
-        value: 0
+        value: 101
         id: 7
       - name: camera_family_1_player_2
-        value: 0
+        value: 102
         id: 8
       - name: camera_family_1_player_3
-        value: 0
+        value: 103
         id: 9
       - name: camera_family_1_player_4
-        value: 0
+        value: 104
         id: 10
   - name: PromptForAnswerSequence
     inputs: 
@@ -78,6 +78,8 @@ scripts:
       - name: camera_faceoff_right
         value: 0
         id: 1
+  - name: PlayerChosePassOrPlaySequence
+    inputs: 
   - name: StartPlaySequence
     inputs: 
       - name: camera
@@ -109,7 +111,7 @@ scripts:
   - name: EndRoundSequence
     inputs: 
       - name: camera
-        value: 0
+        value: 87
         id: 0
   - name: EndGameSequence
     inputs: 

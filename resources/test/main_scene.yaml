@@ -1119,9 +1119,9 @@ entities:
     type: MESH
     transform: 
       position: 
-        x: 6.486586
-        y: 0.020058
-        z: 7.310973
+        x: 6.698906
+        y: 0.880000
+        z: 8.813191
       rotation: 
         x: 0.000000
         y: -5.873541
@@ -1139,9 +1139,9 @@ entities:
     type: MESH
     transform: 
       position: 
-        x: 5.921393
-        y: -0.461727
-        z: 6.176170
+        x: 5.485857
+        y: 2.317835
+        z: 6.571812
       rotation: 
         x: 0.000000
         y: -5.873541
@@ -1159,9 +1159,9 @@ entities:
     type: MESH
     transform: 
       position: 
-        x: 5.358194
-        y: -0.830464
-        z: 5.107086
+        x: 4.936673
+        y: 2.317973
+        z: 5.631723
       rotation: 
         x: 0.000000
         y: -5.873541
@@ -1179,9 +1179,9 @@ entities:
     type: MESH
     transform: 
       position: 
-        x: 4.890990
-        y: -0.995875
-        z: 4.220221
+        x: 1.078757
+        y: 2.546793
+        z: 5.305379
       rotation: 
         x: 0.000000
         y: -5.873541
@@ -1199,9 +1199,9 @@ entities:
     type: MESH
     transform: 
       position: 
-        x: 4.255131
-        y: -0.917461
-        z: 3.013209
+        x: 0.060211
+        y: 2.201460
+        z: 4.399294
       rotation: 
         x: 0.000000
         y: -5.873541
@@ -1240,7 +1240,7 @@ entities:
     transform: 
       position: 
         x: -6.925821
-        y: 0.020058
+        y: 0.880000
         z: 7.077949
       rotation: 
         x: 0.000000
@@ -1260,7 +1260,7 @@ entities:
     transform: 
       position: 
         x: -6.404263
-        y: -0.461727
+        y: 0.880000
         z: 6.180739
       rotation: 
         x: 0.000000
@@ -1280,7 +1280,7 @@ entities:
     transform: 
       position: 
         x: -5.751476
-        y: -0.830464
+        y: 0.880000
         z: 5.132319
       rotation: 
         x: 0.000000
@@ -1300,7 +1300,7 @@ entities:
     transform: 
       position: 
         x: -5.021178
-        y: -0.995875
+        y: 0.880000
         z: 4.142471
       rotation: 
         x: 0.000000
@@ -1320,7 +1320,7 @@ entities:
     transform: 
       position: 
         x: -4.399708
-        y: -0.917461
+        y: 0.880000
         z: 2.926009
       rotation: 
         x: 0.000000
@@ -1802,12 +1802,12 @@ entities:
     type: CAMERA
     transform: 
       position: 
-        x: -10.532612
-        y: 8.380891
-        z: 17.006573
+        x: 1.038573
+        y: 2.623793
+        z: 13.762801
       rotation: 
-        x: -0.272271
-        y: -0.542526
+        x: -0.153589
+        y: 0.343829
         z: 0.000000
       scale: 
         x: 1.000000
@@ -2040,12 +2040,12 @@ entities:
     type: CAMERA
     transform: 
       position: 
-        x: 0.000000
-        y: 10.000000
-        z: 0.000000
+        x: 2.240000
+        y: 1.400000
+        z: 5.100000
       rotation: 
         x: 0.000000
-        y: 0.000000
+        y: -0.400000
         z: 0.000000
       scale: 
         x: 1.000000
@@ -2056,12 +2056,12 @@ entities:
     type: CAMERA
     transform: 
       position: 
-        x: 0.000000
-        y: 10.000000
-        z: 0.000000
+        x: 2.540000
+        y: 1.400000
+        z: 6.280000
       rotation: 
         x: 0.000000
-        y: 0.000000
+        y: -0.400000
         z: 0.000000
       scale: 
         x: 1.000000
@@ -2072,12 +2072,12 @@ entities:
     type: CAMERA
     transform: 
       position: 
-        x: 0.000000
-        y: 10.000000
-        z: 0.000000
+        x: 3.150000
+        y: 1.400000
+        z: 7.150000
       rotation: 
         x: 0.000000
-        y: 0.000000
+        y: -0.400000
         z: 0.000000
       scale: 
         x: 1.000000
@@ -2088,12 +2088,12 @@ entities:
     type: CAMERA
     transform: 
       position: 
-        x: 0.000000
-        y: 10.000000
-        z: 0.000000
+        x: 3.800000
+        y: 1.400000
+        z: 8.400000
       rotation: 
         x: 0.000000
-        y: 0.000000
+        y: -0.400000
         z: 0.000000
       scale: 
         x: 1.000000
@@ -2104,18 +2104,18 @@ entities:
     type: CAMERA
     transform: 
       position: 
-        x: 0.000000
-        y: 10.000000
-        z: 0.000000
+        x: 4.300000
+        y: 1.400000
+        z: 9.000000
       rotation: 
         x: 0.000000
-        y: 0.000000
+        y: -0.400000
         z: 0.000000
       scale: 
         x: 1.000000
         y: 1.000000
         z: 1.000000
-active_camera_id: 95
+active_camera_id: -1
 hdr: resources/hdri/Newport_Loft_Ref.hdr
 cubemap_visible: true
 planar_reflector: 

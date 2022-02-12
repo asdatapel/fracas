@@ -41,8 +41,20 @@ struct Editor
     {
         if (playing)
         {
+            Vec2f backup_mouse_pos = input->mouse_pos;
+            if (Imm::state.windows.count(Imm::hash("Scene"))) {
+              Imm::Window &window = Imm::state.windows[Imm::hash("Scene")];
+              input->mouse_pos -= Vec2f{window.content_rect.x, window.content_rect.y};
+              input->mouse_pos.x *= play_scenes.target.width / window.content_rect.width;
+              input->mouse_pos.y *= play_scenes.target.height / window.content_rect.height;
+            }
+
             play_scenes.update_scripts(1 / 60.f, assets, get_rpc_client(rpc_client), input);
             play_scenes.update_and_draw(1 / 60.f, nullptr, {}, input, assets, 1);
+
+            input->mouse_pos = backup_mouse_pos;
+
+
             debug_ui(&play_scenes, backbuffer, input, assets, mem);
         }
         else
@@ -55,6 +67,7 @@ struct Editor
             editor_scenes->update_and_draw(1 / 60.f, camera, camera_transform.position, input, assets, exposure);
             debug_ui(editor_scenes, backbuffer, input, assets, mem);
         }
+
     }
 
     void debug_ui(SceneManager *scenes, RenderTarget target, InputState *input, Assets *assets, Memory mem)
@@ -631,7 +644,8 @@ struct Editor
         }
       }
 
-      DynamicArray<DynamicArray<i32>> selected_keys(&assets_temp_allocator);
+      static DynamicArray<DynamicArray<i32>> selected_keys(&assets_temp_allocator);
+      selected_keys.clear();
       if (editor_scenes->main.current_sequence) {
         for (u32 i = 0; i < editor_scenes->main.current_sequence->tracks.count; i++) {
           selected_keys.push_back({&assets_temp_allocator});
@@ -851,9 +865,18 @@ struct Editor
           key_clipboard.count) {
         Imm::selected_keyframes.clear();
 
+        i32 base_frame = INT_MAX;
         for (i32 i = 0; i < key_clipboard.count; i++) {
           for (i32 j = 0; j < key_clipboard[i].count; j++) {
-            i32 base_frame               = ka->tracks[i].keys[key_clipboard[i][0]].frame;
+            i32 first_copied_frame_in_track = ka->tracks[i].keys[key_clipboard[i][0]].frame;
+            if (first_copied_frame_in_track < base_frame) {
+              base_frame = first_copied_frame_in_track;
+            }
+          }
+        }
+
+        for (i32 i = 0; i < key_clipboard.count; i++) {
+          for (i32 j = 0; j < key_clipboard[i].count; j++) {
             KeyedAnimationTrack::Key tmp = ka->tracks[i].keys[key_clipboard[i][j]];
             tmp.frame                    = current_frame + (tmp.frame - base_frame);
             i32 new_i                    = ka->tracks[i].add_key(tmp);
@@ -864,13 +887,14 @@ struct Editor
       }
     }
 
-    RpcClient clients[8];
+    static const i32 client_count = 10;
+    RpcClient clients[client_count];
     GameId game_id = -1;
     GameState game_state;
 
     void window_game() {
       
-      for (int i = 0; i < 8; i++) {
+      for (int i = 0; i < client_count; i++) {
         if (clients[i].peer.is_connected()) {
           int msg_len;
           char msg[MAX_MSG_SIZE];
@@ -883,7 +907,7 @@ struct Editor
       }
 
       if (playing_client) {
-        for (i32 i = 0; i < 8; i++) {
+        for (i32 i = 0; i < client_count; i++) {
           RpcClient *client = &clients[i];
           if (playing_client != client) {
             if (client->peer.is_connected() && client->msg_received()) {
@@ -897,7 +921,7 @@ struct Editor
       Imm::start_window("Game", {100, 100, 200, 400});
 
       static i32 num_players = 2;
-      num_players            = std::clamp(num_players, 1, 8);
+      num_players            = std::clamp(num_players, 1, client_count);
       Imm::num_input(&num_players);
 
       if (Imm::button("Create Game")) {

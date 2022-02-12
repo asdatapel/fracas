@@ -142,6 +142,14 @@ inline Vec2f operator-(const Vec2f &lhs, const Vec2f &rhs)
 {
     return {lhs.x - rhs.x, lhs.y - rhs.y};
 }
+inline void operator+=(Vec2f &lhs, const Vec2f &rhs)
+{
+    lhs = lhs + rhs;
+}
+inline void operator-=(Vec2f &lhs, const Vec2f &rhs)
+{
+    lhs = lhs - rhs;
+}
 inline Vec2f operator*(const Vec2f &lhs, const Vec2f &rhs)
 {
     return {lhs.x * rhs.x, lhs.y * rhs.y};

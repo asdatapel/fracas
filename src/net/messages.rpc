@@ -159,6 +159,11 @@ n_incorrects int
 
 client InGameEggghhhh InGameEggghhhhMessage
 
-client InGameEndRound
+message InGameEndRoundMessage
+round_winner int
+family0_score int
+family1_score int
+
+client InGameEndRound InGameEndRoundMessage
 
 client InGameEndGame
