@@ -212,6 +212,7 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
     basic_shader = load_shader(create_shader_program("resources/shaders/basic"));
     lines_shader = load_shader(create_shader_program("resources/shaders/lines"));
     textured_shader = load_shader(create_shader_program("resources/shaders/textured"));
+    single_channel_font_shader = load_shader(create_shader_program("resources/shaders/single_channel_font"));
     textured_mapped_shader = load_shader(create_shader_program("resources/shaders/font_atlas"));
     blurred_colors_shader = load_shader(create_shader_program("resources2/shaders/blurred_colors"));
     threed_shader = load_shader(create_shader_program("resources2/shaders/threed"));
@@ -376,6 +377,22 @@ void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture 
     bind_4f(textured_mapped_shader, UniformId::COLOR, color.r, color.g, color.b, color.a);
 
     bind_texture(textured_mapped_shader, UniformId::TEX, tex);
+
+    glBindVertexArray(screen_quad_vao);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
+void draw_single_channel_text(RenderTarget target, Rect rect, Rect uv, Texture tex)
+{
+    bind_shader(single_channel_font_shader);
+
+    bind_2i(single_channel_font_shader, UniformId::RESOLUTION, target.width, target.height);
+    bind_2f(single_channel_font_shader, UniformId::POS, rect.x, rect.y);
+    bind_2f(single_channel_font_shader, UniformId::SCALE, rect.width, rect.height);
+    bind_4f(single_channel_font_shader, UniformId::UV, uv.x, uv.y, uv.width, uv.height);
+    bind_4f(single_channel_font_shader, UniformId::COLOR, 0, 0, 0, 1);
+
+    bind_texture(single_channel_font_shader, UniformId::TEX, tex);
 
     glBindVertexArray(screen_quad_vao);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

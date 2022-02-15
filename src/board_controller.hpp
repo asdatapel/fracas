@@ -104,18 +104,18 @@ struct BoardController
         currently_flipping = index;
         flip_timer = 0;
 
-        Font *font = assets->get_font(FONT_ANTON, 128);
+        Font *font = assets->get_font(FONT_ANTON, 64);
         int render_target_id = 1 + index;
         RenderTarget render_target = assets->render_targets.data[render_target_id].value;
         render_target.bind();
-        render_target.clear();
+        render_target.clear({0, 0, 0, 0});
         const float text_scale = 2.f;
         {
             float target_border = 0.05f;
             Rect sub_target = {0, 0,
                                .8f * render_target.width,
                                (float)render_target.height};
-            draw_centered_text(*font, render_target, answer, sub_target, target_border, text_scale, text_scale);
+            draw_centered_text(*font, render_target, answer, sub_target, target_border, text_scale, text_scale, true);
         }
         if (score > 0 && score < 100)
         {
@@ -131,7 +131,7 @@ struct BoardController
                                0,
                                .19f * render_target.width,
                                (float)render_target.height};
-            draw_centered_text(*font, render_target, text, sub_target, border, text_scale, text_scale);
+            draw_centered_text(*font, render_target, text, sub_target, border, text_scale, text_scale, true);
         }
         render_target.color_tex.gen_mipmaps();
     }
@@ -262,6 +262,7 @@ struct UiController
 
     b8 question_visible = false;
     AllocatedString<128> question_value;
+    f32 question_visible_pct = 0;
 
     b8 answer_textbox_visible = false;
     f32 timer_value;
@@ -295,7 +296,8 @@ struct UiController
         }
 
         if (question_visible) {
-            draw_text(*font, target, question_value, 10, 10, 1, 1);
+          u32 visible_letters = clamp(question_visible_pct, 0, 1) * question_value.len;
+          draw_text(*font, target, {question_value.data, visible_letters}, 10, 10, 1, 1);
         }
 
         if (timer_visible) {
@@ -305,6 +307,7 @@ struct UiController
             draw_text(*font, target, val, target.width - (get_text_width(*font, val) + 10), 10, 1, 1);
         }
 
+        answer_submitted = false;
         if (answer_textbox_visible) {
             // TODO: alternative for XInput
 
@@ -315,6 +318,7 @@ struct UiController
             answer_submitted = input->key_down_events[(i32)Keys::ENTER];
         }
 
+        buzz_button_pressed = false;
         if (buzz_button_visible) {
           buzz_button.rect =
               anchor_bottom_right({400, 110}, {25.f, 25.f});
@@ -324,6 +328,8 @@ struct UiController
           buzz_button_pressed = buzz_button.update_and_draw(target, input, font);
         }
 
+        pass_button_pressed = false;
+        play_button_pressed = false;
         if (pass_play_buttons_visible) {
             pass_button.text = "PASS";
             pass_button.rect = anchor_bottom_right({400, 110}, {25.f, 25.f});
@@ -338,6 +344,14 @@ struct UiController
 
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
+    }
+
+    void hide_all() {
+        buzz_button_visible = false;
+        question_visible = false;
+        answer_textbox_visible = false;
+        timer_visible = false;
+        pass_play_buttons_visible = false;
     }
 
     void popup_banner(String text, f32 duration = 5.f)
@@ -368,10 +382,15 @@ struct UiController
         answer_textbox_visible = visible;
     }
 
-    void question(b8 visible, String val)
+    void set_question(AllocatedString<128> &val) {
+        question_value = string_to_allocated_string<128>(val);
+    }
+    void set_question_visible_pct(f32 p) {
+        question_visible_pct = p;
+    }
+    void question(b8 visible)
     {
         question_visible = visible;
-        question_value = string_to_allocated_string<128>(val);
     }
 
     void pass_or_play(b8 visible) {

@@ -1119,9 +1119,9 @@ entities:
     type: MESH
     transform: 
       position: 
-        x: 6.698906
+        x: 6.486586
         y: 0.880000
-        z: 8.813191
+        z: 7.310973
       rotation: 
         x: 0.000000
         y: -5.873541
@@ -1139,9 +1139,9 @@ entities:
     type: MESH
     transform: 
       position: 
-        x: 5.485857
-        y: 2.317835
-        z: 6.571812
+        x: 5.921393
+        y: 0.880000
+        z: 6.176170
       rotation: 
         x: 0.000000
         y: -5.873541
@@ -1159,9 +1159,9 @@ entities:
     type: MESH
     transform: 
       position: 
-        x: 4.936673
-        y: 2.317973
-        z: 5.631723
+        x: 5.358194
+        y: 0.880000
+        z: 5.107086
       rotation: 
         x: 0.000000
         y: -5.873541
@@ -1179,9 +1179,9 @@ entities:
     type: MESH
     transform: 
       position: 
-        x: 1.078757
-        y: 2.546793
-        z: 5.305379
+        x: 4.890990
+        y: 0.880000
+        z: 4.220221
       rotation: 
         x: 0.000000
         y: -5.873541
@@ -1199,9 +1199,9 @@ entities:
     type: MESH
     transform: 
       position: 
-        x: 0.060211
-        y: 2.201460
-        z: 4.399294
+        x: 4.255131
+        y: 0.880000
+        z: 3.013209
       rotation: 
         x: 0.000000
         y: -5.873541
@@ -1802,12 +1802,12 @@ entities:
     type: CAMERA
     transform: 
       position: 
-        x: 1.038573
-        y: 2.623793
-        z: 13.762801
+        x: 0.100000
+        y: 8.600000
+        z: 4.660000
       rotation: 
-        x: -0.153589
-        y: 0.343829
+        x: 0.000000
+        y: 0.000000
         z: 0.000000
       scale: 
         x: 1.000000
@@ -1876,8 +1876,8 @@ entities:
     type: CAMERA
     transform: 
       position: 
-        x: 0.080000
-        y: 7.199999
+        x: 0.100000
+        y: 8.599998
         z: 4.659999
       rotation: 
         x: 0.000000
@@ -2115,7 +2115,7 @@ entities:
         x: 1.000000
         y: 1.000000
         z: 1.000000
-active_camera_id: -1
+active_camera_id: 87
 hdr: resources/hdri/Newport_Loft_Ref.hdr
 cubemap_visible: true
 planar_reflector: 

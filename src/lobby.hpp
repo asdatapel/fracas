@@ -156,7 +156,9 @@ struct Lobby
         stage = LobbyStage::ENDED;
         game.round_stage = RoundStage::END;
 
-        broadcaster.broadcast(&RpcServer::InGameEndGame, Empty{});
+        InGameEndGameMessage msg;
+        msg.game_winner = game.scores[0] > game.scores[1] ? 0 : 1;
+        broadcaster.broadcast(&RpcServer::InGameEndGame, msg);
 
         set_waiter(&Lobby::waiter_end_game, 10 * 60 * second);
     }
@@ -243,14 +245,14 @@ struct Lobby
         else
         {
             game.answers[answer_i].revealed = true;
-            game.this_round_points += score;
+            game.this_round_points += score * ROUND_MULTIPLIERS[game.round];
 
             broadcaster.broadcast(&RpcServer::InGameFlipAnswer, InGameFlipAnswerMessage{answer_i, game.last_answer, score});
         }
 
         if (game.round_stage == RoundStage::FACEOFF)
         {
-            if (game.this_round_points == score && game.incorrects == this_answer_incorrect) // no one has answered yet
+            if (game.this_round_points == score && game.incorrects == this_answer_incorrect) // first to answer
             {
                 if (answer_i == 0)
                 {
@@ -330,6 +332,8 @@ struct Lobby
     void stage_start_play(Broadcaster broadcaster)
     {
         game.round_stage = RoundStage::PLAY;
+        game.incorrects = 0;
+
         broadcaster.broadcast(&RpcServer::InGameStartPlay, InGameStartPlayMessage{game.faceoff_winning_family});
         set_next_stage(&Lobby::stage_prep_for_prompt_for_answer);
     }
@@ -355,7 +359,12 @@ struct Lobby
         msg.family0_score = game.scores[0];
         msg.family1_score = game.scores[1];
         broadcaster.broadcast(&RpcServer::InGameEndRound, msg);
-        set_next_stage(&Lobby::stage_start_round);
+
+        if (game.round < 2) {
+            set_next_stage(&Lobby::stage_start_round); }
+        else {
+            set_next_stage(&Lobby::stage_end_game);
+        }
     }
 
     void stage_end_game(Broadcaster broadcaster)

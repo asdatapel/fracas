@@ -56,7 +56,7 @@ struct RpcServer : public BaseRpcServer
 
     void InGameEndRound(Peer *, InGameEndRoundMessage);
 
-    void InGameEndGame(Peer *, Empty);
+    void InGameEndGame(Peer *, InGameEndGameMessage);
 
 };
 
@@ -330,7 +330,7 @@ void RpcServer::InGameEndRound(Peer *peer, InGameEndRoundMessage req)
 }
 
 
-void RpcServer::InGameEndGame(Peer *peer, Empty req)
+void RpcServer::InGameEndGame(Peer *peer, InGameEndGameMessage req)
 {
     MessageBuilder out;
     append(&out, (char) Rpc::InGameEndGame);

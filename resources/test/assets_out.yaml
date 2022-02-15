@@ -157,7 +157,7 @@ keyed_animations:
                 y: 1.000000
                 z: 1.000000
             interpolation_type: 2
-            frame: 192
+            frame: 276
           - transform: 
               position: 
                 x: 0.169764
@@ -172,7 +172,7 @@ keyed_animations:
                 y: 1.000000
                 z: 1.000000
             interpolation_type: 0
-            frame: 270
+            frame: 354
           - transform: 
               position: 
                 x: -2.942712
@@ -187,7 +187,7 @@ keyed_animations:
                 y: 1.000000
                 z: 1.000000
             interpolation_type: 2
-            frame: 321
+            frame: 405
           - transform: 
               position: 
                 x: -0.376916
@@ -202,7 +202,7 @@ keyed_animations:
                 y: 1.000000
                 z: 1.000000
             interpolation_type: 1
-            frame: 401
+            frame: 485
   - asset_id: 3
     asset_name: resources/test/question_start
     fps: 30
@@ -213,9 +213,9 @@ keyed_animations:
         keys: 
           - transform: 
               position: 
-                x: 0.000000
-                y: 6.420000
-                z: 1.077185
+                x: 0.100000
+                y: 8.600000
+                z: 4.660000
               rotation: 
                 x: 0.000000
                 y: 0.000000
@@ -2433,6 +2433,1254 @@ keyed_animations:
               rotation: 
                 x: -0.153589
                 y: 0.343829
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 0
+            frame: 0
+  - asset_id: 7
+    asset_name: resources/test/family1_game_win
+    fps: 30
+    start_frame: 0
+    end_frame: 132
+    tracks: 
+      - entity_id: 57
+        keys: 
+          - transform: 
+              position: 
+                x: 4.255131
+                y: 0.880000
+                z: 3.013209
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 0
+            frame: 0
+          - transform: 
+              position: 
+                x: 4.255131
+                y: 0.880000
+                z: 3.013209
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 5
+          - transform: 
+              position: 
+                x: 3.483565
+                y: 2.335088
+                z: 2.979844
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 15
+          - transform: 
+              position: 
+                x: 2.605627
+                y: 0.880000
+                z: 2.979844
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 25
+          - transform: 
+              position: 
+                x: 1.137485
+                y: 0.880000
+                z: 4.301278
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 0
+            frame: 37
+          - transform: 
+              position: 
+                x: 1.137485
+                y: 0.880000
+                z: 4.301278
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 38
+          - transform: 
+              position: 
+                x: 1.137485
+                y: 2.370842
+                z: 4.301278
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 47
+          - transform: 
+              position: 
+                x: 1.137485
+                y: 0.880000
+                z: 4.301278
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 57
+          - transform: 
+              position: 
+                x: 1.137485
+                y: 2.370842
+                z: 4.301278
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 67
+          - transform: 
+              position: 
+                x: 1.137485
+                y: 0.880000
+                z: 4.301278
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 77
+          - transform: 
+              position: 
+                x: 1.137485
+                y: 2.370842
+                z: 4.301278
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 87
+          - transform: 
+              position: 
+                x: 1.137485
+                y: 0.880000
+                z: 4.301278
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 97
+          - transform: 
+              position: 
+                x: 1.137485
+                y: 2.370842
+                z: 4.301278
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 107
+          - transform: 
+              position: 
+                x: 1.137485
+                y: 0.880000
+                z: 4.301278
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 117
+          - transform: 
+              position: 
+                x: 1.137485
+                y: 2.370842
+                z: 4.301278
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 126
+          - transform: 
+              position: 
+                x: 1.137485
+                y: 0.880000
+                z: 4.301278
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 136
+      - entity_id: 56
+        keys: 
+          - transform: 
+              position: 
+                x: 4.890990
+                y: 0.880000
+                z: 4.220221
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 0
+            frame: 0
+          - transform: 
+              position: 
+                x: 4.890990
+                y: 0.880000
+                z: 4.220221
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 5
+          - transform: 
+              position: 
+                x: 3.815639
+                y: 2.582857
+                z: 4.566074
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 15
+          - transform: 
+              position: 
+                x: 2.098854
+                y: 0.880000
+                z: 4.509281
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 0
+            frame: 29
+          - transform: 
+              position: 
+                x: 2.098854
+                y: 0.880000
+                z: 4.509281
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 30
+          - transform: 
+              position: 
+                x: 1.765425
+                y: 0.880000
+                z: 5.548018
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 0
+            frame: 39
+          - transform: 
+              position: 
+                x: 1.765425
+                y: 0.880000
+                z: 5.548018
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 40
+          - transform: 
+              position: 
+                x: 1.765425
+                y: 2.851584
+                z: 5.548018
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 49
+          - transform: 
+              position: 
+                x: 1.765425
+                y: 0.880000
+                z: 5.548018
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 59
+          - transform: 
+              position: 
+                x: 1.765425
+                y: 2.851584
+                z: 5.548018
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 69
+          - transform: 
+              position: 
+                x: 1.765425
+                y: 0.880000
+                z: 5.548018
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 79
+          - transform: 
+              position: 
+                x: 1.765425
+                y: 2.851584
+                z: 5.548018
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 89
+          - transform: 
+              position: 
+                x: 1.765425
+                y: 0.880000
+                z: 5.548018
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 99
+          - transform: 
+              position: 
+                x: 1.765425
+                y: 2.851584
+                z: 5.548018
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 109
+          - transform: 
+              position: 
+                x: 1.765425
+                y: 0.880000
+                z: 5.548018
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 119
+          - transform: 
+              position: 
+                x: 1.765425
+                y: 2.851584
+                z: 5.548018
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 129
+          - transform: 
+              position: 
+                x: 1.765425
+                y: 0.880000
+                z: 5.548018
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 139
+      - entity_id: 55
+        keys: 
+          - transform: 
+              position: 
+                x: 5.358194
+                y: 0.880000
+                z: 5.107086
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 0
+            frame: 0
+          - transform: 
+              position: 
+                x: 5.358194
+                y: 0.880000
+                z: 5.107086
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 5
+          - transform: 
+              position: 
+                x: 4.324488
+                y: 2.681522
+                z: 5.729658
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 15
+          - transform: 
+              position: 
+                x: 2.585361
+                y: 0.880000
+                z: 6.090960
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 30
+          - transform: 
+              position: 
+                x: 1.708296
+                y: 1.377126
+                z: 6.587973
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 40
+          - transform: 
+              position: 
+                x: 1.708296
+                y: 1.000000
+                z: 6.587973
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 50
+          - transform: 
+              position: 
+                x: 1.708296
+                y: 2.816512
+                z: 6.587973
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 60
+          - transform: 
+              position: 
+                x: 1.708296
+                y: 1.000000
+                z: 6.587973
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 70
+          - transform: 
+              position: 
+                x: 1.708296
+                y: 2.816512
+                z: 6.587973
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 80
+          - transform: 
+              position: 
+                x: 1.708296
+                y: 1.000000
+                z: 6.587973
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 90
+          - transform: 
+              position: 
+                x: 1.708296
+                y: 2.816512
+                z: 6.587973
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 100
+          - transform: 
+              position: 
+                x: 1.708296
+                y: 1.000000
+                z: 6.587973
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 110
+          - transform: 
+              position: 
+                x: 1.708296
+                y: 2.816512
+                z: 6.587973
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 120
+          - transform: 
+              position: 
+                x: 1.708296
+                y: 1.000000
+                z: 6.587973
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 130
+          - transform: 
+              position: 
+                x: 1.708296
+                y: 2.816512
+                z: 6.587973
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 140
+      - entity_id: 54
+        keys: 
+          - transform: 
+              position: 
+                x: 5.921393
+                y: 0.880000
+                z: 6.176170
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 0
+            frame: 0
+          - transform: 
+              position: 
+                x: 5.921393
+                y: 0.880000
+                z: 6.176170
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 5
+          - transform: 
+              position: 
+                x: 5.092031
+                y: 2.620813
+                z: 7.122526
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 15
+          - transform: 
+              position: 
+                x: 3.740568
+                y: 0.880000
+                z: 7.122526
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 30
+          - transform: 
+              position: 
+                x: 1.127833
+                y: 0.880000
+                z: 7.734882
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 50
+          - transform: 
+              position: 
+                x: 1.127833
+                y: 0.880000
+                z: 7.734882
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 55
+          - transform: 
+              position: 
+                x: 1.127833
+                y: 2.916941
+                z: 7.734882
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 65
+          - transform: 
+              position: 
+                x: 1.127833
+                y: 0.880000
+                z: 7.734882
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 75
+          - transform: 
+              position: 
+                x: 1.127833
+                y: 2.916941
+                z: 7.734882
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 85
+          - transform: 
+              position: 
+                x: 1.127833
+                y: 0.880000
+                z: 7.734882
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 95
+          - transform: 
+              position: 
+                x: 1.127833
+                y: 2.916941
+                z: 7.734882
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 105
+          - transform: 
+              position: 
+                x: 1.127833
+                y: 0.880000
+                z: 7.734882
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 115
+          - transform: 
+              position: 
+                x: 1.127833
+                y: 2.916941
+                z: 7.734882
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 124
+          - transform: 
+              position: 
+                x: 1.127833
+                y: 0.880000
+                z: 7.734882
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 134
+          - transform: 
+              position: 
+                x: 1.127833
+                y: 2.916941
+                z: 7.734882
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 145
+          - transform: 
+              position: 
+                x: 1.127833
+                y: 0.880000
+                z: 7.734882
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 155
+      - entity_id: 53
+        keys: 
+          - transform: 
+              position: 
+                x: 6.486586
+                y: 0.880000
+                z: 7.310973
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 0
+            frame: 0
+          - transform: 
+              position: 
+                x: 6.486586
+                y: 0.880000
+                z: 7.310973
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 5
+          - transform: 
+              position: 
+                x: 6.354022
+                y: 2.141070
+                z: 7.623186
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 15
+          - transform: 
+              position: 
+                x: 5.332691
+                y: 2.127029
+                z: 8.349734
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 25
+          - transform: 
+              position: 
+                x: 4.866691
+                y: 2.127029
+                z: 8.737864
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 35
+          - transform: 
+              position: 
+                x: 4.313537
+                y: 0.880000
+                z: 9.270372
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 45
+          - transform: 
+              position: 
+                x: 2.372670
+                y: 0.880000
+                z: 7.418276
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 55
+          - transform: 
+              position: 
+                x: 2.372670
+                y: 1.777999
+                z: 7.418276
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 65
+          - transform: 
+              position: 
+                x: 2.372670
+                y: 0.880000
+                z: 7.418276
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 75
+          - transform: 
+              position: 
+                x: 2.372670
+                y: 1.777999
+                z: 7.418276
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 85
+          - transform: 
+              position: 
+                x: 2.372670
+                y: 0.880000
+                z: 7.418276
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 95
+          - transform: 
+              position: 
+                x: 2.372670
+                y: 1.777999
+                z: 7.418276
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 105
+          - transform: 
+              position: 
+                x: 2.372670
+                y: 0.880000
+                z: 7.418276
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 115
+          - transform: 
+              position: 
+                x: 2.372670
+                y: 1.777999
+                z: 7.418276
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 125
+          - transform: 
+              position: 
+                x: 2.372670
+                y: 0.880000
+                z: 7.418276
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 135
+          - transform: 
+              position: 
+                x: 2.372670
+                y: 1.777999
+                z: 7.418276
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 145
+          - transform: 
+              position: 
+                x: 2.372670
+                y: 0.880000
+                z: 7.418276
+              rotation: 
+                x: 0.000000
+                y: -5.873541
+                z: 0.000000
+              scale: 
+                x: 1.000000
+                y: 1.000000
+                z: 1.000000
+            interpolation_type: 3
+            frame: 155
+      - entity_id: 87
+        keys: 
+          - transform: 
+              position: 
+                x: -1.584557
+                y: 1.698050
+                z: 15.593556
+              rotation: 
+                x: -0.158824
+                y: -0.331615
                 z: 0.000000
               scale: 
                 x: 1.000000

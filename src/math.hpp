@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+#define PI 3.14159265359
+
 struct Color
 {
     float r, g, b, a;

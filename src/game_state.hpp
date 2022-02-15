@@ -6,6 +6,8 @@
 
 #include "util.hpp"
 
+Array<i32, 5> ROUND_MULTIPLIERS = {1, 1, 2, 2, 3};
+
 enum struct RoundStage
 {
     START,
@@ -289,6 +291,7 @@ struct ClientGameData
     }
 
     AllocatedString<128> question;
+    i32 num_answers;
     Array<AnswerState, 8> answers;
 
     i32 round = -1;
@@ -298,4 +301,6 @@ struct ClientGameData
     i32 buzzing_family = -1;
 
     Array<i32, 2> scores = {{}, {}};
+
+    i32 incorrects = 0;
 };

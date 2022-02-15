@@ -87,7 +87,7 @@ char *read_string(char *buf, char *output_buf, uint16_t *len)
 
 char *read_string(char *buf, String *output)
 {
-    buf = read_short(buf, &output->len);
+    buf = read_uint32(buf, &output->len);
     memcpy(output->data, buf, output->len);
     return buf + output->len;
 }

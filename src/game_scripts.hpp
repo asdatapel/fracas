@@ -21,7 +21,7 @@
   step(VARNAME(wait) = time;);     \
   if (VARNAME(wait) > 0.f) {       \
     VARNAME(wait) -= timestep;     \
-    return;                        \
+    return false;                        \
   }
 
 struct Scenes
@@ -43,8 +43,7 @@ struct Sequence {
 
   void reset_base() { next_step = 0; }
 
-  virtual void update(float, Scenes, ClientGameData *, InputState *, RpcClient *) = 0;
-  virtual bool ready(Scenes scenes)                                               = 0;
+  virtual bool update(float, Scenes, ClientGameData *, InputState *, RpcClient *) = 0;
 };
 
 struct ScriptDefinition
@@ -89,7 +88,7 @@ struct IntroSequence : Sequence
         scenes.main->set_t(0);
     }
 
-    void update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
+    bool update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
     {
         Entity *camera = scenes.main->get(input.camera);
         if (camera)
@@ -99,10 +98,7 @@ struct IntroSequence : Sequence
 
         step(
             scenes.ui_controller->popup_banner("hello", 5.f);)
-    }
 
-    bool ready(Scenes scenes)
-    {
         return scenes.main->is_sequence_finished();
     }
 };
@@ -138,7 +134,7 @@ struct RoundStartSequence : Sequence
         scenes.main->play_sequence();
         scenes.main->set_t(0);
     }
-    void update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
+    bool update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
     {
         t += timestep;
         if (t > length)
@@ -151,9 +147,7 @@ struct RoundStartSequence : Sequence
         {
             scenes.main->active_camera_id = input.camera;
         }
-    }
-    bool ready(Scenes scenes)
-    {
+
         return scenes.main->is_sequence_finished();
     }
 };
@@ -190,7 +184,7 @@ struct FaceoffStartSequence : Sequence
         scenes.main->play_sequence();
         scenes.main->set_t(0);
     }
-    void update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
+    bool update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
     {
         t += timestep;
         if (t > length)
@@ -198,16 +192,14 @@ struct FaceoffStartSequence : Sequence
             t = length;
         }
 
-        Entity *camera = scenes.main->get(input.camera);
-        if (camera)
-        {
-            scenes.main->active_camera_id = input.camera;
-        }
+        // Entity *camera = scenes.main->get(input.camera);
+        // if (camera)
+        // {
+        //     scenes.main->active_camera_id = input.camera;
+        // }
 
         scenes.player_controller->start_faceoff();
-    }
-    bool ready(Scenes scenes)
-    {
+
         return scenes.main->is_sequence_finished();
     }
 };
@@ -227,21 +219,13 @@ struct AskQuestionSequence : Sequence
     Input input;
 
     f32 question_appearance_t = 0;
-    AllocatedString<128> question;
-    int num_answers;
 
     void init(Scenes scenes)
     {
         question_appearance_t = 0;
-        scenes.main->stop_sequence();
     }
 
-    void reset(String question, int num_answers)
-    {
-        this->question = string_to_allocated_string<128>(question);
-        this->num_answers = num_answers;
-    }
-    void update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
+    bool update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
     {
         step({
             scenes.main->set_sequence(scenes.assets->get_keyed_animation("resources/test/question_start"));
@@ -252,10 +236,10 @@ struct AskQuestionSequence : Sequence
         yield_wait(.5f);
 
         step({
-          assert(num_answers < 10);
-          scenes.board_controller->activate(scenes.main, num_answers);
+          assert(game_data->num_answers < 10);
+          scenes.board_controller->activate(scenes.main, game_data->num_answers);
           AllocatedString<128> dialogue = string_to_allocated_string<128>("We've got ");
-          dialogue.append('0' + num_answers);
+          dialogue.append('0' + game_data->num_answers);
           dialogue.append(" answers on the board.");
           scenes.ui_controller->popup_banner(dialogue);
         })
@@ -265,15 +249,61 @@ struct AskQuestionSequence : Sequence
         scenes.ui_controller->show_buzz_button(true);
         if (scenes.ui_controller->buzz_button_pressed) {
             rpc_client->InGameBuzz({});
+            scenes.ui_controller->show_buzz_button(false);
         }
+
+        step(scenes.ui_controller->question(true));
+        step(scenes.ui_controller->set_question(game_data->question));
 
         const f32 question_appearance_interval = 3.f;
         f32 question_appearance_ratio = std::min(question_appearance_t / question_appearance_interval, 1.f);
-        u16 num_letters = question_appearance_ratio * question.len;
-        scenes.ui_controller->question(true, {question.data, num_letters});
+        scenes.ui_controller->set_question_visible_pct(question_appearance_ratio);
         question_appearance_t += timestep;
+    
+        return false; 
     }
-    bool ready(Scenes scenes) { return false; }
+};
+
+struct PlayerBuzzedSequence : Sequence
+{
+    ScriptDefinition def()
+    {
+        return {
+            "PlayerBuzzedSequence",
+            this,
+            {},
+        };
+    }
+
+    struct Input
+    {
+    };
+    Input input;
+
+    float t;
+    const float length = 3.f;
+
+    PlayerName player_name;
+
+    void reset(PlayerName player_name)
+    {
+        t = 0;
+        this->player_name = player_name;
+    }
+    bool update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
+    {
+      t += timestep;
+
+      step({ 
+          scenes.ui_controller->show_buzz_button(false); 
+          scenes.ui_controller->question(true); 
+        });
+
+      step(AllocatedString<256> combined = player_name; combined.append(" buzzed.");
+           scenes.ui_controller->popup_banner(combined););
+
+      return t > length;
+    }
 };
 
 struct PassOrPlaySequence : Sequence
@@ -297,23 +327,24 @@ struct PassOrPlaySequence : Sequence
     };
     Input input;
 
-    void update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
+    bool update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
     {
         step({
             scenes.ui_controller->pass_or_play(true);
+            scenes.ui_controller->question(true);
         })
 
         if (scenes.ui_controller->play_button_pressed)
         {
             rpc_client->InGameChoosePassOrPlay({true});
+            scenes.ui_controller->pass_or_play(false);
         }
         if (scenes.ui_controller->pass_button_pressed)
         {
             rpc_client->InGameChoosePassOrPlay({false});
+            scenes.ui_controller->pass_or_play(false);
         }
-    }
-    bool ready(Scenes scenes)
-    {
+    
         return false;
     }
 };
@@ -342,65 +373,15 @@ struct PlayerChosePassOrPlaySequence : Sequence
 
         this->play = play;
     }
-    void update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
+    bool update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
     {
         t += timestep;
-
-        step({
-            scenes.ui_controller->pass_or_play(false);
-        })
 
         step({
             scenes.ui_controller->popup_banner(play ? "\"Play\"" : "\"Pass\"");
         })
-    }
-    bool ready(Scenes scenes)
-    {
+    
         return t >= length;
-    }
-};
-struct PlayerBuzzedSequence : Sequence
-{
-    ScriptDefinition def()
-    {
-        return {
-            "PlayerBuzzedSequence",
-            this,
-            {},
-        };
-    }
-
-    struct Input
-    {
-    };
-    Input input;
-
-    float t;
-    const float length = 3.f;
-
-    PlayerName player_name;
-
-    void reset(PlayerName player_name)
-    {
-        t = 0;
-        this->player_name = player_name;
-    }
-    void update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
-    {
-        t += timestep;
-        
-        step({
-            scenes.ui_controller->show_buzz_button(false);
-        })
-
-        step(
-            AllocatedString<256> combined = player_name;
-            combined.append(" buzzed.");
-            scenes.ui_controller->popup_banner(combined);)
-    }
-    bool ready(Scenes scenes)
-    {
-        return t > length;
     }
 };
 
@@ -475,9 +456,11 @@ struct PrepForPromptForAnswerSequence : Sequence
         this->family = family;
         this->player_position = player_position;
     }
-    void update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
+    bool update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
     {
         t += timestep;
+
+        step(scenes.ui_controller->question(true));
 
         if (game_data->round_stage == RoundStage::FACEOFF) {
             scenes.main->active_camera_id = input.camera_faceoff_main;
@@ -486,8 +469,9 @@ struct PrepForPromptForAnswerSequence : Sequence
         }
 
         step(scenes.ui_controller->popup_banner("\"I'm prompting you for an answer.\"");)
+    
+        return t > length;
     }
-    bool ready(Scenes scenes) { return t > length; }
 };
 
 struct PromptForAnswerSequence : Sequence
@@ -521,8 +505,10 @@ struct PromptForAnswerSequence : Sequence
         this->answerer = answerer;
         this->time_remaining = 15.f;
     }
-    void update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
+    bool update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
     {
+        step(scenes.ui_controller->question(true));
+
         time_remaining -= timestep;
         scenes.ui_controller->answer_timer(true, time_remaining);
 
@@ -537,6 +523,7 @@ struct PromptForAnswerSequence : Sequence
             scenes.ui_controller->show_answer_textbox(true);
             if (scenes.ui_controller->answer_submitted) {
                 rpc_client->InGameAnswer({scenes.ui_controller->answer_textbox.text});
+                scenes.ui_controller->show_answer_textbox(false);
             }
         }
         else
@@ -547,8 +534,9 @@ struct PromptForAnswerSequence : Sequence
                 scenes.ui_controller->popup_banner(combined);)
 
         }
+    
+        return false;
     }
-    bool ready(Scenes scenes) { return false; }
 };
 
 struct StartPlaySequence : Sequence
@@ -580,7 +568,7 @@ struct StartPlaySequence : Sequence
         t = 0;
     }
 
-    void update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
+    bool update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
     {
         t += timestep;
         if (t > length)
@@ -599,10 +587,7 @@ struct StartPlaySequence : Sequence
         // camera on current player, move host to that position
         // repeat question
         //
-    }
 
-    bool ready(Scenes scenes)
-    {
         return t >= length;
     }
 };
@@ -635,7 +620,7 @@ struct StartStealSequence : Sequence
         t = 0;
     }
 
-    void update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
+    bool update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
     {
         t += timestep;
         if (t > length)
@@ -649,10 +634,7 @@ struct StartStealSequence : Sequence
         {
             camera->transform.position = catmull_rom(constant_distance_t(path->spline, t / length) - 1, path->spline);
         }
-    }
 
-    bool ready(Scenes scenes)
-    {
         return t >= length;
     }
 };
@@ -684,16 +666,14 @@ struct PlayerAnsweredSequence : Sequence
 
         this->answer = answer;
     }
-    void update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
+    bool update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
     {
         t += timestep;
         float pos_x = 200 + sinf(t * 1000) * 20;
         float pos_y = 500 + sinf(t * 1000) * 20;
 
         step(scenes.ui_controller->popup_banner(answer, 5.f))
-    }
-    bool ready(Scenes scenes)
-    {
+
         return t > length;
     }
 };
@@ -733,86 +713,181 @@ struct FlipAnswerSequence : Sequence
         this->answer_i = answer_i;
         this->score = score;
     }
-    void update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
+    bool update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
     {
-        scenes.main->active_camera_id = input.camera;
-        
-        yield_wait(2.f);
-        
-        if (t == 0)
-            scenes.board_controller->flip(scenes.main, scenes.assets, answer_i, answer, score);
+      step({
+        scenes.ui_controller->question(true);
+        scenes.ui_controller->set_question_visible_pct(1.f);
+      });
 
-        t += timestep;
-        // set scene camera to board_closeup_camera
-        // wait x seconds
-        // flip animation
-        // wait x seconds
-        // ready
-    }
-    bool ready(Scenes scenes)
-    {
-        return t >= length;
+      scenes.main->active_camera_id = input.camera;
+
+      yield_wait(2.f);
+
+      if (t == 0)
+        scenes.board_controller->flip(scenes.main, scenes.assets, answer_i, answer, score);
+
+      t += timestep;
+
+      yield_wait(2.f);
+
+      return t >= length;
     }
 };
 
-struct EeeeeggghhhhSequence : Sequence
-{
-    ScriptDefinition def()
-    {
-        return {
-            "EeeeeggghhhhSequence",
-            this,
-            {
-                {"camera", &input.camera, EntityType::CAMERA},
-            },
-        };
-    }
-
-    struct Input
-    {
-        int camera;
-    };
-    Input input;
-
-    float t;
-    const float length = 5.f;
-
-    void reset()
-    {
-        t = 0;
-    }
-
-    void update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
-    {
-        t += timestep;
-
-        scenes.xs->visible = true;
-
-        float speed_denoms[3] = {2, 2.75, 2.15};
-        for (int i = 0; i < 3; i++)
+struct EeeeeggghhhhSequence : Sequence {
+  ScriptDefinition def()
+  {
+    return {
+        "EeeeeggghhhhSequence",
+        this,
         {
-            glm::vec3 initial_pos = {-1 + i, 0, 5};
-            glm::quat initial_rot({(i * .5f), .1f + (i * .1f), -0.5f + (i * 1.4f)});
-            glm::vec3 target_pos = {i - 1, 0.f, 0.f};
-            glm::quat target_rot({glm::radians(90.f), 0.f, 0.f});
-            float actual_t = 1.f - powf(glm::clamp(t / 2, 0.f, 1.f), speed_denoms[i]);
-            glm::vec3 actual_pos = initial_pos + ((target_pos - initial_pos) * actual_t);
-            glm::quat actual_rot = glm::normalize(initial_rot + ((target_rot - initial_rot) * actual_t));
-            glm::vec3 actual_rot_euler = glm::eulerAngles(actual_rot);
+            {"camera", &input.camera, EntityType::CAMERA},
+        },
+    };
+  }
 
-            scenes.xs->entities.data[i].value.transform.position = {actual_pos.x, actual_pos.y, actual_pos.z};
-            scenes.xs->entities.data[i].value.transform.rotation = {actual_rot_euler.x, actual_rot_euler.y, actual_rot_euler.z};
-        }
-        // set scene camera to board_closeup_camera
-        // wait x seconds
-        // show Xs
-        // wait x seconds
-        // ready
+  struct Input {
+    int camera;
+  };
+  Input input;
+
+  f32 t;
+  f32 popout_t;
+
+  void reset()
+  {
+    t = 0;
+    popout_t = 0;
+
+  }
+
+  bool update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state,
+              RpcClient *rpc_client)
+  {
+    step({
+      scenes.ui_controller->question(true);
+      scenes.ui_controller->set_question_visible_pct(1.f);
+    });
+
+    step(scenes.main->active_camera_id = input.camera;);
+
+    yield_wait(2.f);
+
+    scenes.xs->visible = true;
+
+    auto bump_function = [](f64 t) -> f64 {
+      if (t < 0 || t > 1) return 0;
+      return 2.71828182846 * std::exp(-1 / ((-4 * t * t) + (4 * t)));
+    };
+    auto clamped_bump_function = [&](f64 t, f64 top) -> f32 {
+      return std::min(bump_function(t), top);
+    };
+    auto easeOutCubic   = [](f32 t) { return 1 - std::pow(1 - t, 3); };
+    auto x_pop_function = [&](f32 t) {
+      return 2 * clamped_bump_function(easeOutCubic(t * .4), 0.15);
+    };
+
+    t += timestep;
+
+    // FYI this is relying on the first three entities in the second secene being Xs
+    if (game_data->incorrects == 1 || game_data->round_stage == RoundStage::FACEOFF) {
+      scenes.xs->entities.data[1].value.transform.position = {0, 0, x_pop_function(t)};
+      scenes.xs->entities.data[1].value.transform.rotation = {PI / 2, 0, 0};
+      scenes.xs->entities.data[1].value.transform.scale    = {
+          1 + x_pop_function(t) * .1f,
+          1 + x_pop_function(t) * .1f,
+          1 + x_pop_function(t) * .1f,
+      };
+
+      scenes.xs->entities.data[0].value.transform.position.z = 10;
+      scenes.xs->entities.data[2].value.transform.position.z = 10;
+    } else if (game_data->incorrects == 2) {
+      scenes.xs->entities.data[0].value.transform.position = {-.5f, 0, 0};
+      scenes.xs->entities.data[0].value.transform.rotation = {PI / 2, 0, 0};
+      scenes.xs->entities.data[1].value.transform.position = {.5f, 0, x_pop_function(t)};
+      scenes.xs->entities.data[1].value.transform.rotation = {PI / 2, 0, 0};
+      scenes.xs->entities.data[1].value.transform.scale    = {
+          1 + x_pop_function(t) * .1f,
+          1 + x_pop_function(t) * .1f,
+          1 + x_pop_function(t) * .1f,
+      };
+
+      scenes.xs->entities.data[2].value.transform.position.z = 10;
+    } else {
+      scenes.xs->entities.data[0].value.transform.position = {-1, 0, 0};
+      scenes.xs->entities.data[0].value.transform.rotation = {PI / 2, 0, 0};
+      scenes.xs->entities.data[1].value.transform.position = {0, 0, 0};
+      scenes.xs->entities.data[1].value.transform.rotation = {PI / 2, 0, 0};
+
+      scenes.xs->entities.data[2].value.transform.position = {1, 0, x_pop_function(t)};
+      scenes.xs->entities.data[2].value.transform.rotation = {PI / 2, 0, 0};
+      scenes.xs->entities.data[2].value.transform.scale    = {
+          1 + x_pop_function(t) * .1f,
+          1 + x_pop_function(t) * .1f,
+          1 + x_pop_function(t) * .1f,
+      };
     }
-    bool ready(Scenes scenes)
-    {
-        return t > length;
+
+    // moving light pizzazzzz
+    scenes.xs->entities.data[7].value.transform.position.x = 1.8f - t;
+
+    yield_wait(4.f);
+
+    const f32 speed_denoms[3] = {2, 3., 2.15};
+    const glm::quat target_rots[3] = {glm::quat({.4f, 2, 0}), glm::quat({.5f, 0, -.9f}),
+                                    glm::quat({1.f, 1.3f, .75f})};
+    glm::vec3 initial_positions[3] = {glm::vec3{-1, 0, 0}, glm::vec3{0, 0, 0}, glm::vec3{1, 0, 0}};
+
+    b8 popout = false; 
+    if (game_data->round_stage == RoundStage::FACEOFF && game_data->incorrects == 2) {
+        popout = true;
+        initial_positions[0].z = 20;
+        initial_positions[1].z = 20;
+    } else if (game_data->incorrects == 3) {
+        popout = true;
     }
+
+    if ((game_data->round_stage == RoundStage::FACEOFF && game_data->incorrects == 2) ||
+        game_data->incorrects == 3) {
+      popout_t += timestep;
+
+      i32 start = 0;
+      i32 end = 3; 
+      if (game_data->round_stage == RoundStage::FACEOFF) {
+          start = 1;
+          end = 2;
+      }
+
+      for (i32 i = start; i < end; i++) {
+        glm::vec3 initial_pos = {i - 1, 0.f, 0.f};
+        glm::quat initial_rot({glm::radians(90.f), 0.f, 0.f});
+
+        glm::vec3 target_pos = {i - 1.5, 0, 5};
+        glm::quat target_rot = target_rots[i];
+        
+        f32 actual_t       = powf(glm::clamp(popout_t / 3, 0.f, 1.f), speed_denoms[i]);
+        
+        glm::vec3 actual_pos = initial_pos + ((target_pos - initial_pos) * actual_t);
+        glm::quat actual_rot =
+            glm::normalize(initial_rot + ((target_rot - initial_rot) * actual_t));
+        glm::vec3 actual_rot_euler = glm::eulerAngles(actual_rot);
+
+        scenes.xs->entities.data[i].value.transform.position = {actual_pos.x, actual_pos.y,
+                                                                actual_pos.z};
+        scenes.xs->entities.data[i].value.transform.rotation = {
+            actual_rot_euler.x, actual_rot_euler.y, actual_rot_euler.z};
+      }
+
+      yield_wait(3.5f);
+    }
+
+    scenes.xs->visible = false;
+
+    yield_wait(2.f);
+
+    return true;
+  }
 };
 
 struct EndRoundSequence : Sequence
@@ -842,7 +917,7 @@ struct EndRoundSequence : Sequence
         this->round_winner = round_winner;
     }
 
-    void update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
+    bool update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
     {
         step({
             scenes.main->active_camera_id = input.camera;
@@ -864,9 +939,7 @@ struct EndRoundSequence : Sequence
         } else {
             // TODO: faceoff failure, show faceoffers going back
         }
-    }
-    bool ready(Scenes scenes)
-    {
+     
         return false;
     }
 };
@@ -892,13 +965,28 @@ struct EndGameSequence : Sequence
 
     float t;
     const float length = 3.f;
+    i32 game_winner;
 
-    void update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
-    {
-        // show winner
+    void reset(i32 game_winner) {
+        this->game_winner = game_winner;
     }
-    bool ready(Scenes scenes)
+    bool update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
     {
+        if (game_winner == 0) {
+            step ({
+                scenes.main->set_sequence(scenes.assets->get_keyed_animation("resources/test/family0_game_win"));
+                scenes.main->play_sequence();
+                scenes.main->set_t(0);
+            })
+        } else {
+          step({
+            scenes.main->set_sequence(
+                scenes.assets->get_keyed_animation("resources/test/family1_game_win"));
+            scenes.main->play_sequence();
+            scenes.main->set_t(0);
+          })
+        }
+     
         return false;
     }
 };
@@ -947,6 +1035,8 @@ struct Game
     bool handle_rpcs(Scenes, RpcClient *); // returns true if game is over
 
     void set_current_sequence(Sequence *seq) {
+        ui_controller.hide_all();
+
         seq->reset_base();
         current_sequence = seq;
     }
@@ -984,8 +1074,8 @@ void Game::update(float timestep, Scenes scenes, RpcClient *rpc_client, InputSta
     handle_rpcs(scenes, rpc_client);
 
     if (current_sequence) {
-        current_sequence->update(timestep, scenes, &game_data, input_state, rpc_client);
-        if (current_sequence->ready(scenes) && !sent_ready)
+        b8 finished = current_sequence->update(timestep, scenes, &game_data, input_state, rpc_client);
+        if (finished && !sent_ready)
         {
             rpc_client->InGameReady({});
             sent_ready = true;
@@ -1000,6 +1090,11 @@ bool Game::handle_rpcs(Scenes scenes, RpcClient *rpc_client)
     {
         printf("get_StartGame_msg\n");
         reset(scenes);
+
+        static i32 x = 0;
+        x++;
+        eeeeggghhh_sequence.reset();
+        set_current_sequence(&eeeeggghhh_sequence);
     }
     else if (auto msg = rpc_client->get_GameStatePing_msg())
     {
@@ -1042,11 +1137,13 @@ bool Game::handle_rpcs(Scenes scenes, RpcClient *rpc_client)
     else if (auto msg = rpc_client->get_InGameAskQuestion_msg())
     {
         printf("get_InGameAskQuestion_msg\n");
+
+        game_data.question = msg->question;
+        game_data.num_answers = msg->num_answers;
         if (current_sequence != &ask_question_sequence)
         {
             game_data.question = msg->question;
 
-            ask_question_sequence.reset(msg->question, msg->num_answers);
             set_current_sequence(&ask_question_sequence);
             sent_ready = false;
         }
@@ -1117,6 +1214,7 @@ bool Game::handle_rpcs(Scenes scenes, RpcClient *rpc_client)
         printf("get_InGameStartPlay_msg\n");
         game_data.round_stage = RoundStage::PLAY;
 
+        game_data.incorrects = 0;
         if (current_sequence != &start_play_sequence)
         {
             start_play_sequence.reset();
@@ -1149,8 +1247,11 @@ bool Game::handle_rpcs(Scenes scenes, RpcClient *rpc_client)
     else if (auto msg = rpc_client->get_InGameEggghhhh_msg())
     {
         printf("get_InGameEggghhhh_msg\n");
+
+        game_data.incorrects = msg->n_incorrects;
         if (current_sequence != &eeeeggghhh_sequence)
         {
+            eeeeggghhh_sequence.reset();
             set_current_sequence(&eeeeggghhh_sequence);
             sent_ready = false;
         }
@@ -1172,25 +1273,10 @@ bool Game::handle_rpcs(Scenes scenes, RpcClient *rpc_client)
         printf("get_InGameEndGame_msg\n");
         if (current_sequence != &end_game_sequence)
         {
+            end_game_sequence.reset(msg->game_winner);
             set_current_sequence(&end_game_sequence);
             sent_ready = false;
         }
     }
     return false;
 }
-
-struct WaitStep
-{
-    float duration;
-    float elapsed;
-    WaitStep(float duration) : duration(duration) {}
-    void init()
-    {
-        elapsed = 0.f;
-    }
-    bool update(float timestep)
-    {
-        elapsed += timestep;
-        return elapsed >= duration;
-    }
-};

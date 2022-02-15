@@ -148,9 +148,9 @@ struct RpcClient : public BaseRpcClient
     bool got_InGameEndRound_msg = false;
     InGameEndRoundMessage InGameEndRound_msg;
 
-    Empty *get_InGameEndGame_msg();
+    InGameEndGameMessage *get_InGameEndGame_msg();
     bool got_InGameEndGame_msg = false;
-    Empty InGameEndGame_msg;
+    InGameEndGameMessage InGameEndGame_msg;
 
 };
 
@@ -773,7 +773,7 @@ InGameEndRoundMessage *RpcClient::get_InGameEndRound_msg()
     return msg;
 }
 
-Empty *RpcClient::get_InGameEndGame_msg()
+InGameEndGameMessage *RpcClient::get_InGameEndGame_msg()
 {
     auto msg = got_InGameEndGame_msg ? &InGameEndGame_msg : nullptr;
     got_InGameEndGame_msg = false;

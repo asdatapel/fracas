@@ -36,7 +36,8 @@ enum struct Message : char
 	InGameStartStealMessage,
 	InGameFlipAnswerMessage,
 	InGameEggghhhhMessage,
-	InGameEndRoundMessage
+	InGameEndRoundMessage,
+	InGameEndGameMessage
 };
 
 
@@ -984,7 +985,7 @@ uint32_t read(MessageReader *msg, std::vector<InGameStartFaceoffMessage> *out)
 
 struct InGameAskQuestionMessage 
 {
-    AllocatedString<64> question = {};
+    AllocatedString<128> question = {};
     int32_t num_answers = {};
 };
 void append(MessageBuilder *msg, InGameAskQuestionMessage &in)
@@ -1347,6 +1348,45 @@ uint32_t read(MessageReader *msg, std::vector<InGameEndRoundMessage> *out)
 	for (int i = 0; i < list_len; i++)
     {
 		InGameEndRoundMessage elem;
+        len += read(msg, &elem);
+        out->push_back(elem);
+	}
+
+	return len;
+};
+
+struct InGameEndGameMessage 
+{
+    int32_t game_winner = {};
+};
+void append(MessageBuilder *msg, InGameEndGameMessage &in)
+{
+    append(msg, in.game_winner);
+}
+uint32_t read(MessageReader *msg, InGameEndGameMessage *out)
+{
+    uint32_t len = 0;
+
+    len += read(msg, &out->game_winner);
+    return len;
+}
+void append(MessageBuilder *msg, std::vector<InGameEndGameMessage> &in)
+{
+	append(msg, (uint16_t)in.size());
+	for (auto &it : in)
+    {
+        append(msg, it);
+    }
+};
+uint32_t read(MessageReader *msg, std::vector<InGameEndGameMessage> *out)
+{
+	uint32_t len = 0;
+
+	uint16_t list_len;
+	len += read(msg, &list_len);
+	for (int i = 0; i < list_len; i++)
+    {
+		InGameEndGameMessage elem;
         len += read(msg, &elem);
         out->push_back(elem);
 	}

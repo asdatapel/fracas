@@ -212,8 +212,14 @@ builtins = {'int': 'int32_t', 'uint': 'uint32_t',
 defaults = {'int': '0', 'uint': '0',
             'bool': 'false', 'string': '{}', 'list': '{}'}
 
+def string_type(type):
+    if type == 'string': return 'AllocatedString<64>'
+    return type.replace('string', 'AllocatedString')
+
 
 def to_type(ts):
+    if ts[0].startswith('string'):
+        return string_type(ts[0])
     if ts[0] == "list":
         return f"{builtins[ts[0]]}<{to_type(ts[1:])}>"
     return builtins[ts[0]] if ts[0] in builtins else ts[0]

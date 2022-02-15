@@ -24,7 +24,7 @@ std::pair<GLenum, GLenum> format_to_opengl(TextureFormat format)
     case TextureFormat::NONE:
         return {0, 0};
     case TextureFormat::RED:
-        return {GL_RGBA8, GL_RED};
+        return {GL_R8, GL_RED};
     case TextureFormat::RGB8:
         return {GL_RGB8, GL_RGB};
     case TextureFormat::RGBA8:

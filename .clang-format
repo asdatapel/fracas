@@ -5,3 +5,5 @@ IncludeBlocks: Preserve
 ColumnLimit: 100
 
 AlignConsecutiveAssignments: Consecutive
+
+BreakBeforeBraces: Linux

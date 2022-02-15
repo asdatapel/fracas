@@ -107,7 +107,7 @@ float get_single_line_height(const Font &font, String text, float scale = 1.f)
   return (max_descent(font, text) - max_ascent(font, text)) * scale;
 }
 
-void draw_text_cropped(const Font &font, RenderTarget target, String text, float x, float y, float h_scale, float v_scale)
+void draw_text_cropped(const Font &font, RenderTarget target, String text, float x, float y, float h_scale, float v_scale, b8 just_alpha = false)
 {
   float ascent = max_ascent(font, text);
   float baseline = -max_ascent(font, text) * v_scale;
@@ -116,7 +116,11 @@ void draw_text_cropped(const Font &font, RenderTarget target, String text, float
     Character c = font.characters[text.data[i]];
     Rect shape_rect = {x + c.shape.x, y + baseline + (v_scale * c.shape.y), h_scale * c.shape.width, v_scale * c.shape.height};
     x += c.advance * h_scale;
-    draw_textured_mapped_rect(target, shape_rect, c.uv, font.atlas);
+    if (just_alpha) {
+      draw_single_channel_text(target, shape_rect, c.uv, font.atlas);
+    } else {
+      draw_textured_mapped_rect(target, shape_rect, c.uv, font.atlas);
+    }
   }
 }
 
@@ -144,7 +148,7 @@ void draw_text(const Font &font, RenderTarget target, String text, float x, floa
   }
 }
 
-void draw_centered_text(const Font &font, RenderTarget target, String text, Rect sub_target, float border, float scale, float aspect_ratio)
+void draw_centered_text(const Font &font, RenderTarget target, String text, Rect sub_target, float border, float scale, float aspect_ratio, b8 just_alpha = false)
 {
   float border_x = border * sub_target.width;
   float border_y = border * sub_target.height;
@@ -174,5 +178,5 @@ void draw_centered_text(const Font &font, RenderTarget target, String text, Rect
   float x_start = sub_target.x + border_x + ((width - text_width) / 2.f);
   float y_start = sub_target.y + border_y + ((height - text_height) / 2.f);
 
-  draw_text_cropped(font, target, text, x_start, y_start, scale, scale * aspect_ratio);
+  draw_text_cropped(font, target, text, x_start, y_start, scale, scale * aspect_ratio, just_alpha);
 }

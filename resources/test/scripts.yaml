@@ -106,7 +106,7 @@ scripts:
   - name: EeeeeggghhhhSequence
     inputs: 
       - name: camera
-        value: 0
+        value: 90
         id: 0
   - name: EndRoundSequence
     inputs: 

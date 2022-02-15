@@ -306,11 +306,11 @@ typedef AllocatedString<64> PlayerName;
 struct String
 {
     char *data = nullptr;
-    uint16_t len = 0;
+    u32 len = 0;
 
     String() {}
 
-    String(char *data, uint16_t len)
+    String(char *data, u32 len)
     {
         this->data = data;
         this->len = len;
@@ -423,7 +423,7 @@ bool strcmp(String str1, String str2)
     return str1.len == str2.len && !strncmp(str1.data, str2.data, str1.len);
 }
 
-template <uint16_t N>
+template <u32 N>
 AllocatedString<N> string_to_allocated_string(String str)
 {
     AllocatedString<N> ret;
@@ -431,14 +431,14 @@ AllocatedString<N> string_to_allocated_string(String str)
     memcpy(ret.data, str.data, ret.len);
     return ret;
 }
-template <uint16_t N>
+template <u32 N>
 AllocatedString<N> float_to_allocated_string(float val)
 {
     AllocatedString<N> ret;
     ret.len = snprintf(ret.data, N, "%g", val);
     return ret;
 }
-template <uint16_t N>
+template <u32 N>
 AllocatedString<N> i32_to_allocated_string(i32 val)
 {
     AllocatedString<N> ret;

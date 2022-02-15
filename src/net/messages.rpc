@@ -109,7 +109,7 @@ faceoffer_1_id int
 client InGameStartFaceoff InGameStartFaceoffMessage
 
 message InGameAskQuestionMessage
-question string
+question string<128>
 num_answers int
 
 client InGameAskQuestion InGameAskQuestionMessage
@@ -166,4 +166,7 @@ family1_score int
 
 client InGameEndRound InGameEndRoundMessage
 
-client InGameEndGame
+message InGameEndGameMessage
+game_winner int
+
+client InGameEndGame InGameEndGameMessage

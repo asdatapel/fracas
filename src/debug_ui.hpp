@@ -16,9 +16,11 @@
 
 typedef u64 ImmId;
 
-namespace Imm {
+namespace Imm
+{
 // http://www.cse.yorku.ca/~oz/hash.html
-ImmId hash(String str) {
+ImmId hash(String str)
+{
   unsigned long hash = 5381;
 
   for (int i = 0; i < str.len; i++) {
@@ -87,46 +89,52 @@ struct DrawItem {
 struct DrawList {
   std::vector<DrawItem> buf;
 
-  void push_clip(Rect rect) {
+  void push_clip(Rect rect)
+  {
     DrawItem item;
     item.type           = DrawItem::Type::CLIP;
     item.clip_draw_item = {rect};
     buf.push_back(item);
   }
-  void push_text(String text, Vec2f pos, float size, Color color, Vec2B8 center = {}) {
+  void push_text(String text, Vec2f pos, float size, Color color, Vec2B8 center = {})
+  {
     DrawItem item;
     item.type                  = DrawItem::Type::TEXT;
     item.text_draw_item        = {string_to_allocated_string<128>(text), pos, size, color};
     item.text_draw_item.center = center;
     buf.push_back(item);
   }
-  void push_rect(Rect rect, Color color) {
+  void push_rect(Rect rect, Color color)
+  {
     DrawItem item;
     item.type           = DrawItem::Type::RECT;
     item.rect_draw_item = {rect, color};
     buf.push_back(item);
   }
-  void push_rect_ptr(Rect *rect, Color color) {
+  void push_rect_ptr(Rect *rect, Color color)
+  {
     DrawItem item;
     item.type               = DrawItem::Type::RECT_PTR;
     item.rect_ptr_draw_item = {rect, color};
     buf.push_back(item);
   }
-  void push_quad(Vec2f p0, Vec2f p1, Vec2f p2, Vec2f p3, Color color) {
+  void push_quad(Vec2f p0, Vec2f p1, Vec2f p2, Vec2f p3, Color color)
+  {
     DrawItem item;
     item.type           = DrawItem::Type::QUAD;
     item.quad_draw_item = {{p0, p1, p2, p3}, color};
     buf.push_back(item);
   }
-  void push_tex(Texture texture, Rect rect) {
+  void push_tex(Texture texture, Rect rect)
+  {
     DrawItem item;
     item.type          = DrawItem::Type::TEXTURE;
     item.tex_draw_item = {texture, rect};
     buf.push_back(item);
   }
 
-  
-  void push_shape(Shape shape, Vec2f center, f32 size, Color color) {
+  void push_shape(Shape shape, Vec2f center, f32 size, Color color)
+  {
     f32 half = size / 2;
     switch (shape) {
       case (Shape::TRIANGLE):
@@ -134,12 +142,12 @@ struct DrawList {
                   center + Vec2f{0, -half}, color);
         break;
       case (Shape::SQUARE):
-        push_quad(center + Vec2f{-half, -half}, center + Vec2f{half, -half}, center + Vec2f{half, half},
-                  center + Vec2f{-half, half}, color);
+        push_quad(center + Vec2f{-half, -half}, center + Vec2f{half, -half},
+                  center + Vec2f{half, half}, center + Vec2f{-half, half}, color);
         break;
       case (Shape::BAR):
-        push_quad(center + Vec2f{-half / 2, -half}, center + Vec2f{half / 2, -half}, center + Vec2f{half / 2, half},
-                  center + Vec2f{-half / 2, half}, color);
+        push_quad(center + Vec2f{-half / 2, -half}, center + Vec2f{half / 2, -half},
+                  center + Vec2f{half / 2, half}, center + Vec2f{-half / 2, half}, color);
         break;
       case (Shape::DIAMOND):
         push_quad(center + Vec2f{-half, 0}, center + Vec2f{0, -half}, center + Vec2f{half, 0},
@@ -161,7 +169,8 @@ struct Window {
   DrawList draw_list;
 
   Window() {}
-  Window(String name, Rect rect) {
+  Window(String name, Rect rect)
+  {
     this->name = string_to_allocated_string<128>(name);
     this->rect = rect;
   }
@@ -246,14 +255,16 @@ struct UiState {
 
 UiState state;
 
-Window *get_current_window() {
+Window *get_current_window()
+{
   if (state.windows.count(state.current_window)) return &state.windows[state.current_window];
   return nullptr;
 }
 }  // namespace Imm
 
 // containers
-namespace Imm {
+namespace Imm
+{
 
 bool vertical_layout = true;
 
@@ -268,7 +279,8 @@ struct Container {
   Vec4f actual_content_bounds = {0, 0, 0, 0};
   Vec2f *final_size_ptr       = nullptr;
 
-  Container(Rect content_rect, DrawList *draw_list) {
+  Container(Rect content_rect, DrawList *draw_list)
+  {
     this->content_rect = content_rect;
     this->draw_list    = draw_list;
 
@@ -276,7 +288,8 @@ struct Container {
     next_line_y   = next_elem_pos.y;
   }
 
-  Rect place(Vec2f size, bool commit = true, bool stretch = false) {
+  Rect place(Vec2f size, bool commit = true, bool stretch = false)
+  {
     Rect rect;
     if (vertical_layout) {
       rect.x      = 0;
@@ -317,22 +330,27 @@ struct Container {
     return {content_rect.x + rect.x, content_rect.y + rect.y, rect.width, rect.height};
   }
 
-  Rect get_remaining_rect() {
-    return {content_rect.x, content_rect.y + next_line_y, content_rect.width, content_rect.height - next_line_y};
+  Rect get_remaining_rect()
+  {
+    return {content_rect.x, content_rect.y + next_line_y, content_rect.width,
+            content_rect.height - next_line_y};
   }
 };
 
 std::stack<Container> containers;
 
-Container *push_container(Container container) {
+Container *push_container(Container container)
+{
   containers.push(container);
   return &containers.top();
 }
-Container *push_container(Rect rect, DrawList *draw_list) {
+Container *push_container(Rect rect, DrawList *draw_list)
+{
   return push_container({rect, draw_list});
 }
 
-void push_subcontainer(Rect rect) {
+void push_subcontainer(Rect rect)
+{
   Container c = {rect, containers.top().draw_list};
   c.visible   = containers.top().visible;
   containers.push(c);
@@ -340,13 +358,15 @@ void push_subcontainer(Rect rect) {
 
 // TODO: pop_container is barely being called anywhere and when it is, theres no validation that
 // they're popping the right container
-Container pop_container() {
+Container pop_container()
+{
   auto top = containers.top();
   containers.pop();
   return top;
 }
 
-Container *get_current_container() {
+Container *get_current_container()
+{
   if (containers.size() == 0) return nullptr;
   return &containers.top();
 }
@@ -354,7 +374,8 @@ Container *get_current_container() {
 }  // namespace Imm
 
 // popups
-namespace Imm {
+namespace Imm
+{
 
 struct Popup {
   Vec2f pos;
@@ -373,21 +394,24 @@ std::stack<ImmId> popup_stack;
 
 std::map<ImmId, Vec2f> uninitted_popups;
 
-ImmId get_current_popup() {
+ImmId get_current_popup()
+{
   if (popup_stack.size()) {
     return popup_stack.top();
   }
   return 0;
 }
 
-bool is_popup_open(ImmId id) {
+bool is_popup_open(ImmId id)
+{
   for (int i = 0; i < open_popups.size(); i++) {
     if (open_popups[i] == id) return true;
   }
   return false;
 }
 
-void start_frame_popups() {
+void start_frame_popups()
+{
   // TODO: this doesn't need to be done for every popup, can be done once a frame
   if (state.input->mouse_button_down_events[(int)MouseButton::LEFT] &&
       state.popup_at_current_mouse_pos == 0) {
@@ -395,11 +419,13 @@ void start_frame_popups() {
   }
 }
 
-void open_popup(ImmId id) {
+void open_popup(ImmId id)
+{
   open_popups.clear();
   open_popups.push_back(id);
 }
-void open_popup(ImmId id, Vec2f new_pos) {
+void open_popup(ImmId id, Vec2f new_pos)
+{
   open_popups.clear();
   open_popups.push_back(id);
   if (popups.count(id)) {
@@ -408,16 +434,19 @@ void open_popup(ImmId id, Vec2f new_pos) {
     uninitted_popups[id] = new_pos;
   }
 }
-void open_popup(String name) {
+void open_popup(String name)
+{
   ImmId id = hash(name);
   open_popup(id);
 }
-void open_popup(String name, Vec2f new_pos) {
+void open_popup(String name, Vec2f new_pos)
+{
   ImmId id = hash(name);
   open_popup(id, new_pos);
 }
 
-void close_popup() {
+void close_popup()
+{
   ImmId id = get_current_popup();
   while (open_popups.size() && open_popups.back() != id) {
     open_popups.pop_back();
@@ -431,7 +460,8 @@ void close_popup() {
 void open_subpopup() {}
 
 // totally fine if width / height = 0
-Container *start_popup(ImmId id, Rect initial_rect) {
+Container *start_popup(ImmId id, Rect initial_rect)
+{
   if (popups.count(id) == 0) {
     popups[id] = {
         {initial_rect.x, initial_rect.y},
@@ -458,16 +488,18 @@ Container *start_popup(ImmId id, Rect initial_rect) {
 
   return c;
 }
-Container *start_popup(String name, Rect initial_rect) {
+Container *start_popup(String name, Rect initial_rect)
+{
   return start_popup(hash(name), initial_rect);
 }
 
-
-void end_popup() {
+void end_popup()
+{
   if (pop_container().visible) popup_stack.pop();
 }
 
-ImmId get_popup_at_position(Vec2f pos) {
+ImmId get_popup_at_position(Vec2f pos)
+{
   for (auto &[id, popup] : popups) {
     Rect rect = {popup.pos.x, popup.pos.y, popup.size.x, popup.size.y};
     if (in_rect(pos, rect) && is_popup_open(id)) {
@@ -479,24 +511,29 @@ ImmId get_popup_at_position(Vec2f pos) {
 
 }  // namespace Imm
 
-namespace Imm {
-Rect relative_to_absolute(Rect relative) {
+namespace Imm
+{
+Rect relative_to_absolute(Rect relative)
+{
   return {relative.x * state.target.width, relative.y * state.target.height,
           relative.width * state.target.width, relative.height * state.target.height};
 }
 
-float get_text_width(String text, float size) {
+float get_text_width(String text, float size)
+{
   Font *font = state.assets->get_font(FONT_ROBOTO_CONDENSED_LIGHT, size);
   return get_text_width(*font, text);
 }
 
-bool in_top_container() {
+bool in_top_container()
+{
   return state.popup_at_current_mouse_pos
              ? state.popup_at_current_mouse_pos == get_current_popup()
              : state.top_window_at_current_mouse_pos == state.current_window;
 }
 
-bool do_hoverable(ImmId id, bool is_hot) {
+bool do_hoverable(ImmId id, bool is_hot)
+{
   if (is_hot) {
     state.hot = id;
   } else if (state.hot == id) {
@@ -505,12 +542,14 @@ bool do_hoverable(ImmId id, bool is_hot) {
   state.last_element_hot = (state.hot == id);
   return state.last_element_hot;
 }
-bool do_hoverable(ImmId id, Rect rect, Rect mask = {}) {
+bool do_hoverable(ImmId id, Rect rect, Rect mask = {})
+{
   bool is_hot = in_top_container() && in_rect(state.input->mouse_pos, rect, mask);
   return do_hoverable(id, is_hot);
 }
 
-bool do_active(ImmId id) {
+bool do_active(ImmId id)
+{
   // right click
   {
     state.was_last_item_right_clicked = false;
@@ -524,8 +563,7 @@ bool do_active(ImmId id) {
       }
     }
     if (state.input->mouse_button_down_events[(int)MouseButton::RIGHT]) {
-      if (state.hot == id)
-       state.right_click_started = id;
+      if (state.hot == id) state.right_click_started = id;
     }
   }
 
@@ -550,7 +588,8 @@ bool do_active(ImmId id) {
 
   return state.last_element_active;
 }
-bool do_draggable(ImmId id) {
+bool do_draggable(ImmId id)
+{
   bool active = state.active == id;
   if (active) {
     if ((state.input->mouse_pos - state.active_position).len() > 2) {
@@ -566,14 +605,16 @@ bool do_draggable(ImmId id) {
   return false;
 }
 
-void set_selected(ImmId id) {
+void set_selected(ImmId id)
+{
   if (state.selected != id) {
     state.just_unselected = id;
   }
   state.selected      = id;
   state.just_selected = id;
 }
-bool do_selectable(ImmId id, bool on_down = false) {
+bool do_selectable(ImmId id, bool on_down = false)
+{
   bool hot                   = state.hot == id;
   bool triggered             = on_down ? state.just_activated == id : state.just_deactivated == id;
   bool just_stopped_dragging = state.just_stopped_dragging == id;
@@ -590,7 +631,8 @@ bool do_selectable(ImmId id, bool on_down = false) {
   return state.last_element_selected;
 }
 
-void start_frame(RenderTarget target, InputState *input, Assets *assets, EditorCamera *camera) {
+void start_frame(RenderTarget target, InputState *input, Assets *assets, EditorCamera *camera)
+{
   state.frame++;
 
   state.per_frame_alloc.reset();
@@ -667,7 +709,8 @@ void start_frame(RenderTarget target, InputState *input, Assets *assets, EditorC
   start_frame_popups();
 }
 
-void start_window(String title, Rect rect) {
+void start_window(String title, Rect rect)
+{
   ImmId me = hash(title);
   ImmId resize_handle_id =
       me + 1;  // I don't know the hash function very well, hopefully this is ok
@@ -1033,7 +1076,8 @@ void start_window(String title, Rect rect) {
   container->final_size_ptr = &window.last_size;
   container->next_line_y    = window.scroll;
 }
-void end_window() {
+void end_window()
+{
   Window *window = get_current_window();
   assert(window);
 
@@ -1041,7 +1085,8 @@ void end_window() {
   pop_container();
 }
 
-void end_frame(Assets *assets) {
+void end_frame(Assets *assets)
+{
   // window ordering
   if (state.input->mouse_button_down_events[(int)MouseButton::LEFT] &&
       state.top_window_at_current_mouse_pos) {
@@ -1134,7 +1179,8 @@ void end_frame(Assets *assets) {
   debug_end_immediate();
 }
 
-void label(String text) {
+void label(String text)
+{
   auto c = get_current_container();
   if (!c || !c->visible) return;
 
@@ -1144,7 +1190,8 @@ void label(String text) {
                           state.style.content_default_text_color);
 }
 
-bool button(ImmId me, String text) {
+bool button(ImmId me, String text)
+{
   auto c = get_current_container();
   if (!c || !c->visible) return false;
 
@@ -1199,16 +1246,18 @@ bool button(ImmId me, String text) {
 
   return triggered;
 }
-bool button(String text) {
+bool button(String text)
+{
   ImmId me = hash(text);
   return button(me, text);
 }
 
-b8 list_item(ImmId me, String text, bool selected_flag = false, bool *as_checkbox = nullptr) {
+b8 list_item(ImmId me, String text, bool selected_flag = false, bool *as_checkbox = nullptr)
+{
   auto c = get_current_container();
   if (!c || !c->visible) {
     if (state.active == me) {
-      state.active = 0;
+      state.active           = 0;
       state.just_deactivated = me;
     }
     return false;
@@ -1242,12 +1291,14 @@ b8 list_item(ImmId me, String text, bool selected_flag = false, bool *as_checkbo
 
   return selected;
 }
-b8 list_item(String text, bool selected_flag = false, bool *as_checkbox = nullptr) {
+b8 list_item(String text, bool selected_flag = false, bool *as_checkbox = nullptr)
+{
   return list_item(hash(text), text, selected_flag, as_checkbox);
 }
 
 template <u64 N>
-bool listitem_with_editing(ImmId me, AllocatedString<N> *text, bool selected_flag = false) {
+bool listitem_with_editing(ImmId me, AllocatedString<N> *text, bool selected_flag = false)
+{
   auto c = get_current_container();
   if (!c || !c->visible) return false;
 
@@ -1277,7 +1328,8 @@ bool listitem_with_editing(ImmId me, AllocatedString<N> *text, bool selected_fla
 
 // returns true on submit
 template <size_t N>
-bool textbox(ImmId me, AllocatedString<N> *str) {
+bool textbox(ImmId me, AllocatedString<N> *str)
+{
   auto c = get_current_container();
   if (!c || !c->visible) return false;
 
@@ -1316,13 +1368,15 @@ bool textbox(ImmId me, AllocatedString<N> *str) {
   return false;
 }
 template <size_t N>
-bool textbox(AllocatedString<N> *str) {
+bool textbox(AllocatedString<N> *str)
+{
   ImmId me = (ImmId)(uint64_t)str;
   return textbox(me, str);
 }
 
 template <typename T>
-void num_input(T *val) {
+void num_input(T *val)
+{
   auto c = get_current_container();
   if (!c || !c->visible) return;
 
@@ -1364,7 +1418,8 @@ void num_input(T *val) {
   }
 }
 
-void texture(ImmId me, Texture val, Rect rect) {
+void texture(ImmId me, Texture val, Rect rect)
+{
   auto c = get_current_container();
   if (!c || !c->visible) return;
 
@@ -1375,13 +1430,15 @@ void texture(ImmId me, Texture val, Rect rect) {
 
   c->draw_list->push_tex(val, rect);
 }
-void texture(Texture *val) {
+void texture(Texture *val)
+{
   ImmId me  = (ImmId)(uint64_t)val;
   Rect rect = get_current_container()->content_rect;
   texture(me, *val, rect);
 }
 
-bool translation_gizmo(Vec3f *p) {
+bool translation_gizmo(Vec3f *p)
+{
   Window &window = state.windows[state.current_window];
   ImmId me       = (ImmId)(uint64_t)p;
 
@@ -1544,7 +1601,8 @@ bool translation_gizmo(Vec3f *p) {
   return false;
 }
 
-void rotation_gizmo(Vec3f *rotation, Vec3f p) {
+void rotation_gizmo(Vec3f *rotation, Vec3f p)
+{
   Window &window = state.windows[state.current_window];
   ImmId me       = hash("rotation gizmo");
 
@@ -1700,7 +1758,8 @@ void rotation_gizmo(Vec3f *rotation, Vec3f p) {
 }  // namespace Imm
 
 // timelines
-namespace Imm {
+namespace Imm
+{
 
 struct TimelineState {
   ImmId id;
@@ -1711,11 +1770,13 @@ TimelineState timeline_state;
 
 std::unordered_set<ImmId> selected_keyframes;
 
-void start_timeline(String name, int *current_frame, float *start, float *width, u32 *sequence_start_frame, u32 *sequence_end_frame) {
-  ImmId me       = hash(name);
-  ImmId scrubber = me + 1;
+void start_timeline(String name, int *current_frame, float *start, float *width,
+                    u32 *sequence_start_frame, u32 *sequence_end_frame)
+{
+  ImmId me          = hash(name);
+  ImmId scrubber    = me + 1;
   ImmId start_stick = me + 2;
-  ImmId end_stick = me + 3;
+  ImmId end_stick   = me + 3;
 
   auto c = get_current_container();
   if (!c || !c->visible) return;
@@ -1949,12 +2010,13 @@ void start_timeline(String name, int *current_frame, float *start, float *width,
   timeline_state.width = *width;
 }
 
-b8 keyframe(ImmId id, int *frame, int track_i = 0, Shape shape = Shape::DIAMOND) {
+b8 keyframe(ImmId id, int *frame, int track_i = 0, Shape shape = Shape::DIAMOND)
+{
   auto c = get_current_container();
   if (!c || !c->visible) return false;
   c->draw_list->push_clip(c->content_rect);
 
-  f32 pos             = (*frame - timeline_state.start) / (timeline_state.width)*c->content_rect.width;
+  f32 pos = (*frame - timeline_state.start) / (timeline_state.width) * c->content_rect.width;
   f32 vertical_offset = track_i * 20;
   Vec2f screen_pos    = {c->content_rect.x + pos, c->content_rect.y + 50 + vertical_offset};
 
@@ -1962,7 +2024,7 @@ b8 keyframe(ImmId id, int *frame, int track_i = 0, Shape shape = Shape::DIAMOND)
   if (state.dragging == timeline_state.id) {
     if (in_rect(screen_pos, Rect::from_ends(state.input->mouse_pos, state.active_position),
                 c->content_rect)) {
-          c->draw_list->push_shape(shape, screen_pos, 15, darken(color, .2f));
+      c->draw_list->push_shape(shape, screen_pos, 15, darken(color, .2f));
     }
   } else if (state.just_stopped_dragging == timeline_state.id) {
     if (in_rect(screen_pos, Rect::from_ends(state.input->mouse_pos, state.active_position),
@@ -2010,8 +2072,10 @@ void end_timeline() {}
 
 }  // namespace Imm
 
-namespace Imm {
-void first_column(float *width) {
+namespace Imm
+{
+void first_column(float *width)
+{
   Rect new_rect  = get_current_container()->get_remaining_rect();
   new_rect.width = *width;
   new_rect.width = width ? *width
@@ -2020,7 +2084,8 @@ void first_column(float *width) {
                                new_rect.x;
   push_subcontainer(new_rect);
 }
-void next_column(float *width) {
+void next_column(float *width)
+{
   Rect new_rect = pop_container().content_rect;
   new_rect.x += new_rect.width;
   new_rect.width = width ? *width
@@ -2034,11 +2099,13 @@ void end_columns() { pop_container(); }
 }  // namespace Imm
 
 // menubar
-namespace Imm {
+namespace Imm
+{
 
 ImmId current_menubar_menu = 0;
 
-bool start_menubar_menu(String name) {
+bool start_menubar_menu(String name)
+{
   const float font_size = state.style.content_font_size;
 
   ImmId me = hash(name);
@@ -2096,9 +2163,11 @@ void end_menubar_menu() { end_popup(); }
 }  // namespace Imm
 
 // save/load
-namespace Imm {
+namespace Imm
+{
 
-void save_layout() {
+void save_layout()
+{
   StackAllocator *a = &state.per_frame_alloc;
 
   YAML::Dict *out_layout = YAML::new_dict(a);
@@ -2152,7 +2221,8 @@ void save_layout() {
 
   write_file("resources/test/layout.yaml", out);
 }
-void load_layout() {
+void load_layout()
+{
   StackAllocator *a = &state.per_frame_alloc;
 
   FileData file = read_entire_file("resources/test/layout.yaml", a);
@@ -2195,7 +2265,8 @@ void load_layout() {
   state.anchored_center = in_anchors->get("anchored_center")->as_literal().to_uint64();
 }
 
-void init() {
+void init()
+{
   state.per_frame_alloc.init(1034 * 1024 * 50);  // 50mb
 
   load_layout();
@@ -2204,10 +2275,12 @@ void init() {
 }  // namespace Imm
 
 // utility
-namespace Imm {
+namespace Imm
+{
 
 // for now this is also displaying some debug stuff
-void add_window_menubar_menu() {
+void add_window_menubar_menu()
+{
   if (Imm::start_menubar_menu("Windows")) {
     for (auto &[id, window] : state.windows) {
       list_item((ImmId)&window.visible, window.name, window.visible, &window.visible);

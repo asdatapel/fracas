@@ -15,12 +15,14 @@ struct DynamicArray {
   StackAllocator *allocator;
 
   DynamicArray() = default;
-  DynamicArray(StackAllocator *allocator) {
+  DynamicArray(StackAllocator *allocator)
+  {
     this->allocator = allocator;
     elements        = (T *)allocator->alloc(sizeof(T) * capacity);
   }
 
-  void resize(u32 new_size) {
+  void resize(u32 new_size)
+  {
     T *new_elements = (T *)allocator->resize((char *)elements, sizeof(T) * new_size);
 
     if (new_elements != elements) {
@@ -32,7 +34,8 @@ struct DynamicArray {
     elements = new_elements;
   }
 
-  T &push_back(T val) {
+  T &push_back(T val)
+  {
     if (count >= capacity) {
       resize(capacity * 2);
     }
@@ -41,17 +44,17 @@ struct DynamicArray {
     return elements[count - 1];
   }
 
-  void remove(u32 i) {
+  void remove(u32 i)
+  {
     assert(i < count);
     memcpy(elements + i, elements + i + 1, (count - (i + 1)) * sizeof(T));
     count--;
   }
 
-  void clear() {
-    count = 0;
-  }
+  void clear() { count = 0; }
 
-  T &operator[](u32 i) {
+  T &operator[](u32 i)
+  {
     assert(i < count);
     return elements[i];
   }
@@ -76,7 +79,8 @@ struct KeyedAnimationTrack {
 
   KeyedAnimationTrack() : keys(&assets_allocator) {}
 
-  u32 add_key(Transform transform, i32 frame, Key::InterpolationType interpolation_type) {
+  u32 add_key(Transform transform, i32 frame, Key::InterpolationType interpolation_type)
+  {
     i32 pos = 0;
     while (pos < keys.count) {
       if (keys[pos].frame == frame) {
@@ -100,11 +104,10 @@ struct KeyedAnimationTrack {
 
     return pos;
   }
-  u32 add_key(Key key) {
-    return add_key(key.transform, key.frame, key.interpolation_type);
-  }
+  u32 add_key(Key key) { return add_key(key.transform, key.frame, key.interpolation_type); }
 
-  Transform eval(f32 t, i32 fps) {
+  Transform eval(f32 t, i32 fps)
+  {
     if (keys.count == 0) return {};
 
     f32 frame = t * fps;
@@ -168,15 +171,16 @@ struct KeyedAnimationTrack {
 };
 
 struct KeyedAnimation : Asset {
-  u32 fps = 30;
+  u32 fps         = 30;
   u32 start_frame = 0;
-  u32 end_frame = 100;  
-  
+  u32 end_frame   = 100;
+
   DynamicArray<KeyedAnimationTrack> tracks;
 
   KeyedAnimation(u32 fps) : fps(fps), tracks(&assets_allocator) {}
 
-  void add_track(EntityId entity_id) {
+  void add_track(EntityId entity_id)
+  {
     for (i32 i = 0; i < tracks.count; i++) {
       if (tracks[i].entity_id == entity_id) return;
     }
@@ -186,7 +190,8 @@ struct KeyedAnimation : Asset {
     tracks.push_back(track);
   }
 
-  Transform eval(u32 track_i, f32 t) {
+  Transform eval(u32 track_i, f32 t)
+  {
     assert(track_i < tracks.count);
     return tracks[track_i].eval(t, fps);
   }

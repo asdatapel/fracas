@@ -20,6 +20,7 @@ Shader basic_shader;
 Shader lines_shader;
 Shader textured_shader;
 Shader textured_mapped_shader;
+Shader single_channel_font_shader;
 Shader blurred_colors_shader;
 Shader rect_to_cubemap_shader;
 Shader cubemap_shader;
@@ -77,6 +78,7 @@ void draw_rect();
 void draw_rect(RenderTarget target, Rect rect, Color color);
 void draw_textured_rect(RenderTarget target, Rect rect, Color color, Texture tex);
 void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture tex, Color color = {1, 1, 1, 1});
+void draw_single_channel_text(RenderTarget target, Rect rect, Rect uv, Texture tex);
 void draw_cubemap();
 
 void start_scissor(RenderTarget target, Rect rect);
