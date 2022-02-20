@@ -4,6 +4,7 @@
 
 #include "graphics/graphics.hpp"
 #include "net/generated_rpc_client.hpp"
+#include "game_state.hpp"
 
 struct Selectable {
   bool hot           = false;
