@@ -8,55 +8,53 @@ const uint16_t MAX_MSG_SIZE = 1024;
 struct Peer;
 struct Client;
 
-enum struct ClientMessageType : uint8_t
-{
-    LIST_GAMES,
-    CREATE_GAME,
-    JOIN_GAME,
-    LEAVE_GAME,
+enum struct ClientMessageType : uint8_t {
+  LIST_GAMES,
+  CREATE_GAME,
+  JOIN_GAME,
+  LEAVE_GAME,
 
-    HOST_START_GAME,
-    HOST_START_ASK_QUESTION,
-    HOST_RESPOND_TO_ANSWER,
-    HOST_END_GAME,
+  HOST_START_GAME,
+  HOST_START_ASK_QUESTION,
+  HOST_RESPOND_TO_ANSWER,
+  HOST_END_GAME,
 
-    READY,
-    BUZZ,
-    PASS_OR_PLAY,
-    ANSWER,
+  READY,
+  BUZZ,
+  PASS_OR_PLAY,
+  ANSWER,
 
-    CELEBRATE,
+  CELEBRATE,
 
-    INVALID,
+  INVALID,
 };
 
-enum struct ServerMessageType : uint8_t
-{
-    LIST_GAMES_RESPONSE = 0,
-    JOIN_GAME_RESPONSE,
+enum struct ServerMessageType : uint8_t {
+  LIST_GAMES_RESPONSE = 0,
+  JOIN_GAME_RESPONSE,
 
-    JOIN_RESPONSE,
-    DESCRIBE_LOBBY,
-    START_GAME,
-    START_ROUND,
-    START_FACEOFF,
-    ASK_QUESTION,
-    PROMPT_PASS_OR_PLAY,
-    PROMPT_FOR_ANSWER,
-    PLAYER_BUZZED,
-    START_PLAY,
-    START_STEAL,
-    PLAYER_SAID_SOMETHING,
-    DO_A_FLIP,
-    DO_AN_EEEEEGGGHHHH,
-    END_ROUND,
+  JOIN_RESPONSE,
+  DESCRIBE_LOBBY,
+  START_GAME,
+  START_ROUND,
+  START_FACEOFF,
+  ASK_QUESTION,
+  PROMPT_PASS_OR_PLAY,
+  PROMPT_FOR_ANSWER,
+  PLAYER_BUZZED,
+  START_PLAY,
+  START_STEAL,
+  PLAYER_SAID_SOMETHING,
+  DO_A_FLIP,
+  DO_AN_EEEEEGGGHHHH,
+  END_ROUND,
 
-    GAME_CREATED,
-    GAME_ENDED,
+  GAME_CREATED,
+  GAME_ENDED,
 
-    PLAYER_LEFT,
+  PLAYER_LEFT,
 
-    INVALID,
+  INVALID,
 };
 
 char *append_byte(char *buf, char val);
@@ -75,18 +73,17 @@ char *read_string(char *buf, String *output);
 // returns pointer to string within buf, no copying;
 char *read_string_inplace(char *buf, char **val, uint16_t *len);
 
-struct MessageBuilder
-{
-    char data_buf[MAX_MSG_SIZE];
-    char *data;
+struct MessageBuilder {
+  char data_buf[MAX_MSG_SIZE];
+  char *data;
 
-    MessageBuilder();
-    MessageBuilder(char header_type);
-    void reset();
-    void reset(char header_type);
+  MessageBuilder();
+  MessageBuilder(char header_type);
+  void reset();
+  void reset(char header_type);
 
-    uint16_t get_len();
-    void send(Peer *peer);
+  uint16_t get_len();
+  void send(Peer *peer);
 };
 void append(MessageBuilder *msg, char val);
 void append(MessageBuilder *msg, uint8_t val);
@@ -100,15 +97,14 @@ void append(MessageBuilder *msg, char *str, uint16_t len);
 template <size_t N>
 void append(MessageBuilder *msg, AllocatedString<N> &str);
 
-struct MessageReader
-{
-    char data_buf[MAX_MSG_SIZE];
-    char *data;
+struct MessageReader {
+  char data_buf[MAX_MSG_SIZE];
+  char *data;
 
-    char *end;
+  char *end;
 
-    MessageReader(char *data, uint16_t len);
-    void check(char *ptr);
+  MessageReader(char *data, uint16_t len);
+  void check(char *ptr);
 };
 
 uint32_t read(MessageReader *msg, char *val);

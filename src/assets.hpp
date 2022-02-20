@@ -16,7 +16,8 @@
 
 const String RESOURCE_PATH = "resources/test";
 
-Texture load_and_upload_texture(String filepath, TextureFormat format, Memory mem) {
+Texture load_and_upload_texture(String filepath, TextureFormat format, Memory mem)
+{
   auto t = Temp::start(mem);
 
   char *filepath_chars = filepath.to_char_array(&assets_temp_allocator);
@@ -32,7 +33,8 @@ Texture load_and_upload_texture(String filepath, TextureFormat format, Memory me
   return tex;
 }
 
-VertexBuffer load_and_upload_mesh(String filepath, int asset_id, Memory mem) {
+VertexBuffer load_and_upload_mesh(String filepath, int asset_id, Memory mem)
+{
   auto t = Temp::start(mem);
 
   char *filepath_chars = filepath.to_char_array(&assets_temp_allocator);
@@ -54,7 +56,8 @@ struct Assets {
 
   std::map<std::pair<int, int>, Font> fonts;
 
-  void init() {
+  void init()
+  {
     meshes.init(&assets_allocator, 1024);
     render_targets.init(&assets_allocator, 64);
     textures.init(&assets_allocator, 1024);
@@ -64,7 +67,8 @@ struct Assets {
     keyed_animations.init(&assets_allocator, 256);
   }
 
-  void load(const char *filename, StackAllocator *main_mem) {
+  void load(const char *filename, StackAllocator *main_mem)
+  {
     Temp temp = Temp::start(&assets_temp_allocator);
 
     FileData file    = read_entire_file(filename, &assets_temp_allocator);
@@ -185,7 +189,8 @@ struct Assets {
     }
   }
 
-  void load(const char *filename) {
+  void load(const char *filename)
+  {
     Temp tmp = Temp::start(&assets_temp_allocator);
 
     FileData file    = read_entire_file(filename, tmp);
@@ -203,7 +208,8 @@ struct Assets {
             String::copy(in_keyed_animation->get("asset_name")->as_literal(), &assets_allocator);
         ka.fps = atoi(in_keyed_animation->get("fps")->as_literal().to_char_array(tmp));
 
-        ka.start_frame = atoi(in_keyed_animation->get("start_frame")->as_literal().to_char_array(tmp));
+        ka.start_frame =
+            atoi(in_keyed_animation->get("start_frame")->as_literal().to_char_array(tmp));
         ka.end_frame = atoi(in_keyed_animation->get("end_frame")->as_literal().to_char_array(tmp));
 
         auto tracks_in = in_keyed_animation->get("tracks")->as_list();
@@ -249,7 +255,8 @@ struct Assets {
     }
   }
 
-  void save(String filepath) {
+  void save(String filepath)
+  {
     auto tmp = Temp::start(&assets_temp_allocator);
 
     auto assets               = YAML::new_dict(tmp);
@@ -266,11 +273,11 @@ struct Assets {
         keyed_animation_out->push_back("asset_name", YAML::new_literal(ka->asset_name, tmp), tmp);
         keyed_animation_out->push_back("fps", YAML::new_literal(String::from(ka->fps, tmp), tmp),
                                        tmp);
-                                       
-        keyed_animation_out->push_back("start_frame", YAML::new_literal(String::from(ka->start_frame, tmp), tmp),
-                                       tmp);
-        keyed_animation_out->push_back("end_frame", YAML::new_literal(String::from(ka->end_frame, tmp), tmp),
-                                       tmp);
+
+        keyed_animation_out->push_back(
+            "start_frame", YAML::new_literal(String::from(ka->start_frame, tmp), tmp), tmp);
+        keyed_animation_out->push_back(
+            "end_frame", YAML::new_literal(String::from(ka->end_frame, tmp), tmp), tmp);
 
         auto tracks_out = YAML::new_list(tmp);
         for (u32 track_i = 0; track_i < ka->tracks.count; track_i++) {
@@ -340,7 +347,8 @@ struct Assets {
     write_file(filepath.to_char_array(tmp), out);
   }
 
-  Font *get_font(int font_id, int size) {
+  Font *get_font(int font_id, int size)
+  {
     if (fonts.count({font_id, size}) == 0) {
       fonts.emplace(std::pair(font_id, size),
                     load_font(font_files.data[font_id].value, size, &assets_temp_allocator));
@@ -348,16 +356,19 @@ struct Assets {
     return &fonts[{font_id, size}];
   }
 
-  RenderTarget get_render_target(String name) {
+  RenderTarget get_render_target(String name)
+  {
     for (int i = 0; i < render_targets.size; i++) {
-      if (strcmp(name, render_targets.data[i].value.asset_name)) return render_targets.data[i].value;
+      if (strcmp(name, render_targets.data[i].value.asset_name))
+        return render_targets.data[i].value;
     }
 
     assert(false);
     return {};
   }
 
-  KeyedAnimation *create_keyed_animation(String folder, String name = {}) {
+  KeyedAnimation *create_keyed_animation(String folder, String name = {})
+  {
     u32 i                = keyed_animations.push_back({30});
     KeyedAnimation *anim = &keyed_animations.data[i].value;
 
@@ -372,10 +383,12 @@ struct Assets {
     return anim;
   }
 
-  //TODO: maybe assets ids should include asset type
-  KeyedAnimation *get_keyed_animation(String name) {
+  // TODO: maybe assets ids should include asset type
+  KeyedAnimation *get_keyed_animation(String name)
+  {
     for (int i = 0; i < keyed_animations.size; i++) {
-      if (strcmp(name, keyed_animations.data[i].value.asset_name)) return &keyed_animations.data[i].value;
+      if (strcmp(name, keyed_animations.data[i].value.asset_name))
+        return &keyed_animations.data[i].value;
     }
 
     assert(false);

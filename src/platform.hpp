@@ -88,8 +88,8 @@ struct InputState {
 
   double scrollwheel_count = 0;
 
-  Vec2f mouse_pos      = {};
-  Vec2f mouse_pos_prev = {};
+  Vec2f mouse_pos       = {};
+  Vec2f mouse_pos_prev  = {};
   Vec2f mouse_pos_delta = {};
 };
 

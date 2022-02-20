@@ -13,7 +13,8 @@
 #include "../yaml.hpp"
 
 const char *debug_hdr = "resources/hdri/Newport_Loft_Ref.hdr";
-Texture2D load_hdri(const char *file) {
+Texture2D load_hdri(const char *file)
+{
   int width, height, components;
   stbi_set_flip_vertically_on_load(true);
   float *hdri = stbi_loadf(file, &width, &height, &components, 0);
@@ -26,7 +27,8 @@ Texture2D load_hdri(const char *file) {
   return tex;
 }
 
-StandardPbrEnvMaterial create_env_mat(RenderTarget temp_target, Texture unfiltered_cubemap) {
+StandardPbrEnvMaterial create_env_mat(RenderTarget temp_target, Texture unfiltered_cubemap)
+{
   Texture irradiance_map = convolve_irradiance_map(temp_target, unfiltered_cubemap, 32);
   Texture env_map        = filter_env_map(temp_target, unfiltered_cubemap, 512);
 
@@ -45,18 +47,21 @@ StandardPbrEnvMaterial create_env_mat(RenderTarget temp_target, Texture unfilter
   return env_mat;
 }
 
-Entity *Scene::get(int id) {
+Entity *Scene::get(int id)
+{
   return entities.data[id].assigned ? &entities.data[id].value : nullptr;
 }
 
-void Scene::init(Memory mem, TextureFormat texture_format) {
+void Scene::init(Memory mem, TextureFormat texture_format)
+{
   entities.init(mem.allocator, 1024);
   target = RenderTarget(1920, 1080, texture_format, TextureFormat::DEPTH24);
 
   new (&saved_transforms) DynamicArray<EntityTransform, 128>(&scene_allocator);
 }
 
-void Scene::load(const char *filename, Assets *assets, Memory mem) {
+void Scene::load(const char *filename, Assets *assets, Memory mem)
+{
   FileData file    = read_entire_file(filename, mem.temp);
   YAML::Dict *root = YAML::deserialize(String(file.data, file.length), mem.temp)->as_dict();
 
@@ -151,7 +156,8 @@ void Scene::load(const char *filename, Assets *assets, Memory mem) {
   }
 }
 
-void Scene::serialize(const char *filename, Assets *assets, StackAllocator *alloc) {
+void Scene::serialize(const char *filename, Assets *assets, StackAllocator *alloc)
+{
   auto new_dict = [&]() {
     YAML::Dict *dict = (YAML::Dict *)alloc->alloc(sizeof(YAML::Dict));
     new (dict) YAML::Dict;
@@ -267,7 +273,8 @@ void Scene::serialize(const char *filename, Assets *assets, StackAllocator *allo
   write_file(filename, out);
 }
 
-void Scene::update(float timestep) {
+void Scene::update(float timestep)
+{
   if (playing_sequence) {
     assert(current_sequence);
     apply_keyed_animation(current_sequence, sequence_t);
@@ -275,7 +282,8 @@ void Scene::update(float timestep) {
   }
 }
 
-void Scene::render(Camera *editor_camera, Vec3f editor_camera_pos) {
+void Scene::render(Camera *editor_camera, Vec3f editor_camera_pos)
+{
   // TODO handle target resize
 
   Camera *camera;
@@ -369,12 +377,14 @@ void Scene::render(Camera *editor_camera, Vec3f editor_camera_pos) {
   }
 }
 
-void Scene::set_planar_target(RenderTarget target) {
+void Scene::set_planar_target(RenderTarget target)
+{
   render_planar = true;
   planar_target = target;
 }
 
-void Scene::render_entities(Camera *camera, Vec3f camera_postion) {
+void Scene::render_entities(Camera *camera, Vec3f camera_postion)
+{
   for (int i = 0; i < entities.size; i++) {
     if (entities.data[i].assigned) {
       Entity &e = entities.data[i].value;
@@ -411,7 +421,8 @@ void Scene::render_entities(Camera *camera, Vec3f camera_postion) {
   }
 }
 
-void Scene::set_sequence(KeyedAnimation *seq) {
+void Scene::set_sequence(KeyedAnimation *seq)
+{
   if (current_sequence) {
     for (int i = 0; i < saved_transforms.count; i++) {
       EntityId id        = saved_transforms[i].id;
@@ -433,16 +444,19 @@ void Scene::play_sequence() { playing_sequence = true; }
 void Scene::stop_sequence() { playing_sequence = false; }
 bool Scene::is_sequence_finished() { return get_frame() > current_sequence->end_frame; }
 void Scene::set_t(f32 t) { sequence_t = t; }
-void Scene::set_frame(u32 frame) {
+void Scene::set_frame(u32 frame)
+{
   assert(current_sequence);
   sequence_t = (f32)frame / current_sequence->fps;
 }
-u32 Scene::get_frame() {
+u32 Scene::get_frame()
+{
   if (!current_sequence) return 0;
-  
+
   return sequence_t * current_sequence->fps;
 }
-void Scene::apply_keyed_animation(KeyedAnimation *keyed_anim, f32 t) {
+void Scene::apply_keyed_animation(KeyedAnimation *keyed_anim, f32 t)
+{
   for (u32 i = 0; i < keyed_anim->tracks.count; i++) {
     KeyedAnimationTrack &track = keyed_anim->tracks[i];
     Entity *entity             = get(track.entity_id);
@@ -450,7 +464,8 @@ void Scene::apply_keyed_animation(KeyedAnimation *keyed_anim, f32 t) {
     entity->transform = track.eval(t, keyed_anim->fps);
   }
 }
-void Scene::apply_keyed_animation(KeyedAnimation *keyed_anim, i32 frame) {
+void Scene::apply_keyed_animation(KeyedAnimation *keyed_anim, i32 frame)
+{
   f32 t = (f32)frame / keyed_anim->fps;
   apply_keyed_animation(keyed_anim, t);
 }

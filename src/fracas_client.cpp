@@ -34,7 +34,8 @@ Memory memory{&allocator, &temp};
 
 float animation_wait = 0.f;
 
-bool init_if_not() {
+bool init_if_not()
+{
   static bool initted = false;
   if (!initted) {
     initted = true;
@@ -48,8 +49,8 @@ bool init_if_not() {
 
     assets_allocator.init(&main_memory, 1024ull * 1024 * 1024 * 1);  // 1 gb
     assets_temp_allocator.init(&main_memory, 1024ull * 1024 * 50);   // 50 mb
-    scene_allocator.init(&main_memory, 1024ull * 1024 * 1024 * 1);  // 1 gb
-    scene_temp_allocator.init(&main_memory, 1024ull * 1024 * 50);   // 50 mb
+    scene_allocator.init(&main_memory, 1024ull * 1024 * 1024 * 1);   // 1 gb
+    scene_temp_allocator.init(&main_memory, 1024ull * 1024 * 50);    // 50 mb
 
     assets.init();
     assets.load("resources/test/main_assets.yaml", &main_memory);
@@ -77,7 +78,8 @@ struct ClientData {
         settings(assets, client, memory),
         create(assets, client, memory),
         join(assets, client, memory),
-        lobby(assets, client, memory) {
+        lobby(assets, client, memory)
+  {
     main_menu.main     = &main;
     main_menu.settings = &settings;
     main_menu.create   = &create;
@@ -87,7 +89,8 @@ struct ClientData {
   }
 };
 
-bool game_update(const float time_step, InputState *input_state, RenderTarget main_target) {
+bool game_update(const float time_step, InputState *input_state, RenderTarget main_target)
+{
   if (!init_if_not()) return false;
 
   static RpcClient client("127.0.0.1", 6666);
@@ -137,7 +140,8 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
   return true;
 }
 
-void deinit() {
+void deinit()
+{
   server.close();
   deinit_net();
 }

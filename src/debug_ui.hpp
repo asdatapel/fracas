@@ -265,7 +265,6 @@ Window *get_current_window()
 // containers
 namespace Imm
 {
-
 bool vertical_layout = true;
 
 struct Container {
@@ -376,7 +375,6 @@ Container *get_current_container()
 // popups
 namespace Imm
 {
-
 struct Popup {
   Vec2f pos;
   Vec2f size;
@@ -1760,7 +1758,6 @@ void rotation_gizmo(Vec3f *rotation, Vec3f p)
 // timelines
 namespace Imm
 {
-
 struct TimelineState {
   ImmId id;
   float start;
@@ -2101,7 +2098,6 @@ void end_columns() { pop_container(); }
 // menubar
 namespace Imm
 {
-
 ImmId current_menubar_menu = 0;
 
 bool start_menubar_menu(String name)
@@ -2165,7 +2161,6 @@ void end_menubar_menu() { end_popup(); }
 // save/load
 namespace Imm
 {
-
 void save_layout()
 {
   StackAllocator *a = &state.per_frame_alloc;
@@ -2277,7 +2272,6 @@ void init()
 // utility
 namespace Imm
 {
-
 // for now this is also displaying some debug stuff
 void add_window_menubar_menu()
 {

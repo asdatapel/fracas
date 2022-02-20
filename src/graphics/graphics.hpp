@@ -5,8 +5,8 @@
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/quaternion.hpp"
+#include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/quaternion.hpp"
 
 #include "../asset.hpp"
@@ -39,18 +39,16 @@ Shader threed_with_planar_shader;
 Shader threed_with_normals_shader;
 Shader threed_skinning_shader;
 
-struct Bitmap
-{
-    int width, height;
-    Vec4i *data;
+struct Bitmap {
+  int width, height;
+  Vec4i *data;
 };
 
-struct VertexBuffer : Asset
-{
-    unsigned int vao;
-    unsigned int vbo;
-    int size;
-    int vert_count;
+struct VertexBuffer : Asset {
+  unsigned int vao;
+  unsigned int vbo;
+  int size;
+  int vert_count;
 };
 
 RenderTarget init_graphics(uint32_t width, uint32_t height);
@@ -77,7 +75,8 @@ void draw(RenderTarget target, Shader shader, VertexBuffer buf);
 void draw_rect();
 void draw_rect(RenderTarget target, Rect rect, Color color);
 void draw_textured_rect(RenderTarget target, Rect rect, Color color, Texture tex);
-void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture tex, Color color = {1, 1, 1, 1});
+void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture tex,
+                               Color color = {1, 1, 1, 1});
 void draw_single_channel_text(RenderTarget target, Rect rect, Rect uv, Texture tex);
 void draw_cubemap();
 
@@ -90,63 +89,55 @@ Texture filter_env_map(RenderTarget target, Texture src, int size);
 VertexBuffer upload_vertex_buffer(Mesh mesh);
 
 const int MAX_LIGHTS = 50;
-struct PointLight
-{
-    glm::vec3 position;
-    glm::vec3 color;
+struct PointLight {
+  glm::vec3 position;
+  glm::vec3 color;
 
-    const static int SIZE = 32;
+  const static int SIZE = 32;
 };
-struct SpotLight
-{
-    glm::vec3 position;
-    glm::vec3 direction;
-    glm::vec3 color;
-    float inner_angle;
-    float outer_angle;
+struct SpotLight {
+  glm::vec3 position;
+  glm::vec3 direction;
+  glm::vec3 color;
+  float inner_angle;
+  float outer_angle;
 
-    const static int SIZE = 64;
+  const static int SIZE = 64;
 };
-struct LightUniformBlock
-{
-    SpotLight spot_lights[MAX_LIGHTS];
-    uint32_t num_lights;
+struct LightUniformBlock {
+  SpotLight spot_lights[MAX_LIGHTS];
+  uint32_t num_lights;
 
-    const static int SIZE = (SpotLight::SIZE * MAX_LIGHTS) + 4;
+  const static int SIZE = (SpotLight::SIZE * MAX_LIGHTS) + 4;
 };
 void upload_lights(LightUniformBlock lights);
 
 static Bitmap parse_bitmap(FileData file_data, StackAllocator *allocator)
 {
-    assert(file_data.length > 14 + 40); // Header + InfoHeader
-    uint32_t pixels_offset = *(uint32_t *)(file_data.data + 10);
+  assert(file_data.length > 14 + 40);  // Header + InfoHeader
+  uint32_t pixels_offset = *(uint32_t *)(file_data.data + 10);
 
-    Bitmap bitmap;
-    bitmap.width = *(uint32_t *)(file_data.data + 18);
-    bitmap.height = *(uint32_t *)(file_data.data + 22);
+  Bitmap bitmap;
+  bitmap.width  = *(uint32_t *)(file_data.data + 18);
+  bitmap.height = *(uint32_t *)(file_data.data + 22);
 
-    bitmap.data = (Vec4i *)allocator->alloc(sizeof(Vec4i) * bitmap.width * bitmap.height);
-    for (int y = 0; y < bitmap.height; y++)
-    {
-        for (int x = 0; x < bitmap.width; x++)
-        {
-            int file_i = (((y * bitmap.width) + x) * sizeof(Vec4i)) + pixels_offset;
-            // int bitmap_i = (bitmap.width * (bitmap.height - 1)) - (y * bitmap.width) + (x);
-            int bitmap_i = (y * bitmap.width) + x;
+  bitmap.data = (Vec4i *)allocator->alloc(sizeof(Vec4i) * bitmap.width * bitmap.height);
+  for (int y = 0; y < bitmap.height; y++) {
+    for (int x = 0; x < bitmap.width; x++) {
+      int file_i = (((y * bitmap.width) + x) * sizeof(Vec4i)) + pixels_offset;
+      // int bitmap_i = (bitmap.width * (bitmap.height - 1)) - (y * bitmap.width) + (x);
+      int bitmap_i = (y * bitmap.width) + x;
 
-            Vec4i color;
-            color.z = *(file_data.data + file_i);
-            color.y = *(file_data.data + file_i + 1);
-            color.x = *(file_data.data + file_i + 2);
-            color.w = *(file_data.data + file_i + 3);
-            bitmap.data[bitmap_i] = color;
-        }
+      Vec4i color;
+      color.z               = *(file_data.data + file_i);
+      color.y               = *(file_data.data + file_i + 1);
+      color.x               = *(file_data.data + file_i + 2);
+      color.w               = *(file_data.data + file_i + 3);
+      bitmap.data[bitmap_i] = color;
     }
+  }
 
-    return bitmap;
+  return bitmap;
 }
 
-static void free_bitmap(Bitmap bitmap)
-{
-    free(bitmap.data);
-}
+static void free_bitmap(Bitmap bitmap) { free(bitmap.data); }
