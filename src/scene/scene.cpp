@@ -438,7 +438,8 @@ void Scene::set_frame(u32 frame) {
   sequence_t = (f32)frame / current_sequence->fps;
 }
 u32 Scene::get_frame() {
-  assert(current_sequence);
+  if (!current_sequence) return 0;
+  
   return sequence_t * current_sequence->fps;
 }
 void Scene::apply_keyed_animation(KeyedAnimation *keyed_anim, f32 t) {

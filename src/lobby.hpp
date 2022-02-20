@@ -247,7 +247,12 @@ struct Lobby
             game.answers[answer_i].revealed = true;
             game.this_round_points += score * ROUND_MULTIPLIERS[game.round];
 
-            broadcaster.broadcast(&RpcServer::InGameFlipAnswer, InGameFlipAnswerMessage{answer_i, game.last_answer, score});
+            InGameFlipAnswerMessage msg;
+            msg.answer_index = answer_i;
+            msg.answer = game.last_answer;
+            msg.score = score;
+            msg.round_score = game.this_round_points;
+            broadcaster.broadcast(&RpcServer::InGameFlipAnswer, msg);
         }
 
         if (game.round_stage == RoundStage::FACEOFF)

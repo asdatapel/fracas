@@ -102,6 +102,8 @@ struct Assets {
 
         RenderTarget target = RenderTarget(width, height, color_format, depth_format);
         target.asset_id     = id;
+        target.asset_name =
+            String::copy(in_render_target->get("name")->as_literal(), &assets_allocator);
         render_targets.emplace(target, id);
       }
     }
@@ -344,6 +346,15 @@ struct Assets {
                     load_font(font_files.data[font_id].value, size, &assets_temp_allocator));
     }
     return &fonts[{font_id, size}];
+  }
+
+  RenderTarget get_render_target(String name) {
+    for (int i = 0; i < render_targets.size; i++) {
+      if (strcmp(name, render_targets.data[i].value.asset_name)) return render_targets.data[i].value;
+    }
+
+    assert(false);
+    return {};
   }
 
   KeyedAnimation *create_keyed_animation(String folder, String name = {}) {

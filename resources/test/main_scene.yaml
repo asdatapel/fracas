@@ -1353,7 +1353,7 @@ entities:
     mesh: 
       mesh: 19
       material: 19
-      shader: 0
+      shader: 4
   - id: 65
     name: right_score_screen
     type: MESH
@@ -1372,8 +1372,8 @@ entities:
         z: 1.000000
     mesh: 
       mesh: 19
-      material: 19
-      shader: 0
+      material: 34
+      shader: 4
   - id: 66
     name: big_screen
     type: MESH
@@ -1392,8 +1392,8 @@ entities:
         z: 2.389150
     mesh: 
       mesh: 19
-      material: 19
-      shader: 0
+      material: 35
+      shader: 4
   - id: 67
     name: backboard.left_score_screen
     type: UNKNOWN

@@ -1231,12 +1231,14 @@ struct InGameFlipAnswerMessage
     int32_t answer_index = {};
     AllocatedString<64> answer = {};
     int32_t score = {};
+    int32_t round_score = {};
 };
 void append(MessageBuilder *msg, InGameFlipAnswerMessage &in)
 {
     append(msg, in.answer_index);
     append(msg, in.answer);
     append(msg, in.score);
+    append(msg, in.round_score);
 }
 uint32_t read(MessageReader *msg, InGameFlipAnswerMessage *out)
 {
@@ -1245,6 +1247,7 @@ uint32_t read(MessageReader *msg, InGameFlipAnswerMessage *out)
     len += read(msg, &out->answer_index);
     len += read(msg, &out->answer);
     len += read(msg, &out->score);
+    len += read(msg, &out->round_score);
     return len;
 }
 void append(MessageBuilder *msg, std::vector<InGameFlipAnswerMessage> &in)

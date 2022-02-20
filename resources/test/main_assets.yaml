@@ -173,7 +173,7 @@ assets:
         - 112
         - 113
     - id: 19
-      name: resources/scenes/test/score_screen/Cube.017
+      name: board_score_left
       textures:
         - 114
         - 115
@@ -181,6 +181,7 @@ assets:
         - 117
         - 118
         - 119
+        - 173
     - id: 20
       name: resources/scenes/test/backboard/Cylinder.033
       textures:
@@ -322,6 +323,26 @@ assets:
         - 170
         - 171
         - 172
+    - id: 34
+      name: board_score_right
+      textures:
+        - 114
+        - 115
+        - 116
+        - 117
+        - 118
+        - 119
+        - 174
+    - id: 35
+      name: board_score_round
+      textures:
+        - 114
+        - 115
+        - 116
+        - 117
+        - 118
+        - 119
+        - 175
   meshes:
     - id: 0
       path: resources/scenes/test/room/room.fmesh
@@ -905,6 +926,15 @@ assets:
     - id: 172
       path: resources/models/human2/Cube/ao.bmp
       format: RGBA8
+    - id: 173
+      name: "board_score_left"
+      render_target: 9
+    - id: 174
+      name: "board_score_right"
+      render_target: 10
+    - id: 175
+      name: "board_score_score"
+      render_target: 11
   render_targets:
     - id: 0
       name: "planar_target"
@@ -954,9 +984,27 @@ assets:
       height: 256
       color_format: RED
       depth_format: NONE
-    - id: 8 
+    - id: 8
       name: "bar_8_text"
       width: 512
+      height: 256
+      color_format: RED
+      depth_format: NONE
+    - id: 9
+      name: board_score_left
+      width: 256
+      height: 256
+      color_format: RED
+      depth_format: NONE
+    - id: 10
+      name: board_score_right
+      width: 256
+      height: 256
+      color_format: RED
+      depth_format: NONE
+    - id: 11
+      name: board_score_round
+      width: 256
       height: 256
       color_format: RED
       depth_format: NONE
@@ -977,6 +1025,10 @@ assets:
       name: threed_skinning
       vert: resources2/shaders/threed_skinning/vert.gl
       frag: resources2/shaders/threed_skinning/frag.gl
+    - id: 4
+      name: score_screen
+      vert: resources2/shaders/score_screen/vert.gl
+      frag: resources2/shaders/score_screen/frag.gl
   fonts:
     - id: 0
       path: resources/fonts/Anton_Regular.ttf

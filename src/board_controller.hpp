@@ -27,6 +27,9 @@ struct BoardController
     b8 resetting = false;
     f32 resetting_t = 0.f;
 
+    i32 family0_score = 0;
+    i32 family1_score = 0;
+
     void update(f32 timestep, Scene *scene, Assets *assets)
     {
         activation_t += timestep / ACTIVATION_DURATION;
@@ -157,6 +160,47 @@ struct BoardController
                 bar_8,
             };
         return ids[index];
+    }
+
+    void set_score(RenderTarget target, i32 score, Assets *assets) {
+      Font *font = assets->get_font(FONT_ANTON, 256);
+
+      char buf[5];
+      _itoa_s(score, buf, 10);
+
+      String text;
+      text.data = buf;
+      text.len  = strlen(buf);
+
+      target.bind();
+      target.clear({0, 0, 0, 0});
+
+      glDisable(GL_DEPTH_TEST);
+      glEnable(GL_BLEND);
+
+      draw_centered_text(*font, target, text, {0, 0, (f32)target.width, (f32)target.height}, 0.1f,
+                         1, 1, true);
+
+      target.color_tex.gen_mipmaps();
+
+      glEnable(GL_DEPTH_TEST);
+      glDisable(GL_BLEND);
+    }
+
+    void set_round_score(i32 score, Assets *assets)
+    {
+      RenderTarget target = assets->get_render_target("board_score_round");
+      set_score(target, score, assets);
+    }
+    void set_family0_score(i32 score, Assets *assets)
+    {
+      RenderTarget target = assets->get_render_target("board_score_left");
+      set_score(target, score, assets);
+    }
+    void set_family1_score(i32 score, Assets *assets)
+    {
+      RenderTarget target = assets->get_render_target("board_score_right");
+      set_score(target, score, assets);
     }
 };
 

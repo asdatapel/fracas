@@ -90,6 +90,11 @@ struct IntroSequence : Sequence
 
     bool update(float timestep, Scenes scenes, ClientGameData *game_data, InputState *input_state, RpcClient *rpc_client)
     {
+        step({
+            scenes.board_controller->set_family0_score(0, scenes.assets);
+            scenes.board_controller->set_family1_score(0, scenes.assets);
+        });
+
         Entity *camera = scenes.main->get(input.camera);
         if (camera)
         {
@@ -698,17 +703,12 @@ struct FlipAnswerSequence : Sequence
     };
     Input input;
 
-    float t;
-    const float length = 2.f;
-
     AllocatedString<64> answer;
     int answer_i;
     int score;
 
     void reset(AllocatedString<64> answer, int answer_i, int score)
     {
-        t = 0;
-
         this->answer = answer;
         this->answer_i = answer_i;
         this->score = score;
@@ -724,14 +724,14 @@ struct FlipAnswerSequence : Sequence
 
       yield_wait(2.f);
 
-      if (t == 0)
+      step({
         scenes.board_controller->flip(scenes.main, scenes.assets, answer_i, answer, score);
-
-      t += timestep;
+        scenes.board_controller->set_round_score(game_data->this_round_score, scenes.assets);
+      });
 
       yield_wait(2.f);
 
-      return t >= length;
+      return true;
     }
 };
 
@@ -839,17 +839,13 @@ struct EeeeeggghhhhSequence : Sequence {
                                     glm::quat({1.f, 1.3f, .75f})};
     glm::vec3 initial_positions[3] = {glm::vec3{-1, 0, 0}, glm::vec3{0, 0, 0}, glm::vec3{1, 0, 0}};
 
-    b8 popout = false; 
-    if (game_data->round_stage == RoundStage::FACEOFF && game_data->incorrects == 2) {
-        popout = true;
-        initial_positions[0].z = 20;
-        initial_positions[1].z = 20;
-    } else if (game_data->incorrects == 3) {
-        popout = true;
-    }
-
     if ((game_data->round_stage == RoundStage::FACEOFF && game_data->incorrects == 2) ||
         game_data->incorrects == 3) {
+      if (game_data->round_stage == RoundStage::FACEOFF) {
+        initial_positions[0].z = 20;
+        initial_positions[1].z = 20;
+      }
+
       popout_t += timestep;
 
       i32 start = 0;
@@ -922,6 +918,8 @@ struct EndRoundSequence : Sequence
         step({
             scenes.main->active_camera_id = input.camera;
             scenes.board_controller->reset(scenes.main);
+            scenes.board_controller->set_family0_score(game_data->scores[0], scenes.assets);
+            scenes.board_controller->set_family1_score(game_data->scores[1], scenes.assets);
         })
 
         if (round_winner == 0) {
@@ -1081,6 +1079,7 @@ void Game::update(float timestep, Scenes scenes, RpcClient *rpc_client, InputSta
             sent_ready = true;
         }
     }
+
 }
 
 // returns true if game is over
@@ -1090,11 +1089,6 @@ bool Game::handle_rpcs(Scenes scenes, RpcClient *rpc_client)
     {
         printf("get_StartGame_msg\n");
         reset(scenes);
-
-        static i32 x = 0;
-        x++;
-        eeeeggghhh_sequence.reset();
-        set_current_sequence(&eeeeggghhh_sequence);
     }
     else if (auto msg = rpc_client->get_GameStatePing_msg())
     {
@@ -1237,6 +1231,7 @@ bool Game::handle_rpcs(Scenes scenes, RpcClient *rpc_client)
     else if (auto msg = rpc_client->get_InGameFlipAnswer_msg())
     {
         printf("get_InGameFlipAnswer_msg\n");
+        game_data.this_round_score = msg->round_score;
         if (current_sequence != &flip_answer_sequence)
         {
             flip_answer_sequence.reset(msg->answer, msg->answer_index, msg->score);

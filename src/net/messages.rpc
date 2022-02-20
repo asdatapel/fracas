@@ -151,6 +151,7 @@ message InGameFlipAnswerMessage
 answer_index int
 answer string
 score int
+round_score int
 
 client InGameFlipAnswer InGameFlipAnswerMessage
 

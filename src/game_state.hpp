@@ -296,6 +296,7 @@ struct ClientGameData
 
     i32 round = -1;
     RoundStage round_stage;
+    i32 this_round_score = 0;
 
     std::pair<ClientId, ClientId> faceoffers;
     i32 buzzing_family = -1;
