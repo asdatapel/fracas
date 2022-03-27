@@ -1,7 +1,7 @@
 objects:
-- data: Cube.fmesh
-  material: Cube
-  name: Cube
+- data: Plane.001.fmesh
+  material: Plane.004
+  name: Plane.001
   parent: Armature
   position:
     x: 0.0
@@ -26,7 +26,7 @@ objects:
     y: 0.0
     z: -0.0
   scale:
-    x: 4.495195388793945
-    y: 4.495195388793945
-    z: 4.495195388793945
+    x: 0.15921467542648315
+    y: 0.15921467542648315
+    z: 0.15921467542648315
   type: ARMATURE

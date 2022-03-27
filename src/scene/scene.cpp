@@ -404,13 +404,13 @@ void Scene::render_entities(Camera *camera, Vec3f camera_postion)
         bind_material(shader, *e.material, 3);
 
         if (e.animation) {
-          for (int i = 0; i < e.animation->num_bones; i++) {
+          for (int i = 0; i < e.animation->final_mats.size(); i++) {
             // TODO shouldn't be querying location every time
             std::string uniform_name =
                 std::string("bone_transforms[") + std::to_string(i) + std::string("]");
             int handle =
                 glGetUniformLocation(threed_skinning_shader.shader_handle, uniform_name.c_str());
-            glm::mat4 transform = e.animation->mats[i];
+            glm::mat4 transform = e.animation->final_mats[i];
             glUniformMatrix4fv(handle, 1, false, &transform[0][0]);
           }
         }

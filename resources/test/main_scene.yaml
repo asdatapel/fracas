@@ -2115,7 +2115,27 @@ entities:
         x: 1.000000
         y: 1.000000
         z: 1.000000
-active_camera_id: 87
+  - id: 105
+    name: figure
+    type: MESH
+    mesh: 
+      mesh: 26
+      material: 0
+      shader: 0
+    transform: 
+      position: 
+        x: 0
+        y: 1.400000
+        z: 0
+      rotation: 
+        x: 0.000000
+        y: 0
+        z: 0.000000
+      scale: 
+        x: 1.000000
+        y: 1.000000
+        z: 1.000000
+active_camera_id: -1
 hdr: resources/hdri/Newport_Loft_Ref.hdr
 cubemap_visible: true
 planar_reflector: 

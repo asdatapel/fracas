@@ -204,8 +204,10 @@ struct PlayerController {
 
   float t = 0;
 
-  Animation left_anim;
-  Animation right_anim;
+  SkeletalAnimation left_anim;
+  SkeletalAnimation right_anim;
+  SkeletalAnimation left_and_nod;
+  Pose left, right;
   float faceoff_timer          = 0;
   const float FACEOFF_DURATION = 3.f;
 
@@ -221,6 +223,10 @@ struct PlayerController {
         parse_animation(read_entire_file("resources/scenes/test/anim/anim.fanim"), {&a, &tmp});
     right_anim =
         parse_animation(read_entire_file("resources/scenes/test/anim/anim.fanim"), {&a, &tmp});
+    left = left_anim.eval(0);
+    right = right_anim.eval(0);
+    
+    left_and_nod = parse_animation(read_entire_file("resources/scenes/test/anim/left_and_nod.fanim"), {&a, &tmp});
   }
 
   void update(float timestep, Scene *scene, Assets *assets)
@@ -235,12 +241,14 @@ struct PlayerController {
       Entity *entity = scene->get(player_id);
     }
 
-    Entity *left     = scene->get(left_faceoffer);
-    left->animation  = &left_anim;
-    Entity *right    = scene->get(right_faceoffer);
-    right->animation = &right_anim;
-    left_anim.update(clamp(t / FACEOFF_DURATION, 0, 0.99));
-    right_anim.update(clamp(t / FACEOFF_DURATION - 0.1f, 0, 0.99));
+    Entity *left_entity     = scene->get(left_faceoffer);
+    left_entity->animation  = &left;
+    Entity *right_entity    = scene->get(right_faceoffer);
+    right_entity->animation = &right;
+    // left_anim.update(fmod(t / FACEOFF_DURATION, 0.99));
+    // right_anim.update(fmod(t / FACEOFF_DURATION, 0.99));
+    left.calculate_final_mats();
+    right.calculate_final_mats();
   }
 
   void start_faceoff() { faceoff_timer = 0; }

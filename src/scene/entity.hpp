@@ -74,5 +74,5 @@ struct Entity {
 
   Spline3 spline;
 
-  Animation *animation = nullptr;
+  Pose *animation = nullptr;
 };

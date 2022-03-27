@@ -377,7 +377,7 @@ assets:
     - id: 15
       path: resources/scenes/test/bricks/Plane.fmesh
     - id: 16
-      path: resources/scenes/test/anim/Cube.fmesh
+      path: resources/scenes/test/anim/Plane.001.fmesh
     - id: 17
       path: resources/scenes/test/long_table/long_table.fmesh
     - id: 18
@@ -398,6 +398,9 @@ assets:
     - id: 25
       name: human2
       path: resources/models/human2/Cube.fmesh
+    - id: 26
+      name: figure
+      path: resources/scenes/test/figure/figure.fmesh
   textures:
     - format: SRGB8_ALPHA8
       id: 0
