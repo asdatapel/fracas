@@ -511,7 +511,8 @@ struct PromptForAnswerSequence : Sequence {
     if (answerer->id == game_data->my_id) {
       scenes.ui_controller->show_answer_textbox(true);
       if (scenes.ui_controller->answer_submitted) {
-        rpc_client->InGameAnswer({scenes.ui_controller->answer_textbox.text});
+        // TODO answering
+        // rpc_client->InGameAnswer({scenes.ui_controller->answer_textbox.text});
         scenes.ui_controller->show_answer_textbox(false);
       }
     } else {
@@ -1122,7 +1123,7 @@ bool Game::handle_rpcs(Scenes scenes, RpcClient *rpc_client)
   } else if (auto msg = rpc_client->get_InGamePlayerAnswered_msg()) {
     printf("get_InGamePlayerAnswered_msg\n");
     if (current_sequence != &player_answered_sequence) {
-      player_answered_sequence.reset(msg->answer);
+      player_answered_sequence.reset(string_to_allocated_string<64>("placeholder"));
       set_current_sequence(&player_answered_sequence);
       sent_ready = false;
     }
@@ -1163,7 +1164,7 @@ bool Game::handle_rpcs(Scenes scenes, RpcClient *rpc_client)
     printf("get_InGameFlipAnswer_msg\n");
     game_data.this_round_score = msg->round_score;
     if (current_sequence != &flip_answer_sequence) {
-      flip_answer_sequence.reset(msg->answer, msg->answer_index, msg->score);
+      flip_answer_sequence.reset(msg->answer, msg->answer_rank, msg->score);
       set_current_sequence(&flip_answer_sequence);
       sent_ready = false;
     }

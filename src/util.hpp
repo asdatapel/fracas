@@ -374,6 +374,11 @@ struct String {
     return ret;
   }
 };
+b8 operator==(String str1, String str2)
+{
+  return str1.len == str2.len && !strncmp((char *)str1.data, (char *)str2.data, str1.len);
+}
+b8 operator!=(String str1, String str2) { return !(str1 == str2); }
 
 bool strcmp(String str1, String str2)
 {

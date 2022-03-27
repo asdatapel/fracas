@@ -38,6 +38,18 @@ int main(int argc, char *argv[])
   init_net();
   ServerData server_data;
 
+  tmp.init(10 * 1000);
+  thesaurus     = parse_thesaurus();
+  auto [questions, answers] = read_questions();
+  question_list = questions;
+  answer_list = answers;
+
+  // for (i32 i = 0; i < question_list.size; i++) {
+  //   if (question_list[i].text == "Name Something That Might Physically Happen To Your Body When Scared") {
+  //     printf("asdasdads %i\n", i);
+  //   }
+  // }
+
   SOCKET s          = open_socket(6519);
   SOCKET rpc_socket = open_socket(6666);
 
@@ -109,6 +121,8 @@ int main(int argc, char *argv[])
     }
 
     // Sleep(1000);
+    tmp.reset();
+
   }
 
   closesocket(s);

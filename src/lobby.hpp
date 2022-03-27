@@ -6,6 +6,28 @@
 #include "game_state.hpp"
 #include "net/generated_rpc_server.hpp"
 #include "net/net.hpp"
+#include "server/answer_parser.hpp"
+
+StackAllocator tmp;
+HashMap<Entry> thesaurus;
+DynamicArray<Question> question_list;
+DynamicArray<String> answer_list;
+
+String to_lower(String in)
+{
+  String out;
+  out.data = tmp.alloc(in.len);
+  out.len  = in.len;
+
+  for (i32 i = 0; i < out.len; i++) {
+    if (in.data[i] >= 'A' && in.data[i] <= 'Z')
+      out.data[i] = 'a' + in.data[i] - 'A';
+    else
+      out.data[i] = in.data[i];
+  }
+
+  return out;
+}
 
 void error(String msg) { printf("%.*s\n", msg.len, msg.data); }
 
@@ -159,17 +181,26 @@ struct Lobby {
     game.incorrects        = 0;
     game.round_winner      = -1;
 
-    game.last_answer.len = 0;
+    game.last_answer_index = -1;
+
+    i32 q_index = 3420;  // rand() % question_list.size;
+    Question q  = question_list[q_index];
+
+    game.question = q.text;
 
     game.answers.clear();
-    game.question = string_to_allocated_string<128>("name a color bitch bitch stupid bitch?");
-    game.answers.append({false, 98, "RED"});
-    game.answers.append({false, 87, "GREEN"});
-    game.answers.append({false, 76, "BLUE"});
-    game.answers.append({false, 65, "ORANGE"});
-    game.answers.append({false, 54, "PINK"});
-    game.answers.append({false, 43, "PURPLE"});
-    game.answers.append({false, 32, "MUAVE"});
+    for (i32 i = 0; i < q.answers.len; i++) {
+      game.answers.append({false, q.answers[i].score, q.answers[i].index});
+    }
+
+    // game.question = string_to_allocated_string<128>("name a color bitch bitch stupid bitch?");
+    // game.answers.append({false, 98, "RED"});
+    // game.answers.append({false, 87, "GREEN"});
+    // game.answers.append({false, 76, "BLUE"});
+    // game.answers.append({false, 65, "ORANGE"});
+    // game.answers.append({false, 54, "PINK"});
+    // game.answers.append({false, 43, "PURPLE"});
+    // game.answers.append({false, 32, "MUAVE"});
 
     broadcaster.broadcast(&RpcServer::InGameStartRound, InGameStartRoundMessage{game.round});
     set_next_stage(&Lobby::stage_start_faceoff);
@@ -187,8 +218,11 @@ struct Lobby {
 
   void stage_ask_question(Broadcaster broadcaster)
   {
-    broadcaster.broadcast(&RpcServer::InGameAskQuestion,
-                          InGameAskQuestionMessage{game.question, (int32_t)game.answers.len});
+    InGameAskQuestionMessage msg;
+    msg.question    = string_to_allocated_string<128>(game.question);
+    msg.num_answers = game.answers.len;
+    broadcaster.broadcast(&RpcServer::InGameAskQuestion, msg);
+
     set_waiter(&Lobby::waiter_buzz, 25 * second);
   }
 
@@ -212,23 +246,33 @@ struct Lobby {
 
   void stage_respond_to_answer(Broadcaster broadcaster)
   {
+    // returns rank of answer, -1 if incorrect
+    auto check_answer = [this]() {
+      for (int i = 0; i < game.answers.len; ++i) {
+        if (!game.answers[i].revealed && game.answers[i].index == game.last_answer_index) {
+          return i;
+        }
+      }
+      return -1;
+    };
+
     int this_answer_incorrect = 0;  // used to simplify checking which faceoffer is answering
-    int answer_i              = game.check_answer();
-    int score                 = answer_i == -1 ? 0 : game.answers[answer_i].score;
-    if (answer_i == -1) {
+    int answer_rank           = check_answer();
+    int score                 = answer_rank == -1 ? 0 : game.answers[answer_rank].score;
+    if (answer_rank == -1) {
       this_answer_incorrect = 1;
       game.incorrects += 1;
 
       broadcaster.broadcast(&RpcServer::InGameEggghhhh, InGameEggghhhhMessage{game.incorrects});
     } else {
-      game.answers[answer_i].revealed = true;
+      game.answers[answer_rank].revealed = true;
       game.this_round_points += score * ROUND_MULTIPLIERS[game.round];
 
       InGameFlipAnswerMessage msg;
-      msg.answer_index = answer_i;
-      msg.answer       = game.last_answer;
-      msg.score        = score;
-      msg.round_score  = game.this_round_points;
+      msg.answer_rank = answer_rank;
+      msg.answer = string_to_allocated_string<64>(answer_list[game.answers[answer_rank].index]);
+      msg.score  = score;
+      msg.round_score = game.this_round_points;
       broadcaster.broadcast(&RpcServer::InGameFlipAnswer, msg);
     }
 
@@ -236,7 +280,7 @@ struct Lobby {
       if (game.this_round_points == score &&
           game.incorrects == this_answer_incorrect)  // first to answer
       {
-        if (answer_i == 0) {
+        if (answer_rank == 0) {
           // buzzer wins automatically
           game.faceoff_winning_family = game.buzzing_family;
           set_next_stage(&Lobby::stage_prompt_pass_or_play);
@@ -258,7 +302,7 @@ struct Lobby {
         }
       }
     } else if (game.round_stage == RoundStage::STEAL) {
-      if (answer_i == -1)  // wrong answer
+      if (answer_rank == -1)  // wrong answer
       {
         game.round_winner = game.playing_family;
       } else  // right answer
@@ -358,9 +402,9 @@ struct Lobby {
   {
     waiter_elapsed += elapsed_micros;
     if (waiter_elapsed >= waiter_deadline) {
+      game.last_answer_index           = -1;
       AllocatedString<64> empty_answer = string_to_allocated_string<64>("...");
-      game.last_answer                 = empty_answer;
-      broadcaster.broadcast(&RpcServer::InGamePlayerAnswered, InGameAnswerMessage{empty_answer});
+      broadcaster.broadcast(&RpcServer::InGamePlayerAnswered, InGameAnswerMessage{-1});
 
       set_next_stage(&Lobby::stage_respond_to_answer);
     }
@@ -710,8 +754,8 @@ void RpcServer::HandleInGameBuzz(ClientId client_id, Empty *req, Empty *resp)
 
 void RpcServer::HandleInGameAnswer(ClientId client_id, InGameAnswerMessage *req, Empty *resp)
 {
-  printf("HandleInGameAnswer - player: %i, answer: %.*s\n", client_id, req->answer.len,
-         req->answer.data);
+  // printf("HandleInGameAnswer - player: %i, answer: %.*s\n", client_id, req->answer.len,
+  //        req->answer.data);
 
   Client *client = &server_data->clients[client_id];
   if (server_data->lobbies.count(client->game_id) == 0) {
@@ -728,14 +772,10 @@ void RpcServer::HandleInGameAnswer(ClientId client_id, InGameAnswerMessage *req,
     return;
   }
 
-  for (int i = 0; i < req->answer.len; i++) {
-    if (req->answer.data[i] >= 'a' && req->answer.data[i] <= 'z') req->answer.data[i] -= 32;
-  }
-
   Broadcaster{this, lobby}.broadcast(&RpcServer::InGamePlayerAnswered,
-                                     InGameAnswerMessage{req->answer});
+                                     InGameAnswerMessage{req->answer_index});
 
-  lobby->game.last_answer           = req->answer;
+  lobby->game.last_answer_index     = req->answer_index;
   lobby->game.last_answer_client_id = client_id;
 
   lobby->set_next_stage(&Lobby::stage_respond_to_answer);
