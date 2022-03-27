@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
   ServerData server_data;
 
   tmp.init(10 * 1000);
-  thesaurus     = parse_thesaurus();
+  // thesaurus     = parse_thesaurus();
   auto [questions, answers] = read_questions();
   question_list = questions;
   answer_list = answers;

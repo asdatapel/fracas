@@ -12,7 +12,6 @@
 #include "../material.hpp"
 #include "../yaml.hpp"
 
-const char *debug_hdr = "resources/hdri/Newport_Loft_Ref.hdr";
 Texture2D load_hdri(const char *file)
 {
   int width, height, components;

@@ -421,70 +421,70 @@ struct Entry {
   String word;
   DynamicArray<String> synonyms;
 };
-HashMap<Entry> parse_thesaurus()
-{
-  String file = read_file("./src/server/th_en_US_v2.dat");
+// HashMap<Entry> parse_thesaurus()
+// {
+//   String file = read_file("./src/server/th_en_US_v2.dat");
 
-  u32 cursor  = 0;
-  b8 new_line = false;
-  auto token  = [&]() -> String {
-    String t = {};
-    t.data   = file.data + cursor;
-    t.len    = 0;
+//   u32 cursor  = 0;
+//   b8 new_line = false;
+//   auto token  = [&]() -> String {
+//     String t = {};
+//     t.data   = file.data + cursor;
+//     t.len    = 0;
 
-    new_line = false;
+//     new_line = false;
 
-    while (file.data[cursor] != '|' && file.data[cursor] != '\n' && cursor < file.len) {
-      cursor++;
-      t.len++;
-    }
+//     while (file.data[cursor] != '|' && file.data[cursor] != '\n' && cursor < file.len) {
+//       cursor++;
+//       t.len++;
+//     }
 
-    if (file.data[cursor] == '\n') {
-      new_line = true;
-    }
-    cursor++;
+//     if (file.data[cursor] == '\n') {
+//       new_line = true;
+//     }
+//     cursor++;
 
-    return t;
-  };
+//     return t;
+//   };
 
-  HashMap<Entry> entries;
-  while (cursor < file.len) {
-    Entry entry;
-    entry.word = token();
+//   HashMap<Entry> entries;
+//   while (cursor < file.len) {
+//     Entry entry;
+//     entry.word = token();
 
-    u32 parts_count = to_u32(token());
+//     u32 parts_count = to_u32(token());
 
-    for (i32 i = 0; i < parts_count; i++) {
-      Part part = to_part(token());
+//     for (i32 i = 0; i < parts_count; i++) {
+//       Part part = to_part(token());
 
-      while (!new_line) {
-        String synonym = token();
-        Type type      = Type::NONE;
+//       while (!new_line) {
+//         String synonym = token();
+//         Type type      = Type::NONE;
 
-        if (synonym.data[synonym.len - 1] == ')') {
-          String type_str;
-          type_str.data = synonym.data + synonym.len - 1;
-          type_str.len  = 1;
-          synonym.len--;
+//         if (synonym.data[synonym.len - 1] == ')') {
+//           String type_str;
+//           type_str.data = synonym.data + synonym.len - 1;
+//           type_str.len  = 1;
+//           synonym.len--;
 
-          while (type_str.data[0] != '(') {
-            type_str.data--;
-            type_str.len++;
-            synonym.len--;
-          }
-          synonym.len--;  // space
+//           while (type_str.data[0] != '(') {
+//             type_str.data--;
+//             type_str.len++;
+//             synonym.len--;
+//           }
+//           synonym.len--;  // space
 
-          type = to_type(type_str);
-        }
+//           type = to_type(type_str);
+//         }
 
-        if (type == Type::SIMILAR || type == Type::GENERIC || type == Type::NONE) {
-          entry.synonyms.append(synonym);
-        }
-      }
-    }
+//         if (type == Type::SIMILAR || type == Type::GENERIC || type == Type::NONE) {
+//           entry.synonyms.append(synonym);
+//         }
+//       }
+//     }
 
-    entries.emplace(entry.word, entry);
-  }
+//     entries.emplace(entry.word, entry);
+//   }
 
-  return entries;
-}
+//   return entries;
+// }
