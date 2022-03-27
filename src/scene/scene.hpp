@@ -34,7 +34,7 @@ struct Scene {
 
   Entity *get(int id);
   void init(Memory mem, TextureFormat texture_format = TextureFormat::RGB16F);
-  void load(const char *filename, Assets *assets, Memory mem);
+  void load(String filename, Assets *assets, Memory mem);
   void serialize(const char *filename, Assets *assets, StackAllocator *alloc);
   void update(float timestep);
   void render(Camera *editor_camera, Vec3f editor_camera_pos);

@@ -165,6 +165,7 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
 
   main_target = {width, height, 0};
 
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
   glFrontFace(GL_CCW);

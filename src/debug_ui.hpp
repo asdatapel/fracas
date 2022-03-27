@@ -1124,6 +1124,7 @@ void end_frame(Assets *assets)
 
   state.target.bind();
   debug_begin_immediate();
+  glEnable(GL_BLEND);
   auto do_draw_list = [&](DrawList &draw_list) {
     for (int i = 0; i < draw_list.buf.size(); i++) {
       DrawItem item = draw_list.buf[i];

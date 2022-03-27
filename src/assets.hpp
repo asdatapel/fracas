@@ -67,42 +67,39 @@ struct Assets {
     keyed_animations.init(&assets_allocator, 256);
   }
 
-  void load(const char *filename, StackAllocator *main_mem)
+  void load(String filename)
   {
     Temp temp = Temp::start(&assets_temp_allocator);
 
-    FileData file    = read_entire_file(filename, &assets_temp_allocator);
-    YAML::Dict *root = YAML::deserialize(String(file.data, file.length), &assets_temp_allocator)
-                           ->as_dict()
-                           ->get("assets")
-                           ->as_dict();
+    FileData file    = read_entire_file(filename, temp);
+    YAML::Dict *root = YAML::deserialize(String(file.data, file.length), temp)->as_dict();
 
-    YAML::List *in_meshes = root->get("meshes")->as_list();
-    for (int i = 0; i < in_meshes->len; i++) {
-      YAML::Dict *in_mesh = in_meshes->get(i)->as_dict();
-      int id      = atoi(in_mesh->get("id")->as_literal().to_char_array(&assets_temp_allocator));
-      String path = in_mesh->get("path")->as_literal();
+    if (auto in_meshes_val = root->get("meshes")) {
+      YAML::List *in_meshes = in_meshes_val->as_list();
+      for (int i = 0; i < in_meshes->len; i++) {
+        YAML::Dict *in_mesh = in_meshes->get(i)->as_dict();
+        int id              = atoi(in_mesh->get("id")->as_literal().to_char_array(temp));
+        String path         = in_mesh->get("path")->as_literal();
 
-      VertexBuffer mesh = load_and_upload_mesh(path, id, assets_memory);
-      mesh.asset_id     = id;
-      mesh.asset_name   = String::copy(path, &assets_allocator);
-      meshes.emplace(mesh, id);
+        VertexBuffer mesh = load_and_upload_mesh(path, id, assets_memory);
+        mesh.asset_id     = id;
+        mesh.asset_name   = String::copy(path, &assets_allocator);
+        meshes.emplace(mesh, id);
+      }
     }
+
     if (auto in_render_targets_val = root->get("render_targets")) {
       YAML::List *in_render_targets = in_render_targets_val->as_list();
       for (int i = 0; i < in_render_targets->len; i++) {
         YAML::Dict *in_render_target = in_render_targets->get(i)->as_dict();
-        int id =
-            atoi(in_render_target->get("id")->as_literal().to_char_array(&assets_temp_allocator));
+        int id = atoi(in_render_target->get("id")->as_literal().to_char_array(temp));
 
         String color_format_string = in_render_target->get("color_format")->as_literal();
         String depth_format_string = in_render_target->get("depth_format")->as_literal();
         TextureFormat color_format = texture_format_from_string(color_format_string);
         TextureFormat depth_format = texture_format_from_string(depth_format_string);
-        int width                  = atoi(
-            in_render_target->get("width")->as_literal().to_char_array(&assets_temp_allocator));
-        int height = atoi(
-            in_render_target->get("height")->as_literal().to_char_array(&assets_temp_allocator));
+        int width  = atoi(in_render_target->get("width")->as_literal().to_char_array(temp));
+        int height = atoi(in_render_target->get("height")->as_literal().to_char_array(temp));
 
         RenderTarget target = RenderTarget(width, height, color_format, depth_format);
         target.asset_id     = id;
@@ -111,90 +108,84 @@ struct Assets {
         render_targets.emplace(target, id);
       }
     }
-    YAML::List *in_textures = root->get("textures")->as_list();
-    for (int i = 0; i < in_textures->len; i++) {
-      YAML::Dict *in_texture = in_textures->get(i)->as_dict();
-      int id = atoi(in_texture->get("id")->as_literal().to_char_array(&assets_temp_allocator));
 
-      Texture texture;
-      if (YAML::Value *path_val = in_texture->get("path")) {
-        String path          = path_val->as_literal();
-        String format_string = in_texture->get("format")->as_literal();
-        TextureFormat format = texture_format_from_string(format_string);
-        texture              = load_and_upload_texture(path, format, assets_memory);
-      } else if (YAML::Value *render_target_val = in_texture->get("render_target")) {
-        int render_target_id =
-            atoi(render_target_val->as_literal().to_char_array(&assets_temp_allocator));
-        texture = render_targets.data[render_target_id].value.color_tex;
-      } else {
-        assert(false);
+    if (auto in_textures_val = root->get("textures")) {
+      YAML::List *in_textures = in_textures_val->as_list();
+      for (int i = 0; i < in_textures->len; i++) {
+        YAML::Dict *in_texture = in_textures->get(i)->as_dict();
+        int id                 = atoi(in_texture->get("id")->as_literal().to_char_array(temp));
+
+        Texture texture;
+        if (YAML::Value *path_val = in_texture->get("path")) {
+          String path          = path_val->as_literal();
+          String format_string = in_texture->get("format")->as_literal();
+          TextureFormat format = texture_format_from_string(format_string);
+          texture              = load_and_upload_texture(path, format, assets_memory);
+        } else if (YAML::Value *render_target_val = in_texture->get("render_target")) {
+          int render_target_id = atoi(render_target_val->as_literal().to_char_array(temp));
+          texture              = render_targets.data[render_target_id].value.color_tex;
+        } else {
+          assert(false);
+        }
+
+        textures.emplace(texture, id);
       }
-
-      textures.emplace(texture, id);
     }
-    YAML::List *in_materials = root->get("materials")->as_list();
-    for (int i = 0; i < in_materials->len; i++) {
-      YAML::Dict *in_material = in_materials->get(i)->as_dict();
-      int id = atoi(in_material->get("id")->as_literal().to_char_array(&assets_temp_allocator));
 
-      int num_parameters = 0;
-      if (auto num_parameters_val = in_material->get("num_parameters")) {
-        num_parameters =
-            atoi(num_parameters_val->as_literal().to_char_array(&assets_temp_allocator));
+    if (auto in_materials_val = root->get("materials")) {
+      YAML::List *in_materials = in_materials_val->as_list();
+      for (int i = 0; i < in_materials->len; i++) {
+        YAML::Dict *in_material = in_materials->get(i)->as_dict();
+        int id                  = atoi(in_material->get("id")->as_literal().to_char_array(temp));
+
+        int num_parameters = 0;
+        if (auto num_parameters_val = in_material->get("num_parameters")) {
+          num_parameters = atoi(num_parameters_val->as_literal().to_char_array(temp));
+        }
+
+        YAML::List *texture_refs = in_material->get("textures")->as_list();
+        Material material = Material::allocate(texture_refs->len, num_parameters, &assets_allocator);
+        material.asset_id = id;
+        for (int tex_i = 0; tex_i < texture_refs->len; tex_i++) {
+          int texture_ref_id       = atoi(texture_refs->get(tex_i)->as_literal().to_char_array(temp));
+          material.textures[tex_i] = textures.data[texture_ref_id].value;
+        }
+
+        materials.emplace(material, id);
       }
-
-      YAML::List *texture_refs = in_material->get("textures")->as_list();
-      Material material = Material::allocate(texture_refs->len, num_parameters, &assets_allocator);
-      material.asset_id = id;
-      for (int tex_i = 0; tex_i < texture_refs->len; tex_i++) {
-        int texture_ref_id =
-            atoi(texture_refs->get(tex_i)->as_literal().to_char_array(&assets_temp_allocator));
-        material.textures[tex_i] = textures.data[texture_ref_id].value;
-      }
-
-      materials.emplace(material, id);
     }
+
     if (auto in_shaders_val = root->get("shaders")) {
       YAML::List *in_shaders = in_shaders_val->as_list();
       for (int i = 0; i < in_shaders->len; i++) {
         YAML::Dict *in_shader = in_shaders->get(i)->as_dict();
-        int id = atoi(in_shader->get("id")->as_literal().to_char_array(&assets_temp_allocator));
-        String name      = in_shader->get("name")->as_literal();
-        String vert_path = in_shader->get("vert")->as_literal();
-        String frag_path = in_shader->get("frag")->as_literal();
+        int id                = atoi(in_shader->get("id")->as_literal().to_char_array(temp));
+        String name           = in_shader->get("name")->as_literal();
+        String vert_path      = in_shader->get("vert")->as_literal();
+        String frag_path      = in_shader->get("frag")->as_literal();
 
-        auto vert_src = read_entire_file(vert_path.to_char_array(&assets_temp_allocator),
-                                         &assets_temp_allocator);
-        auto frag_src = read_entire_file(frag_path.to_char_array(&assets_temp_allocator),
-                                         &assets_temp_allocator);
+        auto vert_src = read_entire_file(vert_path.to_char_array(temp), temp);
+        auto frag_src = read_entire_file(frag_path.to_char_array(temp), temp);
 
-        Shader shader   = create_shader({vert_src.data, (uint16_t)vert_src.length},
-                                      {frag_src.data, (uint16_t)frag_src.length},
-                                      name.to_char_array(&assets_temp_allocator));
+        Shader shader =
+            create_shader({vert_src.data, (uint16_t)vert_src.length},
+                          {frag_src.data, (uint16_t)frag_src.length}, name.to_char_array(temp));
         shader.asset_id = id;
         shaders.emplace(shader, id);
       }
     }
+
     if (auto in_fonts_val = root->get("fonts")) {
       YAML::List *in_fonts = in_fonts_val->as_list();
       for (int i = 0; i < in_fonts->len; i++) {
         YAML::Dict *in_font = in_fonts->get(i)->as_dict();
-        int id      = atoi(in_font->get("id")->as_literal().to_char_array(&assets_temp_allocator));
-        String path = in_font->get("path")->as_literal();
+        int id              = atoi(in_font->get("id")->as_literal().to_char_array(temp));
+        String path         = in_font->get("path")->as_literal();
 
-        FileData file =
-            read_entire_file(path.to_char_array(&assets_temp_allocator), &assets_allocator);
+        FileData file = read_entire_file(path.to_char_array(temp), &assets_allocator);
         font_files.emplace(file, id);
       }
     }
-  }
-
-  void load(const char *filename)
-  {
-    Temp tmp = Temp::start(&assets_temp_allocator);
-
-    FileData file    = read_entire_file(filename, tmp);
-    YAML::Dict *root = YAML::deserialize(String(file.data, file.length), tmp)->as_dict();
 
     if (auto in_keyed_animations_val = root->get("keyed_animations")) {
       YAML::List *in_keyed_animations = in_keyed_animations_val->as_list();
@@ -203,14 +194,14 @@ struct Assets {
 
         KeyedAnimation ka(0);
 
-        ka.asset_id = atoi(in_keyed_animation->get("asset_id")->as_literal().to_char_array(tmp));
+        ka.asset_id = atoi(in_keyed_animation->get("asset_id")->as_literal().to_char_array(temp));
         ka.asset_name =
             String::copy(in_keyed_animation->get("asset_name")->as_literal(), &assets_allocator);
-        ka.fps = atoi(in_keyed_animation->get("fps")->as_literal().to_char_array(tmp));
+        ka.fps = atoi(in_keyed_animation->get("fps")->as_literal().to_char_array(temp));
 
         ka.start_frame =
-            atoi(in_keyed_animation->get("start_frame")->as_literal().to_char_array(tmp));
-        ka.end_frame = atoi(in_keyed_animation->get("end_frame")->as_literal().to_char_array(tmp));
+            atoi(in_keyed_animation->get("start_frame")->as_literal().to_char_array(temp));
+        ka.end_frame = atoi(in_keyed_animation->get("end_frame")->as_literal().to_char_array(temp));
 
         auto tracks_in = in_keyed_animation->get("tracks")->as_list();
         for (u32 track_i = 0; track_i < tracks_in->len; track_i++) {
@@ -218,7 +209,7 @@ struct Assets {
 
           KeyedAnimationTrack track;
 
-          track.entity_id = atoi(track_in->get("entity_id")->as_literal().to_char_array(tmp));
+          track.entity_id = atoi(track_in->get("entity_id")->as_literal().to_char_array(temp));
 
           auto keys_in = track_in->get("keys")->as_list();
           for (u32 key_i = 0; key_i < keys_in->len; key_i++) {
@@ -228,21 +219,27 @@ struct Assets {
 
             YAML::Dict *in_transform = key_in->get("transform")->as_dict();
             YAML::Dict *in_position  = in_transform->get("position")->as_dict();
-            key.transform.position.x = atof(in_position->get("x")->as_literal().to_char_array(tmp));
-            key.transform.position.y = atof(in_position->get("y")->as_literal().to_char_array(tmp));
-            key.transform.position.z = atof(in_position->get("z")->as_literal().to_char_array(tmp));
-            YAML::Dict *in_rotation  = in_transform->get("rotation")->as_dict();
-            key.transform.rotation.x = atof(in_rotation->get("x")->as_literal().to_char_array(tmp));
-            key.transform.rotation.y = atof(in_rotation->get("y")->as_literal().to_char_array(tmp));
-            key.transform.rotation.z = atof(in_rotation->get("z")->as_literal().to_char_array(tmp));
-            YAML::Dict *in_scale     = in_transform->get("scale")->as_dict();
-            key.transform.scale.x    = atof(in_scale->get("x")->as_literal().to_char_array(tmp));
-            key.transform.scale.y    = atof(in_scale->get("y")->as_literal().to_char_array(tmp));
-            key.transform.scale.z    = atof(in_scale->get("z")->as_literal().to_char_array(tmp));
+            key.transform.position.x =
+                atof(in_position->get("x")->as_literal().to_char_array(temp));
+            key.transform.position.y =
+                atof(in_position->get("y")->as_literal().to_char_array(temp));
+            key.transform.position.z =
+                atof(in_position->get("z")->as_literal().to_char_array(temp));
+            YAML::Dict *in_rotation = in_transform->get("rotation")->as_dict();
+            key.transform.rotation.x =
+                atof(in_rotation->get("x")->as_literal().to_char_array(temp));
+            key.transform.rotation.y =
+                atof(in_rotation->get("y")->as_literal().to_char_array(temp));
+            key.transform.rotation.z =
+                atof(in_rotation->get("z")->as_literal().to_char_array(temp));
+            YAML::Dict *in_scale  = in_transform->get("scale")->as_dict();
+            key.transform.scale.x = atof(in_scale->get("x")->as_literal().to_char_array(temp));
+            key.transform.scale.y = atof(in_scale->get("y")->as_literal().to_char_array(temp));
+            key.transform.scale.z = atof(in_scale->get("z")->as_literal().to_char_array(temp));
 
             key.interpolation_type = (KeyedAnimationTrack::Key::InterpolationType)atoi(
-                key_in->get("interpolation_type")->as_literal().to_char_array(tmp));
-            key.frame = atoi(key_in->get("frame")->as_literal().to_char_array(tmp));
+                key_in->get("interpolation_type")->as_literal().to_char_array(temp));
+            key.frame = atoi(key_in->get("frame")->as_literal().to_char_array(temp));
 
             track.keys.push_back(key);
           }

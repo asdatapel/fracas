@@ -59,7 +59,7 @@ void Scene::init(Memory mem, TextureFormat texture_format)
   new (&saved_transforms) DynamicArray<EntityTransform, 128>(&scene_allocator);
 }
 
-void Scene::load(const char *filename, Assets *assets, Memory mem)
+void Scene::load(String filename, Assets *assets, Memory mem)
 {
   FileData file    = read_entire_file(filename, mem.temp);
   YAML::Dict *root = YAML::deserialize(String(file.data, file.length), mem.temp)->as_dict();

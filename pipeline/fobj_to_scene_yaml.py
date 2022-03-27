@@ -3,7 +3,6 @@ import yaml
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-
 scene_root_path = 'resources/scenes/test'
 
 meshes = {}

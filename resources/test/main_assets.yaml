@@ -1,1041 +1,1040 @@
-assets:
-  materials:
-    - id: 0
-      name: resources/scenes/test/room/Plane
-      textures:
-        - 0
-        - 1
-        - 2
-        - 3
-        - 4
-        - 5
-    - id: 1
-      name: resources/scenes/test/floor/floor
-      textures:
-        - 6
-        - 7
-        - 8
-        - 9
-        - 10
-        - 11
-        - 152
-    - id: 2
-      name: resources/scenes/test/background/Cube.021
-      textures:
-        - 12
-        - 13
-        - 14
-        - 15
-        - 16
-        - 17
-    - id: 3
-      name: resources/scenes/test/background/Cube.022
-      textures:
-        - 18
-        - 19
-        - 20
-        - 21
-        - 22
-        - 23
-    - id: 4
-      name: resources/scenes/test/background/Cube.023
-      textures:
-        - 24
-        - 25
-        - 26
-        - 27
-        - 28
-        - 29
-    - id: 5
-      name: resources/scenes/test/background/Cube.024
-      textures:
-        - 30
-        - 31
-        - 32
-        - 33
-        - 34
-        - 35
-    - id: 6
-      name: resources/scenes/test/background/Cylinder.012
-      textures:
-        - 36
-        - 37
-        - 38
-        - 39
-        - 40
-        - 41
-    - id: 7
-      name: resources/scenes/test/background/Cylinder.013
-      textures:
-        - 42
-        - 43
-        - 44
-        - 45
-        - 46
-        - 47
-    - id: 8
-      name: resources/scenes/test/background/Cylinder.014
-      textures:
-        - 48
-        - 49
-        - 50
-        - 51
-        - 52
-        - 53
-    - id: 9
-      name: resources/scenes/test/background/Cylinder.011
-      textures:
-        - 54
-        - 55
-        - 56
-        - 57
-        - 58
-        - 59
-    - id: 10
-      name: resources/scenes/test/entrance/Cube.001
-      textures:
-        - 60
-        - 61
-        - 62
-        - 63
-        - 64
-        - 65
-    - id: 11
-      name: resources/scenes/test/entrance/Cube.022
-      textures:
-        - 66
-        - 67
-        - 68
-        - 69
-        - 70
-        - 71
-    - id: 12
-      name: resources/scenes/test/entrance/Cube.023
-      textures:
-        - 72
-        - 73
-        - 74
-        - 75
-        - 76
-        - 77
-    - id: 13
-      name: resources/scenes/test/entrance/Cube
-      textures:
-        - 78
-        - 79
-        - 80
-        - 81
-        - 82
-        - 83
-    - id: 14
-      name: resources/scenes/test/uv_sphere/Sphere
-      textures:
-        - 84
-        - 85
-        - 86
-        - 87
-        - 88
-        - 89
-    - id: 15
-      name: resources/scenes/test/bricks/Plane
-      textures:
-        - 90
-        - 91
-        - 92
-        - 93
-        - 94
-        - 95
-    - id: 16
-      name: resources/scenes/test/anim/Cube
-      textures:
-        - 96
-        - 97
-        - 98
-        - 99
-        - 100
-        - 101
-    - id: 17
-      name: resources/scenes/test/long_table/Cube.013
-      textures:
-        - 102
-        - 103
-        - 104
-        - 105
-        - 106
-        - 107
-    - id: 18
-      name: resources/scenes/test/person_placeholder/Cylinder
-      textures:
-        - 108
-        - 109
-        - 110
-        - 111
-        - 112
-        - 113
-    - id: 19
-      name: board_score_left
-      textures:
-        - 114
-        - 115
-        - 116
-        - 117
-        - 118
-        - 119
-        - 173
-    - id: 20
-      name: resources/scenes/test/backboard/Cylinder.033
-      textures:
-        - 120
-        - 121
-        - 122
-        - 123
-        - 124
-        - 125
-    - id: 22
-      name: resources/scenes/test/faceoff_table/Cube.013
-      textures:
-        - 132
-        - 133
-        - 134
-        - 135
-        - 136
-        - 137
-    - id: 23
-      name: resources/scenes/test/emit_cube/Cube
-      textures:
-        - 138
-        - 139
-        - 140
-        - 141
-        - 142
-        - 143
-    - id: 24
-      name: bar_1
-      textures:
-        - 126
-        - 127
-        - 128
-        - 129
-        - 130
-        - 131
-        - 144
-        - 153
-      num_parameters: 1
-    - id: 25
-      name: bar_2
-      textures:
-        - 126
-        - 127
-        - 128
-        - 129
-        - 130
-        - 131
-        - 145
-        - 154
-      num_parameters: 1
-    - id: 26
-      name: bar_3
-      textures:
-        - 126
-        - 127
-        - 128
-        - 129
-        - 130
-        - 131
-        - 146
-        - 155
-      num_parameters: 1
-    - id: 27
-      name: bar_4
-      textures:
-        - 126
-        - 127
-        - 128
-        - 129
-        - 130
-        - 131
-        - 147
-        - 156
-      num_parameters: 1
-    - id: 28
-      name: bar_5
-      textures:
-        - 126
-        - 127
-        - 128
-        - 129
-        - 130
-        - 131
-        - 148
-        - 157
-      num_parameters: 1
-    - id: 29
-      name: bar_6
-      textures:
-        - 126
-        - 127
-        - 128
-        - 129
-        - 130
-        - 131
-        - 149
-        - 158
-      num_parameters: 1
-    - id: 30
-      name: bar_7
-      textures:
-        - 126
-        - 127
-        - 128
-        - 129
-        - 130
-        - 131
-        - 150
-        - 159
-      num_parameters: 1
-    - id: 31
-      name: bar_8
-      textures:
-        - 126
-        - 127
-        - 128
-        - 129
-        - 130
-        - 131
-        - 151
-        - 160
-      num_parameters: 1
-    - id: 32
-      name: x
-      textures:
-        - 161
-        - 162
-        - 163
-        - 164
-        - 165
-        - 166
-    - id: 33
-      name: human2
-      textures:
-        - 167
-        - 168
-        - 169
-        - 170
-        - 171
-        - 172
-    - id: 34
-      name: board_score_right
-      textures:
-        - 114
-        - 115
-        - 116
-        - 117
-        - 118
-        - 119
-        - 174
-    - id: 35
-      name: board_score_round
-      textures:
-        - 114
-        - 115
-        - 116
-        - 117
-        - 118
-        - 119
-        - 175
-  meshes:
-    - id: 0
-      path: resources/scenes/test/room/room.fmesh
-    - id: 1
-      path: resources/scenes/test/floor/floor.fmesh
-    - id: 2
-      path: resources/scenes/test/background/Cube.002.fmesh
-    - id: 3
-      path: resources/scenes/test/background/Cube.011.fmesh
-    - id: 4
-      path: resources/scenes/test/background/Cube.012.fmesh
-    - id: 5
-      path: resources/scenes/test/background/Cube.013.fmesh
-    - id: 6
-      path: resources/scenes/test/background/Cylinder.011.fmesh
-    - id: 7
-      path: resources/scenes/test/background/Cylinder.012.fmesh
-    - id: 8
-      path: resources/scenes/test/background/Cylinder.013.fmesh
-    - id: 9
-      path: resources/scenes/test/background/Cylinder.fmesh
-    - id: 10
-      path: resources/scenes/test/entrance/Cube.fmesh
-    - id: 11
-      path: resources/scenes/test/entrance/Cube.003.fmesh
-    - id: 12
-      path: resources/scenes/test/entrance/Cube.002.fmesh
-    - id: 13
-      path: resources/scenes/test/entrance/Cube.001.fmesh
-    - id: 14
-      path: resources/scenes/test/uv_sphere/Sphere.fmesh
-    - id: 15
-      path: resources/scenes/test/bricks/Plane.fmesh
-    - id: 16
-      path: resources/scenes/test/anim/Plane.001.fmesh
-    - id: 17
-      path: resources/scenes/test/long_table/long_table.fmesh
-    - id: 18
-      path: resources/scenes/test/person_placeholder/person_placeholder.fmesh
-    - id: 19
-      path: resources/scenes/test/score_screen/left_score.fmesh
-    - id: 20
-      path: resources/scenes/test/backboard/backboard.fmesh
-    - id: 21
-      path: resources/scenes/test/bar/Cube.fmesh
-    - id: 22
-      path: resources/scenes/test/faceoff_table/faceoff_table.fmesh
-    - id: 23
-      path: resources/scenes/test/emit_cube/Cube.fmesh
-    - id: 24
-      name: x
-      path: resources/models/x2/Text.fmesh
-    - id: 25
-      name: human2
-      path: resources/models/human2/Cube.fmesh
-    - id: 26
-      name: figure
-      path: resources/scenes/test/figure/figure.fmesh
-  textures:
-    - format: SRGB8_ALPHA8
-      id: 0
-      path: resources/scenes/test/room/Plane/diffuse.bmp
-    - format: RGBA8
-      id: 1
-      path: resources/scenes/test/room/Plane/normal.bmp
-    - format: RGBA8
-      id: 2
-      path: resources/scenes/test/room/Plane/metal.bmp
-    - format: RGBA8
-      id: 3
-      path: resources/scenes/test/room/Plane/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 4
-      path: resources/scenes/test/room/Plane/emit.bmp
-    - format: RGBA8
-      id: 5
-      path: resources/scenes/test/room/Plane/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 6
-      path: resources/scenes/test/floor/floor/diffuse.bmp
-    - format: RGBA8
-      id: 7
-      path: resources/scenes/test/floor/floor/normal.bmp
-    - format: RGBA8
-      id: 8
-      path: resources/scenes/test/floor/floor/metal.bmp
-    - format: RGBA8
-      id: 9
-      path: resources/scenes/test/floor/floor/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 10
-      path: resources/scenes/test/floor/floor/emit.bmp
-    - format: RGBA8
-      id: 11
-      path: resources/scenes/test/floor/floor/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 12
-      path: resources/scenes/test/background/Cube.021/diffuse.bmp
-    - format: RGBA8
-      id: 13
-      path: resources/scenes/test/background/Cube.021/normal.bmp
-    - format: RGBA8
-      id: 14
-      path: resources/scenes/test/background/Cube.021/metal.bmp
-    - format: RGBA8
-      id: 15
-      path: resources/scenes/test/background/Cube.021/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 16
-      path: resources/scenes/test/background/Cube.021/emit.bmp
-    - format: RGBA8
-      id: 17
-      path: resources/scenes/test/background/Cube.021/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 18
-      path: resources/scenes/test/background/Cube.022/diffuse.bmp
-    - format: RGBA8
-      id: 19
-      path: resources/scenes/test/background/Cube.022/normal.bmp
-    - format: RGBA8
-      id: 20
-      path: resources/scenes/test/background/Cube.022/metal.bmp
-    - format: RGBA8
-      id: 21
-      path: resources/scenes/test/background/Cube.022/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 22
-      path: resources/scenes/test/background/Cube.022/emit.bmp
-    - format: RGBA8
-      id: 23
-      path: resources/scenes/test/background/Cube.022/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 24
-      path: resources/scenes/test/background/Cube.023/diffuse.bmp
-    - format: RGBA8
-      id: 25
-      path: resources/scenes/test/background/Cube.023/normal.bmp
-    - format: RGBA8
-      id: 26
-      path: resources/scenes/test/background/Cube.023/metal.bmp
-    - format: RGBA8
-      id: 27
-      path: resources/scenes/test/background/Cube.023/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 28
-      path: resources/scenes/test/background/Cube.023/emit.bmp
-    - format: RGBA8
-      id: 29
-      path: resources/scenes/test/background/Cube.023/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 30
-      path: resources/scenes/test/background/Cube.024/diffuse.bmp
-    - format: RGBA8
-      id: 31
-      path: resources/scenes/test/background/Cube.024/normal.bmp
-    - format: RGBA8
-      id: 32
-      path: resources/scenes/test/background/Cube.024/metal.bmp
-    - format: RGBA8
-      id: 33
-      path: resources/scenes/test/background/Cube.024/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 34
-      path: resources/scenes/test/background/Cube.024/emit.bmp
-    - format: RGBA8
-      id: 35
-      path: resources/scenes/test/background/Cube.024/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 36
-      path: resources/scenes/test/background/Cylinder.012/diffuse.bmp
-    - format: RGBA8
-      id: 37
-      path: resources/scenes/test/background/Cylinder.012/normal.bmp
-    - format: RGBA8
-      id: 38
-      path: resources/scenes/test/background/Cylinder.012/metal.bmp
-    - format: RGBA8
-      id: 39
-      path: resources/scenes/test/background/Cylinder.012/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 40
-      path: resources/scenes/test/background/Cylinder.012/emit.bmp
-    - format: RGBA8
-      id: 41
-      path: resources/scenes/test/background/Cylinder.012/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 42
-      path: resources/scenes/test/background/Cylinder.013/diffuse.bmp
-    - format: RGBA8
-      id: 43
-      path: resources/scenes/test/background/Cylinder.013/normal.bmp
-    - format: RGBA8
-      id: 44
-      path: resources/scenes/test/background/Cylinder.013/metal.bmp
-    - format: RGBA8
-      id: 45
-      path: resources/scenes/test/background/Cylinder.013/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 46
-      path: resources/scenes/test/background/Cylinder.013/emit.bmp
-    - format: RGBA8
-      id: 47
-      path: resources/scenes/test/background/Cylinder.013/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 48
-      path: resources/scenes/test/background/Cylinder.014/diffuse.bmp
-    - format: RGBA8
-      id: 49
-      path: resources/scenes/test/background/Cylinder.014/normal.bmp
-    - format: RGBA8
-      id: 50
-      path: resources/scenes/test/background/Cylinder.014/metal.bmp
-    - format: RGBA8
-      id: 51
-      path: resources/scenes/test/background/Cylinder.014/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 52
-      path: resources/scenes/test/background/Cylinder.014/emit.bmp
-    - format: RGBA8
-      id: 53
-      path: resources/scenes/test/background/Cylinder.014/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 54
-      path: resources/scenes/test/background/Cylinder.011/diffuse.bmp
-    - format: RGBA8
-      id: 55
-      path: resources/scenes/test/background/Cylinder.011/normal.bmp
-    - format: RGBA8
-      id: 56
-      path: resources/scenes/test/background/Cylinder.011/metal.bmp
-    - format: RGBA8
-      id: 57
-      path: resources/scenes/test/background/Cylinder.011/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 58
-      path: resources/scenes/test/background/Cylinder.011/emit.bmp
-    - format: RGBA8
-      id: 59
-      path: resources/scenes/test/background/Cylinder.011/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 60
-      path: resources/scenes/test/entrance/Cube.001/diffuse.bmp
-    - format: RGBA8
-      id: 61
-      path: resources/scenes/test/entrance/Cube.001/normal.bmp
-    - format: RGBA8
-      id: 62
-      path: resources/scenes/test/entrance/Cube.001/metal.bmp
-    - format: RGBA8
-      id: 63
-      path: resources/scenes/test/entrance/Cube.001/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 64
-      path: resources/scenes/test/entrance/Cube.001/emit.bmp
-    - format: RGBA8
-      id: 65
-      path: resources/scenes/test/entrance/Cube.001/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 66
-      path: resources/scenes/test/entrance/Cube.022/diffuse.bmp
-    - format: RGBA8
-      id: 67
-      path: resources/scenes/test/entrance/Cube.022/normal.bmp
-    - format: RGBA8
-      id: 68
-      path: resources/scenes/test/entrance/Cube.022/metal.bmp
-    - format: RGBA8
-      id: 69
-      path: resources/scenes/test/entrance/Cube.022/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 70
-      path: resources/scenes/test/entrance/Cube.022/emit.bmp
-    - format: RGBA8
-      id: 71
-      path: resources/scenes/test/entrance/Cube.022/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 72
-      path: resources/scenes/test/entrance/Cube.023/diffuse.bmp
-    - format: RGBA8
-      id: 73
-      path: resources/scenes/test/entrance/Cube.023/normal.bmp
-    - format: RGBA8
-      id: 74
-      path: resources/scenes/test/entrance/Cube.023/metal.bmp
-    - format: RGBA8
-      id: 75
-      path: resources/scenes/test/entrance/Cube.023/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 76
-      path: resources/scenes/test/entrance/Cube.023/emit.bmp
-    - format: RGBA8
-      id: 77
-      path: resources/scenes/test/entrance/Cube.023/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 78
-      path: resources/scenes/test/entrance/Cube/diffuse.bmp
-    - format: RGBA8
-      id: 79
-      path: resources/scenes/test/entrance/Cube/normal.bmp
-    - format: RGBA8
-      id: 80
-      path: resources/scenes/test/entrance/Cube/metal.bmp
-    - format: RGBA8
-      id: 81
-      path: resources/scenes/test/entrance/Cube/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 82
-      path: resources/scenes/test/entrance/Cube/emit.bmp
-    - format: RGBA8
-      id: 83
-      path: resources/scenes/test/entrance/Cube/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 84
-      path: resources/scenes/test/uv_sphere/Sphere/diffuse.bmp
-    - format: RGBA8
-      id: 85
-      path: resources/scenes/test/uv_sphere/Sphere/normal.bmp
-    - format: RGBA8
-      id: 86
-      path: resources/scenes/test/uv_sphere/Sphere/metal.bmp
-    - format: RGBA8
-      id: 87
-      path: resources/scenes/test/uv_sphere/Sphere/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 88
-      path: resources/scenes/test/uv_sphere/Sphere/emit.bmp
-    - format: RGBA8
-      id: 89
-      path: resources/scenes/test/uv_sphere/Sphere/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 90
-      path: resources/scenes/test/bricks/Plane/diffuse.bmp
-    - format: RGBA8
-      id: 91
-      path: resources/scenes/test/bricks/Plane/normal.bmp
-    - format: RGBA8
-      id: 92
-      path: resources/scenes/test/bricks/Plane/metal.bmp
-    - format: RGBA8
-      id: 93
-      path: resources/scenes/test/bricks/Plane/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 94
-      path: resources/scenes/test/bricks/Plane/emit.bmp
-    - format: RGBA8
-      id: 95
-      path: resources/scenes/test/bricks/Plane/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 96
-      path: resources/scenes/test/anim/Cube/diffuse.bmp
-    - format: RGBA8
-      id: 97
-      path: resources/scenes/test/anim/Cube/normal.bmp
-    - format: RGBA8
-      id: 98
-      path: resources/scenes/test/anim/Cube/metal.bmp
-    - format: RGBA8
-      id: 99
-      path: resources/scenes/test/anim/Cube/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 100
-      path: resources/scenes/test/anim/Cube/emit.bmp
-    - format: RGBA8
-      id: 101
-      path: resources/scenes/test/anim/Cube/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 102
-      path: resources/scenes/test/long_table/Cube.013/diffuse.bmp
-    - format: RGBA8
-      id: 103
-      path: resources/scenes/test/long_table/Cube.013/normal.bmp
-    - format: RGBA8
-      id: 104
-      path: resources/scenes/test/long_table/Cube.013/metal.bmp
-    - format: RGBA8
-      id: 105
-      path: resources/scenes/test/long_table/Cube.013/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 106
-      path: resources/scenes/test/long_table/Cube.013/emit.bmp
-    - format: RGBA8
-      id: 107
-      path: resources/scenes/test/long_table/Cube.013/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 108
-      path: resources/scenes/test/person_placeholder/Cylinder/diffuse.bmp
-    - format: RGBA8
-      id: 109
-      path: resources/scenes/test/person_placeholder/Cylinder/normal.bmp
-    - format: RGBA8
-      id: 110
-      path: resources/scenes/test/person_placeholder/Cylinder/metal.bmp
-    - format: RGBA8
-      id: 111
-      path: resources/scenes/test/person_placeholder/Cylinder/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 112
-      path: resources/scenes/test/person_placeholder/Cylinder/emit.bmp
-    - format: RGBA8
-      id: 113
-      path: resources/scenes/test/person_placeholder/Cylinder/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 114
-      path: resources/scenes/test/score_screen/Cube.017/diffuse.bmp
-    - format: RGBA8
-      id: 115
-      path: resources/scenes/test/score_screen/Cube.017/normal.bmp
-    - format: RGBA8
-      id: 116
-      path: resources/scenes/test/score_screen/Cube.017/metal.bmp
-    - format: RGBA8
-      id: 117
-      path: resources/scenes/test/score_screen/Cube.017/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 118
-      path: resources/scenes/test/score_screen/Cube.017/emit.bmp
-    - format: RGBA8
-      id: 119
-      path: resources/scenes/test/score_screen/Cube.017/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 120
-      path: resources/scenes/test/backboard/Cylinder.033/diffuse.bmp
-    - format: RGBA8
-      id: 121
-      path: resources/scenes/test/backboard/Cylinder.033/normal.bmp
-    - format: RGBA8
-      id: 122
-      path: resources/scenes/test/backboard/Cylinder.033/metal.bmp
-    - format: RGBA8
-      id: 123
-      path: resources/scenes/test/backboard/Cylinder.033/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 124
-      path: resources/scenes/test/backboard/Cylinder.033/emit.bmp
-    - format: RGBA8
-      id: 125
-      path: resources/scenes/test/backboard/Cylinder.033/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 126
-      path: resources/scenes/test/bar/Cube/diffuse.bmp
-    - format: RGBA8
-      id: 127
-      path: resources/scenes/test/bar/Cube/normal.bmp
-    - format: RGBA8
-      id: 128
-      path: resources/scenes/test/bar/Cube/metal.bmp
-    - format: RGBA8
-      id: 129
-      path: resources/scenes/test/bar/Cube/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 130
-      path: resources/scenes/test/bar/Cube/emit.bmp
-    - format: RGBA8
-      id: 131
-      path: resources/scenes/test/bar/Cube/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 132
-      path: resources/scenes/test/faceoff_table/Cube.013/diffuse.bmp
-    - format: RGBA8
-      id: 133
-      path: resources/scenes/test/faceoff_table/Cube.013/normal.bmp
-    - format: RGBA8
-      id: 134
-      path: resources/scenes/test/faceoff_table/Cube.013/metal.bmp
-    - format: RGBA8
-      id: 135
-      path: resources/scenes/test/faceoff_table/Cube.013/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 136
-      path: resources/scenes/test/faceoff_table/Cube.013/emit.bmp
-    - format: RGBA8
-      id: 137
-      path: resources/scenes/test/faceoff_table/Cube.013/ao.bmp
-    - format: SRGB8_ALPHA8
-      id: 138
-      path: resources/scenes/test/emit_cube/Cube/diffuse.bmp
-    - format: RGBA8
-      id: 139
-      path: resources/scenes/test/emit_cube/Cube/normal.bmp
-    - format: RGBA8
-      id: 140
-      path: resources/scenes/test/emit_cube/Cube/metal.bmp
-    - format: RGBA8
-      id: 141
-      path: resources/scenes/test/emit_cube/Cube/roughness.bmp
-    - format: SRGB8_ALPHA8
-      id: 142
-      path: resources/scenes/test/emit_cube/Cube/emit.bmp
-    - format: RGBA8
-      id: 143
-      path: resources/scenes/test/emit_cube/Cube/ao.bmp
-    - id: 144
-      name: "bar_number_1"
-      path: resources/images/bar_numbers/num_1.bmp
-      format: SRGB8_ALPHA8
-    - id: 145
-      name: "bar_number_2"
-      path: resources/images/bar_numbers/num_2.bmp
-      format: SRGB8_ALPHA8
-    - id: 146
-      name: "bar_number_3"
-      path: resources/images/bar_numbers/num_3.bmp
-      format: SRGB8_ALPHA8
-    - id: 147
-      name: "bar_number_4"
-      path: resources/images/bar_numbers/num_4.bmp
-      format: SRGB8_ALPHA8
-    - id: 148
-      name: "bar_number_5"
-      path: resources/images/bar_numbers/num_5.bmp
-      format: SRGB8_ALPHA8
-    - id: 149
-      name: "bar_number_6"
-      path: resources/images/bar_numbers/num_6.bmp
-      format: SRGB8_ALPHA8
-    - id: 150
-      name: "bar_number_7"
-      path: resources/images/bar_numbers/num_7.bmp
-      format: SRGB8_ALPHA8
-    - id: 151
-      name: "bar_number_8"
-      path: resources/images/bar_numbers/num_8.bmp
-      format: SRGB8_ALPHA8
-    - id: 152
-      name: "planar_target"
-      render_target: 0
-    - id: 153
-      name: "bar_1_text"
-      render_target: 1
-    - id: 154
-      name: "bar_2_text"
-      render_target: 2
-    - id: 155
-      name: "bar_3_text"
-      render_target: 3
-    - id: 156
-      name: "bar_4_text"
-      render_target: 4
-    - id: 157
-      name: "bar_5_text"
-      render_target: 5
-    - id: 158
-      name: "bar_6_text"
-      render_target: 6
-    - id: 159
-      name: "bar_7_text"
-      render_target: 7
-    - id: 160
-      name: "bar_8_text"
-      render_target: 8
-    - id: 161
-      path: resources/models/x2/diffuse.bmp
-      format: SRGB8_ALPHA8
-    - id: 162
-      path: resources/models/x2/normal.bmp
-      format: RGBA8
-    - id: 163
-      path: resources/models/x2/metal.bmp
-      format: RGBA8
-    - id: 164
-      path: resources/models/x2/roughness.bmp
-      format: RGBA8
-    - id: 165
-      path: resources/models/x2/emit.bmp
-      format: SRGB8_ALPHA8
-    - id: 166
-      path: resources/models/x2/ao.bmp
-      format: RGBA8
-    - id: 167
-      path: resources/models/human2/Cube/diffuse.bmp
-      format: SRGB8_ALPHA8
-    - id: 168
-      path: resources/models/human2/Cube/normal.bmp
-      format: RGBA8
-    - id: 169
-      path: resources/models/human2/Cube/metal.bmp
-      format: RGBA8
-    - id: 170
-      path: resources/models/human2/Cube/roughness.bmp
-      format: RGBA8
-    - id: 171
-      path: resources/models/human2/Cube/emit.bmp
-      format: SRGB8_ALPHA8
-    - id: 172
-      path: resources/models/human2/Cube/ao.bmp
-      format: RGBA8
-    - id: 173
-      name: "board_score_left"
-      render_target: 9
-    - id: 174
-      name: "board_score_right"
-      render_target: 10
-    - id: 175
-      name: "board_score_score"
-      render_target: 11
-  render_targets:
-    - id: 0
-      name: "planar_target"
-      width: 1280
-      height: 720
-      color_format: RGB16F
-      depth_format: DEPTH24
-    - id: 1
-      name: "bar_1_text"
-      width: 512
-      height: 256
-      color_format: RED
-      depth_format: NONE
-    - id: 2
-      name: "bar_2_text"
-      width: 512
-      height: 256
-      color_format: RED
-      depth_format: NONE
-    - id: 3
-      name: "bar_3_text"
-      width: 512
-      height: 256
-      color_format: RED
-      depth_format: NONE
-    - id: 4
-      name: "bar_4_text"
-      width: 512
-      height: 256
-      color_format: RED
-      depth_format: NONE
-    - id: 5
-      name: "bar_5_text"
-      width: 512
-      height: 256
-      color_format: RED
-      depth_format: NONE
-    - id: 6
-      name: "bar_6_text"
-      width: 512
-      height: 256
-      color_format: RED
-      depth_format: NONE
-    - id: 7
-      name: "bar_7_text"
-      width: 512
-      height: 256
-      color_format: RED
-      depth_format: NONE
-    - id: 8
-      name: "bar_8_text"
-      width: 512
-      height: 256
-      color_format: RED
-      depth_format: NONE
-    - id: 9
-      name: board_score_left
-      width: 256
-      height: 256
-      color_format: RED
-      depth_format: NONE
-    - id: 10
-      name: board_score_right
-      width: 256
-      height: 256
-      color_format: RED
-      depth_format: NONE
-    - id: 11
-      name: board_score_round
-      width: 256
-      height: 256
-      color_format: RED
-      depth_format: NONE
-  shaders:
-    - id: 0
-      name: main_threed
-      vert: resources2/shaders/threed/vert.gl
-      frag: resources2/shaders/threed/frag.gl
-    - id: 1
-      name: bar
-      vert: resources2/shaders/bar/vert.gl
-      frag: resources2/shaders/bar/frag.gl
-    - id: 2
-      name: planar
-      vert: resources2/shaders/threed_with_planar/vert.gl
-      frag: resources2/shaders/threed_with_planar/frag.gl
-    - id: 3
-      name: threed_skinning
-      vert: resources2/shaders/threed_skinning/vert.gl
-      frag: resources2/shaders/threed_skinning/frag.gl
-    - id: 4
-      name: score_screen
-      vert: resources2/shaders/score_screen/vert.gl
-      frag: resources2/shaders/score_screen/frag.gl
-  fonts:
-    - id: 0
-      path: resources/fonts/Anton_Regular.ttf
-    - id: 1
-      path: resources/fonts/RobotoCondensed_Regular.ttf
-    - id: 2
-      path: resources/fonts/RobotoCondensed_Light.ttf
+materials:
+  - id: 0
+    name: resources/scenes/test/room/Plane
+    textures:
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+  - id: 1
+    name: resources/scenes/test/floor/floor
+    textures:
+      - 6
+      - 7
+      - 8
+      - 9
+      - 10
+      - 11
+      - 152
+  - id: 2
+    name: resources/scenes/test/background/Cube.021
+    textures:
+      - 12
+      - 13
+      - 14
+      - 15
+      - 16
+      - 17
+  - id: 3
+    name: resources/scenes/test/background/Cube.022
+    textures:
+      - 18
+      - 19
+      - 20
+      - 21
+      - 22
+      - 23
+  - id: 4
+    name: resources/scenes/test/background/Cube.023
+    textures:
+      - 24
+      - 25
+      - 26
+      - 27
+      - 28
+      - 29
+  - id: 5
+    name: resources/scenes/test/background/Cube.024
+    textures:
+      - 30
+      - 31
+      - 32
+      - 33
+      - 34
+      - 35
+  - id: 6
+    name: resources/scenes/test/background/Cylinder.012
+    textures:
+      - 36
+      - 37
+      - 38
+      - 39
+      - 40
+      - 41
+  - id: 7
+    name: resources/scenes/test/background/Cylinder.013
+    textures:
+      - 42
+      - 43
+      - 44
+      - 45
+      - 46
+      - 47
+  - id: 8
+    name: resources/scenes/test/background/Cylinder.014
+    textures:
+      - 48
+      - 49
+      - 50
+      - 51
+      - 52
+      - 53
+  - id: 9
+    name: resources/scenes/test/background/Cylinder.011
+    textures:
+      - 54
+      - 55
+      - 56
+      - 57
+      - 58
+      - 59
+  - id: 10
+    name: resources/scenes/test/entrance/Cube.001
+    textures:
+      - 60
+      - 61
+      - 62
+      - 63
+      - 64
+      - 65
+  - id: 11
+    name: resources/scenes/test/entrance/Cube.022
+    textures:
+      - 66
+      - 67
+      - 68
+      - 69
+      - 70
+      - 71
+  - id: 12
+    name: resources/scenes/test/entrance/Cube.023
+    textures:
+      - 72
+      - 73
+      - 74
+      - 75
+      - 76
+      - 77
+  - id: 13
+    name: resources/scenes/test/entrance/Cube
+    textures:
+      - 78
+      - 79
+      - 80
+      - 81
+      - 82
+      - 83
+  - id: 14
+    name: resources/scenes/test/uv_sphere/Sphere
+    textures:
+      - 84
+      - 85
+      - 86
+      - 87
+      - 88
+      - 89
+  - id: 15
+    name: resources/scenes/test/bricks/Plane
+    textures:
+      - 90
+      - 91
+      - 92
+      - 93
+      - 94
+      - 95
+  - id: 16
+    name: resources/scenes/test/anim/Cube
+    textures:
+      - 96
+      - 97
+      - 98
+      - 99
+      - 100
+      - 101
+  - id: 17
+    name: resources/scenes/test/long_table/Cube.013
+    textures:
+      - 102
+      - 103
+      - 104
+      - 105
+      - 106
+      - 107
+  - id: 18
+    name: resources/scenes/test/person_placeholder/Cylinder
+    textures:
+      - 108
+      - 109
+      - 110
+      - 111
+      - 112
+      - 113
+  - id: 19
+    name: board_score_left
+    textures:
+      - 114
+      - 115
+      - 116
+      - 117
+      - 118
+      - 119
+      - 173
+  - id: 20
+    name: resources/scenes/test/backboard/Cylinder.033
+    textures:
+      - 120
+      - 121
+      - 122
+      - 123
+      - 124
+      - 125
+  - id: 22
+    name: resources/scenes/test/faceoff_table/Cube.013
+    textures:
+      - 132
+      - 133
+      - 134
+      - 135
+      - 136
+      - 137
+  - id: 23
+    name: resources/scenes/test/emit_cube/Cube
+    textures:
+      - 138
+      - 139
+      - 140
+      - 141
+      - 142
+      - 143
+  - id: 24
+    name: bar_1
+    textures:
+      - 126
+      - 127
+      - 128
+      - 129
+      - 130
+      - 131
+      - 144
+      - 153
+    num_parameters: 1
+  - id: 25
+    name: bar_2
+    textures:
+      - 126
+      - 127
+      - 128
+      - 129
+      - 130
+      - 131
+      - 145
+      - 154
+    num_parameters: 1
+  - id: 26
+    name: bar_3
+    textures:
+      - 126
+      - 127
+      - 128
+      - 129
+      - 130
+      - 131
+      - 146
+      - 155
+    num_parameters: 1
+  - id: 27
+    name: bar_4
+    textures:
+      - 126
+      - 127
+      - 128
+      - 129
+      - 130
+      - 131
+      - 147
+      - 156
+    num_parameters: 1
+  - id: 28
+    name: bar_5
+    textures:
+      - 126
+      - 127
+      - 128
+      - 129
+      - 130
+      - 131
+      - 148
+      - 157
+    num_parameters: 1
+  - id: 29
+    name: bar_6
+    textures:
+      - 126
+      - 127
+      - 128
+      - 129
+      - 130
+      - 131
+      - 149
+      - 158
+    num_parameters: 1
+  - id: 30
+    name: bar_7
+    textures:
+      - 126
+      - 127
+      - 128
+      - 129
+      - 130
+      - 131
+      - 150
+      - 159
+    num_parameters: 1
+  - id: 31
+    name: bar_8
+    textures:
+      - 126
+      - 127
+      - 128
+      - 129
+      - 130
+      - 131
+      - 151
+      - 160
+    num_parameters: 1
+  - id: 32
+    name: x
+    textures:
+      - 161
+      - 162
+      - 163
+      - 164
+      - 165
+      - 166
+  - id: 33
+    name: human2
+    textures:
+      - 167
+      - 168
+      - 169
+      - 170
+      - 171
+      - 172
+  - id: 34
+    name: board_score_right
+    textures:
+      - 114
+      - 115
+      - 116
+      - 117
+      - 118
+      - 119
+      - 174
+  - id: 35
+    name: board_score_round
+    textures:
+      - 114
+      - 115
+      - 116
+      - 117
+      - 118
+      - 119
+      - 175
+meshes:
+  - id: 0
+    path: resources/scenes/test/room/room.fmesh
+  - id: 1
+    path: resources/scenes/test/floor/floor.fmesh
+  - id: 2
+    path: resources/scenes/test/background/Cube.002.fmesh
+  - id: 3
+    path: resources/scenes/test/background/Cube.011.fmesh
+  - id: 4
+    path: resources/scenes/test/background/Cube.012.fmesh
+  - id: 5
+    path: resources/scenes/test/background/Cube.013.fmesh
+  - id: 6
+    path: resources/scenes/test/background/Cylinder.011.fmesh
+  - id: 7
+    path: resources/scenes/test/background/Cylinder.012.fmesh
+  - id: 8
+    path: resources/scenes/test/background/Cylinder.013.fmesh
+  - id: 9
+    path: resources/scenes/test/background/Cylinder.fmesh
+  - id: 10
+    path: resources/scenes/test/entrance/Cube.fmesh
+  - id: 11
+    path: resources/scenes/test/entrance/Cube.003.fmesh
+  - id: 12
+    path: resources/scenes/test/entrance/Cube.002.fmesh
+  - id: 13
+    path: resources/scenes/test/entrance/Cube.001.fmesh
+  - id: 14
+    path: resources/scenes/test/uv_sphere/Sphere.fmesh
+  - id: 15
+    path: resources/scenes/test/bricks/Plane.fmesh
+  - id: 16
+    path: resources/scenes/test/anim/Plane.001.fmesh
+  - id: 17
+    path: resources/scenes/test/long_table/long_table.fmesh
+  - id: 18
+    path: resources/scenes/test/person_placeholder/person_placeholder.fmesh
+  - id: 19
+    path: resources/scenes/test/score_screen/left_score.fmesh
+  - id: 20
+    path: resources/scenes/test/backboard/backboard.fmesh
+  - id: 21
+    path: resources/scenes/test/bar/Cube.fmesh
+  - id: 22
+    path: resources/scenes/test/faceoff_table/faceoff_table.fmesh
+  - id: 23
+    path: resources/scenes/test/emit_cube/Cube.fmesh
+  - id: 24
+    name: x
+    path: resources/models/x2/Text.fmesh
+  - id: 25
+    name: human2
+    path: resources/models/human2/Cube.fmesh
+  - id: 26
+    name: figure
+    path: resources/scenes/test/figure/figure.fmesh
+textures:
+  - format: SRGB8_ALPHA8
+    id: 0
+    path: resources/scenes/test/room/Plane/diffuse.bmp
+  - format: RGBA8
+    id: 1
+    path: resources/scenes/test/room/Plane/normal.bmp
+  - format: RGBA8
+    id: 2
+    path: resources/scenes/test/room/Plane/metal.bmp
+  - format: RGBA8
+    id: 3
+    path: resources/scenes/test/room/Plane/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 4
+    path: resources/scenes/test/room/Plane/emit.bmp
+  - format: RGBA8
+    id: 5
+    path: resources/scenes/test/room/Plane/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 6
+    path: resources/scenes/test/floor/floor/diffuse.bmp
+  - format: RGBA8
+    id: 7
+    path: resources/scenes/test/floor/floor/normal.bmp
+  - format: RGBA8
+    id: 8
+    path: resources/scenes/test/floor/floor/metal.bmp
+  - format: RGBA8
+    id: 9
+    path: resources/scenes/test/floor/floor/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 10
+    path: resources/scenes/test/floor/floor/emit.bmp
+  - format: RGBA8
+    id: 11
+    path: resources/scenes/test/floor/floor/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 12
+    path: resources/scenes/test/background/Cube.021/diffuse.bmp
+  - format: RGBA8
+    id: 13
+    path: resources/scenes/test/background/Cube.021/normal.bmp
+  - format: RGBA8
+    id: 14
+    path: resources/scenes/test/background/Cube.021/metal.bmp
+  - format: RGBA8
+    id: 15
+    path: resources/scenes/test/background/Cube.021/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 16
+    path: resources/scenes/test/background/Cube.021/emit.bmp
+  - format: RGBA8
+    id: 17
+    path: resources/scenes/test/background/Cube.021/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 18
+    path: resources/scenes/test/background/Cube.022/diffuse.bmp
+  - format: RGBA8
+    id: 19
+    path: resources/scenes/test/background/Cube.022/normal.bmp
+  - format: RGBA8
+    id: 20
+    path: resources/scenes/test/background/Cube.022/metal.bmp
+  - format: RGBA8
+    id: 21
+    path: resources/scenes/test/background/Cube.022/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 22
+    path: resources/scenes/test/background/Cube.022/emit.bmp
+  - format: RGBA8
+    id: 23
+    path: resources/scenes/test/background/Cube.022/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 24
+    path: resources/scenes/test/background/Cube.023/diffuse.bmp
+  - format: RGBA8
+    id: 25
+    path: resources/scenes/test/background/Cube.023/normal.bmp
+  - format: RGBA8
+    id: 26
+    path: resources/scenes/test/background/Cube.023/metal.bmp
+  - format: RGBA8
+    id: 27
+    path: resources/scenes/test/background/Cube.023/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 28
+    path: resources/scenes/test/background/Cube.023/emit.bmp
+  - format: RGBA8
+    id: 29
+    path: resources/scenes/test/background/Cube.023/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 30
+    path: resources/scenes/test/background/Cube.024/diffuse.bmp
+  - format: RGBA8
+    id: 31
+    path: resources/scenes/test/background/Cube.024/normal.bmp
+  - format: RGBA8
+    id: 32
+    path: resources/scenes/test/background/Cube.024/metal.bmp
+  - format: RGBA8
+    id: 33
+    path: resources/scenes/test/background/Cube.024/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 34
+    path: resources/scenes/test/background/Cube.024/emit.bmp
+  - format: RGBA8
+    id: 35
+    path: resources/scenes/test/background/Cube.024/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 36
+    path: resources/scenes/test/background/Cylinder.012/diffuse.bmp
+  - format: RGBA8
+    id: 37
+    path: resources/scenes/test/background/Cylinder.012/normal.bmp
+  - format: RGBA8
+    id: 38
+    path: resources/scenes/test/background/Cylinder.012/metal.bmp
+  - format: RGBA8
+    id: 39
+    path: resources/scenes/test/background/Cylinder.012/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 40
+    path: resources/scenes/test/background/Cylinder.012/emit.bmp
+  - format: RGBA8
+    id: 41
+    path: resources/scenes/test/background/Cylinder.012/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 42
+    path: resources/scenes/test/background/Cylinder.013/diffuse.bmp
+  - format: RGBA8
+    id: 43
+    path: resources/scenes/test/background/Cylinder.013/normal.bmp
+  - format: RGBA8
+    id: 44
+    path: resources/scenes/test/background/Cylinder.013/metal.bmp
+  - format: RGBA8
+    id: 45
+    path: resources/scenes/test/background/Cylinder.013/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 46
+    path: resources/scenes/test/background/Cylinder.013/emit.bmp
+  - format: RGBA8
+    id: 47
+    path: resources/scenes/test/background/Cylinder.013/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 48
+    path: resources/scenes/test/background/Cylinder.014/diffuse.bmp
+  - format: RGBA8
+    id: 49
+    path: resources/scenes/test/background/Cylinder.014/normal.bmp
+  - format: RGBA8
+    id: 50
+    path: resources/scenes/test/background/Cylinder.014/metal.bmp
+  - format: RGBA8
+    id: 51
+    path: resources/scenes/test/background/Cylinder.014/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 52
+    path: resources/scenes/test/background/Cylinder.014/emit.bmp
+  - format: RGBA8
+    id: 53
+    path: resources/scenes/test/background/Cylinder.014/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 54
+    path: resources/scenes/test/background/Cylinder.011/diffuse.bmp
+  - format: RGBA8
+    id: 55
+    path: resources/scenes/test/background/Cylinder.011/normal.bmp
+  - format: RGBA8
+    id: 56
+    path: resources/scenes/test/background/Cylinder.011/metal.bmp
+  - format: RGBA8
+    id: 57
+    path: resources/scenes/test/background/Cylinder.011/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 58
+    path: resources/scenes/test/background/Cylinder.011/emit.bmp
+  - format: RGBA8
+    id: 59
+    path: resources/scenes/test/background/Cylinder.011/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 60
+    path: resources/scenes/test/entrance/Cube.001/diffuse.bmp
+  - format: RGBA8
+    id: 61
+    path: resources/scenes/test/entrance/Cube.001/normal.bmp
+  - format: RGBA8
+    id: 62
+    path: resources/scenes/test/entrance/Cube.001/metal.bmp
+  - format: RGBA8
+    id: 63
+    path: resources/scenes/test/entrance/Cube.001/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 64
+    path: resources/scenes/test/entrance/Cube.001/emit.bmp
+  - format: RGBA8
+    id: 65
+    path: resources/scenes/test/entrance/Cube.001/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 66
+    path: resources/scenes/test/entrance/Cube.022/diffuse.bmp
+  - format: RGBA8
+    id: 67
+    path: resources/scenes/test/entrance/Cube.022/normal.bmp
+  - format: RGBA8
+    id: 68
+    path: resources/scenes/test/entrance/Cube.022/metal.bmp
+  - format: RGBA8
+    id: 69
+    path: resources/scenes/test/entrance/Cube.022/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 70
+    path: resources/scenes/test/entrance/Cube.022/emit.bmp
+  - format: RGBA8
+    id: 71
+    path: resources/scenes/test/entrance/Cube.022/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 72
+    path: resources/scenes/test/entrance/Cube.023/diffuse.bmp
+  - format: RGBA8
+    id: 73
+    path: resources/scenes/test/entrance/Cube.023/normal.bmp
+  - format: RGBA8
+    id: 74
+    path: resources/scenes/test/entrance/Cube.023/metal.bmp
+  - format: RGBA8
+    id: 75
+    path: resources/scenes/test/entrance/Cube.023/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 76
+    path: resources/scenes/test/entrance/Cube.023/emit.bmp
+  - format: RGBA8
+    id: 77
+    path: resources/scenes/test/entrance/Cube.023/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 78
+    path: resources/scenes/test/entrance/Cube/diffuse.bmp
+  - format: RGBA8
+    id: 79
+    path: resources/scenes/test/entrance/Cube/normal.bmp
+  - format: RGBA8
+    id: 80
+    path: resources/scenes/test/entrance/Cube/metal.bmp
+  - format: RGBA8
+    id: 81
+    path: resources/scenes/test/entrance/Cube/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 82
+    path: resources/scenes/test/entrance/Cube/emit.bmp
+  - format: RGBA8
+    id: 83
+    path: resources/scenes/test/entrance/Cube/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 84
+    path: resources/scenes/test/uv_sphere/Sphere/diffuse.bmp
+  - format: RGBA8
+    id: 85
+    path: resources/scenes/test/uv_sphere/Sphere/normal.bmp
+  - format: RGBA8
+    id: 86
+    path: resources/scenes/test/uv_sphere/Sphere/metal.bmp
+  - format: RGBA8
+    id: 87
+    path: resources/scenes/test/uv_sphere/Sphere/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 88
+    path: resources/scenes/test/uv_sphere/Sphere/emit.bmp
+  - format: RGBA8
+    id: 89
+    path: resources/scenes/test/uv_sphere/Sphere/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 90
+    path: resources/scenes/test/bricks/Plane/diffuse.bmp
+  - format: RGBA8
+    id: 91
+    path: resources/scenes/test/bricks/Plane/normal.bmp
+  - format: RGBA8
+    id: 92
+    path: resources/scenes/test/bricks/Plane/metal.bmp
+  - format: RGBA8
+    id: 93
+    path: resources/scenes/test/bricks/Plane/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 94
+    path: resources/scenes/test/bricks/Plane/emit.bmp
+  - format: RGBA8
+    id: 95
+    path: resources/scenes/test/bricks/Plane/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 96
+    path: resources/scenes/test/anim/Cube/diffuse.bmp
+  - format: RGBA8
+    id: 97
+    path: resources/scenes/test/anim/Cube/normal.bmp
+  - format: RGBA8
+    id: 98
+    path: resources/scenes/test/anim/Cube/metal.bmp
+  - format: RGBA8
+    id: 99
+    path: resources/scenes/test/anim/Cube/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 100
+    path: resources/scenes/test/anim/Cube/emit.bmp
+  - format: RGBA8
+    id: 101
+    path: resources/scenes/test/anim/Cube/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 102
+    path: resources/scenes/test/long_table/Cube.013/diffuse.bmp
+  - format: RGBA8
+    id: 103
+    path: resources/scenes/test/long_table/Cube.013/normal.bmp
+  - format: RGBA8
+    id: 104
+    path: resources/scenes/test/long_table/Cube.013/metal.bmp
+  - format: RGBA8
+    id: 105
+    path: resources/scenes/test/long_table/Cube.013/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 106
+    path: resources/scenes/test/long_table/Cube.013/emit.bmp
+  - format: RGBA8
+    id: 107
+    path: resources/scenes/test/long_table/Cube.013/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 108
+    path: resources/scenes/test/person_placeholder/Cylinder/diffuse.bmp
+  - format: RGBA8
+    id: 109
+    path: resources/scenes/test/person_placeholder/Cylinder/normal.bmp
+  - format: RGBA8
+    id: 110
+    path: resources/scenes/test/person_placeholder/Cylinder/metal.bmp
+  - format: RGBA8
+    id: 111
+    path: resources/scenes/test/person_placeholder/Cylinder/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 112
+    path: resources/scenes/test/person_placeholder/Cylinder/emit.bmp
+  - format: RGBA8
+    id: 113
+    path: resources/scenes/test/person_placeholder/Cylinder/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 114
+    path: resources/scenes/test/score_screen/Cube.017/diffuse.bmp
+  - format: RGBA8
+    id: 115
+    path: resources/scenes/test/score_screen/Cube.017/normal.bmp
+  - format: RGBA8
+    id: 116
+    path: resources/scenes/test/score_screen/Cube.017/metal.bmp
+  - format: RGBA8
+    id: 117
+    path: resources/scenes/test/score_screen/Cube.017/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 118
+    path: resources/scenes/test/score_screen/Cube.017/emit.bmp
+  - format: RGBA8
+    id: 119
+    path: resources/scenes/test/score_screen/Cube.017/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 120
+    path: resources/scenes/test/backboard/Cylinder.033/diffuse.bmp
+  - format: RGBA8
+    id: 121
+    path: resources/scenes/test/backboard/Cylinder.033/normal.bmp
+  - format: RGBA8
+    id: 122
+    path: resources/scenes/test/backboard/Cylinder.033/metal.bmp
+  - format: RGBA8
+    id: 123
+    path: resources/scenes/test/backboard/Cylinder.033/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 124
+    path: resources/scenes/test/backboard/Cylinder.033/emit.bmp
+  - format: RGBA8
+    id: 125
+    path: resources/scenes/test/backboard/Cylinder.033/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 126
+    path: resources/scenes/test/bar/Cube/diffuse.bmp
+  - format: RGBA8
+    id: 127
+    path: resources/scenes/test/bar/Cube/normal.bmp
+  - format: RGBA8
+    id: 128
+    path: resources/scenes/test/bar/Cube/metal.bmp
+  - format: RGBA8
+    id: 129
+    path: resources/scenes/test/bar/Cube/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 130
+    path: resources/scenes/test/bar/Cube/emit.bmp
+  - format: RGBA8
+    id: 131
+    path: resources/scenes/test/bar/Cube/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 132
+    path: resources/scenes/test/faceoff_table/Cube.013/diffuse.bmp
+  - format: RGBA8
+    id: 133
+    path: resources/scenes/test/faceoff_table/Cube.013/normal.bmp
+  - format: RGBA8
+    id: 134
+    path: resources/scenes/test/faceoff_table/Cube.013/metal.bmp
+  - format: RGBA8
+    id: 135
+    path: resources/scenes/test/faceoff_table/Cube.013/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 136
+    path: resources/scenes/test/faceoff_table/Cube.013/emit.bmp
+  - format: RGBA8
+    id: 137
+    path: resources/scenes/test/faceoff_table/Cube.013/ao.bmp
+  - format: SRGB8_ALPHA8
+    id: 138
+    path: resources/scenes/test/emit_cube/Cube/diffuse.bmp
+  - format: RGBA8
+    id: 139
+    path: resources/scenes/test/emit_cube/Cube/normal.bmp
+  - format: RGBA8
+    id: 140
+    path: resources/scenes/test/emit_cube/Cube/metal.bmp
+  - format: RGBA8
+    id: 141
+    path: resources/scenes/test/emit_cube/Cube/roughness.bmp
+  - format: SRGB8_ALPHA8
+    id: 142
+    path: resources/scenes/test/emit_cube/Cube/emit.bmp
+  - format: RGBA8
+    id: 143
+    path: resources/scenes/test/emit_cube/Cube/ao.bmp
+  - id: 144
+    name: "bar_number_1"
+    path: resources/images/bar_numbers/num_1.bmp
+    format: SRGB8_ALPHA8
+  - id: 145
+    name: "bar_number_2"
+    path: resources/images/bar_numbers/num_2.bmp
+    format: SRGB8_ALPHA8
+  - id: 146
+    name: "bar_number_3"
+    path: resources/images/bar_numbers/num_3.bmp
+    format: SRGB8_ALPHA8
+  - id: 147
+    name: "bar_number_4"
+    path: resources/images/bar_numbers/num_4.bmp
+    format: SRGB8_ALPHA8
+  - id: 148
+    name: "bar_number_5"
+    path: resources/images/bar_numbers/num_5.bmp
+    format: SRGB8_ALPHA8
+  - id: 149
+    name: "bar_number_6"
+    path: resources/images/bar_numbers/num_6.bmp
+    format: SRGB8_ALPHA8
+  - id: 150
+    name: "bar_number_7"
+    path: resources/images/bar_numbers/num_7.bmp
+    format: SRGB8_ALPHA8
+  - id: 151
+    name: "bar_number_8"
+    path: resources/images/bar_numbers/num_8.bmp
+    format: SRGB8_ALPHA8
+  - id: 152
+    name: "planar_target"
+    render_target: 0
+  - id: 153
+    name: "bar_1_text"
+    render_target: 1
+  - id: 154
+    name: "bar_2_text"
+    render_target: 2
+  - id: 155
+    name: "bar_3_text"
+    render_target: 3
+  - id: 156
+    name: "bar_4_text"
+    render_target: 4
+  - id: 157
+    name: "bar_5_text"
+    render_target: 5
+  - id: 158
+    name: "bar_6_text"
+    render_target: 6
+  - id: 159
+    name: "bar_7_text"
+    render_target: 7
+  - id: 160
+    name: "bar_8_text"
+    render_target: 8
+  - id: 161
+    path: resources/models/x2/diffuse.bmp
+    format: SRGB8_ALPHA8
+  - id: 162
+    path: resources/models/x2/normal.bmp
+    format: RGBA8
+  - id: 163
+    path: resources/models/x2/metal.bmp
+    format: RGBA8
+  - id: 164
+    path: resources/models/x2/roughness.bmp
+    format: RGBA8
+  - id: 165
+    path: resources/models/x2/emit.bmp
+    format: SRGB8_ALPHA8
+  - id: 166
+    path: resources/models/x2/ao.bmp
+    format: RGBA8
+  - id: 167
+    path: resources/models/human2/Cube/diffuse.bmp
+    format: SRGB8_ALPHA8
+  - id: 168
+    path: resources/models/human2/Cube/normal.bmp
+    format: RGBA8
+  - id: 169
+    path: resources/models/human2/Cube/metal.bmp
+    format: RGBA8
+  - id: 170
+    path: resources/models/human2/Cube/roughness.bmp
+    format: RGBA8
+  - id: 171
+    path: resources/models/human2/Cube/emit.bmp
+    format: SRGB8_ALPHA8
+  - id: 172
+    path: resources/models/human2/Cube/ao.bmp
+    format: RGBA8
+  - id: 173
+    name: "board_score_left"
+    render_target: 9
+  - id: 174
+    name: "board_score_right"
+    render_target: 10
+  - id: 175
+    name: "board_score_score"
+    render_target: 11
+render_targets:
+  - id: 0
+    name: "planar_target"
+    width: 1280
+    height: 720
+    color_format: RGB16F
+    depth_format: DEPTH24
+  - id: 1
+    name: "bar_1_text"
+    width: 512
+    height: 256
+    color_format: RED
+    depth_format: NONE
+  - id: 2
+    name: "bar_2_text"
+    width: 512
+    height: 256
+    color_format: RED
+    depth_format: NONE
+  - id: 3
+    name: "bar_3_text"
+    width: 512
+    height: 256
+    color_format: RED
+    depth_format: NONE
+  - id: 4
+    name: "bar_4_text"
+    width: 512
+    height: 256
+    color_format: RED
+    depth_format: NONE
+  - id: 5
+    name: "bar_5_text"
+    width: 512
+    height: 256
+    color_format: RED
+    depth_format: NONE
+  - id: 6
+    name: "bar_6_text"
+    width: 512
+    height: 256
+    color_format: RED
+    depth_format: NONE
+  - id: 7
+    name: "bar_7_text"
+    width: 512
+    height: 256
+    color_format: RED
+    depth_format: NONE
+  - id: 8
+    name: "bar_8_text"
+    width: 512
+    height: 256
+    color_format: RED
+    depth_format: NONE
+  - id: 9
+    name: board_score_left
+    width: 256
+    height: 256
+    color_format: RED
+    depth_format: NONE
+  - id: 10
+    name: board_score_right
+    width: 256
+    height: 256
+    color_format: RED
+    depth_format: NONE
+  - id: 11
+    name: board_score_round
+    width: 256
+    height: 256
+    color_format: RED
+    depth_format: NONE
+shaders:
+  - id: 0
+    name: main_threed
+    vert: resources2/shaders/threed/vert.gl
+    frag: resources2/shaders/threed/frag.gl
+  - id: 1
+    name: bar
+    vert: resources2/shaders/bar/vert.gl
+    frag: resources2/shaders/bar/frag.gl
+  - id: 2
+    name: planar
+    vert: resources2/shaders/threed_with_planar/vert.gl
+    frag: resources2/shaders/threed_with_planar/frag.gl
+  - id: 3
+    name: threed_skinning
+    vert: resources2/shaders/threed_skinning/vert.gl
+    frag: resources2/shaders/threed_skinning/frag.gl
+  - id: 4
+    name: score_screen
+    vert: resources2/shaders/score_screen/vert.gl
+    frag: resources2/shaders/score_screen/frag.gl
+fonts:
+  - id: 0
+    path: resources/fonts/Anton_Regular.ttf
+  - id: 1
+    path: resources/fonts/RobotoCondensed_Regular.ttf
+  - id: 2
+    path: resources/fonts/RobotoCondensed_Light.ttf
