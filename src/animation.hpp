@@ -1,6 +1,12 @@
 #pragma once
 
+#include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
+
+#include "common.hpp"
+#include "math.hpp"
+#include "platform.hpp"
+#include "util.hpp"
 
 glm::quat lerp_quat(glm::quat a, glm::quat b, f32 t) { return (1 - t) * a + t * b; }
 

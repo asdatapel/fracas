@@ -1,10 +1,10 @@
-#pragma once
+#include "../scripts.hpp"
 
 #include "board_controller.hpp"
-#include "game_state.hpp"
-#include "net/generated_rpc_client.hpp"
-#include "scene/scene.hpp"
-#include "spline.hpp"
+#include "../game_state.hpp"
+#include "../net/generated_rpc_client.hpp"
+#include "../scene/scene.hpp"
+#include "../spline.hpp"
 
 // stupid shit
 #define CAT_(a, b) a##b
@@ -42,19 +42,7 @@ struct Sequence {
 
   void reset_base() { next_step = 0; }
 
-  virtual bool update(float, Scenes, ClientGameData *, InputState *, RpcClient *) = 0;
-};
-
-struct ScriptDefinition {
-  struct InputDef {
-    String name;
-    int *value;
-    EntityType entity_type;
-  };
-
-  String name;
-  Sequence *seq;
-  std::vector<InputDef> inputs;
+  virtual bool update(float timestep, Scenes, ClientGameData *, InputState *, RpcClient *) = 0;
 };
 
 struct IntroSequence : Sequence {
@@ -62,7 +50,6 @@ struct IntroSequence : Sequence {
   {
     return {
         "Intro Sequence",
-        this,
         {
             {"camera", &input.camera, EntityType::CAMERA},
             {"path", &input.path, EntityType::SPLINE},
@@ -107,7 +94,6 @@ struct RoundStartSequence : Sequence {
   {
     return {
         "Round Start Sequence",
-        this,
         {
             {"camera", &input.camera, EntityType::CAMERA},
             {"path", &input.path, EntityType::SPLINE},
@@ -154,7 +140,6 @@ struct FaceoffStartSequence : Sequence {
   {
     return {
         "Faceoff Start Sequence",
-        this,
         {
             {"camera", &input.camera, EntityType::CAMERA},
             {"path", &input.path, EntityType::SPLINE},
@@ -203,7 +188,6 @@ struct AskQuestionSequence : Sequence {
   {
     return {
         "Ask Question Sequence",
-        this,
         {},
     };
   }
@@ -263,7 +247,6 @@ struct PlayerBuzzedSequence : Sequence {
   {
     return {
         "PlayerBuzzedSequence",
-        this,
         {},
     };
   }
@@ -304,7 +287,6 @@ struct PassOrPlaySequence : Sequence {
   {
     return {
         "Pass Or Play Sequence",
-        this,
         {
             {"camera_faceoff_left", &input.camera_faceoff_left, EntityType::CAMERA},
             {"camera_faceoff_right", &input.camera_faceoff_right, EntityType::CAMERA},
@@ -345,7 +327,6 @@ struct PlayerChosePassOrPlaySequence : Sequence {
   {
     return {
         "PlayerChosePassOrPlaySequence",
-        this,
         {},
     };
   }
@@ -381,7 +362,6 @@ struct PrepForPromptForAnswerSequence : Sequence {
   {
     return {
         "PrepForPromptForAnswerSequence",
-        this,
         {
             {"camera_faceoff_main", &input.camera_faceoff_main, EntityType::CAMERA},
 
@@ -470,7 +450,6 @@ struct PromptForAnswerSequence : Sequence {
   {
     return {
         "PromptForAnswerSequence",
-        this,
         {
             {"camera_faceoff_left", &input.camera_faceoff_left, EntityType::CAMERA},
             {"camera_faceoff_right", &input.camera_faceoff_right, EntityType::CAMERA},
@@ -529,7 +508,6 @@ struct StartPlaySequence : Sequence {
   {
     return {
         "StartPlaySequence",
-        this,
         {
             {"camera", &input.camera, EntityType::CAMERA},
             {"path", &input.path, EntityType::SPLINE},
@@ -576,7 +554,6 @@ struct StartStealSequence : Sequence {
   {
     return {
         "StartStealSequence",
-        this,
         {
             {"camera", &input.camera, EntityType::CAMERA},
             {"path", &input.path, EntityType::SPLINE},
@@ -619,7 +596,6 @@ struct PlayerAnsweredSequence : Sequence {
   {
     return {
         "PlayerAnsweredSequence",
-        this,
         {},
     };
   }
@@ -657,7 +633,6 @@ struct FlipAnswerSequence : Sequence {
   {
     return {
         "FlipAnswerSequence",
-        this,
         {
             {"camera", &input.camera, EntityType::CAMERA},
         },
@@ -708,7 +683,6 @@ struct EeeeeggghhhhSequence : Sequence {
   {
     return {
         "EeeeeggghhhhSequence",
-        this,
         {
             {"camera", &input.camera, EntityType::CAMERA},
         },
@@ -858,7 +832,6 @@ struct EndRoundSequence : Sequence {
   {
     return {
         "EndRoundSequence",
-        this,
         {
             {"camera", &input.camera, EntityType::CAMERA},
         },
@@ -918,7 +891,6 @@ struct EndGameSequence : Sequence {
   {
     return {
         "EndGameSequence",
-        this,
         {
             {"camera", &input.camera, EntityType::CAMERA},
         },
@@ -958,7 +930,7 @@ struct EndGameSequence : Sequence {
   }
 };
 
-struct Game {
+struct ScriptData {
   BoardController board_controller;
   PlayerController player_controller;
   UiController ui_controller;
@@ -985,74 +957,77 @@ struct Game {
 
   ClientGameData game_data;
 
-  void init(Scenes scenes)
-  {
-    player_controller.init();
-
-    // TODO ask server for player avatars?
-    ask_question_sequence.init(scenes);
-  }
-  void reset(Scenes scenes)
-  {
-    // start intro cinematic
-    intro_sequence.reset(scenes);
-    set_current_sequence(&intro_sequence);
-  }
-  void update(float, Scenes, RpcClient *, InputState *);
-  bool handle_rpcs(Scenes, RpcClient *);  // returns true if game is over
-
-  void set_current_sequence(Sequence *seq)
-  {
-    ui_controller.hide_all();
-
-    seq->reset_base();
-    current_sequence = seq;
-  }
-
-  // TODO there really should be a way to create a static array at compile time or something why is
-  // it so hard
-  std::vector<ScriptDefinition> get_script_defs()
-  {
-    return {
-        intro_sequence.def(),
-        round_start_sequence.def(),
-        faceoff_start_sequence.def(),
-        ask_question_sequence.def(),
-        player_buzzed_sequence.def(),
-        prep_for_prompt_for_answer_sequence.def(),
-        prompt_for_answer_sequence.def(),
-        pass_or_play_sequence.def(),
-        player_chose_pass_or_play_sequence.def(),
-        start_play_sequence.def(),
-        start_steal_sequence.def(),
-        player_answered_sequence.def(),
-        flip_answer_sequence.def(),
-        eeeeggghhh_sequence.def(),
-        end_round_sequence.def(),
-        end_game_sequence.def(),
-    };
-  }
+  void reset(Scenes scenes);
+  bool handle_rpcs(Scenes scenes, RpcClient *rpc_client);
+  void set_current_sequence(Sequence *seq);
 };
 
-void Game::update(float timestep, Scenes scenes, RpcClient *rpc_client, InputState *input_state)
+void Scripts::init()
 {
-  scenes.board_controller  = &board_controller;
-  scenes.player_controller = &player_controller;
-  scenes.ui_controller     = &ui_controller;
+  script_data = new ScriptData();
+  // script_data->player_controller.init();
 
-  handle_rpcs(scenes, rpc_client);
-
-  if (current_sequence) {
-    b8 finished = current_sequence->update(timestep, scenes, &game_data, input_state, rpc_client);
-    if (finished && !sent_ready) {
-      rpc_client->InGameReady({});
-      sent_ready = true;
-    }
-  }
+  // // TODO ask server for player avatars?
+  // script_data->ask_question_sequence.init();
 }
 
+// TODO there really should be a way to create a static array at compile time or something why is
+// it so hard
+std::vector<ScriptDefinition> Scripts::get_script_defs()
+{
+  return {
+      script_data->intro_sequence.def(),
+      script_data->round_start_sequence.def(),
+      script_data->faceoff_start_sequence.def(),
+      script_data->ask_question_sequence.def(),
+      script_data->player_buzzed_sequence.def(),
+      script_data->prep_for_prompt_for_answer_sequence.def(),
+      script_data->prompt_for_answer_sequence.def(),
+      script_data->pass_or_play_sequence.def(),
+      script_data->player_chose_pass_or_play_sequence.def(),
+      script_data->start_play_sequence.def(),
+      script_data->start_steal_sequence.def(),
+      script_data->player_answered_sequence.def(),
+      script_data->flip_answer_sequence.def(),
+      script_data->eeeeggghhh_sequence.def(),
+      script_data->end_round_sequence.def(),
+      script_data->end_game_sequence.def(),
+  };
+}
+
+void Scripts::update(float timestep)
+{
+  // script_data->board_controller  = &script_data->board_controller;
+  // script_data->player_controller = &script_data->player_controller;
+  // script_data->ui_controller     = &script_data->ui_controller;
+
+  // handle_rpcs(scenes, rpc_client);
+
+  // if (current_sequence) {
+  //   b8 finished = current_sequence->update(timestep, scenes, &game_data, input_state, rpc_client);
+  //   if (finished && !sent_ready) {
+  //     rpc_client->InGameReady({});
+  //     sent_ready = true;
+  //   }
+  // }
+}
+
+
+void ScriptData::reset(Scenes scenes)
+{
+  // start intro cinematic
+  intro_sequence.reset(scenes);
+  // script_data->set_current_sequence(&script_data->intro_sequence);
+}
+void ScriptData::set_current_sequence(Sequence *seq)
+{
+  ui_controller.hide_all();
+
+  seq->reset_base();
+  current_sequence = seq;
+}
 // returns true if game is over
-bool Game::handle_rpcs(Scenes scenes, RpcClient *rpc_client)
+bool ScriptData::handle_rpcs(Scenes scenes, RpcClient *rpc_client)
 {
   if (auto msg = rpc_client->get_StartGame_msg()) {
     printf("get_StartGame_msg\n");

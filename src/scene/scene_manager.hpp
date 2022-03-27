@@ -1,12 +1,13 @@
 #pragma once
 
-#include "../game_scripts.hpp"
+#include "../scripts.hpp"
+#include "../net/generated_rpc_client.hpp"
 
 struct SceneManager {
   Scene main;
   Scene xs;
 
-  Game game;
+  Scripts game;
 
   Bloomer bloomer;
 
@@ -20,14 +21,16 @@ struct SceneManager {
     main.visible = true;
     xs.init(mem, TextureFormat::RGBA16F);
 
-    game.init({&main, &xs, assets});
+    // game.init({&main, &xs, assets});
+    game.init();
 
     bloomer = Bloomer(main.target.width, main.target.height);
   }
 
   void update_scripts(float timestep, Assets *assets, RpcClient *rpc_client, InputState *input)
   {
-    game.update(timestep, {&main, &xs, assets}, rpc_client, input);
+    // game.update(timestep, {&main, &xs, assets}, rpc_client, input);
+    game.update(timestep);
   }
 
   void update_and_draw(float timestep, Camera *debug_camera, Vec3f debug_camera_pos,
@@ -59,9 +62,9 @@ struct SceneManager {
     glEnable(GL_DEPTH_TEST);
 
     // TODO find a better place for this
-    game.board_controller.update(timestep, &main, assets);
-    game.player_controller.update(timestep, &main, assets);
-    game.ui_controller.update(timestep, target, input, assets);
+    // game.board_controller.update(timestep, &main, assets);
+    // game.player_controller.update(timestep, &main, assets);
+    // game.ui_controller.update(timestep, target, input, assets);
 
     target.color_tex.gen_mipmaps();
   }

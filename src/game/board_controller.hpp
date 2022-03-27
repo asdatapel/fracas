@@ -1,9 +1,9 @@
 #pragma once
 
-#include "resources.hpp"
-#include "scene/scene.hpp"
+#include "../resources.hpp"
+#include "../scene/scene.hpp"
 
-#include "main_menu.hpp"
+#include "../main_menu.hpp"
 
 struct BoardController {
   i32 bar_1 = 71;

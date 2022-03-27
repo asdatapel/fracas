@@ -2,11 +2,12 @@
 
 #include "animation.hpp"
 #include "debug_ui.hpp"
+#include "game_state.hpp"
 #include "keyed_animation.hpp"
 #include "scene/scene.hpp"
 #include "scene/scene_manager.hpp"
+#include "scripts.hpp"
 #include "spline.hpp"
-
 #include "yaml.hpp"
 
 struct Editor {
@@ -430,7 +431,7 @@ struct Editor {
 
   void stop_play() { playing = false; }
 
-  String serialize(Game *game, StackAllocator *alloc)
+  String serialize(Scripts *game, StackAllocator *alloc)
   {
     auto new_dict = [&]() {
       YAML::Dict *dict = (YAML::Dict *)alloc->alloc(sizeof(YAML::Dict));
@@ -482,7 +483,7 @@ struct Editor {
     return out;
   }
 
-  void deserialize(Game *game, StackAllocator *alloc)
+  void deserialize(Scripts *game, StackAllocator *alloc)
   {
     Temp temp(alloc);
 
@@ -721,17 +722,17 @@ struct Editor {
     Imm::end_columns();
     Imm::end_window();
 
-    static f32 additive_t = 60.f;
-    static f32 blend      = 0.f;
-    additive_t += .25f;
-    if (additive_t > 90) {
-      additive_t = 60 + (additive_t - 90);
-    }
-    Pose right_base = editor_scenes->game.player_controller.right_anim.eval(additive_t);
-    Pose additive = editor_scenes->game.player_controller.left_and_nod.eval_as_additive(additive_t);
+    // static f32 additive_t = 60.f;
+    // static f32 blend      = 0.f;
+    // additive_t += .25f;
+    // if (additive_t > 90) {
+    //   additive_t = 60 + (additive_t - 90);
+    // }
+    // Pose right_base = editor_scenes->game.player_controller.right_anim.eval(additive_t);
+    // Pose additive = editor_scenes->game.player_controller.left_and_nod.eval_as_additive(additive_t);
 
-    editor_scenes->game.player_controller.right = additive_blend(&right_base, &additive, blend);
-    editor_scenes->game.player_controller.right.calculate_final_mats();
+    // editor_scenes->game.player_controller.right = additive_blend(&right_base, &additive, blend);
+    // editor_scenes->game.player_controller.right.calculate_final_mats();
 
     // applying animation
     if (editor_scenes->main.current_sequence && current_frame != editor_scenes->main.get_frame()) {
@@ -739,7 +740,7 @@ struct Editor {
       editor_scenes->main.apply_keyed_animation(editor_scenes->main.current_sequence,
                                                 (i32)editor_scenes->main.get_frame());
 
-      blend = editor_scenes->main.get_frame() / 100.f - 1;
+      // blend = editor_scenes->main.get_frame() / 100.f - 1;
     }
 
     KeyedAnimation *ka = editor_scenes->main.current_sequence;

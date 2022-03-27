@@ -11,7 +11,7 @@
 
 #include "assets.hpp"
 #include "editor.hpp"
-#include "game_scripts.hpp"
+#include "scripts.hpp"
 #include "main_menu.hpp"
 #include "net/generated_rpc_client.hpp"
 #include "net/net.hpp"
@@ -95,7 +95,7 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
 
   static RpcClient client("127.0.0.1", 6666);
   static ClientData client_data(&assets, &client, memory);
-  static Game game;
+  static Scripts game;
 
   static bool inited = false;
   if (!inited) {
@@ -129,8 +129,10 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
     }
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
+
+    ClientGameData dummy;
     client_data.main_menu.current->update_and_draw(main_target, input_state, &client_data.main_menu,
-                                                   &game.game_data);
+                                                   &dummy);
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
   } else {
