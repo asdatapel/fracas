@@ -80,7 +80,7 @@ struct IntroSequence : Sequence {
 
     Entity *camera = scenes.main->get(input.camera);
     if (camera) {
-      scenes.main->active_camera_id = input.camera;
+      // scenes.main->active_camera_id = input.camera;
     }
 
     step(scenes.ui_controller->popup_banner("hello", 5.f);)
@@ -127,7 +127,7 @@ struct RoundStartSequence : Sequence {
 
     Entity *camera = scenes.main->get(input.camera);
     if (camera) {
-      scenes.main->active_camera_id = input.camera;
+      // scenes.main->active_camera_id = input.camera;
     }
 
     return scenes.main->is_sequence_finished();
@@ -174,7 +174,7 @@ struct FaceoffStartSequence : Sequence {
     // Entity *camera = scenes.main->get(input.camera);
     // if (camera)
     // {
-    //     scenes.main->active_camera_id = input.camera;
+        // scenes.main->active_camera_id = input.camera;
     // }
 
     scenes.player_controller->start_faceoff();
@@ -434,9 +434,9 @@ struct PrepForPromptForAnswerSequence : Sequence {
     step(scenes.ui_controller->question(true));
 
     if (game_data->round_stage == RoundStage::FACEOFF) {
-      scenes.main->active_camera_id = input.camera_faceoff_main;
+      // scenes.main->active_camera_id = input.camera_faceoff_main;
     } else {
-      scenes.main->active_camera_id = get_player_camera();
+      // scenes.main->active_camera_id = get_player_camera();
     }
 
     step(scenes.ui_controller->popup_banner("\"I'm prompting you for an answer.\"");)
@@ -482,9 +482,9 @@ struct PromptForAnswerSequence : Sequence {
     scenes.ui_controller->answer_timer(true, time_remaining);
 
     if (game_data->round_stage == RoundStage::FACEOFF) {
-      scenes.main->active_camera_id = answerer->id == game_data->faceoffers.first
-                                          ? input.camera_faceoff_left
-                                          : input.camera_faceoff_right;
+      // scenes.main->active_camera_id = answerer->id == game_data->faceoffers.first
+                                          // ? input.camera_faceoff_left
+                                          // : input.camera_faceoff_right;
     }
 
     if (answerer->id == game_data->my_id) {
@@ -663,7 +663,7 @@ struct FlipAnswerSequence : Sequence {
       scenes.ui_controller->set_question_visible_pct(1.f);
     });
 
-    scenes.main->active_camera_id = input.camera;
+    // scenes.main->active_camera_id = input.camera;
 
     yield_wait(2.f);
 
@@ -711,11 +711,11 @@ struct EeeeeggghhhhSequence : Sequence {
       scenes.ui_controller->set_question_visible_pct(1.f);
     });
 
-    step(scenes.main->active_camera_id = input.camera;);
+    // step(scenes.main->active_camera_id = input.camera;);
 
     yield_wait(2.f);
 
-    scenes.xs->visible = true;
+    // scenes.xs->visible = true;
 
     auto bump_function = [](f64 t) -> f64 {
       if (t < 0 || t > 1) return 0;
@@ -819,7 +819,7 @@ struct EeeeeggghhhhSequence : Sequence {
       yield_wait(3.5f);
     }
 
-    scenes.xs->visible = false;
+    // scenes.xs->visible = false;
 
     yield_wait(2.f);
 
@@ -853,7 +853,7 @@ struct EndRoundSequence : Sequence {
               RpcClient *rpc_client)
   {
     step({
-      scenes.main->active_camera_id = input.camera;
+      // scenes.main->active_camera_id = input.camera;
       scenes.board_controller->reset(scenes.main);
       scenes.board_controller->set_family0_score(game_data->scores[0], scenes.assets);
       scenes.board_controller->set_family1_score(game_data->scores[1], scenes.assets);

@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <stb/stb_image.hpp>
+
 #include "asset.hpp"
 #include "font.hpp"
 #include "global_allocators.hpp"
@@ -14,20 +16,61 @@
 #include "scene/entity.hpp"
 #include "yaml.hpp"
 
-const String RESOURCE_PATH = "resources/test";
+struct EnvMap {
+  Texture unfiltered_cubemap;
+  Material env_mat;
+};
+
+Texture2D load_hdri(String filepath, Memory mem)
+{
+  auto tmp = Temp::start(mem);
+
+  FileData file        = read_entire_file(filepath, tmp);
+
+  int width, height, components;
+  stbi_set_flip_vertically_on_load(true);
+  float *hdri =
+      stbi_loadf_from_memory((stbi_uc *)file.data, file.length, &width, &height, &components, 0);
+
+  Texture2D tex(width, height, TextureFormat::RGB16F, true);
+  tex.upload(hdri, true);
+
+  stbi_image_free(hdri);
+
+  return tex;
+}
+
+Material create_env_mat(RenderTarget temp_target, Texture unfiltered_cubemap)
+{
+  Texture irradiance_map = convolve_irradiance_map(temp_target, unfiltered_cubemap, 32);
+  Texture env_map        = filter_env_map(temp_target, unfiltered_cubemap, 512);
+
+  Texture2D brdf_lut = Texture2D(512, 512, TextureFormat::RGB16F, false);
+  temp_target.change_color_target(brdf_lut);
+  temp_target.clear();
+  temp_target.bind();
+  bind_shader(brdf_lut_shader);
+  draw_rect();
+
+  Material env_mat = Material::allocate(3, 0,  &assets_allocator);
+  env_mat.textures[0] = irradiance_map;
+  env_mat.textures[1] = env_map;
+  env_mat.textures[2] = brdf_lut;
+
+  return env_mat;
+}
 
 Texture load_and_upload_texture(String filepath, TextureFormat format, Memory mem)
 {
-  auto t = Temp::start(mem);
+  auto tmp = Temp::start(mem);
 
-  char *filepath_chars = filepath.to_char_array(&assets_temp_allocator);
-  FileData file        = read_entire_file(filepath_chars, &assets_temp_allocator);
+  FileData file        = read_entire_file(filepath, tmp);
   if (!file.length) {
     // TODO return default checkerboard texture
     return Texture{};
   }
 
-  Bitmap bmp = parse_bitmap(file, &assets_temp_allocator);
+  Bitmap bmp = parse_bitmap(file, tmp);
   Texture2D tex(bmp.width, bmp.height, format, true);
   tex.upload((uint8_t *)bmp.data, true);
   return tex;
@@ -35,10 +78,10 @@ Texture load_and_upload_texture(String filepath, TextureFormat format, Memory me
 
 VertexBuffer load_and_upload_mesh(String filepath, int asset_id, Memory mem)
 {
-  auto t = Temp::start(mem);
+  auto tmp = Temp::start(mem);
 
-  char *filepath_chars = filepath.to_char_array(&assets_temp_allocator);
-  FileData file        = read_entire_file(filepath_chars, &assets_temp_allocator);
+  char *filepath_chars = filepath.to_char_array(tmp);
+  FileData file        = read_entire_file(filepath_chars, tmp);
   Mesh mesh            = load_fmesh(file, mem);
   VertexBuffer buf     = upload_vertex_buffer(mesh);
   buf.asset_id         = asset_id;
@@ -49,6 +92,7 @@ struct Assets {
   FreeList<VertexBuffer> meshes;
   FreeList<RenderTarget> render_targets;
   FreeList<Texture> textures;
+  FreeList<EnvMap> env_maps;
   FreeList<Material> materials;
   FreeList<Shader> shaders;
   FreeList<FileData> font_files;
@@ -61,6 +105,7 @@ struct Assets {
     meshes.init(&assets_allocator, 1024);
     render_targets.init(&assets_allocator, 64);
     textures.init(&assets_allocator, 1024);
+    env_maps.init(&assets_allocator, 32);
     materials.init(&assets_allocator, 1024);
     shaders.init(&assets_allocator, 1024);
     font_files.init(&assets_allocator, 32);
@@ -129,6 +174,24 @@ struct Assets {
         }
 
         textures.emplace(texture, id);
+      }
+    }
+
+    if (auto in_env_maps_val = root->get("env_maps")) {
+      YAML::List *in_env_maps = in_env_maps_val->as_list();
+      for (int i = 0; i < in_env_maps->len; i++) {
+        YAML::Dict *in_env_map = in_env_maps->get(i)->as_dict();
+        int id                 = atoi(in_env_map->get("id")->as_literal().to_char_array(temp));
+        
+        String path = in_env_map->get("path")->as_literal();
+        RenderTarget temp_target(0, 0, TextureFormat::NONE, TextureFormat::NONE);
+        Texture hdri_tex   = load_hdri(path, assets_memory);
+        
+        EnvMap env_map;
+        env_map.unfiltered_cubemap = hdri_to_cubemap(temp_target, hdri_tex, 1024);
+        env_map.env_mat            = create_env_mat(temp_target, env_map.unfiltered_cubemap);
+
+        env_maps.emplace(env_map, id);
       }
     }
 

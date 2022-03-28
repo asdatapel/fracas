@@ -26,5 +26,3 @@ struct Scripts {
   void update(float timestep);
   std::vector<ScriptDefinition> get_script_defs();
 };
-
-#include "game/game_scripts.cpp"

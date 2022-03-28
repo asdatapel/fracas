@@ -20,6 +20,7 @@
 #include "graphics/graphics_opengl.cpp"
 #include "net/net.cpp"
 #include "platform_windows.cpp"
+#include "game/game_scripts.cpp"
 
 Peer server;
 
