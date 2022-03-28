@@ -49,8 +49,6 @@ bool init_if_not()
     scene_temp_allocator.init(&main_memory, 1024ull * 1024 * 50);    // 50 mb
 
     editor.init(memory);
-
-    Imm::init();
   }
 
   return true;

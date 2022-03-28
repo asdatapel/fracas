@@ -16,6 +16,8 @@
 #include "scene/entity.hpp"
 #include "yaml.hpp"
 
+const String RESOURCE_PATH = "resources/test";
+
 struct EnvMap {
   Texture unfiltered_cubemap;
   Material env_mat;

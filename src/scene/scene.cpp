@@ -116,19 +116,6 @@ void Scene::serialize(const char *filename, Assets *assets, StackAllocator *allo
     }
   }
 
-  // scene_yaml.push_back("active_camera_id", new_literal(String::from(active_camera_id, alloc)),
-  //                      alloc);
-  // scene_yaml.push_back("hdr", new_literal("resources/hdri/Newport_Loft_Ref.hdr"), alloc);
-  // scene_yaml.push_back("cubemap_visible",
-  //                      new_literal(cubemap_visible ? (String) "true" : (String) "false"), alloc);
-
-  // YAML::Dict *planar_reflector_yaml = new_dict();
-  // planar_reflector_yaml->push_back(
-  //     "entity_id", new_literal(String::from(entities.index_of(planar_entity), alloc)), alloc);
-  // planar_reflector_yaml->push_back("render_target",
-  //                                  new_literal(String::from(planar_target.asset_id, alloc)), alloc);
-  // scene_yaml.push_back("planar_reflector", planar_reflector_yaml, alloc);
-
   String out;
   out.data = alloc->next;
   YAML::serialize(&scene_yaml, alloc, 0, false);

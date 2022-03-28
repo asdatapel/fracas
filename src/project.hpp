@@ -11,6 +11,8 @@ struct Project {
   Array<String, 1> scene_files = {};
   String renderer_file = {};
   String scripts_file          = {};
+
+  String editor_ui_file;
 };
 
 

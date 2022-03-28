@@ -11,8 +11,6 @@
 #include "spline.hpp"
 #include "yaml.hpp"
 
-const String RESOURCE_PATH = "resources/test";
-
 struct Editor {
   Assets assets;
 
@@ -42,7 +40,8 @@ struct Editor {
         "resources/fracas/scene.yaml",
     };
     project.renderer_file = "resources/fracas/renderer.yaml";
-    project.scripts_file = "resources/test/scripts.yaml";
+    project.scripts_file = "resources/fracas/scripts.yaml";
+    project.editor_ui_file = "resources/fracas/debug_ui_layout.yaml";
 
     assets.init();
     editor_scene.init(mem);
@@ -55,6 +54,8 @@ struct Editor {
     
     InputState tmp;
     debug_camera.update(compositor.final_target, &tmp);
+
+    Imm::init(project.editor_ui_file);
   }
 
   void update_and_draw(RenderTarget backbuffer, InputState *input, Memory mem)
@@ -99,11 +100,11 @@ struct Editor {
     for (int i = 0; i < input->key_input.len; i++) {
       // save scene
       if (input->key_input[i] == Keys::F1) {
-        // const char *script_file = "resources/test/scripts.yaml";
+        // const char *script_file = project.scripts_file;
         // String out              = serialize(&editor_scene.game, mem.temp);
         // write_file(script_file, out);
 
-        // editor_scene.serialize("resources/test/main_scene.yaml", &assets, mem.temp);
+        // editor_scene.serialize(project.scene_files[0], &assets, mem.temp);
       }
       // load scene
       if (input->key_input[i] == Keys::F2) {
@@ -156,13 +157,13 @@ struct Editor {
 
     if (Imm::start_menubar_menu("File")) {
       if (Imm::button("Save")) {
-        // const char *script_file = "resources/test/scripts.yaml";
+        // const char *script_file = projects.scripts_file;
         // String script_data      = serialize(&editor_scene.game, mem.temp);
         // write_file(script_file, script_data);
 
         // assets.save(filepath_concat(RESOURCE_PATH, "assets_out.yaml", &assets_temp_allocator));
 
-        // editor_scene.serialize("resources/test/main_scene.yaml", &assets, mem.temp);
+        // editor_scene.serialize(projects.scene_files[0], &assets, mem.temp);
 
         // Imm::close_popup();
       }
@@ -502,8 +503,7 @@ struct Editor {
   {
     Temp temp(alloc);
 
-    const char *script_file = "resources/test/scripts.yaml";
-    FileData in             = read_entire_file(script_file, alloc);
+    FileData in             = read_entire_file(project.scripts_file, alloc);
     String in_str;
     in_str.data      = in.data;
     in_str.len       = in.length;

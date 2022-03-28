@@ -497,4 +497,27 @@ void write_file(const char *filename, String data)
   CloseHandle(file_handle);
 }
 
+void write_file(String filename, String data)
+{
+  // TODO do this in a tmp allocator somewhere
+  char buf[256];
+  memcpy(buf, filename.data, filename.len);
+  buf[filename.len] = '\0';
+
+  auto file_handle = CreateFileA(buf, GENERIC_WRITE, NULL, NULL, CREATE_ALWAYS, NULL, NULL);
+  if (file_handle == INVALID_HANDLE_VALUE) {
+    printf("ERROR writing file: %s. Dumping to stdout\n", buf);
+    printf("%.*s\n", data.len, data.data);
+    return;
+  }
+
+  DWORD written = 0;
+  if (!WriteFile(file_handle, data.data, data.len, &written, nullptr) || written != data.len) {
+    printf("ERROR writing file: %s. Dumping to stdout\n", buf);
+    printf("%.*s\n", data.len, data.data);
+  }
+
+  CloseHandle(file_handle);
+}
+
 uint64_t debug_get_cycle_count() { return __rdtsc(); }
