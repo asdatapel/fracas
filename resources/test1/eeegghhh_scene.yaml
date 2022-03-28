@@ -1,0 +1,172 @@
+entities: 
+  - id: 0
+    name: x_0
+    type: MESH
+    transform: 
+      position: 
+        x: -1.000000
+        y: 0.000000
+        z: 0.000000
+      rotation: 
+        x: 1.570000
+        y: 0.000000
+        z: 0.000000
+      scale: 
+        x: 1.000000
+        y: 1.000000
+        z: 1.000000
+    mesh: 
+      mesh: 24
+      material: 32
+      shader: 0
+  - id: 1
+    name: x_1
+    type: MESH
+    transform: 
+      position: 
+        x: 0.000000
+        y: 0.000000
+        z: 0.000000
+      rotation: 
+        x: 1.570000
+        y: 0.000000
+        z: 0.000000
+      scale: 
+        x: 1.000000
+        y: 1.000000
+        z: 1.000000
+    mesh: 
+      mesh: 24
+      material: 32
+      shader: 0
+  - id: 2
+    name: x_2
+    type: MESH
+    transform: 
+      position: 
+        x: 1.000000
+        y: 0.000000
+        z: 0.000000
+      rotation: 
+        x: 1.570000
+        y: 0.000000
+        z: 0.000000
+      scale: 
+        x: 1.000000
+        y: 1.000000
+        z: 1.000000
+    mesh: 
+      mesh: 24
+      material: 32
+      shader: 0
+  - id: 3
+    name: x_camera
+    type: CAMERA
+    transform: 
+      position: 
+        x: 0.000000
+        y: 0.000000
+        z: 3.000000
+      rotation: 
+        x: 0.000000
+        y: 0.000000
+        z: 0.000000
+      scale: 
+        x: 1.000000
+        y: 1.000000
+        z: 1.000000
+  - id: 4
+    name: spotlight
+    type: LIGHT
+    transform: 
+      position: 
+        x: 3.790000
+        y: 0.540000
+        z: 4.830000
+      rotation: 
+        x: 1.153704
+        y: 0.478891
+        z: 0.000000
+      scale: 
+        x: 4.545329
+        y: 4.545329
+        z: 4.545329
+    spotlight: 
+      color: 
+        x: 1000.000000
+        y: 1000.000000
+        z: 1000.000000
+      inner_angle: 0.200000
+      outer_angle: 0.392699
+  - id: 5
+    name: spotlight
+    type: LIGHT
+    transform: 
+      position: 
+        x: 0.040000
+        y: 2.220000
+        z: 3.289999
+      rotation: 
+        x: 1.093704
+        y: -0.081109
+        z: 0.000000
+      scale: 
+        x: 4.545329
+        y: 4.545329
+        z: 4.545329
+    spotlight: 
+      color: 
+        x: 1000.000000
+        y: 1000.000000
+        z: 1000.000000
+      inner_angle: 0.050000
+      outer_angle: 0.192699
+  - id: 6
+    name: spotlight
+    type: LIGHT
+    transform: 
+      position: 
+        x: -1.100000
+        y: -2.543642
+        z: 1.309999
+      rotation: 
+        x: 2.759503
+        y: -0.209848
+        z: 0.098858
+      scale: 
+        x: 4.545329
+        y: 4.545329
+        z: 4.545329
+    spotlight: 
+      color: 
+        x: 1000.000000
+        y: 1000.000000
+        z: 1000.000000
+      inner_angle: 0.010000
+      outer_angle: 0.412699
+  - id: 7
+    name: spotlight
+    type: LIGHT
+    transform: 
+      position: 
+        x: 1.000000
+        y: -4.5
+        z: 1.309999
+      rotation: 
+        x: 2.85
+        y: -0.000000
+        z: 0.000000
+      scale: 
+        x: 4.545329
+        y: 4.545329
+        z: 4.545329
+    spotlight: 
+      color: 
+        x: 5000.000000
+        y: 5000.000000
+        z: 5000.000000
+      inner_angle: 0.000000
+      outer_angle: 0.2
+active_camera_id: 3
+hdr: resources/hdri/Newport_Loft_Ref.hdr
+cubemap_visible: false

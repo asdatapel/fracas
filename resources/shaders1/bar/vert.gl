@@ -1,0 +1,25 @@
+#version 330 core
+
+uniform float t;
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+layout (location = 0) in vec3 pos;
+layout (location = 1) in vec2 main_uv;
+layout (location = 2) in vec3 normal;
+layout (location = 3) in vec2 text_uv;
+
+out vec3 frag_world_pos;
+out vec2 frag_main_uv;
+out vec2 frag_text_uv;
+out vec3 frag_normal;
+
+void main()
+{
+    frag_main_uv = main_uv;
+    frag_text_uv = text_uv;
+    frag_normal = mat3(transpose(inverse(model))) * normal;
+    frag_world_pos = (model * vec4(pos, 1.0)).xyz;
+    gl_Position = projection * view * model * vec4(pos, 1.0);
+}

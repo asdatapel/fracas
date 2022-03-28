@@ -11,6 +11,19 @@
 #include "spline.hpp"
 #include "yaml.hpp"
 
+Project fracas_project = {
+    {
+        "resources/fracas/project/main_assets.yaml",
+        "resources/fracas/project/assets_out.yaml",
+    },
+    {
+        "resources/fracas/project/scene.yaml",
+    },
+    "resources/fracas/project/renderer.yaml",
+    "resources/fracas/project/scripts.yaml",
+    "resources/fracas/project/debug_ui_layout.yaml",
+};
+
 struct Editor {
   Assets assets;
 
@@ -32,16 +45,7 @@ struct Editor {
 
   void init(Memory mem)
   {
-    project.asset_files = {
-        "resources/fracas/main_assets.yaml",
-        "resources/fracas/assets_out.yaml",
-    };
-    project.scene_files = {
-        "resources/fracas/scene.yaml",
-    };
-    project.renderer_file = "resources/fracas/renderer.yaml";
-    project.scripts_file = "resources/fracas/scripts.yaml";
-    project.editor_ui_file = "resources/fracas/debug_ui_layout.yaml";
+    project = fracas_project;
 
     assets.init();
     editor_scene.init(mem);
@@ -524,27 +528,6 @@ struct Editor {
     }
   }
 
-  Camera *get_camera(Scene *scene, Transform *transform_out)
-  {
-    if (use_debug_camera || compositor.view_layers[0].active_camera_id < 0) {
-      transform_out->position = {debug_camera.pos_x, debug_camera.pos_y, debug_camera.pos_z};
-      transform_out->rotation = {glm::radians(debug_camera.y_rot),
-                                 glm::radians(-(debug_camera.x_rot + 90)), 0};
-      transform_out->scale    = {1, 1, 1};
-      return &debug_camera;
-    }
-    if (compositor.view_layers[0].active_camera_id > -1) {
-      *transform_out = scene->entities.data[compositor.view_layers[0].active_camera_id].value.transform;
-      return &scene->entities.data[compositor.view_layers[0].active_camera_id].value.camera;
-    }
-
-    transform_out->position = {debug_camera.pos_x, debug_camera.pos_y, debug_camera.pos_z};
-    transform_out->rotation = {glm::radians(debug_camera.y_rot),
-                               glm::radians(-(debug_camera.x_rot + 90)), 0};
-    transform_out->scale    = {1, 1, 1};
-    return &debug_camera;
-  }
-
   void window_timeline(InputState *input)
   {
     auto type_to_shape = [](KeyedAnimationTrack::Key::InterpolationType type) -> Imm::Shape {
@@ -734,25 +717,11 @@ struct Editor {
     Imm::end_columns();
     Imm::end_window();
 
-    // static f32 additive_t = 60.f;
-    // static f32 blend      = 0.f;
-    // additive_t += .25f;
-    // if (additive_t > 90) {
-    //   additive_t = 60 + (additive_t - 90);
-    // }
-    // Pose right_base = editor_scene.game.player_controller.right_anim.eval(additive_t);
-    // Pose additive = editor_scene.game.player_controller.left_and_nod.eval_as_additive(additive_t);
-
-    // editor_scene.game.player_controller.right = additive_blend(&right_base, &additive, blend);
-    // editor_scene.game.player_controller.right.calculate_final_mats();
-
     // applying animation
     if (editor_scene.current_sequence && current_frame != editor_scene.get_frame()) {
       editor_scene.set_frame(current_frame);
       editor_scene.apply_keyed_animation(editor_scene.current_sequence,
                                                 (i32)editor_scene.get_frame());
-
-      // blend = editor_scene.get_frame() / 100.f - 1;
     }
 
     KeyedAnimation *ka = editor_scene.current_sequence;
@@ -853,5 +822,26 @@ struct Editor {
         }
       }
     }
+  }
+
+  Camera *get_camera(Scene *scene, Transform *transform_out)
+  {
+    if (use_debug_camera || compositor.view_layers[0].active_camera_id < 0) {
+      transform_out->position = {debug_camera.pos_x, debug_camera.pos_y, debug_camera.pos_z};
+      transform_out->rotation = {glm::radians(debug_camera.y_rot),
+                                 glm::radians(-(debug_camera.x_rot + 90)), 0};
+      transform_out->scale    = {1, 1, 1};
+      return &debug_camera;
+    }
+    if (compositor.view_layers[0].active_camera_id > -1) {
+      *transform_out = scene->entities.data[compositor.view_layers[0].active_camera_id].value.transform;
+      return &scene->entities.data[compositor.view_layers[0].active_camera_id].value.camera;
+    }
+
+    transform_out->position = {debug_camera.pos_x, debug_camera.pos_y, debug_camera.pos_z};
+    transform_out->rotation = {glm::radians(debug_camera.y_rot),
+                               glm::radians(-(debug_camera.x_rot + 90)), 0};
+    transform_out->scale    = {1, 1, 1};
+    return &debug_camera;
   }
 };

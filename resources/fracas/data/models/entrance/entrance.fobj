@@ -1,0 +1,65 @@
+objects:
+- data: Cube.fmesh
+  material: Cube.001
+  name: Cube
+  position:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  rotation:
+    x: 0.0
+    y: 0.0
+    z: -0.0
+  scale:
+    x: 0.7773170471191406
+    y: 0.7773170471191406
+    z: 0.7773170471191406
+  type: MESH
+- data: Cube.003.fmesh
+  material: Cube.022
+  name: Cube.003
+  position:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  rotation:
+    x: 0.0
+    y: 0.0
+    z: -0.0
+  scale:
+    x: 0.7773170471191406
+    y: 0.7773170471191406
+    z: 0.7773170471191406
+  type: MESH
+- data: Cube.002.fmesh
+  material: Cube.023
+  name: Cube.002
+  position:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  rotation:
+    x: 0.0
+    y: 0.0
+    z: -0.0
+  scale:
+    x: 0.7773170471191406
+    y: 0.7773170471191406
+    z: 0.7773170471191406
+  type: MESH
+- data: Cube.001.fmesh
+  material: Cube
+  name: Cube.001
+  position:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  rotation:
+    x: 0.0
+    y: 0.0
+    z: -0.0
+  scale:
+    x: 0.7773170471191406
+    y: 0.7773170471191406
+    z: 0.7773170471191406
+  type: MESH

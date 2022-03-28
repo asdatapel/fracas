@@ -1,0 +1,31 @@
+objects:
+- name: Camera
+  position:
+    x: 7.358891487121582
+    y: 4.958309173583984
+    z: 6.925790786743164
+  rotation:
+    x: 1.1093189716339111
+    y: 0.8149281740188599
+    z: -0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  type: CAMERA
+- data: Text.fmesh
+  material: X
+  name: Text
+  position:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  rotation:
+    x: 0.0
+    y: 0.0
+    z: -0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  type: MESH

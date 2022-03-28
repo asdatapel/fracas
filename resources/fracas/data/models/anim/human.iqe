@@ -1,0 +1,25 @@
+# Inter-Quake Export
+
+joint "root" -1
+joint "ik_leg_pole.L" -1
+joint "ik_target.L" -1
+joint "ik_leg_pole.R" -1
+joint "ik_target.R" -1
+joint "spine0" 0
+joint "leg0.L" 0
+joint "leg0.R" 0
+joint "spine1" 5
+joint "leg1.L" 6
+joint "leg1.R" 7
+joint "head" 8
+joint "shoulder.L" 8
+joint "shoulder.R" 8
+joint "foot.L" 9
+joint "foot.R" 10
+joint "arm0.L" 12
+joint "arm0.R" 13
+joint "arm1.L" 16
+joint "arm1.R" 17
+joint "hand.L" 18
+joint "hand.R" 19
+
