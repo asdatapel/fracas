@@ -2,16 +2,37 @@
 
 #include "animation.hpp"
 #include "debug_ui.hpp"
+#include "game_state.hpp"
 #include "keyed_animation.hpp"
+#include "project.hpp"
 #include "scene/scene.hpp"
-#include "scene/scene_manager.hpp"
+#include "renderer/compositor.hpp"
+#include "scripts.hpp"
 #include "spline.hpp"
-
 #include "yaml.hpp"
 
+Project fracas_project = {
+    {
+        "resources/fracas/project/main_assets.yaml",
+        "resources/fracas/project/assets_out.yaml",
+    },
+    {
+        "resources/fracas/project/scene.yaml",
+    },
+    "resources/fracas/project/renderer.yaml",
+    "resources/fracas/project/scripts.yaml",
+    "resources/fracas/project/debug_ui_layout.yaml",
+};
+
 struct Editor {
-  SceneManager *editor_scenes;
-  SceneManager play_scenes;
+  Assets assets;
+
+  Project project;
+
+  Scene editor_scene;
+  Scene play_scene;
+
+  Compositor compositor;
 
   bool playing = false;
 
@@ -22,58 +43,60 @@ struct Editor {
   Entity *selected_entity  = nullptr;
   int selected_spline_node = -1;
 
-  void init(SceneManager *scenes, Assets *assets, Memory mem)
+  void init(Memory mem)
   {
-    this->editor_scenes = scenes;
+    project = fracas_project;
 
-    scenes->main.load("resources/test/main_scene.yaml", assets, mem);
-    scenes->xs.load("resources/test/eeegghhh_scene.yaml", assets, mem);
-    play_scenes.init(assets, mem);
+    assets.init();
+    editor_scene.init(mem);
+    play_scene.init(mem);
 
-    deserialize(&scenes->game, mem.temp);
+    RefArray<ViewLayer> view_layers;
+    deserialize_project(project, mem, &assets, &editor_scene, &view_layers);
 
+    compositor.init(view_layers, &editor_scene, &assets, mem);
+    
     InputState tmp;
-    debug_camera.update(scenes->target, &tmp);
+    debug_camera.update(compositor.final_target, &tmp);
+
+    Imm::init(project.editor_ui_file);
   }
 
-  void update_and_draw(Assets *assets, RpcClient *rpc_client, RenderTarget backbuffer,
-                       InputState *input, Memory mem)
+  void update_and_draw(RenderTarget backbuffer, InputState *input, Memory mem)
   {
     if (playing) {
-      Vec2f backup_mouse_pos = input->mouse_pos;
-      if (Imm::state.windows.count(Imm::hash("Scene"))) {
-        Imm::Window &window = Imm::state.windows[Imm::hash("Scene")];
-        input->mouse_pos -= Vec2f{window.content_rect.x, window.content_rect.y};
-        input->mouse_pos.x *= play_scenes.target.width / window.content_rect.width;
-        input->mouse_pos.y *= play_scenes.target.height / window.content_rect.height;
-      }
+      // Vec2f backup_mouse_pos = input->mouse_pos;
+      // if (Imm::state.windows.count(Imm::hash("Scene"))) {
+      //   Imm::Window &window = Imm::state.windows[Imm::hash("Scene")];
+      //   input->mouse_pos -= Vec2f{window.content_rect.x, window.content_rect.y};
+      //   input->mouse_pos.x *= compositor.final_target.width / window.content_rect.width;
+      //   input->mouse_pos.y *= compositor.final_target.height / window.content_rect.height;
+      // }
 
-      play_scenes.update_scripts(1 / 60.f, assets, get_rpc_client(rpc_client), input);
-      play_scenes.update_and_draw(1 / 60.f, nullptr, {}, input, assets, 1);
+      // // play_scenes.update_scripts(1 / 60.f, &assets, get_rpc_client(rpc_client), input);
+      // play_scenes.update_and_draw(1 / 60.f, nullptr, {}, input, &assets, 1);
 
-      input->mouse_pos = backup_mouse_pos;
+      // input->mouse_pos = backup_mouse_pos;
 
-      debug_ui(&play_scenes, backbuffer, input, assets, mem);
+      // debug_ui(&play_scenes, backbuffer, input, mem);
     } else {
       static float exposure = 1.f;
       if (input->keys[(int)Keys::LEFT]) exposure -= 0.01f;
       if (input->keys[(int)Keys::RIGHT]) exposure += 0.01f;
       Transform camera_transform;
-      Camera *camera = get_camera(&editor_scenes->main, &camera_transform);
-      editor_scenes->update_and_draw(1 / 60.f, camera, camera_transform.position, input, assets,
-                                     exposure);
-      debug_ui(editor_scenes, backbuffer, input, assets, mem);
+      Camera *camera = get_camera(&editor_scene, &camera_transform);
+      compositor.render(camera, camera_transform.position, exposure);
+      debug_ui(backbuffer, input, mem);
     }
   }
 
-  void debug_ui(SceneManager *scenes, RenderTarget target, InputState *input, Assets *assets,
-                Memory mem)
+  void debug_ui(RenderTarget target, InputState *input, Memory mem)
   {
     // copy depth buffer to top level target so we can draw some more stuff
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, scenes->main.target.gl_fbo);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, scenes->target.gl_fbo);
-    glBlitFramebuffer(0, 0, scenes->target.width, scenes->target.height, 0, 0, scenes->target.width,
-                      scenes->target.height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, compositor.layer_targets[0].gl_fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, compositor.final_target.gl_fbo);
+    glBlitFramebuffer(0, 0, compositor.final_target.width, compositor.final_target.height, 0, 0, compositor.final_target.width,
+                      compositor.final_target.height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 
     static Array<float, 1024 * 1024> lines;
     lines.len = 0;
@@ -81,11 +104,11 @@ struct Editor {
     for (int i = 0; i < input->key_input.len; i++) {
       // save scene
       if (input->key_input[i] == Keys::F1) {
-        const char *script_file = "resources/test/scripts.yaml";
-        String out              = serialize(&editor_scenes->game, mem.temp);
-        write_file(script_file, out);
+        // const char *script_file = project.scripts_file;
+        // String out              = serialize(&editor_scene.game, mem.temp);
+        // write_file(script_file, out);
 
-        editor_scenes->main.serialize("resources/test/main_scene.yaml", assets, mem.temp);
+        // editor_scene.serialize(project.scene_files[0], &assets, mem.temp);
       }
       // load scene
       if (input->key_input[i] == Keys::F2) {
@@ -104,7 +127,7 @@ struct Editor {
         new_spline.spline.points.append({-3, 1.5, 3});
         new_spline.spline.points.append({-3, 1.5, 2});
         new_spline.spline.points.append({-3, 1.5, 0});
-        scenes->main.entities.push_back(new_spline);
+        editor_scene.entities.push_back(new_spline);
       }
       // add spline
       if (input->keys[(int)Keys::LALT] && input->key_input[i] == Keys::W) {
@@ -119,12 +142,12 @@ struct Editor {
         new_e.transform.scale.x    = 1;
         new_e.transform.scale.z    = 1;
         new_e.transform.scale.y    = 1;
-        scenes->main.entities.push_back(new_e);
+        editor_scene.entities.push_back(new_e);
       }
 
       // play / pause
       if (input->key_input[i] == Keys::SPACE) {
-        playing ? stop_play() : start_play(assets);
+        playing ? stop_play() : start_play();
       }
 
       if (input->key_input[i] == Keys::ESCAPE) {
@@ -134,19 +157,19 @@ struct Editor {
       }
     }
 
-    Imm::start_frame(target, input, assets, &debug_camera);
+    Imm::start_frame(target, input, &assets, &debug_camera);
 
     if (Imm::start_menubar_menu("File")) {
       if (Imm::button("Save")) {
-        const char *script_file = "resources/test/scripts.yaml";
-        String script_data      = serialize(&editor_scenes->game, mem.temp);
-        write_file(script_file, script_data);
+        // const char *script_file = projects.scripts_file;
+        // String script_data      = serialize(&editor_scene.game, mem.temp);
+        // write_file(script_file, script_data);
 
-        assets->save(filepath_concat(RESOURCE_PATH, "assets_out.yaml", &assets_temp_allocator));
+        // assets.save(filepath_concat(RESOURCE_PATH, "assets_out.yaml", &assets_temp_allocator));
 
-        editor_scenes->main.serialize("resources/test/main_scene.yaml", assets, mem.temp);
+        // editor_scene.serialize(projects.scene_files[0], &assets, mem.temp);
 
-        Imm::close_popup();
+        // Imm::close_popup();
       }
       static bool menu_1 = false;
       static bool menu_2 = false;
@@ -164,9 +187,9 @@ struct Editor {
     Imm::add_window_menubar_menu();
 
     Imm::start_window("Entities", {0, 0, 300, 600});
-    for (int i = 0; i < scenes->main.entities.size; i++) {
-      if (scenes->main.entities.data[i].assigned) {
-        Entity &e = scenes->main.entities.data[i].value;
+    for (int i = 0; i < editor_scene.entities.size; i++) {
+      if (editor_scene.entities.data[i].assigned) {
+        Entity &e = editor_scene.entities.data[i].value;
         if (Imm::list_item((ImmId)&e, e.debug_tag.name, selected_entity_i == i)) {
           selected_entity   = &e;
           selected_entity_i = i;
@@ -190,7 +213,7 @@ struct Editor {
       new_e.transform.scale.x    = 1;
       new_e.transform.scale.z    = 1;
       new_e.transform.scale.y    = 1;
-      scenes->main.entities.push_back(new_e);
+      editor_scene.entities.push_back(new_e);
     }
 
     if (selected_entity) {
@@ -262,11 +285,11 @@ struct Editor {
       } else if (selected_entity->type == EntityType::CAMERA) {
         Imm::label("Camera");
         if (Imm::button("View from camera")) {
-          if (!use_debug_camera && scenes->main.active_camera_id == selected_entity_i) {
+          if (!use_debug_camera && compositor.view_layers[0].active_camera_id == selected_entity_i) {
             use_debug_camera              = true;
-            scenes->main.active_camera_id = -1;
+            compositor.view_layers[0].active_camera_id = -1;
           } else {
-            scenes->main.active_camera_id = selected_entity_i;
+            compositor.view_layers[0].active_camera_id = selected_entity_i;
             use_debug_camera              = false;
           }
         }
@@ -274,7 +297,7 @@ struct Editor {
     }
     Imm::end_window();
 
-    std::vector<ScriptDefinition> scripts = scenes->game.get_script_defs();
+    std::vector<ScriptDefinition> scripts = editor_scene.scripts.get_script_defs();
     static int selected_script_i          = -1;
     Imm::start_window("Scripts", {0, 0, 300, 600});
     for (int i = 0; i < scripts.size(); i++) {
@@ -291,7 +314,7 @@ struct Editor {
       for (int i = 0; i < selected_script->inputs.size(); i++) {
         Imm::label(selected_script->inputs[i].name);
 
-        Entity *input_entity = &scenes->main.entities.data[*selected_script->inputs[i].value].value;
+        Entity *input_entity = &editor_scene.entities.data[*selected_script->inputs[i].value].value;
         if (Imm::button((ImmId)selected_script->inputs[i].value, input_entity->debug_tag.name)) {
           if (selected_entity && selected_entity->type == selected_script->inputs[i].entity_type) {
             *selected_script->inputs[i].value = selected_entity_i;
@@ -329,17 +352,17 @@ struct Editor {
 
     Imm::start_window("Assets", {1000, 500, 600, 400});
     if (Imm::button("Add KeyedAnimation")) {
-      assets->create_keyed_animation(RESOURCE_PATH);
+      assets.create_keyed_animation(RESOURCE_PATH);
     }
 
-    for (int i = 0; i < assets->keyed_animations.size; i++) {
-      if (assets->keyed_animations.data[i].assigned) {
-        KeyedAnimation *ka      = &assets->keyed_animations.data[i].value;
+    for (int i = 0; i < assets.keyed_animations.size; i++) {
+      if (assets.keyed_animations.data[i].assigned) {
+        KeyedAnimation *ka      = &assets.keyed_animations.data[i].value;
         AllocatedString<64> tmp = string_to_allocated_string<64>(ka->asset_name);
-        Imm::listitem_with_editing((ImmId)ka, &tmp, ka == editor_scenes->main.current_sequence);
+        Imm::listitem_with_editing((ImmId)ka, &tmp, ka == editor_scene.current_sequence);
         if (Imm::state.just_activated == (ImmId)ka) {
-          editor_scenes->main.stop_sequence();
-          editor_scenes->main.set_sequence(ka);
+          editor_scene.stop_sequence();
+          editor_scene.set_sequence(ka);
         }
 
         if (!strcmp(tmp, ka->asset_name)) {
@@ -351,7 +374,7 @@ struct Editor {
         }
         if (Imm::start_popup((ImmId)ka, {})->visible) {
           if (Imm::button("Delete")) {
-            assets->keyed_animations.free(&assets->keyed_animations.data[i]);
+            assets.keyed_animations.free(&assets.keyed_animations.data[i]);
             Imm::close_popup();
           }
         }
@@ -360,22 +383,20 @@ struct Editor {
     }
     Imm::end_window();
 
-    window_timeline(scenes, assets, input);
-
-    window_game();
+    window_timeline(input);
 
     bind_shader(lines_shader);
     glUniformMatrix4fv(lines_shader.uniform_handles[(int)UniformId::VIEW], 1, GL_FALSE,
                        &debug_camera.view[0][0]);
     glUniformMatrix4fv(lines_shader.uniform_handles[(int)UniformId::PROJECTION], 1, GL_FALSE,
                        &debug_camera.perspective[0][0]);
-    debug_draw_lines(scenes->target, lines.arr, lines.len / (7 * 2));
+    debug_draw_lines(compositor.final_target, lines.arr, lines.len / (7 * 2));
 
     Imm::start_window("Scene", {700, 250, 100, 300});
-    Imm::texture(&scenes->target.color_tex);
+    Imm::texture(&compositor.final_target.color_tex);
     if (Imm::state.last_element_selected || Imm::state.last_element_active) {
       if (!playing || use_debug_camera) {
-        debug_camera.update(scenes->target, input);
+        debug_camera.update(compositor.final_target, input);
       }
     }
     if (selected_entity) {
@@ -388,49 +409,49 @@ struct Editor {
     }
     Imm::end_window();
 
-    scenes->target.color_tex.gen_mipmaps();
+    compositor.final_target.color_tex.gen_mipmaps();
 
-    Imm::end_frame(assets);
+    Imm::end_frame(&assets);
   }
 
-  void start_play(Assets *assets)
+  void start_play()
   {
-    auto copy_scene = [](Scene *to, Scene *from) {
-      for (int i = 0; i < from->entities.size; i++) {
-        to->entities.data[i].assigned = from->entities.data[i].assigned;
-        to->entities.data[i].value    = from->entities.data[i].value;
-      }
+    // auto copy_scene = [](Scene *to, Scene *from) {
+    //   for (int i = 0; i < from->entities.size; i++) {
+    //     to->entities.data[i].assigned = from->entities.data[i].assigned;
+    //     to->entities.data[i].value    = from->entities.data[i].value;
+    //   }
 
-      to->active_camera_id = from->active_camera_id;
+    //   to->active_camera_id = from->active_camera_id;
 
-      to->unfiltered_cubemap = from->unfiltered_cubemap;
-      to->env_mat            = from->env_mat;
+    //   to->unfiltered_cubemap = from->unfiltered_cubemap;
+    //   to->env_mat            = from->env_mat;
 
-      to->render_planar = from->render_planar;
-      to->planar_target = from->planar_target;
-      to->planar_entity = from->planar_entity;
+    //   to->render_planar = from->render_planar;
+    //   to->planar_target = from->planar_target;
+    //   to->planar_entity = from->planar_entity;
 
-      to->cubemap_visible = from->cubemap_visible;
-    };
-    copy_scene(&play_scenes.main, &editor_scenes->main);
-    copy_scene(&play_scenes.xs, &editor_scenes->xs);
+    //   to->cubemap_visible = from->cubemap_visible;
+    // };
+    // copy_scene(&play_scenes.main, &editor_scene.);
+    // copy_scene(&play_scenes.xs, &editor_scene.xs);
 
-    auto src_scripts = editor_scenes->game.get_script_defs();
-    auto dst_scripts = play_scenes.game.get_script_defs();
-    for (int i = 0; i < src_scripts.size(); i++) {
-      ScriptDefinition src = src_scripts[i];
-      ScriptDefinition dst = dst_scripts[i];
-      for (int input_i = 0; input_i < src.inputs.size(); input_i++) {
-        *dst.inputs[input_i].value = *src.inputs[input_i].value;
-      }
-    }
+    // auto src_scripts = editor_scene.game.get_script_defs();
+    // auto dst_scripts = play_scenes.game.get_script_defs();
+    // for (int i = 0; i < src_scripts.size(); i++) {
+    //   ScriptDefinition src = src_scripts[i];
+    //   ScriptDefinition dst = dst_scripts[i];
+    //   for (int input_i = 0; input_i < src.inputs.size(); input_i++) {
+    //     *dst.inputs[input_i].value = *src.inputs[input_i].value;
+    //   }
+    // }
 
-    playing = true;
+    // playing = true;
   }
 
   void stop_play() { playing = false; }
 
-  String serialize(Game *game, StackAllocator *alloc)
+  String serialize(Scripts *game, StackAllocator *alloc)
   {
     auto new_dict = [&]() {
       YAML::Dict *dict = (YAML::Dict *)alloc->alloc(sizeof(YAML::Dict));
@@ -482,12 +503,11 @@ struct Editor {
     return out;
   }
 
-  void deserialize(Game *game, StackAllocator *alloc)
+  void deserialize(Scripts *game, StackAllocator *alloc)
   {
     Temp temp(alloc);
 
-    const char *script_file = "resources/test/scripts.yaml";
-    FileData in             = read_entire_file(script_file, alloc);
+    FileData in             = read_entire_file(project.scripts_file, alloc);
     String in_str;
     in_str.data      = in.data;
     in_str.len       = in.length;
@@ -508,31 +528,7 @@ struct Editor {
     }
   }
 
-  Camera *get_camera(Scene *scene, Transform *transform_out)
-  {
-    if (use_debug_camera || scene->active_camera_id < 0) {
-      transform_out->position = {debug_camera.pos_x, debug_camera.pos_y, debug_camera.pos_z};
-      transform_out->rotation = {glm::radians(debug_camera.y_rot),
-                                 glm::radians(-(debug_camera.x_rot + 90)), 0};
-      transform_out->scale    = {1, 1, 1};
-      return &debug_camera;
-    }
-    if (scene->active_camera_id > -1) {
-      *transform_out = scene->entities.data[scene->active_camera_id].value.transform;
-      return &scene->entities.data[scene->active_camera_id].value.camera;
-    }
-
-    transform_out->position = {debug_camera.pos_x, debug_camera.pos_y, debug_camera.pos_z};
-    transform_out->rotation = {glm::radians(debug_camera.y_rot),
-                               glm::radians(-(debug_camera.x_rot + 90)), 0};
-    transform_out->scale    = {1, 1, 1};
-    return &debug_camera;
-  }
-
-  RpcClient *playing_client = nullptr;
-  RpcClient *get_rpc_client(RpcClient *main) { return playing_client ? playing_client : main; }
-
-  void window_timeline(SceneManager *scenes, Assets *assets, InputState *input)
+  void window_timeline(InputState *input)
   {
     auto type_to_shape = [](KeyedAnimationTrack::Key::InterpolationType type) -> Imm::Shape {
       switch (type) {
@@ -574,11 +570,11 @@ struct Editor {
 
     i32 selected_track_i                = -1;
     KeyedAnimationTrack *selected_track = nullptr;
-    if (selected_entity_i > -1 && editor_scenes->main.current_sequence) {
-      for (u32 i = 0; i < editor_scenes->main.current_sequence->tracks.count; i++) {
-        if (editor_scenes->main.current_sequence->tracks[i].entity_id == selected_entity_i) {
+    if (selected_entity_i > -1 && editor_scene.current_sequence) {
+      for (u32 i = 0; i < editor_scene.current_sequence->tracks.count; i++) {
+        if (editor_scene.current_sequence->tracks[i].entity_id == selected_entity_i) {
           selected_track_i = i;
-          selected_track   = &editor_scenes->main.current_sequence->tracks[i];
+          selected_track   = &editor_scene.current_sequence->tracks[i];
           break;
         }
       }
@@ -586,8 +582,8 @@ struct Editor {
 
     static DynamicArray<DynamicArray<i32>> selected_keys(&assets_temp_allocator);
     selected_keys.clear();
-    if (editor_scenes->main.current_sequence) {
-      for (u32 i = 0; i < editor_scenes->main.current_sequence->tracks.count; i++) {
+    if (editor_scene.current_sequence) {
+      for (u32 i = 0; i < editor_scene.current_sequence->tracks.count; i++) {
         selected_keys.push_back({&assets_temp_allocator});
       }
     }
@@ -598,39 +594,39 @@ struct Editor {
     Imm::start_window("Timeline", {1000, 500, 600, 400});
 
     Imm::vertical_layout = false;
-    if (editor_scenes->main.current_sequence) {
+    if (editor_scene.current_sequence) {
       if (Imm::button("Play")) {
-        if (!editor_scenes->main.playing_sequence)
-          editor_scenes->main.play_sequence();
+        if (!editor_scene.playing_sequence)
+          editor_scene.play_sequence();
         else
-          editor_scenes->main.stop_sequence();
+          editor_scene.stop_sequence();
       }
       if (selected_track) {
         if (Imm::button(Imm::hash("Add Key From Camera Transform"),
                         "Add Key From Camera Transform")) {
           Transform t;
-          Camera *camera = get_camera(&scenes->main, &t);
-          selected_track->add_key(t, editor_scenes->main.get_frame(),
+          Camera *camera = get_camera(&editor_scene, &t);
+          selected_track->add_key(t, editor_scene.get_frame(),
                                   KeyedAnimationTrack::Key::InterpolationType::LINEAR);
         }
         if (Imm::button(Imm::hash("asdfcvbvbvx"), "Add Key From Entity Transform")) {
-          Entity *entity = scenes->main.get(selected_track->entity_id);
+          Entity *entity = editor_scene.get(selected_track->entity_id);
           Transform t    = entity->transform;
-          selected_track->add_key(t, editor_scenes->main.get_frame(),
+          selected_track->add_key(t, editor_scene.get_frame(),
                                   KeyedAnimationTrack::Key::InterpolationType::LINEAR);
         }
       } else if (selected_entity) {
         if (Imm::button(Imm::hash("Add Track"), "Add Track")) {
-          editor_scenes->main.current_sequence->add_track(selected_entity_i);
+          editor_scene.current_sequence->add_track(selected_entity_i);
         }
       }
     }
     Imm::vertical_layout = true;
 
     if (selected_track && selected_track->keys.count) {
-      Transform tr = editor_scenes->main.current_sequence->eval(selected_track_i, 0);
+      Transform tr = editor_scene.current_sequence->eval(selected_track_i, 0);
       for (f32 t = 0; t < 50.f; t += 0.01f) {
-        Transform trn = editor_scenes->main.current_sequence->eval(selected_track_i, t);
+        Transform trn = editor_scene.current_sequence->eval(selected_track_i, t);
         // lines.append(tr.position.x);
         // lines.append(tr.position.y);
         // lines.append(tr.position.z);
@@ -652,11 +648,11 @@ struct Editor {
     static f32 column_width = 200.f;
     Imm::first_column(&column_width);
 
-    if (editor_scenes->main.current_sequence) {
-      for (i32 track_i = 0; track_i < editor_scenes->main.current_sequence->tracks.count;
+    if (editor_scene.current_sequence) {
+      for (i32 track_i = 0; track_i < editor_scene.current_sequence->tracks.count;
            track_i++) {
-        KeyedAnimationTrack *track = &editor_scenes->main.current_sequence->tracks[track_i];
-        Imm::list_item((ImmId)track, scenes->main.get(track->entity_id)->debug_tag.name,
+        KeyedAnimationTrack *track = &editor_scene.current_sequence->tracks[track_i];
+        Imm::list_item((ImmId)track, editor_scene.get(track->entity_id)->debug_tag.name,
                        track_i == selected_track_i);
         if (Imm::state.just_activated == (ImmId)track) {
           selected_entity_i = track->entity_id;
@@ -664,29 +660,29 @@ struct Editor {
       }
     }
 
-    if (editor_scenes->main.current_sequence)
+    if (editor_scene.current_sequence)
       Imm::label(
-          String::from(editor_scenes->main.current_sequence->end_frame, &assets_temp_allocator));
+          String::from(editor_scene.current_sequence->end_frame, &assets_temp_allocator));
     Imm::next_column(nullptr);
 
     static f32 timeline_start = 0;
     static f32 timeline_width = 60;
-    i32 current_frame = editor_scenes->main.current_sequence ? editor_scenes->main.get_frame() : -1;
+    i32 current_frame = editor_scene.current_sequence ? editor_scene.get_frame() : -1;
     Imm::start_timeline(
         "timeline", &current_frame, &timeline_start, &timeline_width,
-        editor_scenes->main.current_sequence ? &editor_scenes->main.current_sequence->start_frame
+        editor_scene.current_sequence ? &editor_scene.current_sequence->start_frame
                                              : nullptr,
-        editor_scenes->main.current_sequence ? &editor_scenes->main.current_sequence->end_frame
+        editor_scene.current_sequence ? &editor_scene.current_sequence->end_frame
                                              : nullptr);
 
     if (Imm::state.was_last_item_right_clicked) {
       Imm::open_popup("timeline_group_edit", input->mouse_pos);
     }
 
-    if (editor_scenes->main.current_sequence) {
-      for (i32 track_i = 0; track_i < editor_scenes->main.current_sequence->tracks.count;
+    if (editor_scene.current_sequence) {
+      for (i32 track_i = 0; track_i < editor_scene.current_sequence->tracks.count;
            track_i++) {
-        KeyedAnimationTrack &track = editor_scenes->main.current_sequence->tracks[track_i];
+        KeyedAnimationTrack &track = editor_scene.current_sequence->tracks[track_i];
         for (i32 i = 0; i < track.keys.count; i++) {
           i32 frame = track.keys[i].frame;
           if (Imm::keyframe((ImmId)&track.keys[i], &frame, track_i,
@@ -722,13 +718,13 @@ struct Editor {
     Imm::end_window();
 
     // applying animation
-    if (editor_scenes->main.current_sequence && current_frame != editor_scenes->main.get_frame()) {
-      editor_scenes->main.set_frame(current_frame);
-      editor_scenes->main.apply_keyed_animation(editor_scenes->main.current_sequence,
-                                                (i32)editor_scenes->main.get_frame());
+    if (editor_scene.current_sequence && current_frame != editor_scene.get_frame()) {
+      editor_scene.set_frame(current_frame);
+      editor_scene.apply_keyed_animation(editor_scene.current_sequence,
+                                                (i32)editor_scene.get_frame());
     }
 
-    KeyedAnimation *ka = editor_scenes->main.current_sequence;
+    KeyedAnimation *ka = editor_scene.current_sequence;
 
     // right click popup
     Optional<KeyedAnimationTrack::Key::InterpolationType> interp_type_consensus = Optional<>::empty;
@@ -828,99 +824,24 @@ struct Editor {
     }
   }
 
-  static const i32 client_count = 10;
-  RpcClient clients[client_count];
-  GameId game_id = -1;
-  GameState game_state;
-
-  void window_game()
+  Camera *get_camera(Scene *scene, Transform *transform_out)
   {
-    for (int i = 0; i < client_count; i++) {
-      if (clients[i].peer.is_connected()) {
-        int msg_len;
-        char msg[MAX_MSG_SIZE];
-        if ((msg_len = clients[i].peer.recieve_msg(msg)) > 0) {
-          if (clients[i].handle_rpc(msg, msg_len)) {
-            clients[i].peer.pop_message();
-          }
-        }
-      }
+    if (use_debug_camera || compositor.view_layers[0].active_camera_id < 0) {
+      transform_out->position = {debug_camera.pos_x, debug_camera.pos_y, debug_camera.pos_z};
+      transform_out->rotation = {glm::radians(debug_camera.y_rot),
+                                 glm::radians(-(debug_camera.x_rot + 90)), 0};
+      transform_out->scale    = {1, 1, 1};
+      return &debug_camera;
+    }
+    if (compositor.view_layers[0].active_camera_id > -1) {
+      *transform_out = scene->entities.data[compositor.view_layers[0].active_camera_id].value.transform;
+      return &scene->entities.data[compositor.view_layers[0].active_camera_id].value.camera;
     }
 
-    if (playing_client) {
-      for (i32 i = 0; i < client_count; i++) {
-        RpcClient *client = &clients[i];
-        if (playing_client != client) {
-          if (client->peer.is_connected() && client->msg_received()) {
-            client->InGameReady({});
-            client->clear_msgs();
-          }
-        }
-      }
-    }
-
-    Imm::start_window("Game", {100, 100, 200, 400});
-
-    static i32 num_players = 2;
-    num_players            = std::clamp(num_players, 1, client_count);
-    Imm::num_input(&num_players);
-
-    if (Imm::button("Create Game")) {
-      clients[0].connect("127.0.0.1", 6666);
-
-      CreateGameRequest req;
-      req.owner_name = string_to_allocated_string<64>("host");
-      req.name       = string_to_allocated_string<64>(String::from(rand(), &assets_temp_allocator));
-      req.is_self_hosted = true;
-      clients[0].CreateGame(req);
-    }
-    if (Imm::button("Start Game")) {
-      StartGameRequest req;
-      req.game_id = game_id;
-      clients[0].StartGame(req);
-    }
-
-    if (CreateGameResponse *resp = clients[0].get_CreateGame_msg()) {
-      game_id = resp->game_id;
-
-      for (i32 i = 1; i < num_players; i++) {
-        JoinGameRequest req;
-        req.game_id     = resp->game_id;
-        req.player_name = string_to_allocated_string<64>(String("player_").concat(
-            String::from(i, &assets_temp_allocator), &assets_temp_allocator));
-
-        clients[i].connect("127.0.0.1", 6666);
-        clients[i].JoinGame(req);
-      }
-
-      clients[0].GetGame({game_id});
-      playing_client = &clients[0];
-    }
-
-    if (game_id > -1) {
-      if (clients[0].got_GetGame_msg) {
-        auto resp = clients[0].get_GetGame_msg();
-        game_state.players.clear();
-
-        for (i32 i = 0; i < resp->players.size(); i++) {
-          PlayerData pd;
-          pd.name   = resp->players[i].name;
-          pd.id     = resp->players[i].user_id;
-          pd.family = resp->players[i].family;
-          game_state.players.append(pd);
-        }
-
-        clients[0].GetGame({game_id});
-      }
-    }
-
-    static i32 selected_player = -1;
-    for (i32 i = 0; i < game_state.players.len; i++) {
-      if (Imm::list_item(game_state.players[i].name, selected_player == i)) {
-        selected_player = i;
-        playing_client  = &clients[i];
-      }
-    }
-    Imm::end_window();
+    transform_out->position = {debug_camera.pos_x, debug_camera.pos_y, debug_camera.pos_z};
+    transform_out->rotation = {glm::radians(debug_camera.y_rot),
+                               glm::radians(-(debug_camera.x_rot + 90)), 0};
+    transform_out->scale    = {1, 1, 1};
+    return &debug_camera;
   }
 };

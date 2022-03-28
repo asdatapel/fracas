@@ -80,7 +80,7 @@ client PlayerLeft PlayerLeftMessage
 server InGameReady
 
 message InGameAnswerMessage
-answer string
+answer_index int
 
 server InGameAnswer InGameAnswerMessage
 
@@ -148,7 +148,7 @@ client InGamePlayerChosePassOrPlay InGameChoosePassOrPlayMessage
 client InGamePlayerAnswered InGameAnswerMessage
 
 message InGameFlipAnswerMessage
-answer_index int
+answer_rank int
 answer string
 score int
 round_score int

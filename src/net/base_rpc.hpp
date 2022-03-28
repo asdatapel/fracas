@@ -1,5 +1,6 @@
 #pragma once
 
+#define NOMINMAX
 #include "net_windows.hpp"
 
 struct ServerData;

@@ -6,6 +6,8 @@
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
+
+#define NOMINMAX
 #include <windows.h>
 
 #include "fracas_client.hpp"
@@ -447,6 +449,35 @@ FileData read_entire_file(const char *filename, StackAllocator *allocator)
 
   return res;
 }
+FileData read_entire_file(String path, StackAllocator *allocator)
+{
+  FileData res;
+
+  // TODO do this in a tmp allocator somewhere
+  char *null_terminated_path = allocator->alloc(path.len + 1);
+  memcpy(null_terminated_path, path.data, path.len);
+  null_terminated_path[path.len] = '\0';
+
+  auto file_handle = CreateFileA(null_terminated_path, GENERIC_READ, FILE_SHARE_READ, NULL,
+                                 OPEN_EXISTING, NULL, NULL);
+  if (file_handle == INVALID_HANDLE_VALUE) {
+    return {nullptr, 0};
+  }
+
+  LARGE_INTEGER filesize;
+  GetFileSizeEx(file_handle, &filesize);
+
+  res.length           = filesize.QuadPart;
+  res.data             = allocator->alloc(res.length + 1);
+  res.data[res.length] = '\0';
+
+  DWORD read;
+  ReadFile(file_handle, res.data, res.length, &read, NULL);
+
+  CloseHandle(file_handle);
+
+  return res;
+}
 
 void write_file(const char *filename, String data)
 {
@@ -460,6 +491,29 @@ void write_file(const char *filename, String data)
   DWORD written = 0;
   if (!WriteFile(file_handle, data.data, data.len, &written, nullptr) || written != data.len) {
     printf("ERROR writing file: %s. Dumping to stdout\n", filename);
+    printf("%.*s\n", data.len, data.data);
+  }
+
+  CloseHandle(file_handle);
+}
+
+void write_file(String filename, String data)
+{
+  // TODO do this in a tmp allocator somewhere
+  char buf[256];
+  memcpy(buf, filename.data, filename.len);
+  buf[filename.len] = '\0';
+
+  auto file_handle = CreateFileA(buf, GENERIC_WRITE, NULL, NULL, CREATE_ALWAYS, NULL, NULL);
+  if (file_handle == INVALID_HANDLE_VALUE) {
+    printf("ERROR writing file: %s. Dumping to stdout\n", buf);
+    printf("%.*s\n", data.len, data.data);
+    return;
+  }
+
+  DWORD written = 0;
+  if (!WriteFile(file_handle, data.data, data.len, &written, nullptr) || written != data.len) {
+    printf("ERROR writing file: %s. Dumping to stdout\n", buf);
     printf("%.*s\n", data.len, data.data);
   }
 

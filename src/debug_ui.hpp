@@ -189,6 +189,8 @@ struct ImmStyle {
   Color content_background_color       = {.1, .1, .1, 1};
 };
 struct UiState {
+  String layout_filepath;
+
   Assets *assets;
   RenderTarget target;
   InputState *input;
@@ -1124,6 +1126,7 @@ void end_frame(Assets *assets)
 
   state.target.bind();
   debug_begin_immediate();
+  glEnable(GL_BLEND);
   auto do_draw_list = [&](DrawList &draw_list) {
     for (int i = 0; i < draw_list.buf.size(); i++) {
       DrawItem item = draw_list.buf[i];
@@ -2214,13 +2217,13 @@ void save_layout()
   out.len = a->next - out.data;
   printf("%.*s\n", out.len, out.data);
 
-  write_file("resources/test/layout.yaml", out);
+  write_file(state.layout_filepath, out);
 }
 void load_layout()
 {
   StackAllocator *a = &state.per_frame_alloc;
 
-  FileData file = read_entire_file("resources/test/layout.yaml", a);
+  FileData file = read_entire_file(state.layout_filepath, a);
 
   String in_str;
   in_str.data      = file.data;
@@ -2260,10 +2263,11 @@ void load_layout()
   state.anchored_center = in_anchors->get("anchored_center")->as_literal().to_uint64();
 }
 
-void init()
+void init(String layout_filepath)
 {
   state.per_frame_alloc.init(1034 * 1024 * 50);  // 50mb
 
+  state.layout_filepath = layout_filepath;
   load_layout();
 }
 

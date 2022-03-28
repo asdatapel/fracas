@@ -1,0 +1,49 @@
+#version 330 core
+
+uniform float t;
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+uniform mat4 bone_transforms[70];
+
+layout (location = 0) in vec3 pos;
+layout (location = 1) in vec2 main_uv;
+layout (location = 2) in vec3 normal;
+layout (location = 3) in vec3 tangent;
+layout (location = 4) in vec3 bitangent;
+layout (location = 5) in vec4 bone_ids;
+layout (location = 6) in vec4 bone_weights;
+
+out vec3 frag_world_pos;
+out vec2 frag_main_uv;
+out vec3 frag_normal;
+out vec3 frag_tangent;
+out vec3 frag_bitangent;
+
+void main()
+{
+    frag_main_uv = main_uv;
+    frag_normal = normalize(vec3(model * vec4(normal, 0)));
+    frag_tangent = normalize(vec3(model * vec4(tangent, 0)));
+    frag_bitangent = normalize(vec3(model * vec4(bitangent, 0)));
+
+    // vec3 p = pos + (bone_positions[int(bone_ids.x)] * bone_weights.x) +
+    //         (bone_positions[int(bone_ids.y)] * bone_weights.y) + 
+    //         (bone_positions[int(bone_ids.z)] * bone_weights.z) +
+    //         (bone_positions[int(bone_ids.w)] * bone_weights.w);
+
+    mat4 skin = (bone_transforms[int(bone_ids.x)] * bone_weights.x) +
+             (bone_transforms[int(bone_ids.y)] * bone_weights.y) +
+             (bone_transforms[int(bone_ids.z)] * bone_weights.z) +
+             (bone_transforms[int(bone_ids.w)] * bone_weights.w);
+    vec4 p = skin * vec4(pos, 1);
+    frag_normal = mat3(skin) * frag_normal;
+    frag_tangent = mat3(skin) * frag_tangent;
+    frag_bitangent = mat3(skin) * frag_bitangent;
+    
+    
+    frag_world_pos = (model * p).xyz;
+    gl_Position = projection * view * model * p;
+    // gl_Position = vec4(bone_positions[4], 1);
+}

@@ -1,0 +1,32 @@
+objects:
+- data: Plane.001.fmesh
+  material: Plane.004
+  name: Plane.001
+  parent: Armature
+  position:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  rotation:
+    x: 0.0
+    y: 0.0
+    z: -0.0
+  scale:
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  type: MESH
+- name: Armature
+  position:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  rotation:
+    x: 0.0
+    y: 0.0
+    z: -0.0
+  scale:
+    x: 0.15921467542648315
+    y: 0.15921467542648315
+    z: 0.15921467542648315
+  type: ARMATURE

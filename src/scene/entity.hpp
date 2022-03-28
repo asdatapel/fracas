@@ -63,6 +63,7 @@ struct Entity {
   DebugTag debug_tag;
 
   Transform transform;
+  u32 view_layer_mask = 1;
 
   VertexBuffer vert_buffer;
   Material *material = nullptr;
@@ -74,5 +75,5 @@ struct Entity {
 
   Spline3 spline;
 
-  Animation *animation = nullptr;
+  Pose *animation = nullptr;
 };

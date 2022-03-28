@@ -23,14 +23,15 @@ struct PlayerData {
 };
 struct AnswerState {
   bool revealed = false;
-  int score     = 0;
+  i32 score     = 0;
+  i32 index = -1;
   String answer;
 };
 struct GameState {
   Array<PlayerName, 2> family_names               = {{}, {}};
   Array<PlayerData, MAX_PLAYERS_PER_GAME> players = {};
 
-  AllocatedString<128> question;
+  String question;
   Array<AnswerState, 8> answers;
 
   int round              = -1;
@@ -46,7 +47,7 @@ struct GameState {
 
   Array<int, 2> scores = {{}, {}};
 
-  AllocatedString<128> last_answer;
+  i32 last_answer_index = -1;
   ClientId last_answer_client_id;
 
   PlayerData *get_player_data(ClientId client_id)
@@ -197,17 +198,6 @@ struct GameState {
 
     // can't answer during any of the other stages
     return nullptr;
-  }
-
-  // return rank of answer, -1 if incorrect
-  int check_answer()
-  {
-    for (int i = 0; i < answers.len; ++i) {
-      if (strcmp(last_answer, answers[i].answer) && !answers[i].revealed) {
-        return i;
-      }
-    }
-    return -1;
   }
 
   bool are_all_answers_flipped()

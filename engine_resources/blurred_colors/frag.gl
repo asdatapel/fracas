@@ -1,0 +1,35 @@
+#version 330 core
+out vec4 FragColor;
+
+uniform ivec2 resolution;
+
+const float PI = 3.14159265359;
+
+uniform float t;
+
+
+// http://glslsandbox.com/e#12090.0
+
+float normalized_sin (float v) {
+	return sin(v) * 0.5 + 0.5;
+}
+
+vec4 blob(vec2 position, vec2 mult, float timeMult, vec4 color) {
+	vec2 p = position.xy * mult + t / timeMult;
+	return normalized_sin( p.x * PI ) * normalized_sin(p.y * PI) * color;
+    return vec4(p, 0, 1);
+}
+
+void main() {
+
+	vec2 position = ( gl_FragCoord.xy / resolution.xy );
+
+	vec4 color = vec4(.7, .4, .7, 1);
+	
+	color -= blob(position, vec2(1, 1), 5, vec4(.5, 0, 0, 0));
+	color -= blob(position + sin(t/5), vec2(1, 0.5), 5, vec4(0, .2, 0, 0));
+	color -= blob(position, vec2(3, 1), 2, vec4(.2, 0, .1, 0));
+	color += blob(position  + sin(t/5), vec2(1, 2), -4.0, vec4(.6, .3, 0, 0));
+
+	gl_FragColor = color;
+}

@@ -99,7 +99,9 @@ struct FileData {
 };
 FileData read_entire_file(const char *);
 FileData read_entire_file(const char *, StackAllocator *);
+FileData read_entire_file(String, StackAllocator *);
 void write_file(const char *, String);
+void write_file(String, String);
 void free_file(FileData);
 uint64_t debug_get_cycle_count();
 
