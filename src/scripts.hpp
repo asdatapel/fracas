@@ -2,9 +2,9 @@
 
 #include <vector>
 
-#include "../scene/entity.hpp"
-#include "../common.hpp"
-#include "../util.hpp"
+#include "scene/entity.hpp"
+#include "common.hpp"
+#include "util.hpp"
 
 struct ScriptDefinition {
   struct InputDef {

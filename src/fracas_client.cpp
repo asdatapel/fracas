@@ -22,8 +22,6 @@
 #include "platform_windows.cpp"
 #include "game/game_scripts.cpp"
 
-Peer server;
-
 Editor editor;
 
 StackAllocator main_memory;
@@ -40,7 +38,6 @@ bool init_if_not()
     initted = true;
 
     init_net();
-    server.open("127.0.0.1", 6519, false);
 
     main_memory.init(1024ull * 1024 * 1024 * 4);
     allocator.init(1024ull * 1024 * 1024 * 2);  // 2gb
@@ -70,6 +67,6 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
 
 void deinit()
 {
-  server.close();
+  // server.close();
   deinit_net();
 }

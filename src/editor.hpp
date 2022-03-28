@@ -11,6 +11,8 @@
 #include "spline.hpp"
 #include "yaml.hpp"
 
+const String RESOURCE_PATH = "resources/test";
+
 struct Editor {
   Assets assets;
 
