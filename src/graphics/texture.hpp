@@ -87,7 +87,7 @@ struct Texture {
 
 struct Texture2D : Texture {
   Texture2D() = default;
-  Texture2D(uint32_t width, uint32_t height, TextureFormat format, bool want_mipmaps = true)
+  Texture2D(uint32_t width, uint32_t height, TextureFormat format, TextureFormat internal_format, bool want_mipmaps = true)
   {
     this->format = format;
     this->width  = width;
@@ -107,10 +107,27 @@ struct Texture2D : Texture {
     // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  }
+  Texture2D(uint32_t width, uint32_t height, TextureFormat format, bool want_mipmaps = true)
+  {
+    this->format = format;
+    this->width  = width;
+    this->height = height;
 
-    if (want_mipmaps) {
-      gen_mipmaps();
-    }
+    gl_type = GL_TEXTURE_2D;
+
+    glGenTextures(1, &gl_ref);
+    bind();
+
+    auto [gl_internalformat, gl_format] = format_to_opengl(format);
+    glTexImage2D(GL_TEXTURE_2D, 0, gl_internalformat, width, height, 0, gl_format, GL_UNSIGNED_BYTE,
+                 0);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, want_mipmaps ? GL_LINEAR : GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   }
 
   void upload(void *data, GLenum pixel_data_type, bool want_mipmaps)

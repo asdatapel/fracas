@@ -11,19 +11,19 @@ struct Camera {
   glm::mat4 view;
   glm::mat4 perspective;
 
-  static constexpr float fov = glm::radians(45.f);
+  float fov = glm::radians(45.f);
 
   void update_from_transform(RenderTarget target, Transform transform)
   {
     glm::vec3 dir = glm::rotate(
         glm::quat(glm::vec3{transform.rotation.x, transform.rotation.y, transform.rotation.z}),
-        glm::vec3(0, 0, -1));
+        glm::vec3(0, -1, 0));
 
     view = glm::lookAt(
         glm::vec3{transform.position.x, transform.position.y, transform.position.z},
         glm::vec3{transform.position.x, transform.position.y, transform.position.z} + dir,
         {0.f, 1.f, 0.f});
-    perspective = glm::perspective(fov, (float)target.width / (float)target.height, 0.01f, 100.0f);
+    perspective = glm::perspective(fov, (float)target.width / (float)target.height, 0.001f, 100.0f);
   }
 };
 
@@ -90,8 +90,8 @@ struct EditorCamera : Camera {
     view        = glm::lookAt(glm::vec3{pos_x, pos_y, pos_z},
                        glm::vec3{pos_x, pos_y, pos_z} + glm::vec3{dir_x, dir_y, dir_z},
                        {0.f, 1.f, 0.f});
-    perspective = glm::perspective(glm::radians(45.f), (float)target.width / (float)target.height,
-                                   0.01f, 10000.0f);
+    perspective = glm::perspective(fov, (float)target.width / (float)target.height,
+                                   0.01f, 1000.0f);
   }
 };
 

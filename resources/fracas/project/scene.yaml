@@ -1770,12 +1770,12 @@ entities:
     type: LIGHT
     transform: 
       position: 
-        x: 9.781715
-        y: 16.222790
-        z: 7.851425
+        x: 0
+        y: 2
+        z: 3
       rotation: 
-        x: 1.153704
-        y: 0.478891
+        x: 1.55
+        y: 0
         z: 0.000000
       scale: 
         x: 4.545329

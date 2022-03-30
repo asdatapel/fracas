@@ -31,6 +31,7 @@ Shader tonemap_shader;
 Shader blur_shader;
 Shader add_shader;
 Shader twod_shader;
+Shader shadow_shader;
 
 // TODO move this to the asset loading system
 Shader bar_shader;

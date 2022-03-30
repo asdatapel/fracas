@@ -1,10 +1,27 @@
 #pragma once
 
-#include "../scene/scene.hpp"
 #include "../scene/entity.hpp"
+#include "../scene/scene.hpp"
 #include "view_layer.hpp"
 
-void render_scene_entities(Scene *scene, ViewLayer *view_layer, RenderTarget target, Camera *camera, Vec3f camera_postion)
+struct Renderer {
+  RenderTarget shadow_map;
+  Camera shadow_camera;
+
+  void init()
+  {
+    static bool initted = false;
+    if (!initted) {
+      initted = true;
+
+      shadow_map = RenderTarget(256, 256, TextureFormat::RGB16F, TextureFormat::DEPTH24);
+    }
+  }
+};
+static Renderer renderer;
+
+void render_scene_entities(Scene *scene, ViewLayer *view_layer, RenderTarget target, Camera *camera,
+                           Vec3f camera_postion)
 {
   for (int i = 0; i < scene->entities.size; i++) {
     if (scene->entities.data[i].assigned) {
@@ -36,6 +53,11 @@ void render_scene_entities(Scene *scene, ViewLayer *view_layer, RenderTarget tar
             }
           }
 
+          if (e.shader->asset_id == 0) {
+            bind_mat4(shader, UniformId::SHADOW_CASTER_MAT, renderer.shadow_camera.perspective * renderer.shadow_camera.view);
+            bind_texture(shader, 9, renderer.shadow_map.color_tex);
+          }
+
           draw(target, shader, e.vert_buffer);
         }
       }
@@ -43,9 +65,49 @@ void render_scene_entities(Scene *scene, ViewLayer *view_layer, RenderTarget tar
   }
 }
 
-void render_scene(Scene *scene, ViewLayer *view_layer, RenderTarget target, Camera *editor_camera,
-                  Vec3f editor_camera_pos)
+void render_scene_shadow_entities(Scene *scene, ViewLayer *view_layer, RenderTarget target, Camera *camera,
+                           Vec3f camera_postion)
 {
+  for (int i = 0; i < scene->entities.size; i++) {
+    if (scene->entities.data[i].assigned) {
+      Entity &e = scene->entities.data[i].value;
+      if (e.view_layer_mask & view_layer->visiblity_mask) {
+        if (e.type == EntityType::MESH) {
+          glm::vec3 rot(e.transform.rotation.x, e.transform.rotation.y, e.transform.rotation.z);
+          glm::vec3 pos(e.transform.position.x, e.transform.position.y, e.transform.position.z);
+          glm::vec3 scale(e.transform.scale.x, e.transform.scale.y, e.transform.scale.z);
+          glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) *
+                            glm::scale(glm::mat4(1.f), scale) * glm::toMat4(glm::quat(rot));
+
+          Shader shader = shadow_shader;
+          bind_shader(shader);
+          bind_camera(shader, *camera, camera_postion);
+          bind_mat4(shader, UniformId::MODEL, model);
+          draw(target, shader, e.vert_buffer);
+        }
+      }
+    }
+  }
+}
+
+void render_shadow_map(Scene *scene, ViewLayer *view_layer, EntityId light_id, RenderTarget target, Camera *camera)
+{
+  Entity *light = scene->get(light_id);
+
+  Camera light_camera;
+  light_camera.fov = light->spot_light.outer_angle * 2;
+  light_camera.update_from_transform(target, light->transform);
+  renderer.shadow_camera = light_camera;
+
+  target.clear();
+  target.bind();
+  render_scene_shadow_entities(scene, view_layer, target, &light_camera, light->transform.position);
+}
+
+void render_scene(Scene *scene, ViewLayer *view_layer, RenderTarget target, Camera *editor_camera,
+                  Vec3f editor_camera_pos,i32 layer_index)
+{
+
   Camera *camera;
   Vec3f camera_pos;
   if (editor_camera) {
@@ -79,6 +141,7 @@ void render_scene(Scene *scene, ViewLayer *view_layer, RenderTarget target, Came
     }
   }
 
+
   LightUniformBlock all_lights;
   all_lights.num_lights = 0;
   for (int i = 0; i < scene->entities.size && all_lights.num_lights < MAX_LIGHTS; i++) {
@@ -101,6 +164,13 @@ void render_scene(Scene *scene, ViewLayer *view_layer, RenderTarget target, Came
   }
   upload_lights(all_lights);
 
+  
+  renderer.init();
+  if (layer_index == 0) {
+    EntityId light_id = 82;
+    render_shadow_map(scene, view_layer, light_id, renderer.shadow_map, camera);
+  }
+
   // if (view_layer->render_planar) {
   //   planar_target.bind();
   //   planar_target.clear();
@@ -113,9 +183,9 @@ void render_scene(Scene *scene, ViewLayer *view_layer, RenderTarget target, Came
   //                               0, 0,  1, 0,                       //
   //                               0, 0,  0, 1};
 
-  //   Vec3f flipped_camera_pos = {camera_pos.x, (2 * planar_position_y) - camera_pos.y, camera_pos.z};
-  //   Camera flipped_camera    = *camera;
-  //   flipped_camera.view      = reflection_mat * camera->view * reflection_mat;
+  //   Vec3f flipped_camera_pos = {camera_pos.x, (2 * planar_position_y) - camera_pos.y,
+  //   camera_pos.z}; Camera flipped_camera    = *camera; flipped_camera.view      = reflection_mat
+  //   * camera->view * reflection_mat;
 
   //   render_scene->entities(&flipped_camera, flipped_camera_pos);
 

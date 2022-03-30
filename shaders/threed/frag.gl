@@ -13,8 +13,17 @@ uniform vec3 camera_position;
 #include pbr_env_uniforms  
 #include light_uniforms
 
+layout(binding=9) uniform sampler2D shadow_map;
+uniform mat4 shadow_caster_mat;
+
 #include consts  
 #include pbr
+
+float LinearizeDepth(float depth)
+{
+    float z = depth * 2.0 - 1.0; // Back to NDC 
+    return (2.0 * 0.001 * 100) / (100 + 0.001 - z * (100 - 0.001));
+}
 
 void main()
 {
@@ -24,14 +33,20 @@ void main()
     float roughness = max(texture(roughness_texture, frag_uv).x, 0.001); // zero roughness bad
     vec3 emit = texture(emit_texture, frag_uv).rgb;
     float ao = texture(ao_texture, frag_uv).x;
+    
+    vec4 light_space_proj = shadow_caster_mat * vec4(frag_world_pos, 1);
+    vec3 light_space_proj_ndc = light_space_proj.xyz / light_space_proj.w;
+    float shadow_depth = texture(shadow_map, light_space_proj_ndc.xy * 0.5 + 0.5).r;
+    bool lit = shadow_depth >= light_space_proj.z- 0.05;
 
     normal = normalize(frag_normal);
     vec3 light_out = {0, 0, 0};
     for (int i = 0; i < num_lights; i++){
+        if (i == 21 && !lit) continue;
         light_out += PbrLight(frag_world_pos, normal, camera_position, albedo, roughness, metal, spot_lights[i]); 
     }
     vec3 ambient = PbrAmbient(irradiance, env_map, brdf, normal, albedo, roughness, metal, ao);
 
     vec3 color = light_out + ambient + (emit * 10);
-    FragColor = vec4(color, 1.0);
+    FragColor = vec4(color, light_space_proj.z / light_space_proj.w);
 } 

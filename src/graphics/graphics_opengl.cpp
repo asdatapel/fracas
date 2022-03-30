@@ -220,6 +220,7 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
   irradiance_shader      = load_shader(create_shader_program("engine_resources/irradiance"));
   env_filter_shader      = load_shader(create_shader_program("engine_resources/env_filter"));
   brdf_lut_shader        = load_shader(create_shader_program("engine_resources/brdf_lut"));
+  shadow_shader          = load_shader(create_shader_program("engine_resources/shadow"));
   tonemap_shader         = load_shader(create_shader_program("resources2/shaders/tonemap"));
   blur_shader            = load_shader(create_shader_program("resources2/shaders/blur"));
   add_shader             = load_shader(create_shader_program("engine_resources/add"));
