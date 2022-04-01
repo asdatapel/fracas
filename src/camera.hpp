@@ -23,7 +23,7 @@ struct Camera {
         glm::vec3{transform.position.x, transform.position.y, transform.position.z},
         glm::vec3{transform.position.x, transform.position.y, transform.position.z} + dir,
         {0.f, 1.f, 0.f});
-    perspective = glm::perspective(fov, (float)target.width / (float)target.height, 0.001f, 100.0f);
+    perspective = glm::perspective(fov, (float)target.width / (float)target.height, 0.1f, 100.0f);
   }
 };
 

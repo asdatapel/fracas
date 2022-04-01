@@ -14,7 +14,7 @@ struct Renderer {
     if (!initted) {
       initted = true;
 
-      shadow_map = RenderTarget(256, 256, TextureFormat::RGB16F, TextureFormat::DEPTH24);
+      shadow_map = RenderTarget(128, 128, TextureFormat::NONE, TextureFormat::DEPTH24);
     }
   }
 };
@@ -53,9 +53,10 @@ void render_scene_entities(Scene *scene, ViewLayer *view_layer, RenderTarget tar
             }
           }
 
-          if (e.shader->asset_id == 0) {
+          if (e.shader->asset_id == 0) 
+          {
             bind_mat4(shader, UniformId::SHADOW_CASTER_MAT, renderer.shadow_camera.perspective * renderer.shadow_camera.view);
-            bind_texture(shader, 9, renderer.shadow_map.color_tex);
+            bind_texture(shader, 9, renderer.shadow_map.depth_tex);
           }
 
           draw(target, shader, e.vert_buffer);
@@ -98,6 +99,7 @@ void render_shadow_map(Scene *scene, ViewLayer *view_layer, EntityId light_id, R
   light_camera.fov = light->spot_light.outer_angle * 2;
   light_camera.update_from_transform(target, light->transform);
   renderer.shadow_camera = light_camera;
+  renderer.shadow_camera.update_from_transform(target, light->transform);;
 
   target.clear();
   target.bind();

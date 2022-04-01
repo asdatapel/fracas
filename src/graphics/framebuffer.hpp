@@ -36,7 +36,7 @@ struct RenderTarget : Asset {
                              0);
     }
     if (depth != TextureFormat::NONE) {
-      depth_tex = Texture2D(width, height, depth, false);
+      depth_tex = Texture2D(width, height, depth, true);
       glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_tex.gl_ref,
                              0);
     }
