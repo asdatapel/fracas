@@ -91,7 +91,8 @@ static void check_error_program(unsigned int program, const char *folder)
   char infoLog[512];
   glGetProgramiv(program, GL_LINK_STATUS, &success);
 
-  if (!success) {
+  if (!success) 
+  {
     glGetProgramInfoLog(program, 512, NULL, infoLog);
     printf("Shader program '%s' linking failed: %s\n", folder, infoLog);
   }
@@ -208,22 +209,22 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
 
-  basic_shader    = load_shader(create_shader_program("engine_resources/basic"));
-  lines_shader    = load_shader(create_shader_program("engine_resources/lines"));
-  textured_shader = load_shader(create_shader_program("engine_resources/textured"));
+  basic_shader    = load_shader(create_shader_program("engine_resources/shaders/basic"));
+  lines_shader    = load_shader(create_shader_program("engine_resources/shaders/lines"));
+  textured_shader = load_shader(create_shader_program("engine_resources/shaders/textured"));
   single_channel_font_shader =
-      load_shader(create_shader_program("engine_resources/single_channel_font"));
-  textured_mapped_shader = load_shader(create_shader_program("engine_resources/font_atlas"));
+      load_shader(create_shader_program("engine_resources/shaders/single_channel_font"));
+  textured_mapped_shader = load_shader(create_shader_program("engine_resources/shaders/font_atlas"));
   blurred_colors_shader  = load_shader(create_shader_program("resources2/shaders/blurred_colors"));
-  rect_to_cubemap_shader = load_shader(create_shader_program("engine_resources/rect_to_cubemap"));
-  cubemap_shader         = load_shader(create_shader_program("engine_resources/cubemap"));
-  irradiance_shader      = load_shader(create_shader_program("engine_resources/irradiance"));
-  env_filter_shader      = load_shader(create_shader_program("engine_resources/env_filter"));
-  brdf_lut_shader        = load_shader(create_shader_program("engine_resources/brdf_lut"));
-  shadow_shader          = load_shader(create_shader_program("engine_resources/shadow"));
+  rect_to_cubemap_shader = load_shader(create_shader_program("engine_resources/shaders/rect_to_cubemap"));
+  cubemap_shader         = load_shader(create_shader_program("engine_resources/shaders/cubemap"));
+  irradiance_shader      = load_shader(create_shader_program("engine_resources/shaders/irradiance"));
+  env_filter_shader      = load_shader(create_shader_program("engine_resources/shaders/env_filter"));
+  brdf_lut_shader        = load_shader(create_shader_program("engine_resources/shaders/brdf_lut"));
+  shadow_shader          = load_shader(create_shader_program("engine_resources/shaders/shadow"));
   tonemap_shader         = load_shader(create_shader_program("resources2/shaders/tonemap"));
   blur_shader            = load_shader(create_shader_program("resources2/shaders/blur"));
-  add_shader             = load_shader(create_shader_program("engine_resources/add"));
+  add_shader             = load_shader(create_shader_program("engine_resources/shaders/add"));
   twod_shader            = load_shader(create_shader_program("resources2/shaders/twod"));
   threed_skinning_shader = load_shader(create_shader_program("resources2/shaders/threed_skinning"));
 

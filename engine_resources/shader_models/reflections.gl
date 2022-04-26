@@ -1,0 +1,41 @@
+$section standard
+
+$set reflections_texture_offset $texture
+uniform layout(binding=$texture) samplerCube irradiance;
+uniform layout(binding=$texture) samplerCube env_map;
+
+vec3 sampleSpecularReflection(vec3 to_eye, vec3 normal, float roughness)
+{
+    const float MAX_REFLECTION_LOD = 7.0; // assuming 128x128 texture
+    
+    vec3 r = reflect(-to_eye, normal);   
+    return textureLod(env_map, r, roughness * MAX_REFLECTION_LOD).rgb;   
+}
+
+vec3 sampleIrradianceReflection(vec3 normal)
+{
+    return texture(irradiance, normal).rgb;
+}
+
+$section planar
+
+$set reflections_texture_offset $texture
+uniform layout(binding=$texture) sampler2D reflection_texture;
+
+// forward decl
+vec4 planar_clip_pos();
+
+vec3 sampleSpecularReflection(vec3 to_eye, vec3 normal, float roughness)
+{
+    const float MAX_REFLECTION_LOD = 7.0; // assuming 128x128 texture
+    
+    vec4 clip_pos = planar_clip_pos();
+    vec2 r_screen = clip_pos.xy / clip_pos.w;
+    vec2 r = vec2(0.5, 0.5) + 0.5 * r_screen;
+    return textureLod(reflection_texture, r, roughness * MAX_REFLECTION_LOD).rgb;
+}
+
+vec3 sampleIrradianceReflection(vec3 normal)
+{
+    return vec3(0, 0, 0);
+}

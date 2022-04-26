@@ -138,6 +138,23 @@ void load_assets_file(String filename, Assets *assets_o)
           create_shader({vert_src.data, (uint16_t)vert_src.length},
                         {frag_src.data, (uint16_t)frag_src.length}, name.to_char_array(temp));
       shader.asset_id = id;
+
+      if (auto in_config_val = in_shader->get("config")) 
+      {
+        String config_path = in_config_val->as_literal();
+        auto config = read_entire_file(config_path.to_char_array(temp), temp);
+        YAML::Dict *config_root = YAML::deserialize(String(config.data, config.length), temp)->as_dict();
+
+        shader.material_offset = atoi(config_root->get("material_offset")->as_literal().to_char_array(temp));
+        shader.pbr_texture_offset = atoi(config_root->get("pbr_texture_offset")->as_literal().to_char_array(temp));
+        shader.reflections_texture_offset = atoi(config_root->get("reflections_texture_offset")->as_literal().to_char_array(temp));
+        
+        shader.shadows_enabled = strcmp(config_root->get("shadows_enabled")->as_literal(), "true");
+        if (shader.shadows_enabled) {
+          shader.shadow_texture_offset = atoi(config_root->get("shadow_texture_offset")->as_literal().to_char_array(temp));
+        }
+      }
+      
       assets_o->shaders.emplace(shader, id);
     }
   }
@@ -337,10 +354,6 @@ RefArray<ViewLayer> deserialize_renderer_config(String filepath, Assets *assets,
           atoi(planar_reflector->get("entity_id")->as_literal().to_char_array(mem.temp));
       int render_target_id =
           atoi(planar_reflector->get("render_target")->as_literal().to_char_array(mem.temp));
-
-      view_layer->render_planar = true;
-      view_layer->planar_entity = scene->get(planar_reflector_entity_id);
-      view_layer->planar_target = assets->render_targets.data[render_target_id].value;
     }
   }
 

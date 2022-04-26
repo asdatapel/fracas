@@ -34,10 +34,6 @@ Shader twod_shader;
 Shader shadow_shader;
 
 // TODO move this to the asset loading system
-Shader bar_shader;
-Shader threed_shader;
-Shader threed_with_planar_shader;
-Shader threed_with_normals_shader;
 Shader threed_skinning_shader;
 
 struct Bitmap {

@@ -1,0 +1,100 @@
+$vert_shader
+#version 430 core
+
+$include lighting.shadows_vert
+$include pbr_lit_3d.vert
+
+layout (location = $vertex_input) in vec2 text_uv;
+layout (location = $vertex_output) out vec2 frag_text_uv;
+
+void main()
+{
+  pbr_lit_3d_vert();
+  lighting_shadows_vert(frag_world_pos);
+  frag_text_uv = text_uv;
+}
+
+$frag_shader
+#version 430 core
+
+$include lighting.shadows_frag
+$include reflections.standard
+$include pbr_lit_3d.frag
+
+$set material_offset $texture
+uniform layout(binding = $texture) sampler2D albedo_texture;
+uniform layout(binding = $texture) sampler2D normal_texture;
+uniform layout(binding = $texture) sampler2D metal_texture;
+uniform layout(binding = $texture) sampler2D roughness_texture;
+uniform layout(binding = $texture) sampler2D emit_texture;
+uniform layout(binding = $texture) sampler2D ao_texture;
+uniform layout(binding = $texture) sampler2D num_texture;
+uniform layout(binding = $texture) sampler2D text_texture;
+
+layout (location = $uniform_push) uniform float ripple_t;
+
+layout (location = $frag_input) in vec2 frag_text_uv;
+
+out vec4 FragColor;
+
+float easeOutElastic(float t) {
+    float c4 = (2 * 3.1415) / 3;
+
+    t = clamp(t * t, 0, 1);
+    return pow(2, -10 * t) * sin((t * 10 - 0.75) * c4) + 1;
+}
+
+vec4 ripple(float d, float thickness, vec3 color, float alpha)
+{
+    float distance_from_center = length((frag_text_uv - vec2(0.5, 0.25)) * vec2(1, 0.5));
+    float distance_from_ripple = distance_from_center - d;
+    return smoothstep(thickness, thickness * 3 / 10, abs(distance_from_ripple)) * vec4(color, alpha);
+}
+
+vec4 number_and_ripple()
+{
+    vec4 ripple_color = ripple(ripple_t, 0.01 + 0.1 * ripple_t * ripple_t, vec3(.1, .1, .9), 1)
+                + ripple(0.3 * sqrt(1 - pow((ripple_t - 0.25) - 1, 2)) ,  0.1 * ripple_t, vec3(.05, .05, .45) * 2, 1 - (ripple_t));
+
+    vec2 scale = vec2(easeOutElastic(ripple_t) * 3, easeOutElastic(ripple_t) * 2);
+    vec2 center = vec2(0.5, 0.25);
+    vec2 scaled_uv = (frag_text_uv - center) * scale + vec2(0.5, 0.5);
+    vec4 num = texture(num_texture, scaled_uv);
+    return mix(ripple_color * 2, num, num.a);
+}
+
+vec4 text()
+{
+    vec4 ripple_color = ripple(ripple_t, 0.01 + 0.1 * ripple_t * ripple_t, vec3(.1, .1, .9), 1)
+                + ripple(0.3 * sqrt(1 - pow((ripple_t - 0.25) - 1, 2)) ,  0.1 * ripple_t, vec3(.05, .05, .45) * 2, 1 - (ripple_t));
+
+    vec2 scale = vec2(easeOutElastic(ripple_t) * 3, easeOutElastic(ripple_t) * 2);
+    vec2 center = vec2(0.5, 0.25);
+    vec2 scaled_uv = (frag_text_uv - center) * scale + vec2(0.5, 0.5);
+    vec4 num = texture(num_texture, scaled_uv);
+    return mix(ripple_color * 2, num, num.a);
+}
+
+void main()
+{
+    vec3 albedo = texture(albedo_texture, frag_uv).xyz;
+    vec3 normal = texture(normal_texture, frag_uv).xyz;
+    float metal = texture(metal_texture, frag_uv).x;
+    float roughness = texture(roughness_texture, frag_uv).x;
+    float ao = texture(ao_texture, frag_uv).x;
+
+    vec4 overlay = vec4(0, 0, 0, clamp(-ripple_t, 0, 1) / 2);
+    if (ripple_t >= 0)
+    {
+        vec4 masked_overlay = (1 - step(0.6, metal)) * number_and_ripple();
+        vec4 blended_overlay = mix(vec4(0), masked_overlay, masked_overlay.a);
+        overlay = blended_overlay;
+    }
+
+    vec2 text_uv = (frag_text_uv - vec2(0, 0.5)) * vec2(1, 2);
+    vec4 text = vec4(1, 1, 1, texture(text_texture, text_uv));
+    overlay = mix(overlay, text, text.a);
+
+    vec3 emit = mix(vec3(0), overlay.xyz, overlay.a);
+    FragColor = pbr_lit_3d_frag(albedo, frag_normal, metal, roughness, emit, ao, 1);
+}

@@ -4,9 +4,18 @@
 #include "../scene/scene.hpp"
 #include "view_layer.hpp"
 
+struct PlanarProbe {
+  Vec3f position;
+  RenderTarget target;
+
+  glm::mat4 pv_matrix;
+};
+
 struct Renderer {
   RenderTarget shadow_map;
   Camera shadow_camera;
+
+  PlanarProbe planar_probe;
 
   void init()
   {
@@ -14,7 +23,10 @@ struct Renderer {
     if (!initted) {
       initted = true;
 
-      shadow_map = RenderTarget(128, 128, TextureFormat::NONE, TextureFormat::DEPTH24);
+      shadow_map = RenderTarget(1024, 1024, TextureFormat::NONE, TextureFormat::DEPTH24);
+
+      planar_probe.target = RenderTarget(1280, 720, TextureFormat::RGB16F, TextureFormat::DEPTH24);
+      planar_probe.position = {0, 0, 0};
     }
   }
 };
@@ -38,8 +50,14 @@ void render_scene_entities(Scene *scene, ViewLayer *view_layer, RenderTarget tar
           bind_shader(shader);
           bind_camera(shader, *camera, camera_postion);
           bind_mat4(shader, UniformId::MODEL, model);
-          bind_material(shader, view_layer->env_map->env_mat);
-          bind_material(shader, *e.material, 3);
+          bind_material(shader, *e.material, shader.material_offset);
+          
+          if (shader.asset_id == 2) {
+            bind_mat4(shader, UniformId::REFLECTED_PROJECTION, renderer.planar_probe.pv_matrix);
+            bind_texture(shader, shader.reflections_texture_offset, renderer.planar_probe.target.color_tex);
+          } else {
+            bind_material(shader, view_layer->env_map->env_mat, shader.reflections_texture_offset);
+          }
 
           if (e.animation) {
             for (int i = 0; i < e.animation->final_mats.size(); i++) {
@@ -53,10 +71,10 @@ void render_scene_entities(Scene *scene, ViewLayer *view_layer, RenderTarget tar
             }
           }
 
-          if (e.shader->asset_id == 0) 
-          {
-            bind_mat4(shader, UniformId::SHADOW_CASTER_MAT, renderer.shadow_camera.perspective * renderer.shadow_camera.view);
-            bind_texture(shader, 9, renderer.shadow_map.depth_tex);
+          if (shader.shadows_enabled) {
+            bind_mat4(shader, UniformId::SHADOW_CASTER_MAT,
+                      renderer.shadow_camera.perspective * renderer.shadow_camera.view);
+            bind_texture(shader, shader.shadow_texture_offset, renderer.shadow_map.depth_tex);
           }
 
           draw(target, shader, e.vert_buffer);
@@ -66,8 +84,8 @@ void render_scene_entities(Scene *scene, ViewLayer *view_layer, RenderTarget tar
   }
 }
 
-void render_scene_shadow_entities(Scene *scene, ViewLayer *view_layer, RenderTarget target, Camera *camera,
-                           Vec3f camera_postion)
+void render_scene_shadow_entities(Scene *scene, ViewLayer *view_layer, RenderTarget target,
+                                  Camera *camera, Vec3f camera_postion)
 {
   for (int i = 0; i < scene->entities.size; i++) {
     if (scene->entities.data[i].assigned) {
@@ -91,7 +109,8 @@ void render_scene_shadow_entities(Scene *scene, ViewLayer *view_layer, RenderTar
   }
 }
 
-void render_shadow_map(Scene *scene, ViewLayer *view_layer, EntityId light_id, RenderTarget target, Camera *camera)
+void render_shadow_map(Scene *scene, ViewLayer *view_layer, EntityId light_id, RenderTarget target,
+                       Camera *camera)
 {
   Entity *light = scene->get(light_id);
 
@@ -99,7 +118,7 @@ void render_shadow_map(Scene *scene, ViewLayer *view_layer, EntityId light_id, R
   light_camera.fov = light->spot_light.outer_angle * 2;
   light_camera.update_from_transform(target, light->transform);
   renderer.shadow_camera = light_camera;
-  renderer.shadow_camera.update_from_transform(target, light->transform);;
+  renderer.shadow_camera.update_from_transform(target, light->transform);
 
   target.clear();
   target.bind();
@@ -107,9 +126,8 @@ void render_shadow_map(Scene *scene, ViewLayer *view_layer, EntityId light_id, R
 }
 
 void render_scene(Scene *scene, ViewLayer *view_layer, RenderTarget target, Camera *editor_camera,
-                  Vec3f editor_camera_pos,i32 layer_index)
+                  Vec3f editor_camera_pos, i32 layer_index)
 {
-
   Camera *camera;
   Vec3f camera_pos;
   if (editor_camera) {
@@ -143,7 +161,6 @@ void render_scene(Scene *scene, ViewLayer *view_layer, RenderTarget target, Came
     }
   }
 
-
   LightUniformBlock all_lights;
   all_lights.num_lights = 0;
   for (int i = 0; i < scene->entities.size && all_lights.num_lights < MAX_LIGHTS; i++) {
@@ -166,35 +183,28 @@ void render_scene(Scene *scene, ViewLayer *view_layer, RenderTarget target, Came
   }
   upload_lights(all_lights);
 
-  
   renderer.init();
   if (layer_index == 0) {
     EntityId light_id = 82;
     render_shadow_map(scene, view_layer, light_id, renderer.shadow_map, camera);
   }
 
-  // if (view_layer->render_planar) {
-  //   planar_target.bind();
-  //   planar_target.clear();
+  float planar_position_y = renderer.planar_probe.position.y;
 
-  //   float planar_position_y = planar_entity->transform.position.y;
+  // http://khayyam.kaplinski.com/2011/09/reflective-water-with-glsl-part-i.html
+  glm::mat4 reflection_mat = {1, 0,  0, 0,                       //
+                              0, -1, 0, -2 * planar_position_y,  //
+                              0, 0,  1, 0,                       //
+                              0, 0,  0, 1};
 
-  //   // http://khayyam.kaplinski.com/2011/09/reflective-water-with-glsl-part-i.html
-  //   glm::mat4 reflection_mat = {1, 0,  0, 0,                       //
-  //                               0, -1, 0, -2 * planar_position_y,  //
-  //                               0, 0,  1, 0,                       //
-  //                               0, 0,  0, 1};
+  Vec3f flipped_camera_pos = {camera_pos.x, (2 * planar_position_y) - camera_pos.y, camera_pos.z};
+  Camera flipped_camera    = *camera;
+  flipped_camera.view      = reflection_mat * camera->view * reflection_mat;
+  renderer.planar_probe.pv_matrix = flipped_camera.perspective * flipped_camera.view;
 
-  //   Vec3f flipped_camera_pos = {camera_pos.x, (2 * planar_position_y) - camera_pos.y,
-  //   camera_pos.z}; Camera flipped_camera    = *camera; flipped_camera.view      = reflection_mat
-  //   * camera->view * reflection_mat;
-
-  //   render_scene->entities(&flipped_camera, flipped_camera_pos);
-
-  //   bind_shader(*planar_entity->shader);
-  //   bind_mat4(*planar_entity->shader, UniformId::REFLECTED_PROJECTION,
-  //             flipped_camera.perspective * flipped_camera.view);
-  // }
+  renderer.planar_probe.target.bind();
+  renderer.planar_probe.target.clear();
+  render_scene_entities(scene, view_layer, renderer.planar_probe.target, &flipped_camera, flipped_camera_pos);
 
   target.bind();
   target.clear();

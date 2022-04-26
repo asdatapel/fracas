@@ -64,10 +64,6 @@ struct Compositor {
     draw_rect();
     glEnable(GL_DEPTH_TEST);
 
-    glDisable(GL_DEPTH_TEST);
-    draw_textured_rect(final_target, {10, 10, 256, 256}, {}, renderer.shadow_map.color_tex);
-    glEnable(GL_DEPTH_TEST);
-
     final_target.color_tex.gen_mipmaps();
   }
 };

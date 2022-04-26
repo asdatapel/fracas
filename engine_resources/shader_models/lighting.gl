@@ -1,0 +1,68 @@
+$section lights
+const int MAX_LIGHTS = 50;
+
+// TODO needs better attenuation
+struct PointLight
+{
+  vec3 pos;
+  vec3 color;
+};
+struct SpotLight
+{
+  vec3 pos;
+  vec3 direction;
+  vec3 color;
+  float inner_angle;
+  float outer_angle;
+};
+layout (std140, binding = $uniform_buffer) uniform lights
+{
+    SpotLight spot_lights[MAX_LIGHTS];
+    uint num_lights;
+};
+
+#ifndef GET_LIT
+#define GET_LIT(light) 1
+#endif
+
+$section shadows_vert
+
+layout (location = $uniform_push) uniform mat4 shadow_caster_mat;
+
+layout (location = $vertex_output) out vec4 frag_light_pos;
+
+void lighting_shadows_vert(vec3 frag_world_pos) {
+    frag_light_pos = shadow_caster_mat * vec4(frag_world_pos, 1.0);
+}
+
+$section shadows_frag
+
+$set shadows_enabled true
+$set shadow_texture_offset $texture
+layout(binding=$texture) uniform sampler2DShadow texture_shadow_map;
+
+layout(location=$frag_input) in vec4 frag_light_pos;
+
+float sample_shadow_map(sampler2DShadow map, vec4 position)
+{
+    vec3 ndc = (position.xyz / position.w) * 0.5 + 0.5;
+    return texture(map, vec3(ndc.xy, ndc.z - 0.0005));
+}
+float sample_shadow_map(sampler2D map, vec4 position)
+{
+    vec3 ndc = (position.xyz / position.w) * 0.5 + 0.5;
+    float shadow_map_depth = texture(map, ndc.xy).x;
+    return shadow_map_depth >= ndc.z - 0.00005 ? 1 : 0;
+}
+float lit_pct(int light_i)
+{
+    if (light_i == 21)
+      return sample_shadow_map(texture_shadow_map, frag_light_pos);
+
+    return 1;
+}
+
+#ifdef GET_LIT
+#undef GET_LIT
+#endif
+#define GET_LIT(light) lit_pct(light)

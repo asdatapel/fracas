@@ -13,11 +13,7 @@ materials:
     textures:
       - 6
       - 7
-      - 8
-      - 9
-      - 10
       - 11
-      - 152
   - id: 2
     name: resources/fracas/data/models/background/Cube.021
     textures:
@@ -1018,16 +1014,19 @@ render_targets:
 shaders:
   - id: 0
     name: main_threed
-    vert: resources2/shaders/threed/vert.gl
-    frag: resources2/shaders/threed/frag.gl
+    config: generated/resources/fracas/data/shaders/main/config.yaml
+    vert: generated/resources/fracas/data/shaders/main/vert.gl
+    frag: generated/resources/fracas/data/shaders/main/frag.gl
   - id: 1
     name: bar
-    vert: resources2/shaders/bar/vert.gl
-    frag: resources2/shaders/bar/frag.gl
+    config: generated/resources/fracas/data/shaders/screen_bar/config.yaml
+    vert: generated/resources/fracas/data/shaders/screen_bar/vert.gl
+    frag: generated/resources/fracas/data/shaders/screen_bar/frag.gl
   - id: 2
     name: planar
-    vert: resources2/shaders/threed_with_planar/vert.gl
-    frag: resources2/shaders/threed_with_planar/frag.gl
+    config: generated/resources/fracas/data/shaders/planar/config.yaml
+    vert: generated/resources/fracas/data/shaders/planar/vert.gl
+    frag: generated/resources/fracas/data/shaders/planar/frag.gl
   - id: 3
     name: threed_skinning
     vert: resources2/shaders/threed_skinning/vert.gl

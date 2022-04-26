@@ -9,10 +9,6 @@ struct ViewLayer {
   
   EnvMap *env_map;
   
-  bool render_planar    = false;
-  Entity *planar_entity = nullptr;
-  RenderTarget planar_target = {};
-  
   bool visible         = false;
   bool cubemap_visible = true;
 };

@@ -1,0 +1,7 @@
+$section constants
+const float PI = 3.14159265359;
+
+$section camera
+
+layout (location = $uniform_push) uniform vec3 camera_position;
+
