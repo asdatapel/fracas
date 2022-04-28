@@ -9,9 +9,13 @@ struct PointLight
 };
 struct SpotLight
 {
-  vec3 pos;
-  vec3 direction;
-  vec3 color;
+  vec4 pos;
+  vec4 direction;
+  vec4 color;
+
+  mat4 lightspace_mat;
+  int shadow_map_index;
+  
   float inner_angle;
   float outer_angle;
 };
@@ -21,27 +25,29 @@ layout (std140, binding = $uniform_buffer) uniform lights
     uint num_lights;
 };
 
-#ifndef GET_LIT
-#define GET_LIT(light) 1
-#endif
 
-$section shadows_vert
-
-layout (location = $uniform_push) uniform mat4 shadow_caster_mat;
-
-layout (location = $vertex_output) out vec4 frag_light_pos;
-
-void lighting_shadows_vert(vec3 frag_world_pos) {
-    frag_light_pos = shadow_caster_mat * vec4(frag_world_pos, 1.0);
+vec3 CalculatePointLight(vec3 to_eye, vec3 to_light, float to_light_dist, 
+                         vec3 halfway, PointLight light)
+{
+    float attenuation = 1.0 / (to_light_dist * to_light_dist); // TODO needs better attenuation
+    vec3  radiance    = light.color.xyz * attenuation;  
+    return radiance;
 }
 
-$section shadows_frag
+vec3 CalculateSpotLight(vec3 to_eye, vec3 to_light, float to_light_dist, 
+                        vec3 halfway, SpotLight light)
+{
+    float min_cos = cos(light.outer_angle);
+    float max_cos = cos(light.inner_angle);
+    float spotlight_coefficient = smoothstep(min_cos, max_cos, dot(light.direction.xyz, -to_light));
+
+    float attenuation = 1.0 / (to_light_dist * to_light_dist); // TODO needs better attenuation
+    return spotlight_coefficient * light.color.xyz * attenuation;
+}
 
 $set shadows_enabled true
 $set shadow_texture_offset $texture
 layout(binding=$texture) uniform sampler2DShadow texture_shadow_map;
-
-layout(location=$frag_input) in vec4 frag_light_pos;
 
 float sample_shadow_map(sampler2DShadow map, vec4 position)
 {
@@ -54,15 +60,26 @@ float sample_shadow_map(sampler2D map, vec4 position)
     float shadow_map_depth = texture(map, ndc.xy).x;
     return shadow_map_depth >= ndc.z - 0.00005 ? 1 : 0;
 }
-float lit_pct(int light_i)
+float sample_shadow_map(uint index, vec4 lightspace_position)
 {
-    if (light_i == 21)
-      return sample_shadow_map(texture_shadow_map, frag_light_pos);
+    vec3 ndc = (lightspace_position.xyz / lightspace_position.w) * 0.5 + 0.5;
+
+    const int ATLAS_DIM = 4;
+    const float ELEM_SIZE = 1 / ATLAS_DIM;
+    uvec2 atlas_position = uvec2(index % ATLAS_DIM, index / ATLAS_DIM);
+    vec2 uv = vec2((atlas_position.x + ndc.x) * ELEM_SIZE, (atlas_position.y + ndc.y) * ELEM_SIZE);
+
+    return texture(texture_shadow_map, vec3(uv, ndc.z - 0.0005));
+}
+float lit_pct(int light_i, vec3 world_pos)
+{
+    // if (spot_lights[light_i].shadow_map_index > -1) {
+    //   vec4 lightspace_position = spot_lights[light_i].lightspace_mat * 
+    //                                           vec4(world_pos, 1.0);
+    //   return sample_shadow_map(spot_lights[light_i].shadow_map_index, lightspace_position);
+    // }
 
     return 1;
 }
 
-#ifdef GET_LIT
-#undef GET_LIT
-#endif
-#define GET_LIT(light) lit_pct(light)
+#define GET_LIT(light, world_pos) lit_pct(light, world_pos)

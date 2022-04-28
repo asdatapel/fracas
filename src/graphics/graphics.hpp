@@ -93,13 +93,17 @@ struct PointLight {
   const static int SIZE = 32;
 };
 struct SpotLight {
-  glm::vec3 position;
-  glm::vec3 direction;
-  glm::vec3 color;
+  glm::vec4 position;
+  glm::vec4 direction;
+  glm::vec4 color;
+
+  glm::mat4 lightspace_mat;
+  i32 shadow_map_index = -1;
+  
   float inner_angle;
   float outer_angle;
 
-  const static int SIZE = 64;
+  const static int SIZE = 128;
 };
 struct LightUniformBlock {
   SpotLight spot_lights[MAX_LIGHTS];

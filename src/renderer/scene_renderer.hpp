@@ -168,12 +168,12 @@ void render_scene(Scene *scene, ViewLayer *view_layer, RenderTarget target, Came
       Entity &e = scene->entities.data[i].value;
       if (e.type == EntityType::LIGHT && (e.view_layer_mask & view_layer->visiblity_mask)) {
         SpotLight light;
-        light.position = {e.transform.position.x, e.transform.position.y, e.transform.position.z};
+        light.position = {e.transform.position.x, e.transform.position.y, e.transform.position.z, 0};
         light.direction =
             glm::rotate(glm::quat(glm::vec3{e.transform.rotation.x, e.transform.rotation.y,
                                             e.transform.rotation.z}),
-                        glm::vec3(0, -1, 0));
-        light.color = glm::vec3{e.spot_light.color.x, e.spot_light.color.y, e.spot_light.color.z};
+                        glm::vec4(0, -1, 0, 0));
+        light.color = {e.spot_light.color.x, e.spot_light.color.y, e.spot_light.color.z, 0};
         light.outer_angle                             = e.spot_light.outer_angle;
         light.inner_angle                             = e.spot_light.inner_angle;
         all_lights.spot_lights[all_lights.num_lights] = light;

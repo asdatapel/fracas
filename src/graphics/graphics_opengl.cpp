@@ -231,6 +231,7 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
   // setup uniform buffers
   glGenBuffers(1, &lights_ubo_buffer);
   glBindBuffer(GL_UNIFORM_BUFFER, lights_ubo_buffer);
+  int x = LightUniformBlock::SIZE;
   glBufferData(GL_UNIFORM_BUFFER, LightUniformBlock::SIZE, NULL, GL_STATIC_DRAW);
   glBindBufferBase(GL_UNIFORM_BUFFER, LIGHTS_BUFFER_BINDING, lights_ubo_buffer);
 
@@ -394,18 +395,25 @@ void draw_single_channel_text(RenderTarget target, Rect rect, Rect uv, Texture t
 
 void upload_lights(LightUniformBlock lights)
 {
+  lights.num_lights = 0;
   glBindBuffer(GL_UNIFORM_BUFFER, lights_ubo_buffer);
   for (int i = 0; i < lights.num_lights; i++) {
+    if (i == 25) i++;
     int buf_index = SpotLight::SIZE * i;
-    glBufferSubData(GL_UNIFORM_BUFFER, buf_index, 12,
+    glBufferSubData(GL_UNIFORM_BUFFER, buf_index, 16,
                     glm::value_ptr(lights.spot_lights[i].position));
-    glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 16, 12,
+    glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 16, 16,
                     glm::value_ptr(lights.spot_lights[i].direction));
-    glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 32, 12,
+    glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 32, 16,
                     glm::value_ptr(lights.spot_lights[i].color));
-    glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 44, 4, &lights.spot_lights[i].inner_angle);
-    glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 48, 4, &lights.spot_lights[i].outer_angle);
+
+    glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 48, 64, &lights.spot_lights[i].lightspace_mat[0][0]);
+    glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 112, 4, &lights.spot_lights[i].shadow_map_index);
+
+    glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 116, 4, &lights.spot_lights[i].inner_angle);
+    glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 120, 4, &lights.spot_lights[i].outer_angle);
   }
+  int x =  MAX_LIGHTS * SpotLight::SIZE;
   glBufferSubData(GL_UNIFORM_BUFFER, MAX_LIGHTS * SpotLight::SIZE, 4, &lights.num_lights);
 };
 
