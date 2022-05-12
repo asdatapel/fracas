@@ -73,6 +73,7 @@ float cube_verts[] = {
 };
 
 unsigned int lights_ubo_buffer;
+GLuint ssbo;
 
 static void check_shader_error(unsigned int shader, const char *name)
 {
@@ -227,12 +228,12 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
   add_shader             = load_shader(create_shader_program("engine_resources/shaders/add"));
   twod_shader            = load_shader(create_shader_program("resources2/shaders/twod"));
   threed_skinning_shader = load_shader(create_shader_program("resources2/shaders/threed_skinning"));
+  sky_shader             = load_shader(create_shader_program("engine_resources/shaders/sky"));
 
-  // setup uniform buffers
-  glGenBuffers(1, &lights_ubo_buffer);
-  glBindBuffer(GL_UNIFORM_BUFFER, lights_ubo_buffer);
-  glBufferData(GL_UNIFORM_BUFFER, LightUniformBlock::SIZE, NULL, GL_STATIC_DRAW);
-  glBindBufferBase(GL_UNIFORM_BUFFER, LIGHTS_BUFFER_BINDING, lights_ubo_buffer);
+  glGenBuffers(1, &ssbo);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+  glBufferData(GL_SHADER_STORAGE_BUFFER, LightUniformBlock::SIZE, NULL, GL_DYNAMIC_DRAW);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LIGHTS_BUFFER_BINDING, ssbo);
 
   return main_target;
 }
@@ -279,6 +280,11 @@ void bind_2i(Shader shader, UniformId uniform_id, int i1, int i2)
 void bind_2f(Shader shader, UniformId uniform_id, float f1, float f2)
 {
   glUniform2f(shader.uniform_handles[(int)uniform_id], f1, f2);
+}
+
+void bind_3f(Shader shader, UniformId uniform_id, float f1, float f2, float f3)
+{
+  glUniform3f(shader.uniform_handles[(int)uniform_id], f1, f2, f3);
 }
 
 void bind_4f(Shader shader, UniformId uniform_id, float f1, float f2, float f3, float f4)
@@ -394,19 +400,32 @@ void draw_single_channel_text(RenderTarget target, Rect rect, Rect uv, Texture t
 
 void upload_lights(LightUniformBlock lights)
 {
-  glBindBuffer(GL_UNIFORM_BUFFER, lights_ubo_buffer);
+  int buf_index = 0;
+  glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index, 16,
+                  glm::value_ptr(lights.directional_light.direction));
+  glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index + 16, 16,
+                  glm::value_ptr(lights.directional_light.color));
+  glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index + 32, 4, &lights.directional_light.shadow_map_index);
+  glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index + 48, 64, &lights.directional_light.lightspace_mat[0][0]);
+
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
   for (int i = 0; i < lights.num_lights; i++) {
-    int buf_index = SpotLight::SIZE * i;
-    glBufferSubData(GL_UNIFORM_BUFFER, buf_index, 12,
+    int buf_index = DirectionalLight::SIZE + SpotLight::SIZE * i;
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index, 16,
                     glm::value_ptr(lights.spot_lights[i].position));
-    glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 16, 12,
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index + 16, 16,
                     glm::value_ptr(lights.spot_lights[i].direction));
-    glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 32, 12,
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index + 32, 16,
                     glm::value_ptr(lights.spot_lights[i].color));
-    glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 44, 4, &lights.spot_lights[i].inner_angle);
-    glBufferSubData(GL_UNIFORM_BUFFER, buf_index + 48, 4, &lights.spot_lights[i].outer_angle);
+
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index + 48, 4, &lights.spot_lights[i].inner_angle);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index + 52, 4, &lights.spot_lights[i].outer_angle);
+    
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index + 56, 4, &lights.spot_lights[i].shadow_map_index);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index + 64, 64, &lights.spot_lights[i].lightspace_mat[0][0]);
   }
-  glBufferSubData(GL_UNIFORM_BUFFER, MAX_LIGHTS * SpotLight::SIZE, 4, &lights.num_lights);
+
+  glBufferSubData(GL_SHADER_STORAGE_BUFFER,  DirectionalLight::SIZE + MAX_LIGHTS * SpotLight::SIZE, 4, &lights.num_lights);
 };
 
 void render_to_cubemap(RenderTarget target, Shader shader, Cubemap cubemap, uint32_t mip_level = 0)
@@ -454,23 +473,17 @@ Texture hdri_to_cubemap(RenderTarget target, Texture hdri, int size)
   return cubemap;
 }
 
-Texture convolve_irradiance_map(RenderTarget target, Texture src, int size)
+void convolve_irradiance_map(RenderTarget target, Texture src, Cubemap target_cubemap)
 {
-  Cubemap cubemap(size, size, TextureFormat::RGB16F, true);
-
   bind_shader(irradiance_shader);
   bind_texture(irradiance_shader, UniformId::ENV_MAP, src);
 
-  render_to_cubemap(target, irradiance_shader, cubemap);
-  cubemap.gen_mipmaps();
-
-  return cubemap;
+  render_to_cubemap(target, irradiance_shader, target_cubemap);
+  target_cubemap.gen_mipmaps();
 }
 
-Texture filter_env_map(RenderTarget target, Texture src, int size)
+void filter_env_map(RenderTarget target, Texture src, Cubemap target_cubemap)
 {
-  Cubemap cubemap(size, size, TextureFormat::RGB16F, true);
-
   bind_shader(env_filter_shader);
   bind_texture(env_filter_shader, UniformId::ENV_MAP, src);
 
@@ -479,10 +492,8 @@ Texture filter_env_map(RenderTarget target, Texture src, int size)
     float roughness = (float)mip / (float)(max_mip_levels - 1);
     bind_1f(env_filter_shader, UniformId::ROUGHNESS, roughness);
 
-    render_to_cubemap(target, env_filter_shader, cubemap, mip);
+    render_to_cubemap(target, env_filter_shader, target_cubemap, mip);
   }
-
-  return cubemap;
 }
 
 void debug_begin_immediate()
@@ -544,4 +555,33 @@ void debug_draw_lines(RenderTarget target, float *lines, int count)
   glBufferData(GL_ARRAY_BUFFER, count * 2 * 7 * sizeof(float), lines, GL_DYNAMIC_DRAW);
   glBindVertexArray(debug_lines_vao);
   glDrawArrays(GL_LINES, 0, count * 2);
+}
+
+
+void draw_sky(Cubemap cubemap, float dir_t) {
+  static const glm::mat4 model_mats[] = {
+      glm::rotate(glm::mat4(1.0), glm::radians(90.f), glm::vec3(0.0f, 1.0f, 0.0f)),
+      glm::rotate(glm::mat4(1.0), glm::radians(-90.f), glm::vec3(0.0f, 1.0f, 0.0f)),
+      glm::rotate(glm::mat4(1.0), glm::radians(-90.f), glm::vec3(1.0f, 0.0f, 0.0f)),
+      glm::rotate(glm::mat4(1.0), glm::radians(90.f), glm::vec3(1.0f, 0.0f, 0.0f)),
+      glm::mat4(1.0),
+      glm::rotate(glm::mat4(1.0), glm::radians(180.f), glm::vec3(0.0f, 1.0f, 0.0f)),
+  };
+
+  bind_shader(sky_shader);
+
+  bind_3f(sky_shader, UniformId::CAMERA_POSITION, 0, 10, 0);
+  bind_3f(sky_shader, UniformId::SUN_DIRECTION, cos(dir_t/10), sin(dir_t / 10), 0);
+
+  static RenderTarget tmp_target(0, 0, TextureFormat::NONE, TextureFormat::NONE);
+  tmp_target.bind();
+  for (unsigned int i = 0; i < 6; ++i) {
+    bind_mat4(sky_shader, UniformId::MODEL, model_mats[i]);
+    tmp_target.change_color_target(cubemap.get_face(i), 0);
+
+    tmp_target.clear();
+
+    glBindVertexArray(screen_quad_vao);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+  }
 }

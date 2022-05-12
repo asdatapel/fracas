@@ -3,9 +3,13 @@ $vert_shader
 
 $include pbr_lit_3d.vert
 
+layout (location = $vertex_input) in vec2 text_uv;
+layout (location = $vertex_output) out vec2 frag_text_uv;
+
 void main()
 {
   pbr_lit_3d_vert();
+  frag_text_uv = text_uv;
 }
 
 $frag_shader
@@ -21,6 +25,9 @@ uniform layout(binding = $texture) sampler2D metal_texture;
 uniform layout(binding = $texture) sampler2D roughness_texture;
 uniform layout(binding = $texture) sampler2D emit_texture;
 uniform layout(binding = $texture) sampler2D ao_texture;
+uniform layout(binding = $texture) sampler2D text_texture;
+
+layout (location = $frag_input) in vec2 frag_text_uv;
 
 out vec4 FragColor;
 
@@ -33,5 +40,7 @@ void main()
     vec3 emit = texture(emit_texture, frag_uv).rgb;
     float ao = texture(ao_texture, frag_uv).x;
 
+    vec4 text = vec4(10, 10, 10, texture(text_texture, frag_text_uv).r);
+    emit = mix(emit, text.xyz, text.a);
     FragColor = pbr_lit_3d_frag(albedo, frag_normal, metal, roughness, emit, ao, 1);
-} 
+}

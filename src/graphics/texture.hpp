@@ -13,6 +13,7 @@ enum struct TextureFormat {
   RGBA16F,
 
   DEPTH24,
+  DEPTH32,
 };
 
 // [internalformat, format]
@@ -37,6 +38,8 @@ std::pair<GLenum, GLenum> format_to_opengl(TextureFormat format)
       return {GL_RGBA16F, GL_RGBA};
     case TextureFormat::DEPTH24:
       return {GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT};
+    case TextureFormat::DEPTH32:
+      return {GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT};
   }
 }
 
@@ -65,6 +68,9 @@ TextureFormat texture_format_from_string(String str)
   }
   if (strcmp(str, "DEPTH24")) {
     return TextureFormat::DEPTH24;
+  }
+  if (strcmp(str, "DEPTH32")) {
+    return TextureFormat::DEPTH32;
   }
   return TextureFormat::NONE;
 }
@@ -105,8 +111,8 @@ struct Texture2D : Texture {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, want_mipmaps ? GL_LINEAR : GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   }
   Texture2D(uint32_t width, uint32_t height, TextureFormat format, bool want_mipmaps = true)
   {
@@ -126,8 +132,8 @@ struct Texture2D : Texture {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, want_mipmaps ? GL_LINEAR : GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     if (format == TextureFormat::DEPTH24) {
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
@@ -157,6 +163,7 @@ struct Texture2D : Texture {
 };
 
 struct Cubemap : public Texture {
+  Cubemap() = default;
   Cubemap(uint32_t width, uint32_t height, TextureFormat format, bool want_mipmaps = true)
   {
     this->format = format;

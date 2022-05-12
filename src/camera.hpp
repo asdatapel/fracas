@@ -9,11 +9,11 @@
 
 struct Camera {
   glm::mat4 view;
-  glm::mat4 perspective;
+  glm::mat4 projection;
 
   float fov = glm::radians(45.f);
 
-  void update_from_transform(RenderTarget target, Transform transform)
+  void update_from_transform_perspective(RenderTarget target, Transform transform)
   {
     glm::vec3 dir = glm::rotate(
         glm::quat(glm::vec3{transform.rotation.x, transform.rotation.y, transform.rotation.z}),
@@ -23,7 +23,16 @@ struct Camera {
         glm::vec3{transform.position.x, transform.position.y, transform.position.z},
         glm::vec3{transform.position.x, transform.position.y, transform.position.z} + dir,
         {0.f, 1.f, 0.f});
-    perspective = glm::perspective(fov, (float)target.width / (float)target.height, 0.1f, 100.0f);
+    projection = glm::perspective(fov, (float)target.width / (float)target.height, 0.1f, 1000.0f);
+  }
+
+  void update_orthographic(RenderTarget target, glm::vec3 position, glm::vec3 dir, float debug_t = 100.f)
+  {
+    view = glm::lookAt(position, {0, 0, 0}, {0.f, 1.f, 0.f});
+
+    float aspect_ratio = (float)target.width / (float)target.height;
+    projection         = glm::ortho(-fov / 2, fov / 2, -fov / (2 * aspect_ratio),
+                                    fov / (2 * aspect_ratio), 1.f, 100.0f);
   }
 };
 
@@ -90,8 +99,8 @@ struct EditorCamera : Camera {
     view        = glm::lookAt(glm::vec3{pos_x, pos_y, pos_z},
                        glm::vec3{pos_x, pos_y, pos_z} + glm::vec3{dir_x, dir_y, dir_z},
                        {0.f, 1.f, 0.f});
-    perspective = glm::perspective(fov, (float)target.width / (float)target.height,
-                                   0.01f, 1000.0f);
+    projection = glm::perspective(fov, (float)target.width / (float)target.height,
+                                   0.01f, 100.0f);
   }
 };
 
@@ -99,7 +108,7 @@ void bind_camera(Shader shader, Camera camera, Vec3f camera_pos)
 {
   glUniformMatrix4fv(shader.uniform_handles[(int)UniformId::VIEW], 1, GL_FALSE, &camera.view[0][0]);
   glUniformMatrix4fv(shader.uniform_handles[(int)UniformId::PROJECTION], 1, GL_FALSE,
-                     &camera.perspective[0][0]);
+                     &camera.projection[0][0]);
   glUniform3f(shader.uniform_handles[(int)UniformId::CAMERA_POSITION], camera_pos.x, camera_pos.y,
               camera_pos.z);
 }
@@ -109,7 +118,7 @@ Vec3f screen_to_world(Rect target_rect, Camera *camera, Vec2f screen_pos, float 
   Vec3f p              = {screen_pos.x, screen_pos.y, 0};
   glm::vec4 gl_screen  = {(p.x - target_rect.x) / (target_rect.width / 2.f) - 1,
                          -(p.y - target_rect.y) / (target_rect.height / 2.f) + 1, z, 1.f};
-  glm::vec4 unprojects = glm::inverse(camera->perspective * camera->view) * gl_screen;
+  glm::vec4 unprojects = glm::inverse(camera->projection * camera->view) * gl_screen;
   unprojects /= unprojects.w;
 
   return {unprojects.x, unprojects.y, unprojects.z};

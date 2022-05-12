@@ -1,7 +1,6 @@
 $vert_shader
 #version 430 core
 
-$include lighting.shadows_vert
 $include pbr_lit_3d.vert
 
 layout (location = $vertex_input) in vec2 text_uv;
@@ -10,14 +9,12 @@ layout (location = $vertex_output) out vec2 frag_text_uv;
 void main()
 {
   pbr_lit_3d_vert();
-  lighting_shadows_vert(frag_world_pos);
   frag_text_uv = text_uv;
 }
 
 $frag_shader
 #version 430 core
 
-$include lighting.shadows_frag
 $include reflections.standard
 $include pbr_lit_3d.frag
 

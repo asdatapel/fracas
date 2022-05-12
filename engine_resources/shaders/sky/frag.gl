@@ -1,0 +1,99 @@
+#version 430 core
+
+out vec4 FragColor;
+
+in vec3 frag_world_pos;
+
+uniform vec3 camera_position;
+uniform vec3 sun_direction;
+
+const float PI = 3.1415;
+
+const float earth_radius = 6371000.f;
+const float atmosphere_radius = earth_radius + 12000.f;
+
+const float rayleigh_scale_height = 8000;
+const float mie_scale_height = 1200;
+
+// https://www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/simulating-sky/simulating-colors-of-the-sky
+
+float sphere_intersect(vec3 line_p0, vec3 line_dir, float radius) {
+    float a = dot(line_dir, line_dir);
+    float b = 2.f * dot(line_p0, line_dir);
+    float c = dot(line_p0, line_p0) - (radius * radius);
+
+    float determinant = b * b - (4.f * a * c);
+    if (determinant < 0.f) return 1.f;
+    if (determinant == 0.f) return -b / (2.f * a);
+    
+    float right = sqrt(determinant);
+    float plus = (-b + right) / (2.f * a);
+    float minus = (-b - right) / (2.f * a);
+    
+    if (plus > minus) return plus;
+    else return minus;
+}
+
+vec3 atmos(vec3 p0, vec3 dir, vec3 sun_dir) {
+    const vec3 betaR = vec3(3.8e-6f, 13.5e-6f, 33.1e-6f); 
+    const vec3 betaM = vec3(21e-6f); 
+
+    int numSamples = 16; 
+    int numSamplesLight = 8;
+
+    float t1 = sphere_intersect(p0, dir, atmosphere_radius);
+    
+    float segmentLength = t1 / float(numSamples); 
+    float tCurrent = 0.f; 
+    vec3 sumR = vec3(0);
+    vec3 sumM = vec3(0); // mie and rayleigh contribution
+    
+    float opticalDepthR = 0.f;
+    float opticalDepthM = 0.f;
+    
+    float mu = dot(dir, sun_dir); // mu in the paper which is the cosine of the angle between the sun direction and the ray direction 
+    float phaseR = 3.f / (16.f * PI) * (1.f + mu * mu); 
+    float g = 0.76f; 
+    float phaseM = 3.f / (8.f * PI) * ((1.f - g * g) * (1.f + mu * mu)) / ((2.f + g * g) * pow(1.f + g * g - 2.f * g * mu, 1.5f)); 
+    for (int i = 0; i < numSamples; ++i) { 
+        vec3 samplePosition = p0 + (tCurrent + segmentLength * 0.5f) * dir; 
+        float height = length(samplePosition) - earth_radius; 
+        // compute optical depth for light
+        float hr = exp(-height / rayleigh_scale_height) * segmentLength; 
+        float hm = exp(-height / mie_scale_height) * segmentLength; 
+        opticalDepthR += hr; 
+        opticalDepthM += hm; 
+        // light optical depth
+        
+        float t1Light = sphere_intersect(samplePosition, sun_dir, atmosphere_radius);
+        float segmentLengthLight = t1Light / float(numSamplesLight);
+        float tCurrentLight = 0.f; 
+        float opticalDepthLightR = 0.f, opticalDepthLightM = 0.f; 
+        int j; 
+        for (j = 0; j < numSamplesLight; ++j) { 
+            vec3 samplePositionLight = samplePosition + (tCurrentLight + segmentLengthLight * 0.5f) * sun_dir; 
+            float heightLight = length(samplePositionLight) - earth_radius; 
+            if (heightLight < 0.f) break; 
+            opticalDepthLightR += exp(-heightLight / rayleigh_scale_height) * segmentLengthLight; 
+            opticalDepthLightM += exp(-heightLight / mie_scale_height) * segmentLengthLight; 
+            tCurrentLight += segmentLengthLight; 
+        } 
+        if (j == numSamplesLight) { 
+            vec3 tau = betaR * (opticalDepthR + opticalDepthLightR) + betaM * 1.1f * (opticalDepthM + opticalDepthLightM); 
+            vec3 attenuation = vec3(exp(-tau.x), exp(-tau.y), exp(-tau.z)); 
+            sumR += attenuation * hr; 
+            sumM += attenuation * hm; 
+        } 
+        tCurrent += segmentLength; 
+    } 
+ 
+    return (sumR * betaR * phaseR + sumM * betaM * phaseM) * 20.f; 
+}
+
+void main()
+{
+    vec3 sun_dir = normalize(sun_direction);
+    vec3 camera_pos = vec3(0,  camera_position.y + earth_radius, 0);
+    vec3 dir = normalize(frag_world_pos);
+    FragColor = vec4(atmos(camera_pos, dir, sun_dir), 1) * 1.f;
+}

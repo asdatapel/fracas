@@ -44,8 +44,10 @@ Texture2D load_hdri(String filepath, Memory mem)
 
 Material create_env_mat(RenderTarget temp_target, Texture unfiltered_cubemap)
 {
-  Texture irradiance_map = convolve_irradiance_map(temp_target, unfiltered_cubemap, 32);
-  Texture env_map        = filter_env_map(temp_target, unfiltered_cubemap, 512);
+  Cubemap irradiance_map(32, 32, TextureFormat::RGB16F, true);
+  Cubemap env_map(512, 512, TextureFormat::RGB16F, true);
+  convolve_irradiance_map(temp_target, unfiltered_cubemap, irradiance_map);
+  filter_env_map(temp_target, unfiltered_cubemap, env_map);
 
   Texture2D brdf_lut = Texture2D(512, 512, TextureFormat::RGB16F, false);
   temp_target.change_color_target(brdf_lut);
@@ -72,9 +74,19 @@ Texture load_and_upload_texture(String filepath, TextureFormat format, Memory me
     return Texture{};
   }
 
-  Bitmap bmp = parse_bitmap(file, tmp);
-  Texture2D tex(bmp.width, bmp.height, format, true);
-  tex.upload((uint8_t *)bmp.data, true);
+
+  int width, height, components;
+  stbi_set_flip_vertically_on_load(true);
+  u8 *bmp =
+      stbi_load_from_memory((stbi_uc *)file.data, file.length, 
+      &width, &height, &components, 4);
+  Texture2D tex(width, height, format, true);
+  tex.upload(bmp, true);
+  stbi_image_free(bmp);
+  
+  // Bitmap bmp = parse_bitmap(file, tmp);
+  // Texture2D tex(bmp.width, bmp.height, format, true);
+  // tex.upload((uint8_t *)bmp.data, true);
   return tex;
 }
 

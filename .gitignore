@@ -12,3 +12,6 @@ glfw3.dll
 *.bmp
 *.obj
 *.xlsx
+
+resources/sponza/textures/*
+resources/sponza/models/*

@@ -1,0 +1,23 @@
+env_maps:
+  - id: 0
+    name: "newport_loft_hdr"
+    path: resources/fracas/data/images/hdri/Newport_Loft_Ref.hdr
+    format: RGB16F
+shaders:
+  - id: 0
+    name: main_threed
+    config: generated/resources/sponza/shaders/main/config.yaml
+    vert: generated/resources/sponza/shaders/main/vert.gl
+    frag: generated/resources/sponza/shaders/main/frag.gl
+  - id: 1
+    name: dirt_decal
+    config: generated/resources/sponza/shaders/dirt_decal/config.yaml
+    vert: generated/resources/sponza/shaders/dirt_decal/vert.gl
+    frag: generated/resources/sponza/shaders/dirt_decal/frag.gl
+fonts:
+  - id: 0
+    path: resources/fonts/Anton_Regular.ttf
+  - id: 1
+    path: resources/fonts/RobotoCondensed_Regular.ttf
+  - id: 2
+    path: resources/fonts/RobotoCondensed_Light.ttf

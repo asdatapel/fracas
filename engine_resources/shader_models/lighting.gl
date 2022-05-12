@@ -9,39 +9,40 @@ struct PointLight
 };
 struct SpotLight
 {
-  vec3 pos;
-  vec3 direction;
-  vec3 color;
+  vec4 pos;
+  vec4 direction;
+  vec4 color;
+
   float inner_angle;
   float outer_angle;
+
+  int shadow_map_index;
+  mat4 lightspace_mat;
 };
-layout (std140, binding = $uniform_buffer) uniform lights
+struct DirectionalLight
 {
+  vec4 direction;
+  vec4 color;
+
+  int shadow_map_index;
+  mat4 lightspace_mat;
+};
+layout (std140, binding = $uniform_buffer) buffer lights
+{
+    DirectionalLight directional_light;
     SpotLight spot_lights[MAX_LIGHTS];
     uint num_lights;
 };
 
-#ifndef GET_LIT
-#define GET_LIT(light) 1
-#endif
-
-$section shadows_vert
-
-layout (location = $uniform_push) uniform mat4 shadow_caster_mat;
-
-layout (location = $vertex_output) out vec4 frag_light_pos;
-
-void lighting_shadows_vert(vec3 frag_world_pos) {
-    frag_light_pos = shadow_caster_mat * vec4(frag_world_pos, 1.0);
-}
-
-$section shadows_frag
+struct LightResult {
+    vec3 radiance;
+    vec3 to_light;
+    float lit_percentage;
+};
 
 $set shadows_enabled true
 $set shadow_texture_offset $texture
 layout(binding=$texture) uniform sampler2DShadow texture_shadow_map;
-
-layout(location=$frag_input) in vec4 frag_light_pos;
 
 float sample_shadow_map(sampler2DShadow map, vec4 position)
 {
@@ -54,15 +55,71 @@ float sample_shadow_map(sampler2D map, vec4 position)
     float shadow_map_depth = texture(map, ndc.xy).x;
     return shadow_map_depth >= ndc.z - 0.00005 ? 1 : 0;
 }
-float lit_pct(int light_i)
+float sample_shadow_map(uint index, vec4 lightspace_position, float bias)
 {
-    if (light_i == 21)
-      return sample_shadow_map(texture_shadow_map, frag_light_pos);
+    vec3 ndc = (lightspace_position.xyz / lightspace_position.w) * 0.5 + 0.5;
 
-    return 1;
+    const int ATLAS_DIM = 2;
+    const float ELEM_SIZE = 1.f / ATLAS_DIM;
+    uvec2 atlas_position = uvec2(index % ATLAS_DIM, index / ATLAS_DIM);
+    vec2 uv = vec2((atlas_position.x + ndc.x) * ELEM_SIZE, (atlas_position.y + ndc.y) * ELEM_SIZE);
+
+    return texture(texture_shadow_map, vec3(uv, ndc.z - bias));
+}
+float lit_pct(vec3 world_pos, mat4 lightspace_mat, int shadow_map_index, float bias)
+{
+    if (shadow_map_index < 0) return 1;
+
+    vec4 lightspace_position = lightspace_mat * vec4(world_pos, 1.0);
+    return sample_shadow_map(shadow_map_index, lightspace_position, bias);
 }
 
-#ifdef GET_LIT
-#undef GET_LIT
-#endif
-#define GET_LIT(light) lit_pct(light)
+#define GET_LIT(world_pos, lightspace_mat, shadow_map_index, bias) lit_pct(world_pos, lightspace_mat, shadow_map_index, bias)
+
+float sloped_bias(vec3 normal, vec3 to_light) {
+    return 0;
+    float n_dot_to_light = clamp(dot(normal, to_light), 0, 1);
+    return clamp(tan(acos(n_dot_to_light)) * 0.005, 0, 0.0005);
+}
+
+
+
+vec3 CalculatePointLight(vec3 to_eye, vec3 to_light, float to_light_dist, 
+                         vec3 halfway, PointLight light)
+{
+    float attenuation = 1.0 / (to_light_dist * to_light_dist); // TODO needs better attenuation
+    vec3  radiance    = light.color.xyz * attenuation;  
+    return radiance;
+}
+
+LightResult CalculateSpotLight(vec3 p, vec3 normal, SpotLight light)
+{
+    LightResult r;
+
+    r.to_light      = normalize(light.pos.xyz - p);
+    float to_light_dist = length(light.pos.xyz - p);
+
+    float min_cos = cos(light.outer_angle);
+    float max_cos = cos(light.inner_angle);
+    float spotlight_coefficient = smoothstep(min_cos, max_cos, dot(light.direction.xyz, -r.to_light));
+
+    float attenuation = 1.0 / (to_light_dist * to_light_dist); // TODO needs better attenuation
+    r.radiance = spotlight_coefficient * light.color.xyz * attenuation;
+
+    float shadow_bias = sloped_bias(normal, r.to_light);
+    r.lit_percentage = GET_LIT(p, light.lightspace_mat, light.shadow_map_index, shadow_bias);
+
+    return r;
+}
+
+LightResult CalculateDirectionalLight(vec3 p, vec3 normal, DirectionalLight light)
+{
+    LightResult r;
+    r.to_light = normalize(-light.direction.xyz);
+    r.radiance = light.color.xyz;
+    
+    float shadow_bias = sloped_bias(normal, r.to_light);
+    r.lit_percentage = GET_LIT(p, light.lightspace_mat, light.shadow_map_index, shadow_bias);
+
+    return r;
+}
