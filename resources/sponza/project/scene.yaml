@@ -1,0 +1,6104 @@
+entities:
+  - id: 0
+    mesh:
+      material: 0
+      mesh: 0
+      shader: 0
+    name: arch_stones_01
+    transform:
+      position:
+        x: 0.14015014469623566
+        y: 4.069164752960205
+        z: 3.0872087478637695
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 1
+    mesh:
+      material: 0
+      mesh: 1
+      shader: 0
+    name: arch_stones_02
+    transform:
+      position:
+        x: 0.14014892280101776
+        y: 4.069164752960205
+        z: -3.114764928817749
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 2
+    mesh:
+      material: 1
+      mesh: 2
+      shader: 0
+    name: arch_stones_03
+    transform:
+      position:
+        x: 0.11376464366912842
+        y: 4.3738908767700195
+        z: -0.016881408169865608
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 3
+    mesh:
+      material: 2
+      mesh: 3
+      shader: 0
+    name: ceiling_1stfloor_01
+    transform:
+      position:
+        x: 0.4021221697330475
+        y: 4.096160411834717
+        z: -0.15080444514751434
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 4
+    mesh:
+      material: 2
+      mesh: 4
+      shader: 0
+    name: ceiling_1stfloor_02
+    transform:
+      position:
+        x: 15.272645950317383
+        y: 3.9124488830566406
+        z: -2.0942840576171875
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 5
+    mesh:
+      material: 3
+      mesh: 5
+      shader: 0
+    name: columns_1stfloor_01
+    transform:
+      position:
+        x: 8.3294677734375
+        y: -0.011514129117131233
+        z: -0.03189780190587044
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 6
+    mesh:
+      material: 3
+      mesh: 6
+      shader: 0
+    name: columns_1stfloor_02
+    transform:
+      position:
+        x: 4.2073211669921875
+        y: -0.012799834832549095
+        z: -0.04089896008372307
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 7
+    mesh:
+      material: 3
+      mesh: 7
+      shader: 0
+    name: columns_1stfloor_03
+    transform:
+      position:
+        x: 0.144184872508049
+        y: -0.011829833500087261
+        z: -0.03620154410600662
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 8
+    mesh:
+      material: 3
+      mesh: 8
+      shader: 0
+    name: columns_1stfloor_04
+    transform:
+      position:
+        x: -3.896315336227417
+        y: -0.01148147601634264
+        z: -0.03693396598100662
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 9
+    mesh:
+      material: 3
+      mesh: 9
+      shader: 0
+    name: columns_1stfloor_05
+    transform:
+      position:
+        x: -8.081866264343262
+        y: -0.011514129117131233
+        z: -0.029485996812582016
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 12
+    mesh:
+      material: 5
+      mesh: 12
+      shader: 0
+    name: exterior
+    transform:
+      position:
+        x: 1.877864956855774
+        y: 8.259137153625488
+        z: 0.4965130388736725
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 13
+    mesh:
+      material: 6
+      mesh: 13
+      shader: 0
+    name: ornament_doors_01
+    transform:
+      position:
+        x: 15.48161792755127
+        y: 1.5200445652008057
+        z: 1.4644957780838013
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 14
+    mesh:
+      material: 7
+      mesh: 14
+      shader: 0
+    name: ornament_doors_02
+    transform:
+      position:
+        x: 18.31136131286621
+        y: 0.8876335024833679
+        z: -3.912816047668457
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 15
+    mesh:
+      material: 6
+      mesh: 15
+      shader: 0
+    name: ornament_doors_03
+    transform:
+      position:
+        x: 6.19555139541626
+        y: 1.7943835258483887
+        z: 6.133327484130859
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 16
+    mesh:
+      material: 6
+      mesh: 16
+      shader: 0
+    name: ornament_doors_04
+    transform:
+      position:
+        x: 2.1816625595092773
+        y: 1.7943835258483887
+        z: 6.133327484130859
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 17
+    mesh:
+      material: 6
+      mesh: 17
+      shader: 0
+    name: ornament_doors_05
+    transform:
+      position:
+        x: -1.8183587789535522
+        y: 1.7943835258483887
+        z: 6.133327484130859
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 18
+    mesh:
+      material: 6
+      mesh: 18
+      shader: 0
+    name: ornament_doors_06
+    transform:
+      position:
+        x: -5.776973247528076
+        y: 1.7943835258483887
+        z: 6.133327484130859
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 19
+    mesh:
+      material: 6
+      mesh: 19
+      shader: 0
+    name: ornament_doors_07
+    transform:
+      position:
+        x: -11.2301607131958
+        y: 1.7943835258483887
+        z: 4.657639026641846
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 20
+    mesh:
+      material: 6
+      mesh: 20
+      shader: 0
+    name: ornament_doors_08
+    transform:
+      position:
+        x: -9.720212936401367
+        y: 1.7943835258483887
+        z: 6.139299392700195
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 21
+    mesh:
+      material: 6
+      mesh: 21
+      shader: 0
+    name: ornament_doors_09
+    transform:
+      position:
+        x: -2.048527240753174
+        y: 1.8174022436141968
+        z: -6.098107814788818
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 22
+    mesh:
+      material: 6
+      mesh: 22
+      shader: 0
+    name: ornament_doors_10
+    transform:
+      position:
+        x: -9.99221420288086
+        y: 1.8124775886535645
+        z: -4.949672698974609
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 23
+    mesh:
+      material: 0
+      mesh: 23
+      shader: 0
+    name: ornament_stones_01
+    transform:
+      position:
+        x: -1.2055010795593262
+        y: 2.8793656826019287
+        z: -0.13393187522888184
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 24
+    mesh:
+      material: 2
+      mesh: 24
+      shader: 0
+    name: walls_1stfloor_01
+    transform:
+      position:
+        x: -11.35430908203125
+        y: 2.856191873550415
+        z: 0.06835174560546875
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 25
+    mesh:
+      material: 8
+      mesh: 25
+      shader: 0
+    name: wood_door
+    transform:
+      position:
+        x: 19.491859436035156
+        y: 0.7786175608634949
+        z: 0.03165676072239876
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 26
+    mesh:
+      material: 8
+      mesh: 26
+      shader: 0
+    name: wooden_parts
+    transform:
+      position:
+        x: 14.160347938537598
+        y: 1.8342666625976562
+        z: -2.496399402618408
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 27
+    mesh:
+      material: 5
+      mesh: 27
+      shader: 0
+    name: arch_wall_2ndfloor
+    transform:
+      position:
+        x: 0.25837981700897217
+        y: 9.925777435302734
+        z: -0.020968932658433914
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 28
+    mesh:
+      material: 9
+      mesh: 28
+      shader: 0
+    name: ceiling_2ndfloor
+    transform:
+      position:
+        x: 0.14894957840442657
+        y: 9.553943634033203
+        z: -0.050252072513103485
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 29
+    mesh:
+      material: 10
+      mesh: 29
+      shader: 0
+    name: column_2ndfloor_01
+    transform:
+      position:
+        x: -3.8596532344818115
+        y: 6.108536720275879
+        z: 3.106274366378784
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 30
+    mesh:
+      material: 10
+      mesh: 30
+      shader: 0
+    name: column_2ndfloor_02
+    transform:
+      position:
+        x: 0.14297209680080414
+        y: 6.107756614685059
+        z: 3.103250026702881
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 31
+    mesh:
+      material: 10
+      mesh: 31
+      shader: 0
+    name: column_2ndfloor_03
+    transform:
+      position:
+        x: 4.158140659332275
+        y: 6.10853910446167
+        z: 3.1034035682678223
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 32
+    mesh:
+      material: 10
+      mesh: 32
+      shader: 0
+    name: column_2ndfloor_04
+    transform:
+      position:
+        x: 8.318652153015137
+        y: 6.108538627624512
+        z: 2.97918963432312
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 33
+    mesh:
+      material: 10
+      mesh: 33
+      shader: 0
+    name: column_2ndfloor_05
+    transform:
+      position:
+        x: -3.8596532344818115
+        y: 6.108536720275879
+        z: -3.1314733028411865
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 34
+    mesh:
+      material: 10
+      mesh: 34
+      shader: 0
+    name: column_2ndfloor_06
+    transform:
+      position:
+        x: 0.14740081131458282
+        y: 6.107755661010742
+        z: -3.120760440826416
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 35
+    mesh:
+      material: 10
+      mesh: 35
+      shader: 0
+    name: column_2ndfloor_07
+    transform:
+      position:
+        x: 4.14800500869751
+        y: 6.1085357666015625
+        z: -3.127596378326416
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 36
+    mesh:
+      material: 10
+      mesh: 36
+      shader: 0
+    name: column_2ndfloor_08
+    transform:
+      position:
+        x: 8.317798614501953
+        y: 6.10853910446167
+        z: -2.9828436374664307
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 37
+    mesh:
+      material: 11
+      mesh: 37
+      shader: 0
+    name: column_2ndfloor_09
+    transform:
+      position:
+        x: -1.8593943119049072
+        y: 6.100160598754883
+        z: -3.084819793701172
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 38
+    mesh:
+      material: 11
+      mesh: 38
+      shader: 0
+    name: column_2ndfloor_10
+    transform:
+      position:
+        x: 2.1651017665863037
+        y: 6.100160598754883
+        z: -3.0848207473754883
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 39
+    mesh:
+      material: 11
+      mesh: 39
+      shader: 0
+    name: column_2ndfloor_11
+    transform:
+      position:
+        x: 6.153645992279053
+        y: 6.100160598754883
+        z: -3.0848195552825928
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 40
+    mesh:
+      material: 11
+      mesh: 40
+      shader: 0
+    name: column_2ndfloor_12
+    transform:
+      position:
+        x: -1.8683825731277466
+        y: 6.100160598754883
+        z: 3.0724496841430664
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 41
+    mesh:
+      material: 11
+      mesh: 41
+      shader: 0
+    name: column_2ndfloor_13
+    transform:
+      position:
+        x: 2.156113624572754
+        y: 6.100160598754883
+        z: 3.072448253631592
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 42
+    mesh:
+      material: 11
+      mesh: 42
+      shader: 0
+    name: column_2ndfloor_14
+    transform:
+      position:
+        x: 6.170249938964844
+        y: 6.100160598754883
+        z: 3.0724480152130127
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 43
+    mesh:
+      material: 11
+      mesh: 43
+      shader: 0
+    name: column_2ndfloor_15
+    transform:
+      position:
+        x: 8.420499801635742
+        y: 6.100160598754883
+        z: -0.030615901574492455
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 44
+    mesh:
+      material: 10
+      mesh: 44
+      shader: 0
+    name: column_2ndfloor_16
+    transform:
+      position:
+        x: -8.063948631286621
+        y: 6.066609859466553
+        z: 2.9510302543640137
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 45
+    mesh:
+      material: 10
+      mesh: 45
+      shader: 0
+    name: column_2ndfloor_17
+    transform:
+      position:
+        x: -8.069543838500977
+        y: 6.108537673950195
+        z: -2.9921135902404785
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 46
+    mesh:
+      material: 11
+      mesh: 46
+      shader: 0
+    name: column_2ndfloor_18
+    transform:
+      position:
+        x: -5.873531341552734
+        y: 6.100160598754883
+        z: -3.084819793701172
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 47
+    mesh:
+      material: 11
+      mesh: 47
+      shader: 0
+    name: column_2ndfloor_19
+    transform:
+      position:
+        x: -8.14419174194336
+        y: 6.100160598754883
+        z: 0.021669253706932068
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 48
+    mesh:
+      material: 11
+      mesh: 48
+      shader: 0
+    name: column_2ndfloor_20
+    transform:
+      position:
+        x: -5.856927394866943
+        y: 6.100160598754883
+        z: 3.072448968887329
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 49
+    mesh:
+      material: 1
+      mesh: 49
+      shader: 0
+    name: ornament_door_2ndfloor_01
+    transform:
+      position:
+        x: 2.2743313312530518
+        y: 5.450930595397949
+        z: -7.468501567840576
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 50
+    mesh:
+      material: 1
+      mesh: 50
+      shader: 0
+    name: ornament_door_2ndfloor_02
+    transform:
+      position:
+        x: -1.8412055969238281
+        y: 5.450930595397949
+        z: -7.468501567840576
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 51
+    mesh:
+      material: 1
+      mesh: 51
+      shader: 0
+    name: ornament_door_2ndfloor_03
+    transform:
+      position:
+        x: -5.736634254455566
+        y: 5.450930595397949
+        z: -7.468499183654785
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 52
+    mesh:
+      material: 1
+      mesh: 52
+      shader: 0
+    name: ornament_door_2ndfloor_04
+    transform:
+      position:
+        x: 6.160540580749512
+        y: 5.432581901550293
+        z: -7.452783584594727
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 53
+    mesh:
+      material: 1
+      mesh: 53
+      shader: 0
+    name: ornament_door_2ndfloor_05
+    transform:
+      position:
+        x: 10.058539390563965
+        y: 5.450930595397949
+        z: -7.468503952026367
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 54
+    mesh:
+      material: 1
+      mesh: 54
+      shader: 0
+    name: ornament_door_2ndfloor_06
+    transform:
+      position:
+        x: -9.634869575500488
+        y: 5.450930595397949
+        z: -7.4684977531433105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 55
+    mesh:
+      material: 1
+      mesh: 55
+      shader: 0
+    name: ornament_door_2ndfloor_07
+    transform:
+      position:
+        x: -12.40319538116455
+        y: 5.4376397132873535
+        z: 0.12462028115987778
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 56
+    mesh:
+      material: 1
+      mesh: 56
+      shader: 0
+    name: ornament_door_2ndfloor_08
+    transform:
+      position:
+        x: -12.421671867370605
+        y: 5.450929641723633
+        z: -4.7081451416015625
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 57
+    mesh:
+      material: 1
+      mesh: 57
+      shader: 0
+    name: ornament_door_2ndfloor_09
+    transform:
+      position:
+        x: -12.424445152282715
+        y: 5.450929641723633
+        z: 4.697772979736328
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 58
+    mesh:
+      material: 1
+      mesh: 58
+      shader: 0
+    name: ornament_door_2ndfloor_10
+    transform:
+      position:
+        x: 2.2569923400878906
+        y: 5.450929641723633
+        z: 7.430117130279541
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 59
+    mesh:
+      material: 1
+      mesh: 59
+      shader: 0
+    name: ornament_door_2ndfloor_11
+    transform:
+      position:
+        x: -1.9147945642471313
+        y: 5.450929641723633
+        z: 7.430118083953857
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 60
+    mesh:
+      material: 1
+      mesh: 60
+      shader: 0
+    name: ornament_door_2ndfloor_12
+    transform:
+      position:
+        x: -5.841040134429932
+        y: 5.450929641723633
+        z: 7.430119514465332
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 61
+    mesh:
+      material: 1
+      mesh: 61
+      shader: 0
+    name: ornament_door_2ndfloor_13
+    transform:
+      position:
+        x: -9.69232177734375
+        y: 5.450929641723633
+        z: 7.430120468139648
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 62
+    mesh:
+      material: 1
+      mesh: 62
+      shader: 0
+    name: ornament_door_2ndfloor_14
+    transform:
+      position:
+        x: 10.040162086486816
+        y: 4.796761989593506
+        z: 7.407774448394775
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 63
+    mesh:
+      material: 1
+      mesh: 63
+      shader: 0
+    name: ornament_door_2ndfloor_15
+    transform:
+      position:
+        x: 12.739145278930664
+        y: 5.422553062438965
+        z: 4.736014366149902
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 64
+    mesh:
+      material: 0
+      mesh: 64
+      shader: 0
+    name: ornament_stones_2ndfloor
+    transform:
+      position:
+        x: 0.15320616960525513
+        y: 8.437972068786621
+        z: -0.02905425988137722
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 65
+    mesh:
+      material: 1
+      mesh: 65
+      shader: 0
+    name: stone_walls_2ndfloor
+    transform:
+      position:
+        x: 0.13906310498714447
+        y: 7.855088710784912
+        z: 0.11463012546300888
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 66
+    mesh:
+      material: 7
+      mesh: 66
+      shader: 0
+    name: ornament_roof
+    transform:
+      position:
+        x: 0.8993908762931824
+        y: 15.94246768951416
+        z: -0.0030139158479869366
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 67
+    mesh:
+      material: 6
+      mesh: 67
+      shader: 0
+    name: ornament_windows
+    transform:
+      position:
+        x: 1.0220263004302979
+        y: 12.18465518951416
+        z: 0.006693878211081028
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 68
+    mesh:
+      material: 12
+      mesh: 68
+      shader: 0
+    name: roof_floor_03_01
+    transform:
+      position:
+        x: -11.028592109680176
+        y: 16.175004959106445
+        z: 5.4987688064575195
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 69
+    mesh:
+      material: 12
+      mesh: 69
+      shader: 0
+    name: roof_floor_03_02
+    transform:
+      position:
+        x: -0.8206982016563416
+        y: 16.175004959106445
+        z: 5.498769283294678
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 70
+    mesh:
+      material: 12
+      mesh: 70
+      shader: 0
+    name: roof_floor_03_05
+    transform:
+      position:
+        x: 10.204414367675781
+        y: 16.703466415405273
+        z: 0.14466887712478638
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 71
+    mesh:
+      material: 12
+      mesh: 71
+      shader: 0
+    name: roof_floor_03_06
+    transform:
+      position:
+        x: -11.96572494506836
+        y: 16.88477897644043
+        z: 0.018022460862994194
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 72
+    mesh:
+      material: 12
+      mesh: 72
+      shader: 0
+    name: roof_floor_03_07
+    transform:
+      position:
+        x: 7.446067810058594
+        y: 16.175004959106445
+        z: 5.498768329620361
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 73
+    mesh:
+      material: 12
+      mesh: 73
+      shader: 0
+    name: roof_floor_03_08
+    transform:
+      position:
+        x: 7.51724100112915
+        y: 16.175004959106445
+        z: -5.476746559143066
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 74
+    mesh:
+      material: 12
+      mesh: 74
+      shader: 0
+    name: roof_floor_03_09
+    transform:
+      position:
+        x: -11.032135963439941
+        y: 16.172346115112305
+        z: -5.472142219543457
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 75
+    mesh:
+      material: 12
+      mesh: 75
+      shader: 0
+    name: roof_floor_03_10
+    transform:
+      position:
+        x: -0.8403283357620239
+        y: 16.175004959106445
+        z: -5.476743221282959
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 76
+    mesh:
+      material: 13
+      mesh: 76
+      shader: 0
+    name: sponza_ornament
+    transform:
+      position:
+        x: -7.899507999420166
+        y: 13.326274871826172
+        z: -0.011113815009593964
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 77
+    mesh:
+      material: 1
+      mesh: 77
+      shader: 0
+    name: walls_floor_03
+    transform:
+      position:
+        x: 1.4462536573410034
+        y: 13.452463150024414
+        z: 0.0494467169046402
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 78
+    mesh:
+      material: 14
+      mesh: 78
+      shader: 0
+    name: lionhead
+    transform:
+      position:
+        x: -15.945751190185547
+        y: 0.22804443538188934
+        z: 0.09938076138496399
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 0.4699629545211792
+        y: 0.4699629545211792
+        z: 0.4699629545211792
+    type: MESH
+  - id: 79
+    mesh:
+      material: 15
+      mesh: 79
+      shader: 0
+    name: master_material
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 80
+    mesh:
+      material: 16
+      mesh: 80
+      shader: 0
+    name: columns_1stfloor_01.001
+    transform:
+      position:
+        x: 8.3294677734375
+        y: -0.011514129117131233
+        z: -0.03189780190587044
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 81
+    mesh:
+      material: 17
+      mesh: 81
+      shader: 0
+    name: arch_stones_01.001
+    transform:
+      position:
+        x: 0.14015014469623566
+        y: 4.069164752960205
+        z: 3.0872087478637695
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 82
+    mesh:
+      material: 17
+      mesh: 82
+      shader: 0
+    name: arch_stones_02.001
+    transform:
+      position:
+        x: 0.14014892280101776
+        y: 4.069164752960205
+        z: -3.114764928817749
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 83
+    mesh:
+      material: 17
+      mesh: 83
+      shader: 0
+    name: arch_stones_03.001
+    transform:
+      position:
+        x: 0.11376464366912842
+        y: 4.3738908767700195
+        z: -0.016881408169865608
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 84
+    mesh:
+      material: 0
+      mesh: 84
+      shader: 0
+    name: arch_stones_03.002
+    transform:
+      position:
+        x: 0.11376464366912842
+        y: 4.3738908767700195
+        z: -0.016881408169865608
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 85
+    mesh:
+      material: 7
+      mesh: 85
+      shader: 0
+    name: arch_stones_03.003
+    transform:
+      position:
+        x: 0.11376464366912842
+        y: 4.3738908767700195
+        z: -0.016881408169865608
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 86
+    mesh:
+      material: 18
+      mesh: 86
+      shader: 0
+    name: ceiling_1stfloor_01.001
+    transform:
+      position:
+        x: 0.4021221697330475
+        y: 4.096160411834717
+        z: -0.15080444514751434
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 87
+    mesh:
+      material: 19
+      mesh: 87
+      shader: 0
+    name: ceiling_1stfloor_01.002
+    transform:
+      position:
+        x: 0.4021221697330475
+        y: 4.096160411834717
+        z: -0.15080444514751434
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 88
+    mesh:
+      material: 0
+      mesh: 88
+      shader: 0
+    name: ceiling_1stfloor_02.001
+    transform:
+      position:
+        x: 15.272645950317383
+        y: 3.9124488830566406
+        z: -2.0942840576171875
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 89
+    mesh:
+      material: 20
+      mesh: 89
+      shader: 0
+    name: ceiling_1stfloor_02.002
+    transform:
+      position:
+        x: 15.272645950317383
+        y: 3.9124488830566406
+        z: -2.0942840576171875
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 90
+    mesh:
+      material: 21
+      mesh: 90
+      shader: 0
+    name: ceiling_1stfloor_02.003
+    transform:
+      position:
+        x: 15.272645950317383
+        y: 3.9124488830566406
+        z: -2.0942840576171875
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 91
+    mesh:
+      material: 19
+      mesh: 91
+      shader: 0
+    name: ceiling_1stfloor_02.004
+    transform:
+      position:
+        x: 15.272645950317383
+        y: 3.9124488830566406
+        z: -2.0942840576171875
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 92
+    mesh:
+      material: 16
+      mesh: 92
+      shader: 0
+    name: columns_1stfloor_02.001
+    transform:
+      position:
+        x: 4.2073211669921875
+        y: -0.012799834832549095
+        z: -0.04089896008372307
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 93
+    mesh:
+      material: 16
+      mesh: 93
+      shader: 0
+    name: columns_1stfloor_03.001
+    transform:
+      position:
+        x: 0.144184872508049
+        y: -0.011829833500087261
+        z: -0.03620154410600662
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 94
+    mesh:
+      material: 16
+      mesh: 94
+      shader: 0
+    name: columns_1stfloor_04.001
+    transform:
+      position:
+        x: -3.896315336227417
+        y: -0.01148147601634264
+        z: -0.03693396598100662
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 95
+    mesh:
+      material: 16
+      mesh: 95
+      shader: 0
+    name: columns_1stfloor_05.001
+    transform:
+      position:
+        x: -8.081866264343262
+        y: -0.011514129117131233
+        z: -0.029485996812582016
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 96
+    mesh:
+      material: 17
+      mesh: 96
+      shader: 0
+    name: exterior.001
+    transform:
+      position:
+        x: 1.877864956855774
+        y: 8.259137153625488
+        z: 0.4965130388736725
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 97
+    mesh:
+      material: 21
+      mesh: 97
+      shader: 0
+    name: exterior.002
+    transform:
+      position:
+        x: 1.877864956855774
+        y: 8.259137153625488
+        z: 0.4965130388736725
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 98
+    mesh:
+      material: 20
+      mesh: 98
+      shader: 0
+    name: ornament_doors_01.001
+    transform:
+      position:
+        x: 15.48161792755127
+        y: 1.5200445652008057
+        z: 1.4644957780838013
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 99
+    mesh:
+      material: 22
+      mesh: 99
+      shader: 0
+    name: ornament_doors_01.002
+    transform:
+      position:
+        x: 15.48161792755127
+        y: 1.5200445652008057
+        z: 1.4644957780838013
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 100
+    mesh:
+      material: 7
+      mesh: 100
+      shader: 0
+    name: ornament_doors_01.003
+    transform:
+      position:
+        x: 15.48161792755127
+        y: 1.5200445652008057
+        z: 1.4644957780838013
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 101
+    mesh:
+      material: 20
+      mesh: 101
+      shader: 0
+    name: ornament_doors_02.001
+    transform:
+      position:
+        x: 18.31136131286621
+        y: 0.8876335024833679
+        z: -3.912816047668457
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 102
+    mesh:
+      material: 23
+      mesh: 102
+      shader: 0
+    name: ornament_doors_02.002
+    transform:
+      position:
+        x: 18.31136131286621
+        y: 0.8876335024833679
+        z: -3.912816047668457
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 103
+    mesh:
+      material: 23
+      mesh: 103
+      shader: 0
+    name: ornament_doors_03.001
+    transform:
+      position:
+        x: 6.19555139541626
+        y: 1.7943835258483887
+        z: 6.133327484130859
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 104
+    mesh:
+      material: 7
+      mesh: 104
+      shader: 0
+    name: ornament_doors_03.002
+    transform:
+      position:
+        x: 6.19555139541626
+        y: 1.7943835258483887
+        z: 6.133327484130859
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 105
+    mesh:
+      material: 23
+      mesh: 105
+      shader: 0
+    name: ornament_doors_04.001
+    transform:
+      position:
+        x: 2.1816625595092773
+        y: 1.7943835258483887
+        z: 6.133327484130859
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 106
+    mesh:
+      material: 7
+      mesh: 106
+      shader: 0
+    name: ornament_doors_04.002
+    transform:
+      position:
+        x: 2.1816625595092773
+        y: 1.7943835258483887
+        z: 6.133327484130859
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 107
+    mesh:
+      material: 23
+      mesh: 107
+      shader: 0
+    name: ornament_doors_05.001
+    transform:
+      position:
+        x: -1.8183587789535522
+        y: 1.7943835258483887
+        z: 6.133327484130859
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 108
+    mesh:
+      material: 7
+      mesh: 108
+      shader: 0
+    name: ornament_doors_05.002
+    transform:
+      position:
+        x: -1.8183587789535522
+        y: 1.7943835258483887
+        z: 6.133327484130859
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 109
+    mesh:
+      material: 23
+      mesh: 109
+      shader: 0
+    name: ornament_doors_06.001
+    transform:
+      position:
+        x: -5.776973247528076
+        y: 1.7943835258483887
+        z: 6.133327484130859
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 110
+    mesh:
+      material: 7
+      mesh: 110
+      shader: 0
+    name: ornament_doors_06.002
+    transform:
+      position:
+        x: -5.776973247528076
+        y: 1.7943835258483887
+        z: 6.133327484130859
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 111
+    mesh:
+      material: 23
+      mesh: 111
+      shader: 0
+    name: ornament_doors_07.001
+    transform:
+      position:
+        x: -11.2301607131958
+        y: 1.7943835258483887
+        z: 4.657639026641846
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 112
+    mesh:
+      material: 7
+      mesh: 112
+      shader: 0
+    name: ornament_doors_07.002
+    transform:
+      position:
+        x: -11.2301607131958
+        y: 1.7943835258483887
+        z: 4.657639026641846
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 113
+    mesh:
+      material: 23
+      mesh: 113
+      shader: 0
+    name: ornament_doors_08.001
+    transform:
+      position:
+        x: -9.720212936401367
+        y: 1.7943835258483887
+        z: 6.139299392700195
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 114
+    mesh:
+      material: 7
+      mesh: 114
+      shader: 0
+    name: ornament_doors_08.002
+    transform:
+      position:
+        x: -9.720212936401367
+        y: 1.7943835258483887
+        z: 6.139299392700195
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 115
+    mesh:
+      material: 20
+      mesh: 115
+      shader: 0
+    name: ornament_doors_09.001
+    transform:
+      position:
+        x: -2.048527240753174
+        y: 1.8174022436141968
+        z: -6.098107814788818
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 116
+    mesh:
+      material: 22
+      mesh: 116
+      shader: 0
+    name: ornament_doors_09.002
+    transform:
+      position:
+        x: -2.048527240753174
+        y: 1.8174022436141968
+        z: -6.098107814788818
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 117
+    mesh:
+      material: 7
+      mesh: 117
+      shader: 0
+    name: ornament_doors_09.003
+    transform:
+      position:
+        x: -2.048527240753174
+        y: 1.8174022436141968
+        z: -6.098107814788818
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 118
+    mesh:
+      material: 20
+      mesh: 118
+      shader: 0
+    name: ornament_doors_10.001
+    transform:
+      position:
+        x: -9.99221420288086
+        y: 1.8124775886535645
+        z: -4.949672698974609
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 119
+    mesh:
+      material: 21
+      mesh: 119
+      shader: 0
+    name: ornament_doors_10.002
+    transform:
+      position:
+        x: -9.99221420288086
+        y: 1.8124775886535645
+        z: -4.949672698974609
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 120
+    mesh:
+      material: 18
+      mesh: 120
+      shader: 0
+    name: ornament_doors_10.003
+    transform:
+      position:
+        x: -9.99221420288086
+        y: 1.8124775886535645
+        z: -4.949672698974609
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 121
+    mesh:
+      material: 23
+      mesh: 121
+      shader: 0
+    name: ornament_doors_10.004
+    transform:
+      position:
+        x: -9.99221420288086
+        y: 1.8124775886535645
+        z: -4.949672698974609
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 122
+    mesh:
+      material: 7
+      mesh: 122
+      shader: 0
+    name: ornament_doors_10.005
+    transform:
+      position:
+        x: -9.99221420288086
+        y: 1.8124775886535645
+        z: -4.949672698974609
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 123
+    mesh:
+      material: 17
+      mesh: 123
+      shader: 0
+    name: walls_1stfloor_01.001
+    transform:
+      position:
+        x: -11.35430908203125
+        y: 2.856191873550415
+        z: 0.06835174560546875
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 124
+    mesh:
+      material: 0
+      mesh: 124
+      shader: 0
+    name: walls_1stfloor_01.002
+    transform:
+      position:
+        x: -11.35430908203125
+        y: 2.856191873550415
+        z: 0.06835174560546875
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 125
+    mesh:
+      material: 20
+      mesh: 125
+      shader: 0
+    name: walls_1stfloor_01.003
+    transform:
+      position:
+        x: -11.35430908203125
+        y: 2.856191873550415
+        z: 0.06835174560546875
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 126
+    mesh:
+      material: 21
+      mesh: 126
+      shader: 0
+    name: walls_1stfloor_01.004
+    transform:
+      position:
+        x: -11.35430908203125
+        y: 2.856191873550415
+        z: 0.06835174560546875
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 127
+    mesh:
+      material: 24
+      mesh: 127
+      shader: 0
+    name: walls_1stfloor_01.005
+    transform:
+      position:
+        x: -11.35430908203125
+        y: 2.856191873550415
+        z: 0.06835174560546875
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 128
+    mesh:
+      material: 18
+      mesh: 128
+      shader: 0
+    name: walls_1stfloor_01.006
+    transform:
+      position:
+        x: -11.35430908203125
+        y: 2.856191873550415
+        z: 0.06835174560546875
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 129
+    mesh:
+      material: 22
+      mesh: 129
+      shader: 0
+    name: walls_1stfloor_01.007
+    transform:
+      position:
+        x: -11.35430908203125
+        y: 2.856191873550415
+        z: 0.06835174560546875
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 130
+    mesh:
+      material: 7
+      mesh: 130
+      shader: 0
+    name: walls_1stfloor_01.008
+    transform:
+      position:
+        x: -11.35430908203125
+        y: 2.856191873550415
+        z: 0.06835174560546875
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 131
+    mesh:
+      material: 6
+      mesh: 131
+      shader: 0
+    name: walls_1stfloor_01.009
+    transform:
+      position:
+        x: -11.35430908203125
+        y: 2.856191873550415
+        z: 0.06835174560546875
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 132
+    mesh:
+      material: 5
+      mesh: 132
+      shader: 0
+    name: walls_1stfloor_01.010
+    transform:
+      position:
+        x: -11.35430908203125
+        y: 2.856191873550415
+        z: 0.06835174560546875
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 133
+    mesh:
+      material: 1
+      mesh: 133
+      shader: 0
+    name: walls_1stfloor_01.011
+    transform:
+      position:
+        x: -11.35430908203125
+        y: 2.856191873550415
+        z: 0.06835174560546875
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 134
+    mesh:
+      material: 19
+      mesh: 134
+      shader: 0
+    name: walls_1stfloor_01.012
+    transform:
+      position:
+        x: -11.35430908203125
+        y: 2.856191873550415
+        z: 0.06835174560546875
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 135
+    mesh:
+      material: 25
+      mesh: 135
+      shader: 0
+    name: wood_door.001
+    transform:
+      position:
+        x: 19.491859436035156
+        y: 0.7786175608634949
+        z: 0.03165676072239876
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 136
+    mesh:
+      material: 7
+      mesh: 136
+      shader: 0
+    name: wooden_parts.001
+    transform:
+      position:
+        x: 14.160347938537598
+        y: 1.8342666625976562
+        z: -2.496399402618408
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 137
+    mesh:
+      material: 6
+      mesh: 137
+      shader: 0
+    name: wooden_parts.002
+    transform:
+      position:
+        x: 14.160347938537598
+        y: 1.8342666625976562
+        z: -2.496399402618408
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 138
+    mesh:
+      material: 25
+      mesh: 138
+      shader: 0
+    name: wooden_parts.003
+    transform:
+      position:
+        x: 14.160347938537598
+        y: 1.8342666625976562
+        z: -2.496399402618408
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 139
+    mesh:
+      material: 0
+      mesh: 139
+      shader: 0
+    name: arch_wall_2ndfloor.001
+    transform:
+      position:
+        x: 0.25837981700897217
+        y: 9.925777435302734
+        z: -0.020968932658433914
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 140
+    mesh:
+      material: 7
+      mesh: 140
+      shader: 0
+    name: arch_wall_2ndfloor.002
+    transform:
+      position:
+        x: 0.25837981700897217
+        y: 9.925777435302734
+        z: -0.020968932658433914
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 141
+    mesh:
+      material: 17
+      mesh: 141
+      shader: 0
+    name: ceiling_2ndfloor.001
+    transform:
+      position:
+        x: 0.14894957840442657
+        y: 9.553943634033203
+        z: -0.050252072513103485
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 142
+    mesh:
+      material: 21
+      mesh: 142
+      shader: 0
+    name: ceiling_2ndfloor.002
+    transform:
+      position:
+        x: 0.14894957840442657
+        y: 9.553943634033203
+        z: -0.050252072513103485
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 143
+    mesh:
+      material: 18
+      mesh: 143
+      shader: 0
+    name: ceiling_2ndfloor.003
+    transform:
+      position:
+        x: 0.14894957840442657
+        y: 9.553943634033203
+        z: -0.050252072513103485
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 144
+    mesh:
+      material: 7
+      mesh: 144
+      shader: 0
+    name: ceiling_2ndfloor.004
+    transform:
+      position:
+        x: 0.14894957840442657
+        y: 9.553943634033203
+        z: -0.050252072513103485
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 145
+    mesh:
+      material: 0
+      mesh: 145
+      shader: 0
+    name: column_2ndfloor_01.001
+    transform:
+      position:
+        x: -3.8596532344818115
+        y: 6.108536720275879
+        z: 3.106274366378784
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 146
+    mesh:
+      material: 26
+      mesh: 146
+      shader: 0
+    name: column_2ndfloor_01.002
+    transform:
+      position:
+        x: -3.8596532344818115
+        y: 6.108536720275879
+        z: 3.106274366378784
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 147
+    mesh:
+      material: 16
+      mesh: 147
+      shader: 0
+    name: column_2ndfloor_02.001
+    transform:
+      position:
+        x: 0.14297209680080414
+        y: 6.107756614685059
+        z: 3.103250026702881
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 148
+    mesh:
+      material: 0
+      mesh: 148
+      shader: 0
+    name: column_2ndfloor_02.002
+    transform:
+      position:
+        x: 0.14297209680080414
+        y: 6.107756614685059
+        z: 3.103250026702881
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 149
+    mesh:
+      material: 26
+      mesh: 149
+      shader: 0
+    name: column_2ndfloor_02.003
+    transform:
+      position:
+        x: 0.14297209680080414
+        y: 6.107756614685059
+        z: 3.103250026702881
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 150
+    mesh:
+      material: 16
+      mesh: 150
+      shader: 0
+    name: column_2ndfloor_03.001
+    transform:
+      position:
+        x: 4.158140659332275
+        y: 6.10853910446167
+        z: 3.1034035682678223
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 151
+    mesh:
+      material: 0
+      mesh: 151
+      shader: 0
+    name: column_2ndfloor_03.002
+    transform:
+      position:
+        x: 4.158140659332275
+        y: 6.10853910446167
+        z: 3.1034035682678223
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 152
+    mesh:
+      material: 26
+      mesh: 152
+      shader: 0
+    name: column_2ndfloor_03.003
+    transform:
+      position:
+        x: 4.158140659332275
+        y: 6.10853910446167
+        z: 3.1034035682678223
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 153
+    mesh:
+      material: 16
+      mesh: 153
+      shader: 0
+    name: column_2ndfloor_04.001
+    transform:
+      position:
+        x: 8.318652153015137
+        y: 6.108538627624512
+        z: 2.97918963432312
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 154
+    mesh:
+      material: 0
+      mesh: 154
+      shader: 0
+    name: column_2ndfloor_04.002
+    transform:
+      position:
+        x: 8.318652153015137
+        y: 6.108538627624512
+        z: 2.97918963432312
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 155
+    mesh:
+      material: 26
+      mesh: 155
+      shader: 0
+    name: column_2ndfloor_04.003
+    transform:
+      position:
+        x: 8.318652153015137
+        y: 6.108538627624512
+        z: 2.97918963432312
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 156
+    mesh:
+      material: 0
+      mesh: 156
+      shader: 0
+    name: column_2ndfloor_05.001
+    transform:
+      position:
+        x: -3.8596532344818115
+        y: 6.108536720275879
+        z: -3.1314733028411865
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 157
+    mesh:
+      material: 26
+      mesh: 157
+      shader: 0
+    name: column_2ndfloor_05.002
+    transform:
+      position:
+        x: -3.8596532344818115
+        y: 6.108536720275879
+        z: -3.1314733028411865
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 158
+    mesh:
+      material: 16
+      mesh: 158
+      shader: 0
+    name: column_2ndfloor_06.001
+    transform:
+      position:
+        x: 0.14740081131458282
+        y: 6.107755661010742
+        z: -3.120760440826416
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 159
+    mesh:
+      material: 0
+      mesh: 159
+      shader: 0
+    name: column_2ndfloor_06.002
+    transform:
+      position:
+        x: 0.14740081131458282
+        y: 6.107755661010742
+        z: -3.120760440826416
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 160
+    mesh:
+      material: 26
+      mesh: 160
+      shader: 0
+    name: column_2ndfloor_06.003
+    transform:
+      position:
+        x: 0.14740081131458282
+        y: 6.107755661010742
+        z: -3.120760440826416
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 161
+    mesh:
+      material: 0
+      mesh: 161
+      shader: 0
+    name: column_2ndfloor_07.001
+    transform:
+      position:
+        x: 4.14800500869751
+        y: 6.1085357666015625
+        z: -3.127596378326416
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 162
+    mesh:
+      material: 26
+      mesh: 162
+      shader: 0
+    name: column_2ndfloor_07.002
+    transform:
+      position:
+        x: 4.14800500869751
+        y: 6.1085357666015625
+        z: -3.127596378326416
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 163
+    mesh:
+      material: 0
+      mesh: 163
+      shader: 0
+    name: column_2ndfloor_08.001
+    transform:
+      position:
+        x: 8.317798614501953
+        y: 6.10853910446167
+        z: -2.9828436374664307
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 164
+    mesh:
+      material: 26
+      mesh: 164
+      shader: 0
+    name: column_2ndfloor_08.002
+    transform:
+      position:
+        x: 8.317798614501953
+        y: 6.10853910446167
+        z: -2.9828436374664307
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 165
+    mesh:
+      material: 21
+      mesh: 165
+      shader: 0
+    name: column_2ndfloor_09.001
+    transform:
+      position:
+        x: -1.8593943119049072
+        y: 6.100160598754883
+        z: -3.084819793701172
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 166
+    mesh:
+      material: 21
+      mesh: 166
+      shader: 0
+    name: column_2ndfloor_10.001
+    transform:
+      position:
+        x: 2.1651017665863037
+        y: 6.100160598754883
+        z: -3.0848207473754883
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 167
+    mesh:
+      material: 21
+      mesh: 167
+      shader: 0
+    name: column_2ndfloor_11.001
+    transform:
+      position:
+        x: 6.153645992279053
+        y: 6.100160598754883
+        z: -3.0848195552825928
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 168
+    mesh:
+      material: 21
+      mesh: 168
+      shader: 0
+    name: column_2ndfloor_12.001
+    transform:
+      position:
+        x: -1.8683825731277466
+        y: 6.100160598754883
+        z: 3.0724496841430664
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 169
+    mesh:
+      material: 21
+      mesh: 169
+      shader: 0
+    name: column_2ndfloor_13.001
+    transform:
+      position:
+        x: 2.156113624572754
+        y: 6.100160598754883
+        z: 3.072448253631592
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 170
+    mesh:
+      material: 21
+      mesh: 170
+      shader: 0
+    name: column_2ndfloor_14.001
+    transform:
+      position:
+        x: 6.170249938964844
+        y: 6.100160598754883
+        z: 3.0724480152130127
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 171
+    mesh:
+      material: 21
+      mesh: 171
+      shader: 0
+    name: column_2ndfloor_15.001
+    transform:
+      position:
+        x: 8.420499801635742
+        y: 6.100160598754883
+        z: -0.030615901574492455
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 172
+    mesh:
+      material: 0
+      mesh: 172
+      shader: 0
+    name: column_2ndfloor_16.001
+    transform:
+      position:
+        x: -8.063948631286621
+        y: 6.066609859466553
+        z: 2.9510302543640137
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 173
+    mesh:
+      material: 26
+      mesh: 173
+      shader: 0
+    name: column_2ndfloor_16.002
+    transform:
+      position:
+        x: -8.063948631286621
+        y: 6.066609859466553
+        z: 2.9510302543640137
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 174
+    mesh:
+      material: 0
+      mesh: 174
+      shader: 0
+    name: column_2ndfloor_17.001
+    transform:
+      position:
+        x: -8.069543838500977
+        y: 6.108537673950195
+        z: -2.9921135902404785
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 175
+    mesh:
+      material: 26
+      mesh: 175
+      shader: 0
+    name: column_2ndfloor_17.002
+    transform:
+      position:
+        x: -8.069543838500977
+        y: 6.108537673950195
+        z: -2.9921135902404785
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 176
+    mesh:
+      material: 21
+      mesh: 176
+      shader: 0
+    name: column_2ndfloor_18.001
+    transform:
+      position:
+        x: -5.873531341552734
+        y: 6.100160598754883
+        z: -3.084819793701172
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 177
+    mesh:
+      material: 21
+      mesh: 177
+      shader: 0
+    name: column_2ndfloor_19.001
+    transform:
+      position:
+        x: -8.14419174194336
+        y: 6.100160598754883
+        z: 0.021669253706932068
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 178
+    mesh:
+      material: 21
+      mesh: 178
+      shader: 0
+    name: column_2ndfloor_20.001
+    transform:
+      position:
+        x: -5.856927394866943
+        y: 6.100160598754883
+        z: 3.072448968887329
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 179
+    mesh:
+      material: 20
+      mesh: 179
+      shader: 0
+    name: ornament_door_2ndfloor_01.001
+    transform:
+      position:
+        x: 2.2743313312530518
+        y: 5.450930595397949
+        z: -7.468501567840576
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 180
+    mesh:
+      material: 21
+      mesh: 180
+      shader: 0
+    name: ornament_door_2ndfloor_01.002
+    transform:
+      position:
+        x: 2.2743313312530518
+        y: 5.450930595397949
+        z: -7.468501567840576
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 181
+    mesh:
+      material: 22
+      mesh: 181
+      shader: 0
+    name: ornament_door_2ndfloor_01.003
+    transform:
+      position:
+        x: 2.2743313312530518
+        y: 5.450930595397949
+        z: -7.468501567840576
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 182
+    mesh:
+      material: 7
+      mesh: 182
+      shader: 0
+    name: ornament_door_2ndfloor_01.004
+    transform:
+      position:
+        x: 2.2743313312530518
+        y: 5.450930595397949
+        z: -7.468501567840576
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 183
+    mesh:
+      material: 6
+      mesh: 183
+      shader: 0
+    name: ornament_door_2ndfloor_01.005
+    transform:
+      position:
+        x: 2.2743313312530518
+        y: 5.450930595397949
+        z: -7.468501567840576
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 184
+    mesh:
+      material: 20
+      mesh: 184
+      shader: 0
+    name: ornament_door_2ndfloor_02.001
+    transform:
+      position:
+        x: -1.8412055969238281
+        y: 5.450930595397949
+        z: -7.468501567840576
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 185
+    mesh:
+      material: 21
+      mesh: 185
+      shader: 0
+    name: ornament_door_2ndfloor_02.002
+    transform:
+      position:
+        x: -1.8412055969238281
+        y: 5.450930595397949
+        z: -7.468501567840576
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 186
+    mesh:
+      material: 22
+      mesh: 186
+      shader: 0
+    name: ornament_door_2ndfloor_02.003
+    transform:
+      position:
+        x: -1.8412055969238281
+        y: 5.450930595397949
+        z: -7.468501567840576
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 187
+    mesh:
+      material: 7
+      mesh: 187
+      shader: 0
+    name: ornament_door_2ndfloor_02.004
+    transform:
+      position:
+        x: -1.8412055969238281
+        y: 5.450930595397949
+        z: -7.468501567840576
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 188
+    mesh:
+      material: 6
+      mesh: 188
+      shader: 0
+    name: ornament_door_2ndfloor_02.005
+    transform:
+      position:
+        x: -1.8412055969238281
+        y: 5.450930595397949
+        z: -7.468501567840576
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 189
+    mesh:
+      material: 20
+      mesh: 189
+      shader: 0
+    name: ornament_door_2ndfloor_03.001
+    transform:
+      position:
+        x: -5.736634254455566
+        y: 5.450930595397949
+        z: -7.468499183654785
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 190
+    mesh:
+      material: 21
+      mesh: 190
+      shader: 0
+    name: ornament_door_2ndfloor_03.002
+    transform:
+      position:
+        x: -5.736634254455566
+        y: 5.450930595397949
+        z: -7.468499183654785
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 191
+    mesh:
+      material: 22
+      mesh: 191
+      shader: 0
+    name: ornament_door_2ndfloor_03.003
+    transform:
+      position:
+        x: -5.736634254455566
+        y: 5.450930595397949
+        z: -7.468499183654785
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 192
+    mesh:
+      material: 7
+      mesh: 192
+      shader: 0
+    name: ornament_door_2ndfloor_03.004
+    transform:
+      position:
+        x: -5.736634254455566
+        y: 5.450930595397949
+        z: -7.468499183654785
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 193
+    mesh:
+      material: 6
+      mesh: 193
+      shader: 0
+    name: ornament_door_2ndfloor_03.005
+    transform:
+      position:
+        x: -5.736634254455566
+        y: 5.450930595397949
+        z: -7.468499183654785
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 194
+    mesh:
+      material: 17
+      mesh: 194
+      shader: 0
+    name: ornament_door_2ndfloor_04.001
+    transform:
+      position:
+        x: 6.160540580749512
+        y: 5.432581901550293
+        z: -7.452783584594727
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 195
+    mesh:
+      material: 21
+      mesh: 195
+      shader: 0
+    name: ornament_door_2ndfloor_04.002
+    transform:
+      position:
+        x: 6.160540580749512
+        y: 5.432581901550293
+        z: -7.452783584594727
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 196
+    mesh:
+      material: 23
+      mesh: 196
+      shader: 0
+    name: ornament_door_2ndfloor_04.003
+    transform:
+      position:
+        x: 6.160540580749512
+        y: 5.432581901550293
+        z: -7.452783584594727
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 197
+    mesh:
+      material: 7
+      mesh: 197
+      shader: 0
+    name: ornament_door_2ndfloor_04.004
+    transform:
+      position:
+        x: 6.160540580749512
+        y: 5.432581901550293
+        z: -7.452783584594727
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 198
+    mesh:
+      material: 20
+      mesh: 198
+      shader: 0
+    name: ornament_door_2ndfloor_05.001
+    transform:
+      position:
+        x: 10.058539390563965
+        y: 5.450930595397949
+        z: -7.468503952026367
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 199
+    mesh:
+      material: 21
+      mesh: 199
+      shader: 0
+    name: ornament_door_2ndfloor_05.002
+    transform:
+      position:
+        x: 10.058539390563965
+        y: 5.450930595397949
+        z: -7.468503952026367
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 200
+    mesh:
+      material: 22
+      mesh: 200
+      shader: 0
+    name: ornament_door_2ndfloor_05.003
+    transform:
+      position:
+        x: 10.058539390563965
+        y: 5.450930595397949
+        z: -7.468503952026367
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 201
+    mesh:
+      material: 7
+      mesh: 201
+      shader: 0
+    name: ornament_door_2ndfloor_05.004
+    transform:
+      position:
+        x: 10.058539390563965
+        y: 5.450930595397949
+        z: -7.468503952026367
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 202
+    mesh:
+      material: 6
+      mesh: 202
+      shader: 0
+    name: ornament_door_2ndfloor_05.005
+    transform:
+      position:
+        x: 10.058539390563965
+        y: 5.450930595397949
+        z: -7.468503952026367
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 203
+    mesh:
+      material: 20
+      mesh: 203
+      shader: 0
+    name: ornament_door_2ndfloor_06.001
+    transform:
+      position:
+        x: -9.634869575500488
+        y: 5.450930595397949
+        z: -7.4684977531433105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 204
+    mesh:
+      material: 21
+      mesh: 204
+      shader: 0
+    name: ornament_door_2ndfloor_06.002
+    transform:
+      position:
+        x: -9.634869575500488
+        y: 5.450930595397949
+        z: -7.4684977531433105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 205
+    mesh:
+      material: 22
+      mesh: 205
+      shader: 0
+    name: ornament_door_2ndfloor_06.003
+    transform:
+      position:
+        x: -9.634869575500488
+        y: 5.450930595397949
+        z: -7.4684977531433105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 206
+    mesh:
+      material: 7
+      mesh: 206
+      shader: 0
+    name: ornament_door_2ndfloor_06.004
+    transform:
+      position:
+        x: -9.634869575500488
+        y: 5.450930595397949
+        z: -7.4684977531433105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 207
+    mesh:
+      material: 6
+      mesh: 207
+      shader: 0
+    name: ornament_door_2ndfloor_06.005
+    transform:
+      position:
+        x: -9.634869575500488
+        y: 5.450930595397949
+        z: -7.4684977531433105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 208
+    mesh:
+      material: 21
+      mesh: 208
+      shader: 0
+    name: ornament_door_2ndfloor_07.001
+    transform:
+      position:
+        x: -12.40319538116455
+        y: 5.4376397132873535
+        z: 0.12462028115987778
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 209
+    mesh:
+      material: 23
+      mesh: 209
+      shader: 0
+    name: ornament_door_2ndfloor_07.002
+    transform:
+      position:
+        x: -12.40319538116455
+        y: 5.4376397132873535
+        z: 0.12462028115987778
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 210
+    mesh:
+      material: 7
+      mesh: 210
+      shader: 0
+    name: ornament_door_2ndfloor_07.003
+    transform:
+      position:
+        x: -12.40319538116455
+        y: 5.4376397132873535
+        z: 0.12462028115987778
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 211
+    mesh:
+      material: 6
+      mesh: 211
+      shader: 0
+    name: ornament_door_2ndfloor_07.004
+    transform:
+      position:
+        x: -12.40319538116455
+        y: 5.4376397132873535
+        z: 0.12462028115987778
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 212
+    mesh:
+      material: 20
+      mesh: 212
+      shader: 0
+    name: ornament_door_2ndfloor_08.001
+    transform:
+      position:
+        x: -12.421671867370605
+        y: 5.450929641723633
+        z: -4.7081451416015625
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 213
+    mesh:
+      material: 21
+      mesh: 213
+      shader: 0
+    name: ornament_door_2ndfloor_08.002
+    transform:
+      position:
+        x: -12.421671867370605
+        y: 5.450929641723633
+        z: -4.7081451416015625
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 214
+    mesh:
+      material: 22
+      mesh: 214
+      shader: 0
+    name: ornament_door_2ndfloor_08.003
+    transform:
+      position:
+        x: -12.421671867370605
+        y: 5.450929641723633
+        z: -4.7081451416015625
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 215
+    mesh:
+      material: 7
+      mesh: 215
+      shader: 0
+    name: ornament_door_2ndfloor_08.004
+    transform:
+      position:
+        x: -12.421671867370605
+        y: 5.450929641723633
+        z: -4.7081451416015625
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 216
+    mesh:
+      material: 6
+      mesh: 216
+      shader: 0
+    name: ornament_door_2ndfloor_08.005
+    transform:
+      position:
+        x: -12.421671867370605
+        y: 5.450929641723633
+        z: -4.7081451416015625
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 217
+    mesh:
+      material: 20
+      mesh: 217
+      shader: 0
+    name: ornament_door_2ndfloor_09.001
+    transform:
+      position:
+        x: -12.424445152282715
+        y: 5.450929641723633
+        z: 4.697772979736328
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 218
+    mesh:
+      material: 21
+      mesh: 218
+      shader: 0
+    name: ornament_door_2ndfloor_09.002
+    transform:
+      position:
+        x: -12.424445152282715
+        y: 5.450929641723633
+        z: 4.697772979736328
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 219
+    mesh:
+      material: 22
+      mesh: 219
+      shader: 0
+    name: ornament_door_2ndfloor_09.003
+    transform:
+      position:
+        x: -12.424445152282715
+        y: 5.450929641723633
+        z: 4.697772979736328
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 220
+    mesh:
+      material: 7
+      mesh: 220
+      shader: 0
+    name: ornament_door_2ndfloor_09.004
+    transform:
+      position:
+        x: -12.424445152282715
+        y: 5.450929641723633
+        z: 4.697772979736328
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 221
+    mesh:
+      material: 6
+      mesh: 221
+      shader: 0
+    name: ornament_door_2ndfloor_09.005
+    transform:
+      position:
+        x: -12.424445152282715
+        y: 5.450929641723633
+        z: 4.697772979736328
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 222
+    mesh:
+      material: 20
+      mesh: 222
+      shader: 0
+    name: ornament_door_2ndfloor_10.001
+    transform:
+      position:
+        x: 2.2569923400878906
+        y: 5.450929641723633
+        z: 7.430117130279541
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 223
+    mesh:
+      material: 21
+      mesh: 223
+      shader: 0
+    name: ornament_door_2ndfloor_10.002
+    transform:
+      position:
+        x: 2.2569923400878906
+        y: 5.450929641723633
+        z: 7.430117130279541
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 224
+    mesh:
+      material: 22
+      mesh: 224
+      shader: 0
+    name: ornament_door_2ndfloor_10.003
+    transform:
+      position:
+        x: 2.2569923400878906
+        y: 5.450929641723633
+        z: 7.430117130279541
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 225
+    mesh:
+      material: 7
+      mesh: 225
+      shader: 0
+    name: ornament_door_2ndfloor_10.004
+    transform:
+      position:
+        x: 2.2569923400878906
+        y: 5.450929641723633
+        z: 7.430117130279541
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 226
+    mesh:
+      material: 6
+      mesh: 226
+      shader: 0
+    name: ornament_door_2ndfloor_10.005
+    transform:
+      position:
+        x: 2.2569923400878906
+        y: 5.450929641723633
+        z: 7.430117130279541
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 227
+    mesh:
+      material: 20
+      mesh: 227
+      shader: 0
+    name: ornament_door_2ndfloor_11.001
+    transform:
+      position:
+        x: -1.9147945642471313
+        y: 5.450929641723633
+        z: 7.430118083953857
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 228
+    mesh:
+      material: 21
+      mesh: 228
+      shader: 0
+    name: ornament_door_2ndfloor_11.002
+    transform:
+      position:
+        x: -1.9147945642471313
+        y: 5.450929641723633
+        z: 7.430118083953857
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 229
+    mesh:
+      material: 22
+      mesh: 229
+      shader: 0
+    name: ornament_door_2ndfloor_11.003
+    transform:
+      position:
+        x: -1.9147945642471313
+        y: 5.450929641723633
+        z: 7.430118083953857
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 230
+    mesh:
+      material: 7
+      mesh: 230
+      shader: 0
+    name: ornament_door_2ndfloor_11.004
+    transform:
+      position:
+        x: -1.9147945642471313
+        y: 5.450929641723633
+        z: 7.430118083953857
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 231
+    mesh:
+      material: 6
+      mesh: 231
+      shader: 0
+    name: ornament_door_2ndfloor_11.005
+    transform:
+      position:
+        x: -1.9147945642471313
+        y: 5.450929641723633
+        z: 7.430118083953857
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 232
+    mesh:
+      material: 20
+      mesh: 232
+      shader: 0
+    name: ornament_door_2ndfloor_12.001
+    transform:
+      position:
+        x: -5.841040134429932
+        y: 5.450929641723633
+        z: 7.430119514465332
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 233
+    mesh:
+      material: 21
+      mesh: 233
+      shader: 0
+    name: ornament_door_2ndfloor_12.002
+    transform:
+      position:
+        x: -5.841040134429932
+        y: 5.450929641723633
+        z: 7.430119514465332
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 234
+    mesh:
+      material: 22
+      mesh: 234
+      shader: 0
+    name: ornament_door_2ndfloor_12.003
+    transform:
+      position:
+        x: -5.841040134429932
+        y: 5.450929641723633
+        z: 7.430119514465332
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 235
+    mesh:
+      material: 7
+      mesh: 235
+      shader: 0
+    name: ornament_door_2ndfloor_12.004
+    transform:
+      position:
+        x: -5.841040134429932
+        y: 5.450929641723633
+        z: 7.430119514465332
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 236
+    mesh:
+      material: 6
+      mesh: 236
+      shader: 0
+    name: ornament_door_2ndfloor_12.005
+    transform:
+      position:
+        x: -5.841040134429932
+        y: 5.450929641723633
+        z: 7.430119514465332
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 237
+    mesh:
+      material: 20
+      mesh: 237
+      shader: 0
+    name: ornament_door_2ndfloor_13.001
+    transform:
+      position:
+        x: -9.69232177734375
+        y: 5.450929641723633
+        z: 7.430120468139648
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 238
+    mesh:
+      material: 21
+      mesh: 238
+      shader: 0
+    name: ornament_door_2ndfloor_13.002
+    transform:
+      position:
+        x: -9.69232177734375
+        y: 5.450929641723633
+        z: 7.430120468139648
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 239
+    mesh:
+      material: 22
+      mesh: 239
+      shader: 0
+    name: ornament_door_2ndfloor_13.003
+    transform:
+      position:
+        x: -9.69232177734375
+        y: 5.450929641723633
+        z: 7.430120468139648
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 240
+    mesh:
+      material: 7
+      mesh: 240
+      shader: 0
+    name: ornament_door_2ndfloor_13.004
+    transform:
+      position:
+        x: -9.69232177734375
+        y: 5.450929641723633
+        z: 7.430120468139648
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 241
+    mesh:
+      material: 6
+      mesh: 241
+      shader: 0
+    name: ornament_door_2ndfloor_13.005
+    transform:
+      position:
+        x: -9.69232177734375
+        y: 5.450929641723633
+        z: 7.430120468139648
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 242
+    mesh:
+      material: 17
+      mesh: 242
+      shader: 0
+    name: ornament_door_2ndfloor_14.001
+    transform:
+      position:
+        x: 10.040162086486816
+        y: 4.796761989593506
+        z: 7.407774448394775
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 243
+    mesh:
+      material: 21
+      mesh: 243
+      shader: 0
+    name: ornament_door_2ndfloor_14.002
+    transform:
+      position:
+        x: 10.040162086486816
+        y: 4.796761989593506
+        z: 7.407774448394775
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 244
+    mesh:
+      material: 23
+      mesh: 244
+      shader: 0
+    name: ornament_door_2ndfloor_14.003
+    transform:
+      position:
+        x: 10.040162086486816
+        y: 4.796761989593506
+        z: 7.407774448394775
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 245
+    mesh:
+      material: 7
+      mesh: 245
+      shader: 0
+    name: ornament_door_2ndfloor_14.004
+    transform:
+      position:
+        x: 10.040162086486816
+        y: 4.796761989593506
+        z: 7.407774448394775
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 246
+    mesh:
+      material: 17
+      mesh: 246
+      shader: 0
+    name: ornament_door_2ndfloor_15.001
+    transform:
+      position:
+        x: 12.739145278930664
+        y: 5.422553062438965
+        z: 4.736014366149902
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 247
+    mesh:
+      material: 21
+      mesh: 247
+      shader: 0
+    name: ornament_door_2ndfloor_15.002
+    transform:
+      position:
+        x: 12.739145278930664
+        y: 5.422553062438965
+        z: 4.736014366149902
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 248
+    mesh:
+      material: 23
+      mesh: 248
+      shader: 0
+    name: ornament_door_2ndfloor_15.003
+    transform:
+      position:
+        x: 12.739145278930664
+        y: 5.422553062438965
+        z: 4.736014366149902
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 249
+    mesh:
+      material: 7
+      mesh: 249
+      shader: 0
+    name: ornament_door_2ndfloor_15.004
+    transform:
+      position:
+        x: 12.739145278930664
+        y: 5.422553062438965
+        z: 4.736014366149902
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 250
+    mesh:
+      material: 27
+      mesh: 250
+      shader: 0
+    name: stone_walls_2ndfloor.001
+    transform:
+      position:
+        x: 0.13906310498714447
+        y: 7.855088710784912
+        z: 0.11463012546300888
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 251
+    mesh:
+      material: 18
+      mesh: 251
+      shader: 0
+    name: stone_walls_2ndfloor.002
+    transform:
+      position:
+        x: 0.13906310498714447
+        y: 7.855088710784912
+        z: 0.11463012546300888
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 252
+    mesh:
+      material: 5
+      mesh: 252
+      shader: 0
+    name: stone_walls_2ndfloor.003
+    transform:
+      position:
+        x: 0.13906310498714447
+        y: 7.855088710784912
+        z: 0.11463012546300888
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 253
+    mesh:
+      material: 0
+      mesh: 253
+      shader: 0
+    name: ornament_roof.001
+    transform:
+      position:
+        x: 0.8993908762931824
+        y: 15.94246768951416
+        z: -0.0030139158479869366
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 254
+    mesh:
+      material: 0
+      mesh: 254
+      shader: 0
+    name: ornament_windows.001
+    transform:
+      position:
+        x: 1.0220263004302979
+        y: 12.18465518951416
+        z: 0.006693878211081028
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 255
+    mesh:
+      material: 23
+      mesh: 255
+      shader: 0
+    name: ornament_windows.002
+    transform:
+      position:
+        x: 1.0220263004302979
+        y: 12.18465518951416
+        z: 0.006693878211081028
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 256
+    mesh:
+      material: 7
+      mesh: 256
+      shader: 0
+    name: ornament_windows.003
+    transform:
+      position:
+        x: 1.0220263004302979
+        y: 12.18465518951416
+        z: 0.006693878211081028
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 257
+    mesh:
+      material: 21
+      mesh: 257
+      shader: 0
+    name: roof_floor_03_01.001
+    transform:
+      position:
+        x: -11.028592109680176
+        y: 16.175004959106445
+        z: 5.4987688064575195
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 258
+    mesh:
+      material: 21
+      mesh: 258
+      shader: 0
+    name: roof_floor_03_02.001
+    transform:
+      position:
+        x: -0.8206982016563416
+        y: 16.175004959106445
+        z: 5.498769283294678
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 259
+    mesh:
+      material: 20
+      mesh: 259
+      shader: 0
+    name: roof_floor_03_05.001
+    transform:
+      position:
+        x: 10.204414367675781
+        y: 16.703466415405273
+        z: 0.14466887712478638
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 260
+    mesh:
+      material: 21
+      mesh: 260
+      shader: 0
+    name: roof_floor_03_05.002
+    transform:
+      position:
+        x: 10.204414367675781
+        y: 16.703466415405273
+        z: 0.14466887712478638
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 261
+    mesh:
+      material: 7
+      mesh: 261
+      shader: 0
+    name: roof_floor_03_05.003
+    transform:
+      position:
+        x: 10.204414367675781
+        y: 16.703466415405273
+        z: 0.14466887712478638
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 262
+    mesh:
+      material: 6
+      mesh: 262
+      shader: 0
+    name: roof_floor_03_05.004
+    transform:
+      position:
+        x: 10.204414367675781
+        y: 16.703466415405273
+        z: 0.14466887712478638
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 263
+    mesh:
+      material: 5
+      mesh: 263
+      shader: 0
+    name: roof_floor_03_05.005
+    transform:
+      position:
+        x: 10.204414367675781
+        y: 16.703466415405273
+        z: 0.14466887712478638
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 264
+    mesh:
+      material: 1
+      mesh: 264
+      shader: 0
+    name: roof_floor_03_05.006
+    transform:
+      position:
+        x: 10.204414367675781
+        y: 16.703466415405273
+        z: 0.14466887712478638
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 265
+    mesh:
+      material: 21
+      mesh: 265
+      shader: 0
+    name: roof_floor_03_06.001
+    transform:
+      position:
+        x: -11.96572494506836
+        y: 16.88477897644043
+        z: 0.018022460862994194
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 266
+    mesh:
+      material: 7
+      mesh: 266
+      shader: 0
+    name: roof_floor_03_06.002
+    transform:
+      position:
+        x: -11.96572494506836
+        y: 16.88477897644043
+        z: 0.018022460862994194
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 267
+    mesh:
+      material: 5
+      mesh: 267
+      shader: 0
+    name: roof_floor_03_06.003
+    transform:
+      position:
+        x: -11.96572494506836
+        y: 16.88477897644043
+        z: 0.018022460862994194
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 268
+    mesh:
+      material: 21
+      mesh: 268
+      shader: 0
+    name: roof_floor_03_07.001
+    transform:
+      position:
+        x: 7.446067810058594
+        y: 16.175004959106445
+        z: 5.498768329620361
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 269
+    mesh:
+      material: 21
+      mesh: 269
+      shader: 0
+    name: roof_floor_03_08.001
+    transform:
+      position:
+        x: 7.51724100112915
+        y: 16.175004959106445
+        z: -5.476746559143066
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 270
+    mesh:
+      material: 21
+      mesh: 270
+      shader: 0
+    name: roof_floor_03_09.001
+    transform:
+      position:
+        x: -11.032135963439941
+        y: 16.172346115112305
+        z: -5.472142219543457
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 271
+    mesh:
+      material: 21
+      mesh: 271
+      shader: 0
+    name: roof_floor_03_10.001
+    transform:
+      position:
+        x: -0.8403283357620239
+        y: 16.175004959106445
+        z: -5.476743221282959
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 272
+    mesh:
+      material: 17
+      mesh: 272
+      shader: 0
+    name: walls_floor_03.001
+    transform:
+      position:
+        x: 1.4462536573410034
+        y: 13.452463150024414
+        z: 0.0494467169046402
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 273
+    mesh:
+      material: 0
+      mesh: 273
+      shader: 0
+    name: walls_floor_03.002
+    transform:
+      position:
+        x: 1.4462536573410034
+        y: 13.452463150024414
+        z: 0.0494467169046402
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 274
+    mesh:
+      material: 21
+      mesh: 274
+      shader: 0
+    name: walls_floor_03.003
+    transform:
+      position:
+        x: 1.4462536573410034
+        y: 13.452463150024414
+        z: 0.0494467169046402
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 275
+    mesh:
+      material: 23
+      mesh: 275
+      shader: 0
+    name: walls_floor_03.004
+    transform:
+      position:
+        x: 1.4462536573410034
+        y: 13.452463150024414
+        z: 0.0494467169046402
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 276
+    mesh:
+      material: 5
+      mesh: 276
+      shader: 0
+    name: walls_floor_03.005
+    transform:
+      position:
+        x: 1.4462536573410034
+        y: 13.452463150024414
+        z: 0.0494467169046402
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 277
+    mesh:
+      material: 17
+      mesh: 277
+      shader: 0
+    name: master_material.001
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 278
+    mesh:
+      material: 16
+      mesh: 278
+      shader: 0
+    name: master_material.002
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 279
+    mesh:
+      material: 3
+      mesh: 279
+      shader: 0
+    name: master_material.003
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 280
+    mesh:
+      material: 0
+      mesh: 280
+      shader: 0
+    name: master_material.004
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 281
+    mesh:
+      material: 20
+      mesh: 281
+      shader: 0
+    name: master_material.005
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 282
+    mesh:
+      material: 21
+      mesh: 282
+      shader: 0
+    name: master_material.006
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 283
+    mesh:
+      material: 27
+      mesh: 283
+      shader: 0
+    name: master_material.007
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 284
+    mesh:
+      material: 18
+      mesh: 284
+      shader: 0
+    name: master_material.008
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 285
+    mesh:
+      material: 23
+      mesh: 285
+      shader: 0
+    name: master_material.009
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 286
+    mesh:
+      material: 22
+      mesh: 286
+      shader: 0
+    name: master_material.010
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 287
+    mesh:
+      material: 7
+      mesh: 287
+      shader: 0
+    name: master_material.011
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 288
+    mesh:
+      material: 6
+      mesh: 288
+      shader: 0
+    name: master_material.012
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 289
+    mesh:
+      material: 28
+      mesh: 289
+      shader: 0
+    name: master_material.013
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 290
+    mesh:
+      material: 5
+      mesh: 290
+      shader: 0
+    name: master_material.014
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 291
+    mesh:
+      material: 1
+      mesh: 291
+      shader: 0
+    name: master_material.015
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 292
+    mesh:
+      material: 11
+      mesh: 292
+      shader: 0
+    name: master_material.016
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 293
+    mesh:
+      material: 26
+      mesh: 293
+      shader: 0
+    name: master_material.017
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 294
+    mesh:
+      material: 10
+      mesh: 294
+      shader: 0
+    name: master_material.018
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 295
+    mesh:
+      material: 13
+      mesh: 295
+      shader: 0
+    name: master_material.019
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 296
+    mesh:
+      material: 12
+      mesh: 296
+      shader: 0
+    name: master_material.020
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 297
+    mesh:
+      material: 19
+      mesh: 297
+      shader: 0
+    name: master_material.021
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 298
+    mesh:
+      material: 25
+      mesh: 298
+      shader: 0
+    name: master_material.022
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 299
+    mesh:
+      material: 8
+      mesh: 299
+      shader: 0
+    name: master_material.023
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 300
+    mesh:
+      material: 9
+      mesh: 300
+      shader: 0
+    name: master_material.024
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 301
+    mesh:
+      material: 2
+      mesh: 301
+      shader: 0
+    name: master_material.025
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 302
+    mesh:
+      material: 4
+      mesh: 302
+      shader: 1
+    name: master_material.026
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 303
+    mesh:
+      material: 14
+      mesh: 303
+      shader: 0
+    name: master_material.027
+    transform:
+      position:
+        x: 1.9864367246627808
+        y: 0.0
+        z: 13.863932609558105
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 301
+    mesh:
+      material: 4
+      mesh: 10
+      shader: 1
+    name: decals_2nd_floor
+    transform:
+      position:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 302
+    mesh:
+      material: 4
+      mesh: 11
+      shader: 1
+    name: decals_3rd_floor
+    transform:
+      position:
+        x: 0.09102355688810349
+        y: 12.530000686645508
+        z: 0.18152205646038055
+      rotation:
+        x: 0.0
+        y: 0.0
+        z: -0.0
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    type: MESH
+  - id: 304
+    name: background.001.Spot
+    type: LIGHT
+    transform: 
+      position: 
+        x: 24.643276
+        y: 0.608066
+        z: -10.776815
+      rotation: 
+        x: 3.030385
+        y: -1.521126
+        z: 0.000000
+      scale: 
+        x: 1.000000
+        y: 1.000000
+        z: 1.000000
+    spotlight: 
+      color: 
+        x: 2000.000000
+        y: 386.679413
+        z: 27.839329
+      inner_angle: 0.104720
+      outer_angle: 0.698132

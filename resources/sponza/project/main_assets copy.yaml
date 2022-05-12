@@ -1,0 +1,929 @@
+textures:
+  - format: SRGB8_ALPHA8
+    id: 0
+    path: resources/sponza/textures/stone_trims_01_BaseColor.png
+  - format: RGBA8
+    id: 1
+    path: resources/sponza/textures/stone_trims_01_Metalness.bmp
+  - format: RGBA8
+    id: 2
+    path: resources/sponza/textures/stone_trims_01_Normal.png
+  - format: RGBA8
+    id: 3
+    path: resources/sponza/textures/stone_trims_01_Roughness.bmp
+  - format: RGBA8
+    id: 4
+    path: resources/sponza/textures/stone_trims_01_Roughnessstone_trims_01_Metalness.bmp
+  - format: SRGB8_ALPHA8
+    id: 5
+    path: resources/sponza/textures/brickwall_02_BaseColor.png
+  - format: RGBA8
+    id: 6
+    path: resources/sponza/textures/brickwall_02_Metalness.bmp
+  - format: RGBA8
+    id: 7
+    path: resources/sponza/textures/brickwall_02_Normal.png
+  - format: RGBA8
+    id: 8
+    path: resources/sponza/textures/brickwall_02_Roughness.bmp
+  - format: RGBA8
+    id: 9
+    path: resources/sponza/textures/brickwall_02_Roughnessbrickwall_02_Metalness.bmp
+  - format: SRGB8_ALPHA8
+    id: 10
+    path: resources/sponza/textures/ceiling_plaster_02_BaseColor.png
+  - format: RGBA8
+    id: 11
+    path: resources/sponza/textures/ceiling_plaster_02_Roughness.bmp
+  - format: RGBA8
+    id: 12
+    path: resources/sponza/textures/ceiling_plaster_02_Roughnessceiling_plaster_01_Metalness.bmp
+  - format: SRGB8_ALPHA8
+    id: 13
+    path: resources/sponza/textures/column_head_1stfloor_BaseColor.png
+  - format: RGBA8
+    id: 14
+    path: resources/sponza/textures/column_head_1stfloor_Metalness.bmp
+  - format: RGBA8
+    id: 15
+    path: resources/sponza/textures/column_head_1stfloor_Normal.png
+  - format: RGBA8
+    id: 16
+    path: resources/sponza/textures/column_head_1stfloor_Roughness.bmp
+  - format: RGBA8
+    id: 17
+    path: resources/sponza/textures/column_head_1stfloor_Roughnesscolumn_head_1stfloor_Metalness.bmp
+  - format: RGBA8
+    id: 18
+    path: resources/sponza/textures/dirt_decal_01.bmp
+  - format: RGBA8
+    id: 19
+    path: resources/sponza/textures/dirt_decal_01_alpha.bmp
+  - format: RGBA8
+    id: 20
+    path: resources/sponza/textures/dirt_decal_01_dirt_decal_01_mask_alpha_dirt_decal_Opacity.bmp
+  - format: RGBA8
+    id: 21
+    path: resources/sponza/textures/dirt_decal_01_mask.bmp
+  - format: SRGB8_ALPHA8
+    id: 22
+    path: resources/sponza/textures/brickwall_01_BaseColor.png
+  - format: RGBA8
+    id: 23
+    path: resources/sponza/textures/brickwall_01_Metalness.bmp
+  - format: RGBA8
+    id: 24
+    path: resources/sponza/textures/brickwall_01_Normal.png
+  - format: RGBA8
+    id: 25
+    path: resources/sponza/textures/brickwall_01_Roughness.bmp
+  - format: RGBA8
+    id: 26
+    path: resources/sponza/textures/brickwall_01_Roughnessbrickwall_01_Metalness.bmp
+  - format: SRGB8_ALPHA8
+    id: 27
+    path: resources/sponza/textures/metal_door_01_BaseColor.png
+  - format: RGBA8
+    id: 28
+    path: resources/sponza/textures/metal_door_01_Metalness.bmp
+  - format: RGBA8
+    id: 29
+    path: resources/sponza/textures/metal_door_01_Normal.png
+  - format: RGBA8
+    id: 30
+    path: resources/sponza/textures/metal_door_01_Roughness.bmp
+  - format: RGBA8
+    id: 31
+    path: resources/sponza/textures/metal_door_01_Roughnessmetal_door_01_Metalness.bmp
+  - format: SRGB8_ALPHA8
+    id: 32
+    path: resources/sponza/textures/ceiling_plaster_01_BaseColor.png
+  - format: RGBA8
+    id: 33
+    path: resources/sponza/textures/ceiling_plaster_01_Metalness.bmp
+  - format: RGBA8
+    id: 34
+    path: resources/sponza/textures/ceiling_plaster_01_Normal.png
+  - format: RGBA8
+    id: 35
+    path: resources/sponza/textures/ceiling_plaster_01_Roughness.bmp
+  - format: RGBA8
+    id: 36
+    path: resources/sponza/textures/ceiling_plaster_01_Roughnessceiling_plaster_01_Metalness.bmp
+  - format: SRGB8_ALPHA8
+    id: 37
+    path: resources/sponza/textures/column_head_2ndfloor_03_BaseColor.png
+  - format: RGBA8
+    id: 38
+    path: resources/sponza/textures/column_head_2ndfloor_03_Metalness.bmp
+  - format: RGBA8
+    id: 39
+    path: resources/sponza/textures/column_head_2ndfloor_03_Normal.png
+  - format: RGBA8
+    id: 40
+    path: resources/sponza/textures/column_head_2ndfloor_03_Roughness.bmp
+  - format: RGBA8
+    id: 41
+    path: resources/sponza/textures/column_head_2ndfloor_03_Roughnesscolumn_head_2ndfloor_03_Metalness.bmp
+  - format: SRGB8_ALPHA8
+    id: 42
+    path: resources/sponza/textures/column_head_2ndfloor_02_BaseColor.png
+  - format: RGBA8
+    id: 43
+    path: resources/sponza/textures/column_head_2ndfloor_02_Metalness.bmp
+  - format: RGBA8
+    id: 44
+    path: resources/sponza/textures/column_head_2ndfloor_02_Normal.png
+  - format: RGBA8
+    id: 45
+    path: resources/sponza/textures/column_head_2ndfloor_02_Roughness.bmp
+  - format: RGBA8
+    id: 46
+    path: resources/sponza/textures/column_head_2ndfloor_02_Roughnesscolumn_head_2ndfloor_02_Metalness.bmp
+  - format: SRGB8_ALPHA8
+    id: 47
+    path: resources/sponza/textures/roof_tiles_01_BaseColor.png
+  - format: RGBA8
+    id: 48
+    path: resources/sponza/textures/roof_tiles_01_Metalness.bmp
+  - format: RGBA8
+    id: 49
+    path: resources/sponza/textures/roof_tiles_01_Normal.png
+  - format: RGBA8
+    id: 50
+    path: resources/sponza/textures/roof_tiles_01_Roughness.bmp
+  - format: RGBA8
+    id: 51
+    path: resources/sponza/textures/roof_tiles_01_Roughnessroof_tiles_01_Metalness.bmp
+  - format: SRGB8_ALPHA8
+    id: 52
+    path: resources/sponza/textures/ornament_01_BaseColor.png
+  - format: RGBA8
+    id: 53
+    path: resources/sponza/textures/ornament_01_Metalness.bmp
+  - format: RGBA8
+    id: 54
+    path: resources/sponza/textures/ornament_01_Normal.png
+  - format: RGBA8
+    id: 55
+    path: resources/sponza/textures/ornament_01_Roughness.bmp
+  - format: RGBA8
+    id: 56
+    path: resources/sponza/textures/ornament_01_Roughnessornament_01_Metalness.bmp
+  - format: SRGB8_ALPHA8
+    id: 57
+    path: resources/sponza/textures/column_1stfloor_BaseColor.png
+  - format: RGBA8
+    id: 58
+    path: resources/sponza/textures/column_1stfloor_Metalness.bmp
+  - format: RGBA8
+    id: 59
+    path: resources/sponza/textures/column_1stfloor_Normal.png
+  - format: RGBA8
+    id: 60
+    path: resources/sponza/textures/column_1stfloor_Roughness.bmp
+  - format: RGBA8
+    id: 61
+    path: resources/sponza/textures/column_1stfloor_Roughnesscolumn_1stfloor_Metalness.bmp
+  - format: SRGB8_ALPHA8
+    id: 62
+    path: resources/sponza/textures/arch_stone_wall_01_BaseColor.png
+  - format: RGBA8
+    id: 63
+    path: resources/sponza/textures/arch_stone_wall_01_Metalness.bmp
+  - format: RGBA8
+    id: 64
+    path: resources/sponza/textures/arch_stone_wall_01_Normal.png
+  - format: RGBA8
+    id: 65
+    path: resources/sponza/textures/arch_stone_wall_01_Roughness.bmp
+  - format: RGBA8
+    id: 66
+    path: resources/sponza/textures/arch_stone_wall_01_Roughnessarch_stone_wall_01_Metalness.bmp
+  - format: SRGB8_ALPHA8
+    id: 67
+    path: resources/sponza/textures/stones_2ndfloor_01_BaseColor.png
+  - format: RGBA8
+    id: 68
+    path: resources/sponza/textures/stones_2ndfloor_01_Metalness.bmp
+  - format: RGBA8
+    id: 69
+    path: resources/sponza/textures/stones_2ndfloor_01_Normal.png
+  - format: RGBA8
+    id: 70
+    path: resources/sponza/textures/stones_2ndfloor_01_Roughness.bmp
+  - format: RGBA8
+    id: 71
+    path: resources/sponza/textures/stones_2ndfloor_01_Roughnessstones_2ndfloor_01_Metalness.bmp
+  - format: SRGB8_ALPHA8
+    id: 72
+    path: resources/sponza/textures/stone_trims_02_BaseColor.png
+  - format: RGBA8
+    id: 73
+    path: resources/sponza/textures/stone_trims_02_Metalness.bmp
+  - format: RGBA8
+    id: 74
+    path: resources/sponza/textures/stone_trims_02_Normal.png
+  - format: RGBA8
+    id: 75
+    path: resources/sponza/textures/stone_trims_02_Roughness.bmp
+  - format: RGBA8
+    id: 76
+    path: resources/sponza/textures/stone_trims_02_Roughnessstone_trims_02_Metalness.bmp
+  - format: SRGB8_ALPHA8
+    id: 77
+    path: resources/sponza/textures/window_frame_01_BaseColor.png
+  - format: RGBA8
+    id: 78
+    path: resources/sponza/textures/window_frame_01_Metalness.bmp
+  - format: RGBA8
+    id: 79
+    path: resources/sponza/textures/window_frame_01_Normal.png
+  - format: RGBA8
+    id: 80
+    path: resources/sponza/textures/window_frame_01_Roughness.bmp
+  - format: RGBA8
+    id: 81
+    path: resources/sponza/textures/window_frame_01_Roughnesswindow_frame_01_Metalness.bmp
+  - format: SRGB8_ALPHA8
+    id: 82
+    path: resources/sponza/textures/door_stoneframe_02_BaseColor.png
+  - format: RGBA8
+    id: 83
+    path: resources/sponza/textures/door_stoneframe_02_Metalness.bmp
+  - format: RGBA8
+    id: 84
+    path: resources/sponza/textures/door_stoneframe_02_Normal.png
+  - format: RGBA8
+    id: 85
+    path: resources/sponza/textures/door_stoneframe_02_Roughness.bmp
+  - format: RGBA8
+    id: 86
+    path: resources/sponza/textures/door_stoneframe_02_Roughnessdoor_stoneframe_02_Metalness.bmp
+  - format: SRGB8_ALPHA8
+    id: 87
+    path: resources/sponza/textures/door_stoneframe_01_BaseColor.png
+  - format: RGBA8
+    id: 88
+    path: resources/sponza/textures/door_stoneframe_01_Metalness.bmp
+  - format: RGBA8
+    id: 89
+    path: resources/sponza/textures/door_stoneframe_01_Normal.png
+  - format: RGBA8
+    id: 90
+    path: resources/sponza/textures/door_stoneframe_01_Roughness.bmp
+  - format: RGBA8
+    id: 91
+    path: resources/sponza/textures/door_stoneframe_01_Roughnessdoor_stoneframe_01_Metalness.bmp
+  - format: SRGB8_ALPHA8
+    id: 92
+    path: resources/sponza/textures/wood_door_01_BaseColor.png
+  - format: RGBA8
+    id: 93
+    path: resources/sponza/textures/wood_door_01_Metalness.bmp
+  - format: RGBA8
+    id: 94
+    path: resources/sponza/textures/wood_door_01_Normal.png
+  - format: RGBA8
+    id: 95
+    path: resources/sponza/textures/wood_door_01_Roughness.bmp
+  - format: RGBA8
+    id: 96
+    path: resources/sponza/textures/wood_door_01_Roughnesswood_door_01_Metalness.bmp
+  - format: SRGB8_ALPHA8
+    id: 97
+    path: resources/sponza/textures/column_brickwall_01_BaseColor.png
+  - format: RGBA8
+    id: 98
+    path: resources/sponza/textures/column_brickwall_01_Metalness.bmp
+  - format: RGBA8
+    id: 99
+    path: resources/sponza/textures/column_brickwall_01_Normal.png
+  - format: RGBA8
+    id: 100
+    path: resources/sponza/textures/column_brickwall_01_Roughness.bmp
+  - format: RGBA8
+    id: 101
+    path: resources/sponza/textures/column_brickwall_01_Roughnesscolumn_brickwall_01_Metalness.bmp
+materials:
+  - id: 0
+    name: stone_trims_01
+    textures:
+      - 0
+      - 1
+      - 2
+      - 3
+  - id: 1
+    name: brickwall_02
+    textures:
+      - 5
+      - 6
+      - 7
+      - 8
+  - id: 2
+    name: ceiling_plaster_02
+    textures:
+      - 10
+      - 11
+      - 12
+  - id: 3
+    name: column_head_1stfloor
+    textures:
+      - 13
+      - 14
+      - 15
+      - 16
+  - id: 4
+    name: dirt_decal
+    textures:
+      - 18
+      - 19
+      - 20
+      - 21
+  - id: 5
+    name: brickwall_01
+    textures:
+      - 22
+      - 23
+      - 24
+      - 25
+  - id: 6
+    name: metal_door
+    textures:
+      - 27
+      - 28
+      - 29
+      - 30
+  - id: 7
+    name: ceiling_plaster_01
+    textures:
+      - 32
+      - 33
+      - 34
+      - 35
+  - id: 8
+    name: column_head_2ndfloor_03
+    textures:
+      - 37
+      - 38
+      - 39
+      - 40
+  - id: 9
+    name: column_head_2ndfloor_02
+    textures:
+      - 42
+      - 43
+      - 44
+      - 45
+  - id: 10
+    name: roof_tiles_01
+    textures:
+      - 47
+      - 48
+      - 49
+      - 50
+  - id: 11
+    name: ornament_01
+    textures:
+      - 52
+      - 53
+      - 54
+      - 55
+  - id: 12
+    name: column_1stfloor
+    textures:
+      - 57
+      - 58
+      - 59
+      - 60
+  - id: 13
+    name: arch_stone_wall_01
+    textures:
+      - 62
+      - 63
+      - 64
+      - 65
+  - id: 14
+    name: stones_2ndfloor
+    textures:
+      - 67
+      - 68
+      - 69
+      - 70
+  - id: 15
+    name: stone_trims_02
+    textures:
+      - 72
+      - 73
+      - 74
+      - 75
+  - id: 16
+    name: window_frame_01
+    textures:
+      - 77
+      - 78
+      - 79
+      - 80
+  - id: 17
+    name: door_stoneframe_02
+    textures:
+      - 82
+      - 83
+      - 84
+      - 85
+  - id: 18
+    name: door_stoneframe_01
+    textures:
+      - 87
+      - 88
+      - 89
+      - 90
+  - id: 19
+    name: wood_door_01
+    textures:
+      - 92
+      - 93
+      - 94
+      - 95
+  - id: 20
+    name: column_brickwall_01
+    textures:
+      - 97
+      - 98
+      - 99
+      - 100
+meshes:
+  - id: 0
+    path: resources/sponza/models/arch_stones_01.fmesh
+  - id: 1
+    path: resources/sponza/models/arch_stones_02.fmesh
+  - id: 2
+    path: resources/sponza/models/arch_stones_03.fmesh
+  - id: 3
+    path: resources/sponza/models/ceiling_1stfloor_01.fmesh
+  - id: 4
+    path: resources/sponza/models/ceiling_1stfloor_02.fmesh
+  - id: 5
+    path: resources/sponza/models/columns_1stfloor_01.fmesh
+  - id: 6
+    path: resources/sponza/models/columns_1stfloor_02.fmesh
+  - id: 7
+    path: resources/sponza/models/columns_1stfloor_03.fmesh
+  - id: 8
+    path: resources/sponza/models/columns_1stfloor_04.fmesh
+  - id: 9
+    path: resources/sponza/models/columns_1stfloor_05.fmesh
+  - id: 10
+    path: resources/sponza/models/decals_2nd_floor.fmesh
+  - id: 11
+    path: resources/sponza/models/decals_3rd_floor.fmesh
+  - id: 12
+    path: resources/sponza/models/exterior.fmesh
+  - id: 13
+    path: resources/sponza/models/ornament_doors_02.fmesh
+  - id: 14
+    path: resources/sponza/models/ornament_stones_01.fmesh
+  - id: 15
+    path: resources/sponza/models/walls_1stfloor_01.fmesh
+  - id: 16
+    path: resources/sponza/models/arch_wall_2ndfloor.fmesh
+  - id: 17
+    path: resources/sponza/models/ceiling_2ndfloor.fmesh
+  - id: 18
+    path: resources/sponza/models/column_2ndfloor_01.fmesh
+  - id: 19
+    path: resources/sponza/models/column_2ndfloor_02.fmesh
+  - id: 20
+    path: resources/sponza/models/column_2ndfloor_03.fmesh
+  - id: 21
+    path: resources/sponza/models/column_2ndfloor_04.fmesh
+  - id: 22
+    path: resources/sponza/models/column_2ndfloor_05.fmesh
+  - id: 23
+    path: resources/sponza/models/column_2ndfloor_06.fmesh
+  - id: 24
+    path: resources/sponza/models/column_2ndfloor_07.fmesh
+  - id: 25
+    path: resources/sponza/models/column_2ndfloor_08.fmesh
+  - id: 26
+    path: resources/sponza/models/column_2ndfloor_09.fmesh
+  - id: 27
+    path: resources/sponza/models/column_2ndfloor_10.fmesh
+  - id: 28
+    path: resources/sponza/models/column_2ndfloor_11.fmesh
+  - id: 29
+    path: resources/sponza/models/column_2ndfloor_12.fmesh
+  - id: 30
+    path: resources/sponza/models/column_2ndfloor_13.fmesh
+  - id: 31
+    path: resources/sponza/models/column_2ndfloor_14.fmesh
+  - id: 32
+    path: resources/sponza/models/column_2ndfloor_15.fmesh
+  - id: 33
+    path: resources/sponza/models/column_2ndfloor_16.fmesh
+  - id: 34
+    path: resources/sponza/models/column_2ndfloor_17.fmesh
+  - id: 35
+    path: resources/sponza/models/column_2ndfloor_18.fmesh
+  - id: 36
+    path: resources/sponza/models/column_2ndfloor_19.fmesh
+  - id: 37
+    path: resources/sponza/models/column_2ndfloor_20.fmesh
+  - id: 38
+    path: resources/sponza/models/ornament_door_2ndfloor_01.fmesh
+  - id: 39
+    path: resources/sponza/models/ornament_door_2ndfloor_02.fmesh
+  - id: 40
+    path: resources/sponza/models/ornament_door_2ndfloor_03.fmesh
+  - id: 41
+    path: resources/sponza/models/ornament_door_2ndfloor_04.fmesh
+  - id: 42
+    path: resources/sponza/models/ornament_door_2ndfloor_05.fmesh
+  - id: 43
+    path: resources/sponza/models/ornament_door_2ndfloor_06.fmesh
+  - id: 44
+    path: resources/sponza/models/ornament_door_2ndfloor_07.fmesh
+  - id: 45
+    path: resources/sponza/models/ornament_door_2ndfloor_08.fmesh
+  - id: 46
+    path: resources/sponza/models/ornament_door_2ndfloor_09.fmesh
+  - id: 47
+    path: resources/sponza/models/ornament_door_2ndfloor_10.fmesh
+  - id: 48
+    path: resources/sponza/models/ornament_door_2ndfloor_11.fmesh
+  - id: 49
+    path: resources/sponza/models/ornament_door_2ndfloor_12.fmesh
+  - id: 50
+    path: resources/sponza/models/ornament_door_2ndfloor_13.fmesh
+  - id: 51
+    path: resources/sponza/models/ornament_door_2ndfloor_14.fmesh
+  - id: 52
+    path: resources/sponza/models/ornament_door_2ndfloor_15.fmesh
+  - id: 53
+    path: resources/sponza/models/ornament_stones_2ndfloor.fmesh
+  - id: 54
+    path: resources/sponza/models/stone_walls_2ndfloor.fmesh
+  - id: 55
+    path: resources/sponza/models/ornament_roof.fmesh
+  - id: 56
+    path: resources/sponza/models/roof_floor_03_01.fmesh
+  - id: 57
+    path: resources/sponza/models/roof_floor_03_02.fmesh
+  - id: 58
+    path: resources/sponza/models/roof_floor_03_05.fmesh
+  - id: 59
+    path: resources/sponza/models/roof_floor_03_06.fmesh
+  - id: 60
+    path: resources/sponza/models/roof_floor_03_07.fmesh
+  - id: 61
+    path: resources/sponza/models/roof_floor_03_08.fmesh
+  - id: 62
+    path: resources/sponza/models/roof_floor_03_09.fmesh
+  - id: 63
+    path: resources/sponza/models/roof_floor_03_10.fmesh
+  - id: 64
+    path: resources/sponza/models/sponza_ornament.fmesh
+  - id: 65
+    path: resources/sponza/models/walls_floor_03.fmesh
+  - id: 66
+    path: resources/sponza/models/columns_1stfloor_01.001.fmesh
+  - id: 67
+    path: resources/sponza/models/arch_stones_01.001.fmesh
+  - id: 68
+    path: resources/sponza/models/arch_stones_02.001.fmesh
+  - id: 69
+    path: resources/sponza/models/arch_stones_03.001.fmesh
+  - id: 70
+    path: resources/sponza/models/arch_stones_03.002.fmesh
+  - id: 71
+    path: resources/sponza/models/arch_stones_03.003.fmesh
+  - id: 72
+    path: resources/sponza/models/ceiling_1stfloor_01.001.fmesh
+  - id: 73
+    path: resources/sponza/models/ceiling_1stfloor_01.002.fmesh
+  - id: 74
+    path: resources/sponza/models/ceiling_1stfloor_02.001.fmesh
+  - id: 75
+    path: resources/sponza/models/ceiling_1stfloor_02.002.fmesh
+  - id: 76
+    path: resources/sponza/models/ceiling_1stfloor_02.004.fmesh
+  - id: 77
+    path: resources/sponza/models/columns_1stfloor_02.001.fmesh
+  - id: 78
+    path: resources/sponza/models/columns_1stfloor_03.001.fmesh
+  - id: 79
+    path: resources/sponza/models/columns_1stfloor_04.001.fmesh
+  - id: 80
+    path: resources/sponza/models/columns_1stfloor_05.001.fmesh
+  - id: 81
+    path: resources/sponza/models/exterior.001.fmesh
+  - id: 82
+    path: resources/sponza/models/ornament_doors_01.001.fmesh
+  - id: 83
+    path: resources/sponza/models/ornament_doors_01.002.fmesh
+  - id: 84
+    path: resources/sponza/models/ornament_doors_01.003.fmesh
+  - id: 85
+    path: resources/sponza/models/ornament_doors_02.001.fmesh
+  - id: 86
+    path: resources/sponza/models/ornament_doors_02.002.fmesh
+  - id: 87
+    path: resources/sponza/models/ornament_doors_03.001.fmesh
+  - id: 88
+    path: resources/sponza/models/ornament_doors_03.002.fmesh
+  - id: 89
+    path: resources/sponza/models/ornament_doors_04.001.fmesh
+  - id: 90
+    path: resources/sponza/models/ornament_doors_04.002.fmesh
+  - id: 91
+    path: resources/sponza/models/ornament_doors_05.001.fmesh
+  - id: 92
+    path: resources/sponza/models/ornament_doors_05.002.fmesh
+  - id: 93
+    path: resources/sponza/models/ornament_doors_06.001.fmesh
+  - id: 94
+    path: resources/sponza/models/ornament_doors_06.002.fmesh
+  - id: 95
+    path: resources/sponza/models/ornament_doors_07.001.fmesh
+  - id: 96
+    path: resources/sponza/models/ornament_doors_07.002.fmesh
+  - id: 97
+    path: resources/sponza/models/ornament_doors_08.001.fmesh
+  - id: 98
+    path: resources/sponza/models/ornament_doors_08.002.fmesh
+  - id: 99
+    path: resources/sponza/models/ornament_doors_09.001.fmesh
+  - id: 100
+    path: resources/sponza/models/ornament_doors_09.002.fmesh
+  - id: 101
+    path: resources/sponza/models/ornament_doors_09.003.fmesh
+  - id: 102
+    path: resources/sponza/models/ornament_doors_10.001.fmesh
+  - id: 103
+    path: resources/sponza/models/ornament_doors_10.003.fmesh
+  - id: 104
+    path: resources/sponza/models/ornament_doors_10.004.fmesh
+  - id: 105
+    path: resources/sponza/models/ornament_doors_10.005.fmesh
+  - id: 106
+    path: resources/sponza/models/walls_1stfloor_01.001.fmesh
+  - id: 107
+    path: resources/sponza/models/walls_1stfloor_01.002.fmesh
+  - id: 108
+    path: resources/sponza/models/walls_1stfloor_01.003.fmesh
+  - id: 109
+    path: resources/sponza/models/walls_1stfloor_01.006.fmesh
+  - id: 110
+    path: resources/sponza/models/walls_1stfloor_01.007.fmesh
+  - id: 111
+    path: resources/sponza/models/walls_1stfloor_01.008.fmesh
+  - id: 112
+    path: resources/sponza/models/walls_1stfloor_01.010.fmesh
+  - id: 113
+    path: resources/sponza/models/walls_1stfloor_01.011.fmesh
+  - id: 114
+    path: resources/sponza/models/walls_1stfloor_01.012.fmesh
+  - id: 115
+    path: resources/sponza/models/wood_door.001.fmesh
+  - id: 116
+    path: resources/sponza/models/wooden_parts.001.fmesh
+  - id: 117
+    path: resources/sponza/models/wooden_parts.003.fmesh
+  - id: 118
+    path: resources/sponza/models/arch_wall_2ndfloor.001.fmesh
+  - id: 119
+    path: resources/sponza/models/arch_wall_2ndfloor.002.fmesh
+  - id: 120
+    path: resources/sponza/models/ceiling_2ndfloor.001.fmesh
+  - id: 121
+    path: resources/sponza/models/ceiling_2ndfloor.003.fmesh
+  - id: 122
+    path: resources/sponza/models/ceiling_2ndfloor.004.fmesh
+  - id: 123
+    path: resources/sponza/models/column_2ndfloor_01.001.fmesh
+  - id: 124
+    path: resources/sponza/models/column_2ndfloor_01.002.fmesh
+  - id: 125
+    path: resources/sponza/models/column_2ndfloor_02.001.fmesh
+  - id: 126
+    path: resources/sponza/models/column_2ndfloor_02.002.fmesh
+  - id: 127
+    path: resources/sponza/models/column_2ndfloor_02.003.fmesh
+  - id: 128
+    path: resources/sponza/models/column_2ndfloor_03.001.fmesh
+  - id: 129
+    path: resources/sponza/models/column_2ndfloor_03.002.fmesh
+  - id: 130
+    path: resources/sponza/models/column_2ndfloor_03.003.fmesh
+  - id: 131
+    path: resources/sponza/models/column_2ndfloor_04.001.fmesh
+  - id: 132
+    path: resources/sponza/models/column_2ndfloor_04.002.fmesh
+  - id: 133
+    path: resources/sponza/models/column_2ndfloor_04.003.fmesh
+  - id: 134
+    path: resources/sponza/models/column_2ndfloor_05.001.fmesh
+  - id: 135
+    path: resources/sponza/models/column_2ndfloor_05.002.fmesh
+  - id: 136
+    path: resources/sponza/models/column_2ndfloor_06.001.fmesh
+  - id: 137
+    path: resources/sponza/models/column_2ndfloor_06.002.fmesh
+  - id: 138
+    path: resources/sponza/models/column_2ndfloor_06.003.fmesh
+  - id: 139
+    path: resources/sponza/models/column_2ndfloor_07.001.fmesh
+  - id: 140
+    path: resources/sponza/models/column_2ndfloor_07.002.fmesh
+  - id: 141
+    path: resources/sponza/models/column_2ndfloor_08.001.fmesh
+  - id: 142
+    path: resources/sponza/models/column_2ndfloor_08.002.fmesh
+  - id: 143
+    path: resources/sponza/models/column_2ndfloor_16.001.fmesh
+  - id: 144
+    path: resources/sponza/models/column_2ndfloor_16.002.fmesh
+  - id: 145
+    path: resources/sponza/models/column_2ndfloor_17.001.fmesh
+  - id: 146
+    path: resources/sponza/models/column_2ndfloor_17.002.fmesh
+  - id: 147
+    path: resources/sponza/models/ornament_door_2ndfloor_01.001.fmesh
+  - id: 148
+    path: resources/sponza/models/ornament_door_2ndfloor_01.003.fmesh
+  - id: 149
+    path: resources/sponza/models/ornament_door_2ndfloor_01.004.fmesh
+  - id: 150
+    path: resources/sponza/models/ornament_door_2ndfloor_02.001.fmesh
+  - id: 151
+    path: resources/sponza/models/ornament_door_2ndfloor_02.003.fmesh
+  - id: 152
+    path: resources/sponza/models/ornament_door_2ndfloor_02.004.fmesh
+  - id: 153
+    path: resources/sponza/models/ornament_door_2ndfloor_03.001.fmesh
+  - id: 154
+    path: resources/sponza/models/ornament_door_2ndfloor_03.003.fmesh
+  - id: 155
+    path: resources/sponza/models/ornament_door_2ndfloor_03.004.fmesh
+  - id: 156
+    path: resources/sponza/models/ornament_door_2ndfloor_04.001.fmesh
+  - id: 157
+    path: resources/sponza/models/ornament_door_2ndfloor_04.003.fmesh
+  - id: 158
+    path: resources/sponza/models/ornament_door_2ndfloor_04.004.fmesh
+  - id: 159
+    path: resources/sponza/models/ornament_door_2ndfloor_05.001.fmesh
+  - id: 160
+    path: resources/sponza/models/ornament_door_2ndfloor_05.003.fmesh
+  - id: 161
+    path: resources/sponza/models/ornament_door_2ndfloor_05.004.fmesh
+  - id: 162
+    path: resources/sponza/models/ornament_door_2ndfloor_06.001.fmesh
+  - id: 163
+    path: resources/sponza/models/ornament_door_2ndfloor_06.003.fmesh
+  - id: 164
+    path: resources/sponza/models/ornament_door_2ndfloor_06.004.fmesh
+  - id: 165
+    path: resources/sponza/models/ornament_door_2ndfloor_07.002.fmesh
+  - id: 166
+    path: resources/sponza/models/ornament_door_2ndfloor_07.003.fmesh
+  - id: 167
+    path: resources/sponza/models/ornament_door_2ndfloor_08.001.fmesh
+  - id: 168
+    path: resources/sponza/models/ornament_door_2ndfloor_08.003.fmesh
+  - id: 169
+    path: resources/sponza/models/ornament_door_2ndfloor_08.004.fmesh
+  - id: 170
+    path: resources/sponza/models/ornament_door_2ndfloor_09.001.fmesh
+  - id: 171
+    path: resources/sponza/models/ornament_door_2ndfloor_09.003.fmesh
+  - id: 172
+    path: resources/sponza/models/ornament_door_2ndfloor_09.004.fmesh
+  - id: 173
+    path: resources/sponza/models/ornament_door_2ndfloor_10.001.fmesh
+  - id: 174
+    path: resources/sponza/models/ornament_door_2ndfloor_10.003.fmesh
+  - id: 175
+    path: resources/sponza/models/ornament_door_2ndfloor_10.004.fmesh
+  - id: 176
+    path: resources/sponza/models/ornament_door_2ndfloor_11.001.fmesh
+  - id: 177
+    path: resources/sponza/models/ornament_door_2ndfloor_11.003.fmesh
+  - id: 178
+    path: resources/sponza/models/ornament_door_2ndfloor_11.004.fmesh
+  - id: 179
+    path: resources/sponza/models/ornament_door_2ndfloor_12.001.fmesh
+  - id: 180
+    path: resources/sponza/models/ornament_door_2ndfloor_12.003.fmesh
+  - id: 181
+    path: resources/sponza/models/ornament_door_2ndfloor_12.004.fmesh
+  - id: 182
+    path: resources/sponza/models/ornament_door_2ndfloor_13.001.fmesh
+  - id: 183
+    path: resources/sponza/models/ornament_door_2ndfloor_13.003.fmesh
+  - id: 184
+    path: resources/sponza/models/ornament_door_2ndfloor_13.004.fmesh
+  - id: 185
+    path: resources/sponza/models/ornament_door_2ndfloor_14.001.fmesh
+  - id: 186
+    path: resources/sponza/models/ornament_door_2ndfloor_14.003.fmesh
+  - id: 187
+    path: resources/sponza/models/ornament_door_2ndfloor_14.004.fmesh
+  - id: 188
+    path: resources/sponza/models/ornament_door_2ndfloor_15.001.fmesh
+  - id: 189
+    path: resources/sponza/models/ornament_door_2ndfloor_15.003.fmesh
+  - id: 190
+    path: resources/sponza/models/ornament_door_2ndfloor_15.004.fmesh
+  - id: 191
+    path: resources/sponza/models/stone_walls_2ndfloor.002.fmesh
+  - id: 192
+    path: resources/sponza/models/stone_walls_2ndfloor.003.fmesh
+  - id: 193
+    path: resources/sponza/models/ornament_roof.001.fmesh
+  - id: 194
+    path: resources/sponza/models/ornament_windows.001.fmesh
+  - id: 195
+    path: resources/sponza/models/ornament_windows.002.fmesh
+  - id: 196
+    path: resources/sponza/models/ornament_windows.003.fmesh
+  - id: 197
+    path: resources/sponza/models/roof_floor_03_05.001.fmesh
+  - id: 198
+    path: resources/sponza/models/roof_floor_03_05.003.fmesh
+  - id: 199
+    path: resources/sponza/models/roof_floor_03_05.005.fmesh
+  - id: 200
+    path: resources/sponza/models/roof_floor_03_05.006.fmesh
+  - id: 201
+    path: resources/sponza/models/roof_floor_03_06.002.fmesh
+  - id: 202
+    path: resources/sponza/models/roof_floor_03_06.003.fmesh
+  - id: 203
+    path: resources/sponza/models/walls_floor_03.001.fmesh
+  - id: 204
+    path: resources/sponza/models/walls_floor_03.002.fmesh
+  - id: 205
+    path: resources/sponza/models/walls_floor_03.004.fmesh
+  - id: 206
+    path: resources/sponza/models/walls_floor_03.005.fmesh
+  - id: 207
+    path: resources/sponza/models/master_material.001.fmesh
+  - id: 208
+    path: resources/sponza/models/master_material.002.fmesh
+  - id: 209
+    path: resources/sponza/models/master_material.003.fmesh
+  - id: 210
+    path: resources/sponza/models/master_material.004.fmesh
+  - id: 211
+    path: resources/sponza/models/master_material.005.fmesh
+  - id: 212
+    path: resources/sponza/models/master_material.008.fmesh
+  - id: 213
+    path: resources/sponza/models/master_material.009.fmesh
+  - id: 214
+    path: resources/sponza/models/master_material.010.fmesh
+  - id: 215
+    path: resources/sponza/models/master_material.011.fmesh
+  - id: 216
+    path: resources/sponza/models/master_material.014.fmesh
+  - id: 217
+    path: resources/sponza/models/master_material.015.fmesh
+  - id: 218
+    path: resources/sponza/models/master_material.016.fmesh
+  - id: 219
+    path: resources/sponza/models/master_material.017.fmesh
+  - id: 220
+    path: resources/sponza/models/master_material.018.fmesh
+  - id: 221
+    path: resources/sponza/models/master_material.019.fmesh
+  - id: 222
+    path: resources/sponza/models/master_material.020.fmesh
+  - id: 223
+    path: resources/sponza/models/master_material.021.fmesh
+  - id: 224
+    path: resources/sponza/models/master_material.022.fmesh
+  - id: 225
+    path: resources/sponza/models/master_material.024.fmesh
+  - id: 226
+    path: resources/sponza/models/master_material.025.fmesh
+  - id: 227
+    path: resources/sponza/models/master_material.026.fmesh
+env_maps:
+  - id: 0
+    name: "newport_loft_hdr"
+    path: resources/fracas/data/images/hdri/Newport_Loft_Ref.hdr
+    format: RGB16F
+shaders:
+  - id: 0
+    name: main_threed
+    config: generated/resources/sponza/shaders/main/config.yaml
+    vert: generated/resources/sponza/shaders/main/vert.gl
+    frag: generated/resources/sponza/shaders/main/frag.gl
+fonts:
+  - id: 0
+    path: resources/fonts/Anton_Regular.ttf
+  - id: 1
+    path: resources/fonts/RobotoCondensed_Regular.ttf
+  - id: 2
+    path: resources/fonts/RobotoCondensed_Light.ttf

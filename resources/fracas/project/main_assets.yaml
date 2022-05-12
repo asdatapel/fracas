@@ -1033,8 +1033,9 @@ shaders:
     frag: resources2/shaders/threed_skinning/frag.gl
   - id: 4
     name: score_screen
-    vert: resources2/shaders/score_screen/vert.gl
-    frag: resources2/shaders/score_screen/frag.gl
+    config: generated/resources/fracas/data/shaders/score_screen/config.yaml
+    vert: generated/resources/fracas/data/shaders/score_screen/vert.gl
+    frag: generated/resources/fracas/data/shaders/score_screen/frag.gl
 fonts:
   - id: 0
     path: resources/fonts/Anton_Regular.ttf

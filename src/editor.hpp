@@ -23,6 +23,18 @@ Project fracas_project = {
     "resources/fracas/project/scripts.yaml",
     "resources/fracas/project/debug_ui_layout.yaml",
 };
+Project sponza_project = {
+    {
+        "resources/sponza/project/main_assets.yaml",
+        "resources/sponza/project/material_assets.yaml",
+    },
+    {
+        "resources/sponza/project/scene.yaml",
+    },
+    "resources/sponza/project/renderer.yaml",
+    "resources/sponza/project/scripts.yaml",
+    "resources/sponza/project/debug_ui_layout.yaml",
+};
 
 struct Editor {
   Assets assets;
@@ -45,7 +57,7 @@ struct Editor {
 
   void init(Memory mem)
   {
-    project = fracas_project;
+    project = sponza_project;
 
     assets.init();
     editor_scene.init(mem);
@@ -325,6 +337,11 @@ struct Editor {
     }
 
     Imm::start_window("Entitiesasd", {50, 50, 200, 500});
+    Imm::num_input(&renderer.sky_t);
+    Imm::num_input(&renderer.directional_light_distance);
+    Imm::num_input(&renderer.directional_light_brightness);
+    Imm::num_input(&renderer.shadow_offset_factor);
+    Imm::num_input(&renderer.shadow_offset_units);
     Imm::label("asfasdf");
     if (Imm::button("do something")) printf("do something\n");
     Imm::label("ASad");
@@ -389,7 +406,7 @@ struct Editor {
     glUniformMatrix4fv(lines_shader.uniform_handles[(int)UniformId::VIEW], 1, GL_FALSE,
                        &debug_camera.view[0][0]);
     glUniformMatrix4fv(lines_shader.uniform_handles[(int)UniformId::PROJECTION], 1, GL_FALSE,
-                       &debug_camera.perspective[0][0]);
+                       &debug_camera.projection[0][0]);
     debug_draw_lines(compositor.final_target, lines.arr, lines.len / (7 * 2));
 
     Imm::start_window("Scene", {700, 250, 100, 300});

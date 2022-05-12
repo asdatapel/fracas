@@ -57,7 +57,7 @@ float arc_length_at_point(float t, Segment s)
 
 Vec3f to_screen_space(Vec3f p, Camera *camera)
 {
-  glm::vec4 p_3d = camera->perspective * camera->view * glm::vec4(p.x, p.y, p.z, 1.f);
+  glm::vec4 p_3d = camera->projection * camera->view * glm::vec4(p.x, p.y, p.z, 1.f);
   if (p_3d.w > 0) {
     p_3d /= p_3d.w;
     return Vec3f{(p_3d.x + 1) * 1920 * 0.5f, 1080 - ((p_3d.y + 1) * 1080 * .5f), p_3d.z};

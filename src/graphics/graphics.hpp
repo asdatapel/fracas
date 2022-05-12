@@ -32,6 +32,7 @@ Shader blur_shader;
 Shader add_shader;
 Shader twod_shader;
 Shader shadow_shader;
+Shader sky_shader;
 
 // TODO move this to the asset loading system
 Shader threed_skinning_shader;
@@ -80,9 +81,11 @@ void draw_cubemap();
 void start_scissor(RenderTarget target, Rect rect);
 void end_scissor();
 
+void draw_sky(Cubemap cubemap, float dir_t = 0.f);
+
 Texture hdri_to_cubemap(RenderTarget target, Texture hdri, int size);
-Texture convolve_irradiance_map(RenderTarget target, Texture src, int size);
-Texture filter_env_map(RenderTarget target, Texture src, int size);
+void convolve_irradiance_map(RenderTarget target, Texture src, Cubemap target_cubemap);
+void filter_env_map(RenderTarget target, Texture src, Cubemap target_cubemap);
 VertexBuffer upload_vertex_buffer(Mesh mesh);
 
 const int MAX_LIGHTS = 50;
@@ -96,20 +99,30 @@ struct SpotLight {
   glm::vec4 position;
   glm::vec4 direction;
   glm::vec4 color;
-
-  glm::mat4 lightspace_mat;
-  i32 shadow_map_index = -1;
   
   float inner_angle;
   float outer_angle;
 
+  i32 shadow_map_index = -1;
+  glm::mat4 lightspace_mat = glm::mat4(1.0);
+
   const static int SIZE = 128;
 };
+struct DirectionalLight {
+  glm::vec4 direction;
+  glm::vec4 color;
+  
+  i32 shadow_map_index = -1;
+  glm::mat4 lightspace_mat = glm::mat4(1.0);
+
+  const static int SIZE = 112;
+};
 struct LightUniformBlock {
+  DirectionalLight directional_light;
   SpotLight spot_lights[MAX_LIGHTS];
   uint32_t num_lights;
 
-  const static int SIZE = (SpotLight::SIZE * MAX_LIGHTS) + 4;
+  const static int SIZE = DirectionalLight::SIZE + (SpotLight::SIZE * MAX_LIGHTS) + 4;
 };
 void upload_lights(LightUniformBlock lights);
 
@@ -121,6 +134,8 @@ static Bitmap parse_bitmap(FileData file_data, StackAllocator *allocator)
   Bitmap bitmap;
   bitmap.width  = *(uint32_t *)(file_data.data + 18);
   bitmap.height = *(uint32_t *)(file_data.data + 22);
+
+  u16 pixel_size = *(u16 *)(file_data.data + 28);
 
   bitmap.data = (Vec4i *)allocator->alloc(sizeof(Vec4i) * bitmap.width * bitmap.height);
   for (int y = 0; y < bitmap.height; y++) {

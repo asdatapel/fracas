@@ -44,7 +44,7 @@ bool init_if_not()
     temp.init(1024 * 1024 * 100);               // 100 mb
 
     assets_allocator.init(&main_memory, 1024ull * 1024 * 1024 * 1);  // 1 gb
-    assets_temp_allocator.init(&main_memory, 1024ull * 1024 * 50);   // 50 mb
+    assets_temp_allocator.init(&main_memory, 1024ull * 1024 * 1024);   // 1 gb
     scene_allocator.init(&main_memory, 1024ull * 1024 * 1024 * 1);   // 1 gb
     scene_temp_allocator.init(&main_memory, 1024ull * 1024 * 50);    // 50 mb
 

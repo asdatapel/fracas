@@ -1,0 +1,33 @@
+$vert_shader
+#version 430 core
+
+$include pbr_lit_3d.vert
+
+void main()
+{
+  pbr_lit_3d_vert();
+}
+
+$frag_shader
+#version 430 core
+
+$include reflections.standard
+$include pbr_lit_3d.frag
+
+$set material_offset $texture
+uniform layout(binding = $texture) sampler2D albedo_texture;
+uniform layout(binding = $texture) sampler2D metal_texture;
+uniform layout(binding = $texture) sampler2D normal_texture;
+uniform layout(binding = $texture) sampler2D roughness_texture;
+
+out vec4 FragColor;
+
+void main()
+{
+    vec3 albedo = texture(albedo_texture, frag_uv).xyz;
+    vec3 normal = texture(normal_texture, frag_uv).xyz;
+    float metal = texture(metal_texture, frag_uv).x;
+    float roughness = texture(roughness_texture, frag_uv).x;
+
+    FragColor = pbr_lit_3d_frag(albedo, frag_normal, metal, roughness, vec3(0, 0, 0), 1, 1);
+} 

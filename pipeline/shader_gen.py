@@ -61,9 +61,12 @@ def parse(lines, shader, parsed = {}):
 
   return ret
 
-shader_files = [f for root,dirs,files in os.walk("resources/fracas/data/shaders") for f in files if f.endswith(".gl")]
+shader_path = 'resources/sponza/shaders/'
+generated_shader_path = 'generated/resources/sponza/shaders/'
+
+shader_files = [f for root,dirs,files in os.walk(shader_path) for f in files if f.endswith(".gl")]
 for filename in shader_files:
-  f = open('resources/fracas/data/shaders/' + filename).readlines()
+  f = open(shader_path + filename).readlines()
   vert_i = f.index('$vert_shader\n')
   frag_i = f.index('$frag_shader\n')
 
@@ -73,15 +76,15 @@ for filename in shader_files:
   fragment = parse(f[frag_i + 1:], shader, includes)
 
   shader_name = filename.split('.')[0]
-  os.makedirs(os.path.dirname('generated/resources/fracas/data/shaders/' + shader_name + '/'), exist_ok=True)
-  f = open('generated/resources/fracas/data/shaders/' + shader_name + '/vert.gl', 'w+')
+  os.makedirs(os.path.dirname(generated_shader_path + shader_name + '/'), exist_ok=True)
+  f = open(generated_shader_path + shader_name + '/vert.gl', 'w+')
   f.write(vertex)
   f.close()
-  f = open('generated/resources/fracas/data/shaders/' + shader_name + '/frag.gl', 'w+')
+  f = open(generated_shader_path + shader_name + '/frag.gl', 'w+')
   f.write(fragment)
   f.close()
 
 
-  f = open('generated/resources/fracas/data/shaders/' + shader_name + '/config.yaml', 'w+')
+  f = open(generated_shader_path + shader_name + '/config.yaml', 'w+')
   f.write(yaml.dump(shader.context))
   f.close()

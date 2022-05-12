@@ -143,15 +143,29 @@ void load_assets_file(String filename, Assets *assets_o)
       {
         String config_path = in_config_val->as_literal();
         auto config = read_entire_file(config_path.to_char_array(temp), temp);
-        YAML::Dict *config_root = YAML::deserialize(String(config.data, config.length), temp)->as_dict();
+        YAML::Dict *config_root =
+            YAML::deserialize(String(config.data, config.length), temp)->as_dict();
 
-        shader.material_offset = atoi(config_root->get("material_offset")->as_literal().to_char_array(temp));
-        shader.pbr_texture_offset = atoi(config_root->get("pbr_texture_offset")->as_literal().to_char_array(temp));
-        shader.reflections_texture_offset = atoi(config_root->get("reflections_texture_offset")->as_literal().to_char_array(temp));
-        
-        shader.shadows_enabled = strcmp(config_root->get("shadows_enabled")->as_literal(), "true");
-        if (shader.shadows_enabled) {
-          shader.shadow_texture_offset = atoi(config_root->get("shadow_texture_offset")->as_literal().to_char_array(temp));
+        if (config_root->get("material_offset")) {
+          shader.material_offset =
+              atoi(config_root->get("material_offset")->as_literal().to_char_array(temp));
+        }
+        if (config_root->get("pbr_texture_offset")) {
+          shader.pbr_texture_offset =
+              atoi(config_root->get("pbr_texture_offset")->as_literal().to_char_array(temp));
+        }
+        if (config_root->get("reflections_texture_offset")) {
+          shader.reflections_texture_offset = atoi(
+              config_root->get("reflections_texture_offset")->as_literal().to_char_array(temp));
+        }
+
+        if (config_root->get("shadows_enabled")) {
+          shader.shadows_enabled =
+              strcmp(config_root->get("shadows_enabled")->as_literal(), "true");
+          if (shader.shadows_enabled) {
+            shader.shadow_texture_offset =
+                atoi(config_root->get("shadow_texture_offset")->as_literal().to_char_array(temp));
+          }
         }
       }
       
@@ -257,8 +271,12 @@ void deserialize_scene_file(String filepath, Assets *assets, Memory mem, Scene *
 
     entity.type           = entity_type_from_string(in_e->get("type")->as_literal());
     entity.debug_tag.name = string_to_allocated_string<32>(in_e->get("name")->as_literal());
-    entity.view_layer_mask =
-        strtoul(in_e->get("view_layer")->as_literal().to_char_array(tmp), nullptr, 10);
+    
+    entity.view_layer_mask = 1;
+    if (in_e->get("view_layer")) {
+      entity.view_layer_mask =
+          strtoul(in_e->get("view_layer")->as_literal().to_char_array(tmp), nullptr, 10);
+    }
 
     // transform
     YAML::Dict *in_transform    = in_e->get("transform")->as_dict();

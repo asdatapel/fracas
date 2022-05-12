@@ -1517,7 +1517,7 @@ bool translation_gizmo(Vec3f *p)
     };
 
     glm::vec4 p_ndc =
-        state.camera->perspective * state.camera->view * glm::vec4(p->x, p->y, p->z, 1.f);
+        state.camera->projection * state.camera->view * glm::vec4(p->x, p->y, p->z, 1.f);
     if (p_ndc.w > 0) {
       p_ndc /= p_ndc.w;
       Vec3f p_screen = ndc_to_screen(window.content_rect, {p_ndc.x, p_ndc.y, p_ndc.z});
@@ -1535,7 +1535,7 @@ bool translation_gizmo(Vec3f *p)
       bool active   = do_active(id);
       bool dragging = do_draggable(id);
 
-      glm::vec4 x_axis_offset_ndc = state.camera->perspective * state.camera->view *
+      glm::vec4 x_axis_offset_ndc = state.camera->projection * state.camera->view *
                                     glm::vec4(p->x + axis.x, p->y + axis.y, p->z + axis.z, 1.f);
       float w = x_axis_offset_ndc.w;
       if (x_axis_offset_ndc.w > 0) {
@@ -1753,7 +1753,7 @@ void rotation_gizmo(Vec3f *rotation, Vec3f p)
   glUniformMatrix4fv(lines_shader.uniform_handles[(int)UniformId::VIEW], 1, GL_FALSE,
                      &state.camera->view[0][0]);
   glUniformMatrix4fv(lines_shader.uniform_handles[(int)UniformId::PROJECTION], 1, GL_FALSE,
-                     &state.camera->perspective[0][0]);
+                     &state.camera->projection[0][0]);
   debug_draw_lines(state.target, lines.arr, lines.len / (7 * 2));
 }
 }  // namespace Imm
