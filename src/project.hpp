@@ -30,10 +30,12 @@ void load_assets_file(String filename, Assets *assets_o)
       int id              = atoi(in_mesh->get("id")->as_literal().to_char_array(temp));
       String path         = in_mesh->get("path")->as_literal();
 
-      VertexBuffer mesh = load_and_upload_mesh(path, id, assets_memory);
-      mesh.asset_id     = id;
+      Mesh mesh = load_mesh(path, id, assets_memory);
       mesh.asset_name   = String::copy(path, &assets_allocator);
       assets_o->meshes.emplace(mesh, id);
+
+      VertexBuffer buf     = upload_vertex_buffer(mesh);
+      assets_o->vertex_buffers.emplace(buf, id);
     }
   }
 
@@ -298,8 +300,9 @@ void deserialize_scene_file(String filepath, Assets *assets, Memory mem, Scene *
       int mesh_id         = atoi(in_mesh->get("mesh")->as_literal().to_char_array(tmp));
       int material_id     = atoi(in_mesh->get("material")->as_literal().to_char_array(tmp));
 
-      entity.vert_buffer = assets->meshes.data[mesh_id].value;
-      entity.material    = &assets->materials.data[material_id].value;
+      entity.mesh          = &assets->meshes.data[mesh_id].value;
+      entity.vert_buffer   = assets->vertex_buffers.data[mesh_id].value;
+      entity.material      = &assets->materials.data[material_id].value;
 
       if (auto shader_id_val = in_mesh->get("shader")) {
         int shader_id = atoi(in_mesh->get("shader")->as_literal().to_char_array(tmp));

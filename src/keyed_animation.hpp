@@ -139,7 +139,7 @@ struct KeyedAnimationTrack {
               lerp(base_key.transform.rotation, target_key.transform.rotation, lerp_t);
           transform.scale = lerp(base_key.transform.scale, target_key.transform.scale, lerp_t);
         } else if (base_key.interpolation_type == Key::InterpolationType::SMOOTHSTEP) {
-          f32 smoothstep_t = clamp(lerp_t * lerp_t * (3.0 - 2.0 * lerp_t), 0.0, 1.0);
+          f32 smoothstep_t = clamp(lerp_t * lerp_t * (3.0 - 2.0 * lerp_t), 0.f, 1.f);
           transform.position =
               lerp(base_key.transform.position, target_key.transform.position, smoothstep_t);
           transform.rotation =

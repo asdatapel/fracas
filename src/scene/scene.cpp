@@ -76,7 +76,7 @@ void Scene::serialize(const char *filename, Assets *assets, StackAllocator *allo
 
       if (e->type == EntityType::MESH) {
         YAML::Dict *mesh_yaml = new_dict();
-        mesh_yaml->push_back("mesh", new_literal(String::from(e->vert_buffer.asset_id, alloc)),
+        mesh_yaml->push_back("mesh", new_literal(String::from(e->mesh->asset_id, alloc)),
                              alloc);
         mesh_yaml->push_back("material", new_literal(String::from(e->material->asset_id, alloc)),
                              alloc);

@@ -47,7 +47,7 @@ struct StackAllocator {
 
   char *resize(char *ptr, uint32_t size)
   {
-    if (ptr != last_allocation) return alloc(size);
+    if (!ptr || ptr != last_allocation) return alloc(size);
 
     last_allocation_size = size;
     next                 = last_allocation + size;

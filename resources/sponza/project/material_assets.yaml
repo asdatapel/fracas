@@ -759,6 +759,8 @@ meshes:
     path: resources/sponza/models/master_material.026.fmesh
   - id: 303
     path: resources/sponza/models/master_material.027.fmesh
+  - id: 304
+    path: resources/fracas/data/models/uv_sphere/Sphere.fmesh
 textures:
   - format: SRGB8_ALPHA8
     id: 0

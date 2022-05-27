@@ -229,6 +229,7 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
   twod_shader            = load_shader(create_shader_program("resources2/shaders/twod"));
   threed_skinning_shader = load_shader(create_shader_program("resources2/shaders/threed_skinning"));
   sky_shader             = load_shader(create_shader_program("engine_resources/shaders/sky"));
+  probe_debug_shader             = load_shader(create_shader_program("engine_resources/shaders/probe_debug"));
 
   glGenBuffers(1, &ssbo);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
@@ -319,6 +320,12 @@ void draw(RenderTarget target, Shader shader, VertexBuffer buf)
 
   glBindVertexArray(buf.vao);
   glDrawArrays(GL_TRIANGLES, 0, buf.vert_count);
+}
+
+void draw_cube()
+{
+  glBindVertexArray(cube_vao);
+  glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
 void draw_cubemap()
@@ -557,7 +564,6 @@ void debug_draw_lines(RenderTarget target, float *lines, int count)
   glDrawArrays(GL_LINES, 0, count * 2);
 }
 
-
 void draw_sky(Cubemap cubemap, float dir_t) {
   static const glm::mat4 model_mats[] = {
       glm::rotate(glm::mat4(1.0), glm::radians(90.f), glm::vec3(0.0f, 1.0f, 0.0f)),
@@ -585,3 +591,4 @@ void draw_sky(Cubemap cubemap, float dir_t) {
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
   }
 }
+

@@ -102,9 +102,9 @@ vec3 PbrLight(vec3 position, vec3 normal, vec3 camera, vec3 albedo,
     return light.lit_percentage * (kD * albedo / PI + specular) * light.radiance * n_dot_l;             
 }
 
-vec3 PbrAmbient(vec3 normal, vec3 albedo, float roughness, float metal, float ao)
+vec3 PbrAmbient(vec3 position, vec3 normal, vec3 albedo, float roughness, float metal, float ao)
 {
-    vec3 to_eye = normalize(camera_position - frag_world_pos);
+    vec3 to_eye = normalize(camera_position - position);
 
     vec3 f0 = vec3(0.04); 
     f0      = mix(f0, albedo, metal);
@@ -113,7 +113,7 @@ vec3 PbrAmbient(vec3 normal, vec3 albedo, float roughness, float metal, float ao
     vec3 ambient_kS = F;
     vec3 ambient_kD = 1.0 - ambient_kS;
     ambient_kD *= 1.0 - metal;	  
-    vec3 ambient_irradiance = sampleIrradianceReflection(normal);
+    vec3 ambient_irradiance = sampleIrradianceReflection(position, normal);
     vec3 ambient_diffuse = ambient_irradiance * albedo;
     
     const float MAX_REFLECTION_LOD = 7.0; // assuming 128x128 texture
@@ -138,8 +138,10 @@ vec4 pbr_lit_3d_frag(vec3 albedo, vec3 normal, float metal, float roughness, vec
   LightResult directional_l = CalculateDirectionalLight(frag_world_pos, normal, directional_light);
   light_out += PbrLight(frag_world_pos, normal, camera_position, albedo, roughness, metal, directional_l); 
 
-  vec3 ambient = PbrAmbient(normal, albedo, roughness, metal, ao);
+  vec3 ambient = PbrAmbient(frag_world_pos, normal, albedo, roughness, metal, ao);
 
   vec3 color = light_out + ambient + (emit * 10);
-  return vec4(color, alpha);
+//   return vec4(color, alpha);
+
+  return vec4(sampleIrradianceReflection(frag_world_pos, normal), alpha);
 }

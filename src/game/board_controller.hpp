@@ -319,7 +319,7 @@ struct UiController {
     }
 
     if (question_visible) {
-      u32 visible_letters = clamp(question_visible_pct, 0, 1) * question_value.len;
+      u32 visible_letters = clamp(question_visible_pct, 0.f, 1.f) * question_value.len;
       draw_text(*font, target, {question_value.data, visible_letters}, 10, 10, 1, 1);
     }
 

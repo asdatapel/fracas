@@ -9,7 +9,6 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/quaternion.hpp"
 
-#include "../asset.hpp"
 #include "../math.hpp"
 #include "../mesh.hpp"
 #include "../platform.hpp"
@@ -33,6 +32,7 @@ Shader add_shader;
 Shader twod_shader;
 Shader shadow_shader;
 Shader sky_shader;
+Shader probe_debug_shader;
 
 // TODO move this to the asset loading system
 Shader threed_skinning_shader;
@@ -42,7 +42,7 @@ struct Bitmap {
   Vec4i *data;
 };
 
-struct VertexBuffer : Asset {
+struct VertexBuffer {
   unsigned int vao;
   unsigned int vbo;
   int size;
@@ -71,6 +71,7 @@ void debug_draw_lines(RenderTarget target, float *lines, int count);
 
 void draw(RenderTarget target, Shader shader, VertexBuffer buf);
 void draw_rect();
+void draw_cube();
 void draw_rect(RenderTarget target, Rect rect, Color color);
 void draw_textured_rect(RenderTarget target, Rect rect, Color color, Texture tex);
 void draw_textured_mapped_rect(RenderTarget target, Rect rect, Rect uv, Texture tex,

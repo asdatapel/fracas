@@ -34,6 +34,19 @@ struct Camera {
     projection         = glm::ortho(-fov / 2, fov / 2, -fov / (2 * aspect_ratio),
                                     fov / (2 * aspect_ratio), 1.f, 100.0f);
   }
+
+  static Camera lookat_perspective(Vec3f origin, Vec3f at, Vec3f up, float fov, float aspect_ratio) {
+    Camera camera;
+    camera.fov = fov;
+
+    camera.view = glm::lookAt(
+        glm::vec3{origin.x, origin.y, origin.z},
+        glm::vec3{at.x, at.y, at.z},
+        glm::vec3{up.x, up.y, up.z});
+    camera.projection = glm::perspective(fov, aspect_ratio, 0.1f, 1000.0f);
+
+    return camera;
+  }
 };
 
 struct EditorCamera : Camera {

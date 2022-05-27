@@ -200,3 +200,28 @@ struct Cubemap : public Texture {
     return {format, width, height, gl_ref, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i};
   }
 };
+
+struct CubemapArray : public Texture {
+  i32 count = 0;
+
+  CubemapArray() {gl_type = GL_TEXTURE_CUBE_MAP_ARRAY;}
+
+  void init(i32 count, i32 size, TextureFormat format) {
+    this->count  = count;
+    this->width  = size;
+    this->height = size;
+
+    glGenTextures(1, &gl_ref);
+    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, gl_ref);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    
+    auto [gl_internalformat, gl_format] = format_to_opengl(format);
+    glTexImage3D(
+        GL_TEXTURE_CUBE_MAP_ARRAY, 0, gl_internalformat, size, size, 6 * count, 0,
+        gl_format, GL_UNSIGNED_BYTE, nullptr);
+  }
+};

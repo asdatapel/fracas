@@ -34,14 +34,14 @@ struct Compositor {
     bloomer = Bloomer(WIDTH, HEIGHT);
   }
 
-  void render(Camera *debug_camera, Vec3f debug_camera_pos, float exposure = 1.f)
+  void render(Camera *debug_camera, Assets *assets, Vec3f debug_camera_pos, float exposure = 1.f)
   {
     // TODO handle target resize
 
-    render_scene(scene, &view_layers[0], layer_targets[0], debug_camera, debug_camera_pos, 0);
+    render_scene(scene, &view_layers[0], layer_targets[0], debug_camera, debug_camera_pos, 0, assets);
     for (i32 i = 1; i < view_layers.len; i++) {
       if (view_layers[i].visible) {
-        render_scene(scene, &view_layers[i], layer_targets[i], nullptr, debug_camera_pos, i);
+        render_scene(scene, &view_layers[i], layer_targets[i], nullptr, debug_camera_pos, i, assets);
         
         layer_targets[0].bind();
         glEnable(GL_BLEND);

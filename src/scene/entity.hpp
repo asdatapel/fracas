@@ -66,6 +66,7 @@ struct Entity {
   u32 view_layer_mask = 1;
 
   VertexBuffer vert_buffer;
+  Mesh *mesh;
   Material *material = nullptr;
   Shader *shader     = nullptr;
 

@@ -4,6 +4,17 @@
 
 #define PI 3.14159265359
 
+float clamp(float d, float min, float max)
+{
+  const float t = d < min ? min : d;
+  return t > max ? max : t;
+}
+i32 clamp(i32 d, i32 min, i32 max)
+{
+  const i32 t = d < min ? min : d;
+  return t > max ? max : t;
+}
+
 struct Color {
   float r, g, b, a;
 };
@@ -181,6 +192,10 @@ inline Vec3f operator/(const Vec3f &lhs, const Vec3f &rhs)
 {
   return {lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z};
 }
+inline Vec3f operator/(const Vec3f &lhs, const float &rhs)
+{
+  return {lhs.x / rhs, lhs.y / rhs, lhs.z / rhs};
+}
 inline float dot(const Vec3f &lhs, const Vec3f &rhs)
 {
   return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
@@ -197,6 +212,50 @@ Vec3f normalize(Vec3f v)
 {
   float len = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
   return {v.x / len, v.y / len, v.z / len};
+}
+
+struct Vec3i {
+  i32 x, y, z;
+
+  float len() { return sqrt(x * x + y * y + z * z); }
+};
+inline Vec3i operator+(const Vec3i &lhs, const Vec3i &rhs)
+{
+  return {lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z};
+}
+inline Vec3i operator-(const Vec3i &lhs, const Vec3i &rhs)
+{
+  return {lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z};
+}
+inline Vec3i operator*(const Vec3i &lhs, const Vec3i &rhs)
+{
+  return {lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z};
+}
+inline Vec3i operator*(const Vec3i &lhs, const i32 &rhs) { return lhs * Vec3i{rhs, rhs, rhs}; }
+inline Vec3i operator*(const i32 &lhs, const Vec3i &rhs) { return rhs * lhs; }
+inline Vec3i operator/(const Vec3i &lhs, const Vec3i &rhs)
+{
+  return {lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z};
+}
+inline i32 dot(const Vec3i &lhs, const Vec3i &rhs)
+{
+  return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
+}
+inline Vec3i cross(const Vec3i &lhs, const Vec3i &rhs)
+{
+  return {
+      lhs.y * rhs.z - lhs.z * rhs.y,
+      lhs.z * rhs.x - lhs.x * rhs.z,
+      lhs.x * rhs.y - lhs.y * rhs.x,
+  };
+}
+Vec3f normalize(Vec3i v)
+{
+  float len = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+  return {v.x / len, v.y / len, v.z / len};
+}
+Vec3i clamp(Vec3i val, Vec3i min, Vec3i max) {
+  return {clamp(val.x, min.x, max.x), clamp(val.y, min.y, max.y), clamp(val.z, min.z, max.z)};
 }
 
 struct Vec4f {
@@ -254,16 +313,21 @@ struct Transform {
   Vec3f scale;
 };
 
+// TODO I should implement my own
+inline Vec3f operator*(const Transform &lhs, const Vec3f &rhs) {
+  glm::vec3 rot(lhs.rotation.x, lhs.rotation.y, lhs.rotation.z);
+  glm::vec3 pos(lhs.position.x, lhs.position.y, lhs.position.z);
+  glm::vec3 scale(lhs.scale.x, lhs.scale.y, lhs.scale.z);
+  glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) *
+                    glm::scale(glm::mat4(1.f), scale) * glm::toMat4(glm::quat(rot));
+  glm::vec4 result = model * glm::vec4(rhs.x, rhs.y, rhs.z, 1);
+  return {result.x, result.y, result.z}; 
+}
+
 float lerp(float a, float b, float t) { return (1 - t) * a + t * b; }
 
 Vec2f lerp(Vec2f a, Vec2f b, float t) { return {lerp(a.x, b.x, t), lerp(a.y, b.y, t)}; }
 Vec3f lerp(Vec3f a, Vec3f b, float t)
 {
   return {lerp(a.x, b.x, t), lerp(a.y, b.y, t), lerp(a.z, b.z, t)};
-}
-
-float clamp(float d, float min, float max)
-{
-  const float t = d < min ? min : d;
-  return t > max ? max : t;
 }

@@ -55,6 +55,22 @@ struct RenderTarget : Asset {
                            color_tex.gl_ref, mip_level);
   }
 
+  void change_color_target(CubemapArray new_color_tex, i32 layer, i32 face, uint32_t mip_level = 0)
+  {
+    assert(layer < new_color_tex.count);
+    assert(face < 6);
+
+    // TODO possible leak here, if the original color_tex isn't cleaned up somewhere else
+    color_tex = new_color_tex;
+
+    width  = color_tex.width * powf(0.5, mip_level);
+    height = color_tex.height * powf(0.5, mip_level);
+
+    bind();
+    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, color_tex.gl_ref, mip_level,
+                              (layer * 6) + face);
+  }
+
   void change_mip_level(uint32_t mip_level)
   {
     width  = color_tex.width * powf(0.5, mip_level);

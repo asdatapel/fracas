@@ -90,20 +90,20 @@ Texture load_and_upload_texture(String filepath, TextureFormat format, Memory me
   return tex;
 }
 
-VertexBuffer load_and_upload_mesh(String filepath, int asset_id, Memory mem)
+Mesh load_mesh(String filepath, int asset_id, Memory mem)
 {
   auto tmp = Temp::start(mem);
 
   char *filepath_chars = filepath.to_char_array(tmp);
   FileData file        = read_entire_file(filepath_chars, tmp);
   Mesh mesh            = load_fmesh(file, mem);
-  VertexBuffer buf     = upload_vertex_buffer(mesh);
-  buf.asset_id         = asset_id;
-  return buf;
+  mesh.asset_id         = asset_id;
+  return mesh;
 }
 
 struct Assets {
-  FreeList<VertexBuffer> meshes;
+  FreeList<VertexBuffer> vertex_buffers;
+  FreeList<Mesh> meshes;
   FreeList<RenderTarget> render_targets;
   FreeList<Texture> textures;
   FreeList<EnvMap> env_maps;
@@ -117,6 +117,7 @@ struct Assets {
   void init()
   {
     meshes.init(&assets_allocator, 1024);
+    vertex_buffers.init(&assets_allocator, 1024);
     render_targets.init(&assets_allocator, 64);
     textures.init(&assets_allocator, 1024);
     env_maps.init(&assets_allocator, 32);

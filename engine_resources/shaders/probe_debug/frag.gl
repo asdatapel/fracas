@@ -1,0 +1,55 @@
+#version 450 core
+
+out vec4 FragColor;
+
+uniform layout(binding=0) samplerCubeArray irradianceArray;
+
+in vec4 frag_world_pos;
+in vec3 frag_normal;
+
+ivec3 dims = ivec3(12, 4, 6);
+vec3 vol_min = {-20, 0, -10};
+vec3 vol_max = {20, 15, 10};
+
+vec4 sample_probe(ivec3 i) {
+    int texture_index = (dims.z * dims.y) * i.x + (dims.z) * i.y + i.z;
+    return texture(irradianceArray, vec4(frag_normal, texture_index));
+}
+
+void main()
+{
+    vec3 cell_size = (vol_max - vol_min) / dims;
+    vec3 cell_position = (frag_world_pos.xyz - vol_min) / cell_size;
+    ivec3 root = ivec3(cell_position);
+    ivec3 p0 = root + ivec3(0, 0, 0);
+    ivec3 p1 = root + ivec3(0, 0, 1);
+    ivec3 p2 = root + ivec3(0, 1, 0);
+    ivec3 p3 = root + ivec3(0, 1, 1);
+    ivec3 p4 = root + ivec3(1, 0, 0);
+    ivec3 p5 = root + ivec3(1, 0, 1);
+    ivec3 p6 = root + ivec3(1, 1, 0);
+    ivec3 p7 = root + ivec3(1, 1, 1);
+
+    vec3 v0 = sample_probe(p0).rgb;
+    // vec3 v1 = sample_probe(p1, normal).rgb;
+    // vec3 v2 = sample_probe(p2, normal).rgb;
+    // vec3 v3 = sample_probe(p3, normal).rgb;
+    // vec3 v4 = sample_probe(p4, normal).rgb;
+    // vec3 v5 = sample_probe(p5, normal).rgb;
+    // vec3 v6 = sample_probe(p6, normal).rgb;
+    // vec3 v7 = sample_probe(p7, normal).rgb;
+
+    // vec3 blend_factor = cell_position - root;
+    // vec3 bz0 = mix(v0, v1, blend_factor.z);
+    // vec3 bz1 = mix(v2, v3, blend_factor.z);
+    // vec3 bz2 = mix(v4, v5, blend_factor.z);
+    // vec3 bz3 = mix(v6, v7, blend_factor.z);
+
+    // vec3 by0 = mix(bz0, bz1, blend_factor.y);
+    // vec3 by1 = mix(bz2, bz3, blend_factor.y);
+
+    // vec3 bx0 = mix(by0, by1, blend_factor.x);
+
+    // return bx0;
+    FragColor = vec4(v0, 1);
+}

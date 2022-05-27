@@ -11,7 +11,7 @@ void main()
 $frag_shader
 #version 430 core
 
-$include reflections.standard
+$include reflections.probes
 $include pbr_lit_3d.frag
 
 $set material_offset $texture

@@ -10,6 +10,7 @@
 #include "scripts.hpp"
 #include "spline.hpp"
 #include "yaml.hpp"
+#include "renderer/irradiance_volume.hpp"
 
 Project fracas_project = {
     {
@@ -97,7 +98,7 @@ struct Editor {
       if (input->keys[(int)Keys::RIGHT]) exposure += 0.01f;
       Transform camera_transform;
       Camera *camera = get_camera(&editor_scene, &camera_transform);
-      compositor.render(camera, camera_transform.position, exposure);
+      compositor.render(camera, &assets, camera_transform.position, exposure);
       debug_ui(backbuffer, input, mem);
     }
   }
@@ -337,6 +338,9 @@ struct Editor {
     }
 
     Imm::start_window("Entitiesasd", {50, 50, 200, 500});
+    if (Imm::button("Bake Probes")) {
+      renderer.bake_probes(&editor_scene, &compositor.view_layers[0]);
+    }
     Imm::num_input(&renderer.sky_t);
     Imm::num_input(&renderer.directional_light_distance);
     Imm::num_input(&renderer.directional_light_brightness);
@@ -401,6 +405,50 @@ struct Editor {
     Imm::end_window();
 
     window_timeline(input);
+
+
+    auto append_point = [&](Vec3f p) {
+      lines.append(p.x);
+      lines.append(p.y);
+      lines.append(p.z);
+      lines.append(1);
+      lines.append(0);
+      lines.append(0);
+      lines.append(1);
+    };
+
+    auto append_cube = [&](Vec3f min, Vec3f max) {
+      append_point(min);
+      append_point({max.x, min.y, min.z});
+      append_point(min);
+      append_point({min.x, max.y, min.z});
+      append_point(min);
+      append_point({min.x, min.y, max.z});
+
+      Vec3f min_opposite = {max.x, min.y, max.z};
+      append_point(min_opposite);
+      append_point({min.x, min.y, min_opposite.z});
+      append_point(min_opposite);
+      append_point({min_opposite.x, min.y, min.z});
+      append_point(min_opposite);
+      append_point(max);
+
+      Vec3f max_adj_1 = {min.x, max.y, max.z};
+      append_point(max_adj_1);
+      append_point({max_adj_1.x, min.y, max_adj_1.z});
+      append_point(max_adj_1);
+      append_point({max_adj_1.x, max_adj_1.y, min.z});
+      append_point(max_adj_1);
+      append_point(max);
+
+      Vec3f max_adj_2 = {max.x, max.y, min.z};
+      append_point(max_adj_2);
+      append_point({max_adj_2.x, min.y, max_adj_2.z});
+      append_point(max_adj_2);
+      append_point({min.x, max_adj_2.y, max_adj_2.z});
+      append_point(max_adj_2);
+      append_point(max);
+    };
 
     bind_shader(lines_shader);
     glUniformMatrix4fv(lines_shader.uniform_handles[(int)UniformId::VIEW], 1, GL_FALSE,

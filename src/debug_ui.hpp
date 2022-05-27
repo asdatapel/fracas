@@ -1712,7 +1712,7 @@ void rotation_gizmo(Vec3f *rotation, Vec3f p)
         Vec3f new_dir_projected        = normalize(cross(plane_n, cross(dir, plane_n)));
         state.gizmo_last_contact_point = dir;
 
-        float angle = acos(clamp(dot(old_dir_projected, new_dir_projected), -1, 1));
+        float angle = acos(clamp(dot(old_dir_projected, new_dir_projected), -1.f, 1.f));
         float sign  = dot(cross(old_dir_projected, new_dir_projected), plane_n);
         if (angle > 0 && sign != 0) {
           sign           = sign / fabs(sign);
