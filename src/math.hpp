@@ -168,11 +168,16 @@ Vec2f normalize(Vec2f v)
 }
 
 struct Vec3f {
-  float x, y, z;
+  union {
+    struct {
+      float x, y, z;
+    };
+    float values[3];
+  };
 
   Vec2f xy() { return {x, y}; }
-
   float len() { return sqrt(x * x + y * y + z * z); }
+  float operator[](i32 i) { return values[i]; }
 };
 inline Vec3f operator+(const Vec3f &lhs, const Vec3f &rhs)
 {
@@ -191,6 +196,10 @@ inline Vec3f operator*(const float &lhs, const Vec3f &rhs) { return rhs * lhs; }
 inline Vec3f operator/(const Vec3f &lhs, const Vec3f &rhs)
 {
   return {lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z};
+}
+inline Vec3f operator/(const float &lhs, const Vec3f &rhs)
+{
+  return {lhs / rhs.x, lhs / rhs.y, lhs / rhs.z};
 }
 inline Vec3f operator/(const Vec3f &lhs, const float &rhs)
 {
@@ -213,6 +222,8 @@ Vec3f normalize(Vec3f v)
   float len = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
   return {v.x / len, v.y / len, v.z / len};
 }
+Vec3f min(Vec3f a, Vec3f b) { return {fminf(a.x, b.x), fminf(a.y, b.y), fminf(a.z, b.z)}; }
+Vec3f max(Vec3f a, Vec3f b) { return {fmaxf(a.x, b.x), fmaxf(a.y, b.y), fmaxf(a.z, b.z)}; }
 
 struct Vec3i {
   i32 x, y, z;
@@ -254,7 +265,8 @@ Vec3f normalize(Vec3i v)
   float len = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
   return {v.x / len, v.y / len, v.z / len};
 }
-Vec3i clamp(Vec3i val, Vec3i min, Vec3i max) {
+Vec3i clamp(Vec3i val, Vec3i min, Vec3i max)
+{
   return {clamp(val.x, min.x, max.x), clamp(val.y, min.y, max.y), clamp(val.z, min.z, max.z)};
 }
 
@@ -314,14 +326,15 @@ struct Transform {
 };
 
 // TODO I should implement my own
-inline Vec3f operator*(const Transform &lhs, const Vec3f &rhs) {
+inline Vec3f operator*(const Transform &lhs, const Vec3f &rhs)
+{
   glm::vec3 rot(lhs.rotation.x, lhs.rotation.y, lhs.rotation.z);
   glm::vec3 pos(lhs.position.x, lhs.position.y, lhs.position.z);
   glm::vec3 scale(lhs.scale.x, lhs.scale.y, lhs.scale.z);
-  glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) *
-                    glm::scale(glm::mat4(1.f), scale) * glm::toMat4(glm::quat(rot));
+  glm::mat4 model = glm::translate(glm::mat4(1.0f), pos) * glm::scale(glm::mat4(1.f), scale) *
+                    glm::toMat4(glm::quat(rot));
   glm::vec4 result = model * glm::vec4(rhs.x, rhs.y, rhs.z, 1);
-  return {result.x, result.y, result.z}; 
+  return {result.x, result.y, result.z};
 }
 
 float lerp(float a, float b, float t) { return (1 - t) * a + t * b; }
@@ -331,3 +344,8 @@ Vec3f lerp(Vec3f a, Vec3f b, float t)
 {
   return {lerp(a.x, b.x, t), lerp(a.y, b.y, t), lerp(a.z, b.z, t)};
 }
+
+struct AABB {
+  Vec3f min = {100000, 100000, 100000};
+  Vec3f max = {-100000, -100000, -100000};
+};

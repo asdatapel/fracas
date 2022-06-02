@@ -73,7 +73,7 @@ float cube_verts[] = {
 };
 
 unsigned int lights_ubo_buffer;
-GLuint ssbo;
+GLuint lights_ssbo;
 
 static void check_shader_error(unsigned int shader, const char *name)
 {
@@ -160,6 +160,22 @@ Shader create_shader(String vert_src, String frag_src, const char *debug_name)
   return load_shader(shaderProgram);
 }
 
+ComputeShader load_compute_shader(const char *filepath)
+{
+  auto shader_file     = read_entire_file(filepath);
+  unsigned int shader = glCreateShader(GL_COMPUTE_SHADER);
+  glShaderSource(shader, 1, &shader_file.data, NULL);
+  glCompileShader(shader);
+  check_shader_error(shader, filepath);
+
+  GLuint shader_program = glCreateProgram();
+  glAttachShader(shader_program, shader);
+  glLinkProgram(shader_program);
+  check_error_program(shader_program, filepath);
+
+  return {shader_program};
+}
+
 RenderTarget init_graphics(uint32_t width, uint32_t height)
 {
   glViewport(0, 0, width, height);
@@ -231,10 +247,17 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
   sky_shader             = load_shader(create_shader_program("engine_resources/shaders/sky"));
   probe_debug_shader             = load_shader(create_shader_program("engine_resources/shaders/probe_debug"));
 
-  glGenBuffers(1, &ssbo);
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+  rtshadow_compute_shader = load_compute_shader("engine_resources/shaders/rtshadow/rtshadow.gl");
+
+  glGenBuffers(1, &lights_ssbo);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, lights_ssbo);
   glBufferData(GL_SHADER_STORAGE_BUFFER, LightUniformBlock::SIZE, NULL, GL_DYNAMIC_DRAW);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LIGHTS_BUFFER_BINDING, ssbo);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LIGHTS_BUFFER_BINDING, lights_ssbo);
+
+  glGenBuffers(1, &bvh_ssbo);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, bvh_ssbo);
+  glBufferData(GL_SHADER_STORAGE_BUFFER, 48 * 5000000 + 48 * 20000000 + 64 + 16, NULL, GL_DYNAMIC_DRAW);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bvh_ssbo);
 
   return main_target;
 }
@@ -407,6 +430,8 @@ void draw_single_channel_text(RenderTarget target, Rect rect, Rect uv, Texture t
 
 void upload_lights(LightUniformBlock lights)
 {
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, lights_ssbo);
+
   int buf_index = 0;
   glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index, 16,
                   glm::value_ptr(lights.directional_light.direction));
@@ -415,7 +440,6 @@ void upload_lights(LightUniformBlock lights)
   glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index + 32, 4, &lights.directional_light.shadow_map_index);
   glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index + 48, 64, &lights.directional_light.lightspace_mat[0][0]);
 
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
   for (int i = 0; i < lights.num_lights; i++) {
     int buf_index = DirectionalLight::SIZE + SpotLight::SIZE * i;
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index, 16,

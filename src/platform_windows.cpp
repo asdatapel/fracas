@@ -340,10 +340,10 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 int main()
 {
   glfwInit();
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  glfwSwapInterval(1);  // vsync on
+  // glfwSwapInterval(1);  // vsync on
   glfwWindowHint(GLFW_SAMPLES, 4);
 
 #if MACOS
@@ -376,8 +376,8 @@ int main()
 
   auto loop_start_time = std::chrono::high_resolution_clock::now();
   while (!glfwWindowShouldClose(window)) {
-    // printf("loop time: %lldms\n", (std::chrono::high_resolution_clock::now() -
-    // loop_start_time).count() / 1000000);
+    printf("loop time: %lldms\n", (std::chrono::high_resolution_clock::now() -
+    loop_start_time).count() / 1000000);
     loop_start_time = std::chrono::high_resolution_clock::now();
 
     target.clear();

@@ -338,6 +338,15 @@ struct Editor {
     }
 
     Imm::start_window("Entitiesasd", {50, 50, 200, 500});
+    if (Imm::button("reload rt shader")) {
+      rtshadow_compute_shader = load_compute_shader("engine_resources/shaders/rtshadow/rtshadow.gl");
+    }
+    if (Imm::button("upload bvh")) {
+      renderer.upload_bvh();
+    }
+    if (Imm::button("raytrace")) {
+      renderer.raytrace_gpu(&debug_camera, {debug_camera.pos_x, debug_camera.pos_y, debug_camera.pos_z});
+    }
     if (Imm::button("Bake Probes")) {
       renderer.bake_probes(&editor_scene, &compositor.view_layers[0]);
     }
@@ -472,6 +481,10 @@ struct Editor {
         Imm::translation_gizmo(&selected_entity->transform.position);
       }
     }
+    Imm::end_window();
+
+    Imm::start_window("rt", {700, 250, 300, 300});
+    Imm::texture(&renderer.rt_gpu_tex);
     Imm::end_window();
 
     compositor.final_target.color_tex.gen_mipmaps();

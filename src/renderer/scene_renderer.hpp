@@ -2,7 +2,9 @@
 
 #include "../scene/entity.hpp"
 #include "../scene/scene.hpp"
+#include "../util/timer.hpp"
 #include "irradiance_volume.hpp"
+#include "tracing.hpp"
 #include "view_layer.hpp"
 
 struct PlanarProbe {
@@ -33,8 +35,15 @@ struct Renderer {
   float shadow_offset_factor = 2;
   float shadow_offset_units  = 0;
 
+  Texture2D rt_tex;
+  Texture2D rt_gpu_tex;
+
   void init(Scene *scene, ViewLayer *view_layer);
   void bake_probes(Scene *scene, ViewLayer *view_layer);
+  void raytrace(Camera *camera, Vec3f camera_pos);
+  void raytrace_threaded(Camera *camera, Vec3f camera_pos);
+  void upload_bvh();
+  void raytrace_gpu(Camera *camera, Vec3f camera_pos);
 };
 static Renderer renderer;
 
@@ -203,6 +212,8 @@ void render_scene(Scene *scene, ViewLayer *view_layer, RenderTarget target, Came
 
   renderer.init(scene, view_layer);
 
+  renderer.raytrace_gpu(camera, camera_pos);
+
   {
     draw_sky(renderer.sky_cubemap, renderer.sky_t);
     renderer.sky_cubemap.gen_mipmaps();
@@ -308,7 +319,7 @@ void render_scene(Scene *scene, ViewLayer *view_layer, RenderTarget target, Came
       VertexBuffer vb = assets->vertex_buffers.data[304].value;
       draw(target, probe_debug_shader, vb);
     }
-  }
+}
 
   if (view_layer->cubemap_visible) {
     bind_shader(cubemap_shader);
@@ -318,6 +329,12 @@ void render_scene(Scene *scene, ViewLayer *view_layer, RenderTarget target, Came
     draw_cubemap();
   }
 }
+
+const i32 RT_WIDTH  = 1920;
+const i32 RT_HEIGHT = 1080;
+const i32 RT_RATIO  = RT_WIDTH / RT_HEIGHT;
+float hdr_image[RT_WIDTH * RT_HEIGHT * 3];
+u8 image[RT_WIDTH * RT_HEIGHT * 3];
 
 void Renderer::init(Scene *scene, ViewLayer *view_layer)
 {
@@ -341,6 +358,11 @@ void Renderer::init(Scene *scene, ViewLayer *view_layer)
 
     planar_probe.target   = RenderTarget(1280, 720, TextureFormat::RGB16F, TextureFormat::DEPTH24);
     planar_probe.position = {0, 0, 0};
+
+    rt_tex = Texture2D(RT_WIDTH, RT_HEIGHT, TextureFormat::RGB8, true);
+    rt_gpu_tex = Texture2D(RT_WIDTH, RT_HEIGHT, TextureFormat::RGBA32, true);
+    create_bvh_threaded(scene);
+    upload_bvh();
   }
 }
 
@@ -395,4 +417,247 @@ void Renderer::bake_probes(Scene *scene, ViewLayer *view_layer)
     }
   }
   irradiance_volume.cubemaps.gen_mipmaps();
+}
+
+void Renderer::raytrace(Camera *camera, Vec3f camera_pos)
+{
+  Timer timer;
+
+  float min_t = 1e30;
+  float max_t = -1e30;
+
+  glm::mat4 inverse_camera = glm::inverse(camera->view);
+  for (i32 y = 0; y < RT_HEIGHT; y++) {
+    for (i32 x = 0; x < RT_WIDTH; x++) {
+      Vec3f ray_origin = camera_pos;
+
+      Vec3f pixel_ndc     = {((float)x / RT_WIDTH) * 2.f - 1, ((float)y / RT_HEIGHT) * 2.f - 1, -1};
+      glm::vec3 world_pos = inverse_camera * glm::vec4(pixel_ndc.x, pixel_ndc.y, pixel_ndc.z, 1);
+      Vec3f pixel_pos     = {world_pos.x, world_pos.y, world_pos.z};
+      Vec3f ray_dir       = normalize(pixel_pos - camera_pos);
+
+      float t = traverse_bvh_threaded(ray_origin, ray_dir);
+      min_t   = fminf(min_t, t);
+      max_t   = fmaxf(max_t, t);
+
+      hdr_image[(RT_WIDTH * y + x) * 3]     = t;
+      hdr_image[(RT_WIDTH * y + x) * 3 + 1] = t;
+      hdr_image[(RT_WIDTH * y + x) * 3 + 2] = t;
+    }
+  }
+
+  for (i32 y = 0; y < RT_HEIGHT; y++) {
+    for (i32 x = 0; x < RT_WIDTH; x++) {
+      float hdr                         = hdr_image[(RT_WIDTH * y + x) * 3];
+      float normalized                  = (hdr - min_t) / (max_t - min_t);
+      image[(RT_WIDTH * y + x) * 3]     = normalized * 255;
+      image[(RT_WIDTH * y + x) * 3 + 1] = normalized * 255;
+      image[(RT_WIDTH * y + x) * 3 + 2] = normalized * 255;
+    }
+  }
+
+  rt_tex.upload(image, true);
+
+  timer.print_ms();
+}
+
+template <typename T, size_t SIZE>
+struct ThreadSafeFiniteJobQueue {
+  std::mutex lock;
+  T elements[SIZE];
+  i32 head           = 0;
+  i32 count          = 0;
+  std::atomic<i32> remaining_jobs = 0;
+
+  const static size_t MAX_COUNT = SIZE;
+
+  i32 push(T elem)
+  {
+    lock.lock();
+    i32 pos       = (head + count) % SIZE;
+    elements[pos] = elem;
+    assert(count < SIZE);
+    count++;
+    remaining_jobs++;
+    lock.unlock();
+
+    return pos;
+  }
+
+  b8 pop(T *elem)
+  {
+    b8 exists = false;
+
+    lock.lock();
+    if (count > 0) {
+      i32 pos = head % SIZE;
+      *elem   = elements[pos];
+
+      head++;
+      count--;
+      exists = true;
+    }
+    lock.unlock();
+
+    return exists;
+  }
+
+  void worker_thread()
+  {
+    while (true) {
+      T job;
+      if (pop(&job)) {
+        job.do_work();
+        remaining_jobs--;
+      }
+
+      if (remaining_jobs == 0) {
+        return;
+      }
+    }
+  }
+};
+struct TraverseBvhJob {
+  Camera *camera;
+  Vec3f ray_origin;
+  i32 x, y;
+
+  void do_work()
+  {
+    glm::mat4 inverse_camera = glm::inverse(camera->view);
+    Vec3f pixel_ndc     = {((float)x / RT_WIDTH) * 2.f - 1, ((float)y / RT_HEIGHT) * 2.f - 1, -1};
+    glm::vec3 world_pos = inverse_camera * glm::vec4(pixel_ndc.x, pixel_ndc.y, pixel_ndc.z, 1);
+    Vec3f pixel_pos     = {world_pos.x, world_pos.y, world_pos.z};
+    Vec3f ray_dir       = normalize(pixel_pos - ray_origin);
+
+    float t = traverse_bvh_threaded(ray_origin, ray_dir);
+
+    hdr_image[(RT_WIDTH * y + x) * 3]     = t;
+    hdr_image[(RT_WIDTH * y + x) * 3 + 1] = t;
+    hdr_image[(RT_WIDTH * y + x) * 3 + 2] = t;
+  }
+};
+ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000> bvh_traversal_queue;
+
+void Renderer::raytrace_threaded(Camera *camera, Vec3f camera_pos)
+{
+  Timer timer;
+
+  for (i32 y = 0; y < RT_HEIGHT; y++) {
+    for (i32 x = 0; x < RT_WIDTH; x++) {
+      TraverseBvhJob job;
+      job.camera     = camera;
+      job.ray_origin = camera_pos;
+      job.x          = x;
+      job.y          = y;
+
+      bvh_traversal_queue.push(job);
+    }
+  }
+
+  std::thread t0(&ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000>::worker_thread, &bvh_traversal_queue);
+  std::thread t1(&ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000>::worker_thread, &bvh_traversal_queue);
+  std::thread t2(&ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000>::worker_thread, &bvh_traversal_queue);
+  std::thread t3(&ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000>::worker_thread, &bvh_traversal_queue);
+  std::thread t4(&ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000>::worker_thread, &bvh_traversal_queue);
+  std::thread t5(&ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000>::worker_thread, &bvh_traversal_queue);
+  std::thread t6(&ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000>::worker_thread, &bvh_traversal_queue);
+  std::thread t7(&ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000>::worker_thread, &bvh_traversal_queue);
+  std::thread t8(&ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000>::worker_thread, &bvh_traversal_queue);
+  std::thread t9(&ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000>::worker_thread, &bvh_traversal_queue);
+  std::thread t10(&ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000>::worker_thread, &bvh_traversal_queue);
+  std::thread t11(&ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000>::worker_thread, &bvh_traversal_queue);
+  std::thread t12(&ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000>::worker_thread, &bvh_traversal_queue);
+  std::thread t13(&ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000>::worker_thread, &bvh_traversal_queue);
+  std::thread t14(&ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000>::worker_thread, &bvh_traversal_queue);
+  std::thread t15(&ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000>::worker_thread, &bvh_traversal_queue);
+  std::thread t16(&ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000>::worker_thread, &bvh_traversal_queue);
+  std::thread t17(&ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000>::worker_thread, &bvh_traversal_queue);
+  std::thread t18(&ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000>::worker_thread, &bvh_traversal_queue);
+  std::thread t19(&ThreadSafeFiniteJobQueue<TraverseBvhJob, 3000000>::worker_thread, &bvh_traversal_queue);
+
+  t0.join();
+  t1.join();
+  t2.join();
+  t3.join();
+  t4.join();
+  t5.join();
+  t6.join();
+  t7.join();
+  t8.join();
+  t9.join();
+  t10.join();
+  t11.join();
+  t12.join();
+  t13.join();
+  t14.join();
+  t15.join();
+  t16.join();
+  t17.join();
+  t18.join();
+  t19.join();
+
+  for (i32 y = 0; y < RT_HEIGHT; y++) {
+    for (i32 x = 0; x < RT_WIDTH; x++) {
+      float hdr                         = hdr_image[(RT_WIDTH * y + x) * 3];
+      float normalized                  = hdr / 20.f;
+      image[(RT_WIDTH * y + x) * 3]     = normalized * 255;
+      image[(RT_WIDTH * y + x) * 3 + 1] = normalized * 255;
+      image[(RT_WIDTH * y + x) * 3 + 2] = normalized * 255;
+    }
+  }
+
+  rt_tex.upload(image, true);
+
+  timer.print_ms();
+}
+
+void Renderer::upload_bvh(){
+  
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, bvh_ssbo);
+
+  for (i32 i = 0; i < triangles.size(); i++) {
+    int buf_index = 48 * i;
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index, 16,
+                    &triangles[i].verts[0]);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index + 16, 16,
+                    &triangles[i].verts[1]);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index + 32, 16,
+                    &triangles[i].verts[2]);
+
+  }
+  
+  for (i32 i = 0; i < threaded_nodes.count; i++) {
+    int buf_index = 48 * 5000000 + 48 * i;
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index, 16,
+                    &threaded_nodes[i].bounds.min);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index + 16, 16,
+                    &threaded_nodes[i].bounds.max);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index + 28, 4,
+                    &threaded_nodes[i].child_0);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index + 32, 4,
+                    &threaded_nodes[i].child_1);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index + 36, 4,
+                    &threaded_nodes[i].triangle_i_start);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index + 40, 4,
+                    &threaded_nodes[i].triangle_count);
+  }
+}
+void Renderer::raytrace_gpu(Camera *camera, Vec3f camera_pos){
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, bvh_ssbo);
+
+  int buf_index = 48 * 5000000 + 48 * 20000000;
+  glm::mat4 inverse_camera = glm::inverse(camera->view);
+  glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index, 64,
+                  glm::value_ptr(inverse_camera));
+  glm::vec3 glm_camera_pos = {camera_pos.x, camera_pos.y, camera_pos.z};
+  glBufferSubData(GL_SHADER_STORAGE_BUFFER, buf_index + 64, 16,
+                  glm::value_ptr(glm_camera_pos));
+
+  //// 
+  glBindImageTexture(0, rt_gpu_tex.gl_ref, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+  glUseProgram(rtshadow_compute_shader.shader_handle);
+  glDispatchCompute((GLuint)rt_gpu_tex.width / 8, (GLuint)rt_gpu_tex.height / 4, 1);
+  glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+  rt_gpu_tex.gen_mipmaps();
 }

@@ -13,6 +13,7 @@
 #include "../mesh.hpp"
 #include "../platform.hpp"
 #include "framebuffer.hpp"
+#include "compute_shader.hpp"
 #include "shader.hpp"
 
 Shader basic_shader;
@@ -34,6 +35,8 @@ Shader shadow_shader;
 Shader sky_shader;
 Shader probe_debug_shader;
 
+ComputeShader rtshadow_compute_shader;
+
 // TODO move this to the asset loading system
 Shader threed_skinning_shader;
 
@@ -51,6 +54,7 @@ struct VertexBuffer {
 
 RenderTarget init_graphics(uint32_t width, uint32_t height);
 
+ComputeShader load_compute_shader(const char *filepath);
 Shader create_shader(String vert_src, String frag_src, const char *debug_name = "");
 void bind_shader(Shader shader);
 void bind_1f(Shader shader, UniformId uniform_id, float val);
@@ -158,3 +162,5 @@ static Bitmap parse_bitmap(FileData file_data, StackAllocator *allocator)
 }
 
 static void free_bitmap(Bitmap bitmap) { free(bitmap.data); }
+
+GLuint bvh_ssbo;

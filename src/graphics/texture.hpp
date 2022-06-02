@@ -7,6 +7,7 @@ enum struct TextureFormat {
   RED,
   RGB8,
   RGBA8,
+  RGBA32,
   SRGB8_ALPHA8,
   SRGB8,
   RGB16F,
@@ -28,6 +29,8 @@ std::pair<GLenum, GLenum> format_to_opengl(TextureFormat format)
       return {GL_RGB8, GL_RGB};
     case TextureFormat::RGBA8:
       return {GL_RGBA8, GL_RGBA};
+    case TextureFormat::RGBA32:
+      return {GL_RGBA32F, GL_RGBA};
     case TextureFormat::SRGB8_ALPHA8:
       return {GL_SRGB_ALPHA, GL_RGBA};
     case TextureFormat::SRGB8:

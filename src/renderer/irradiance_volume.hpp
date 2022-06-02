@@ -1,7 +1,7 @@
 #pragma once
 
-#include "math.hpp"
-#include "scene/scene.hpp"
+#include "../math.hpp"
+#include "../scene/scene.hpp"
 
 // this is all stuff to only put probes outside of geometry
 // struct GridCell {

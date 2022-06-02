@@ -1,0 +1,198 @@
+#version 430
+layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
+layout(rgba32f, binding = 0) uniform image2D img_output;
+
+struct Triangle {
+  vec3 verts[3];
+};
+struct BvhNode {
+  vec3 bounds_min;
+  vec3 bounds_max;
+
+  int child_0;
+  int child_1;
+
+  int triangle_i_start;
+  int triangle_count;
+};
+layout (std140, binding = 1) buffer bvh
+{
+    Triangle triangles[5000000];
+    BvhNode nodes[20000000];
+    mat4 inverse_camera;
+    vec3 camera_pos;
+};
+
+float ray_tri_intersect(vec3 ray_origin, vec3 ray_dir, int tri_i)
+{
+  Triangle tri = triangles[tri_i];
+
+  vec3 edge_0 = tri.verts[1] - tri.verts[0];
+  vec3 edge_1 = tri.verts[2] - tri.verts[0];
+  vec3 h      = cross(ray_dir, edge_1);
+  float a      = dot(edge_0, h);
+
+  // parralel
+  if (a > -0.000001f && a < 0.000001f) return -1;
+
+  float f = 1 / a;
+  vec3 s = ray_origin - tri.verts[0];
+  float u = f * dot(s, h);
+
+  // missed triangle
+  if (u < 0 || u > 1) return -1;
+
+  vec3 q = cross(s, edge_0);
+  float v = f * dot(ray_dir, q);
+
+  // missed triangle
+  if (v < 0 || u + v > 1) return -1;
+
+  float t = f * dot(edge_1, q);
+  return t;
+}
+
+float max_component (vec3 v) {
+  return max (max (v.x, v.y), v.z);
+}
+float min_component (vec3 v) {
+  return min (min (v.x, v.y), v.z);
+}
+
+bool ray_aabb_intersect(vec3 ray_origin, vec3 ray_dir, vec3 b_min, vec3 b_max)
+{
+  vec3 inv_dir = 1.f / ray_dir;
+  vec3 t0      = (b_min - ray_origin) * inv_dir;
+  vec3 t1      = (b_max - ray_origin) * inv_dir;
+  vec3 tmin = min(t0, t1);
+  vec3 tmax = max(t0, t1);
+
+  return max_component(tmin) <= min_component(tmax);
+}
+
+float traverse_bvh(vec3 ray_origin, vec3 ray_dir)
+{
+  int node_stack[32];
+  int stack_head = 0;
+  
+  float min_t = 1e30;
+
+  node_stack[stack_head++] = 0;
+  while (stack_head > 0) {
+    stack_head--;
+    int node_i = node_stack[stack_head];
+    BvhNode node = nodes[node_i];
+
+    if (!ray_aabb_intersect(ray_origin, ray_dir, node.bounds_min, node.bounds_max)) continue;
+    
+    if (node.child_0 == -1) {
+      for (int i = node.triangle_i_start; i < node.triangle_i_start + node.triangle_count; i++) {
+        float t = ray_tri_intersect(ray_origin, ray_dir, i);
+        if (t > 0) {
+          min_t = min(min_t, t);
+        }
+      }
+    } else {
+      node_stack[stack_head++] = node.child_0;
+      node_stack[stack_head++] = node.child_1;
+    }
+  }
+
+  return min_t;
+}
+
+// https://jacco.ompf2.com/2022/04/18/how-to-build-a-bvh-part-2-faster-rays/
+float IntersectAABB(vec3 ray_origin, vec3 ray_dir, float t, vec3 bmin,  vec3 bmax )
+{
+    float tx1 = (bmin.x - ray_origin.x) / ray_dir.x, tx2 = (bmax.x - ray_origin.x) / ray_dir.x;
+    float tmin = min( tx1, tx2 ), tmax = max( tx1, tx2 );
+    float ty1 = (bmin.y - ray_origin.y) / ray_dir.y, ty2 = (bmax.y - ray_origin.y) / ray_dir.y;
+    tmin = max( tmin, min( ty1, ty2 ) ), tmax = min( tmax, max( ty1, ty2 ) );
+    float tz1 = (bmin.z - ray_origin.z) / ray_dir.z, tz2 = (bmax.z - ray_origin.z) / ray_dir.z;
+    tmin = max( tmin, min( tz1, tz2 ) ), tmax = min( tmax, max( tz1, tz2 ) );
+    if (tmax >= tmin && tmax > 0) return tmin; else return 1e30f;
+}
+
+float ray_aabb_intersect_dist(vec3 ray_origin, vec3 ray_dir, float t, vec3 b_min, vec3 b_max)
+{
+  vec3 inv_dir = 1.f / ray_dir;
+  vec3 t0      = (b_min - ray_origin) * inv_dir;
+  vec3 t1      = (b_max - ray_origin) * inv_dir;
+  vec3 tmin = min(t0, t1);
+  vec3 tmax = max(t0, t1);
+
+  float tminc = max_component(tmin);
+  float tmaxc = min_component(tmax);
+
+  // for some reason including tmin < t here slows it down significantly. I HAVE NO IDEA WHY!!!!
+  if (tminc <= tmaxc && tmaxc > 0 && tminc < t) return tminc;
+  return 1e30;
+}
+
+float traverse_bvh_ordered(vec3 ray_origin, vec3 ray_dir)
+{
+  int node_stack[32];
+  int stack_head = 0;
+  
+  float min_t = 1e30;
+
+  node_stack[stack_head++] = 0;
+  while (stack_head > 0) {
+    stack_head--;
+    int node_i = node_stack[stack_head];
+    BvhNode node = nodes[node_i];
+    
+    if (node.child_0 == -1) {
+      for (int i = node.triangle_i_start; i < node.triangle_i_start + node.triangle_count; i++) {
+        float t = ray_tri_intersect(ray_origin, ray_dir, i);
+        if (t > 0) {
+          min_t = min(min_t, t);
+        }
+      }
+    } else {
+      int child_0 = node.child_0;
+      int child_1 = node.child_1;
+      float dst_0 = ray_aabb_intersect_dist(ray_origin, ray_dir, min_t, nodes[child_0].bounds_min, nodes[child_0].bounds_max);
+      float dst_1 = ray_aabb_intersect_dist(ray_origin, ray_dir, min_t, nodes[child_1].bounds_min, nodes[child_1].bounds_max);
+      if (dst_0 > dst_1) { 
+        int tmp_c = child_0;
+        float tmp_d = dst_0;
+        child_0 = child_1;
+        dst_0 = dst_1;
+        child_1 = tmp_c;
+        dst_1 = tmp_d;
+      }
+      if (dst_0 != 1e30f) {
+        node_stack[stack_head++] = child_0;
+        if (dst_1 != 1e30f)  {
+          node_stack[stack_head++] = child_1;
+        }
+      }
+    }
+  }
+
+  return min_t;
+}
+
+
+void main() {
+  ivec2 image_size = imageSize(img_output);
+  ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
+
+  vec3 pixel_ndc = vec3((pixel_coords.x / float(image_size.x)) * 2 - 1, (pixel_coords.y / float(image_size.y)) * 2 - 1, -1);
+  vec4 world_pos = inverse_camera * vec4(pixel_ndc.x, pixel_ndc.y, pixel_ndc.z, 1);
+  vec3 pixel_pos = vec3(world_pos.x, world_pos.y, world_pos.z);
+  vec3 ray_dir   = normalize(pixel_pos - camera_pos);
+
+  float t = traverse_bvh_ordered(camera_pos, ray_dir);
+
+  vec3 hit_pos = camera_pos + ray_dir * t;
+  vec3 sun_ray_dir = vec3(.9, 1, .5);
+  float sun_t = traverse_bvh_ordered(hit_pos + sun_ray_dir * 0.001, sun_ray_dir);
+  if (sun_t < 1e30) t /= 10;
+
+  t /= 20;
+  vec4 color = vec4(t, t, t, 1);
+
+  imageStore(img_output, pixel_coords, color);
+}

@@ -6,60 +6,6 @@
 #include "scene/entity.hpp"
 #include "spline.hpp"
 
-template <typename T, u32 INITIAL_CAPACITY = 2>
-struct DynamicArray {
-  T *elements  = nullptr;
-  u32 count    = 0;
-  u32 capacity = INITIAL_CAPACITY;
-
-  StackAllocator *allocator;
-
-  DynamicArray() = default;
-  DynamicArray(StackAllocator *allocator)
-  {
-    this->allocator = allocator;
-    elements        = (T *)allocator->alloc(sizeof(T) * capacity);
-  }
-
-  void resize(u32 new_size)
-  {
-    T *new_elements = (T *)allocator->resize((char *)elements, sizeof(T) * new_size);
-
-    if (new_elements != elements) {
-      u32 to_copy_n = std::min(capacity, new_size);
-      memcpy(new_elements, elements, to_copy_n * sizeof(T));
-    }
-
-    capacity = new_size;
-    elements = new_elements;
-  }
-
-  T &push_back(T val)
-  {
-    if (count >= capacity) {
-      resize(capacity * 2);
-    }
-    elements[count] = val;
-    count++;
-    return elements[count - 1];
-  }
-
-  void remove(u32 i)
-  {
-    assert(i < count);
-    memcpy(elements + i, elements + i + 1, (count - (i + 1)) * sizeof(T));
-    count--;
-  }
-
-  void clear() { count = 0; }
-
-  T &operator[](u32 i)
-  {
-    assert(i < count);
-    return elements[i];
-  }
-};
-
 struct KeyedAnimationTrack {
   struct Key {
     enum struct InterpolationType {

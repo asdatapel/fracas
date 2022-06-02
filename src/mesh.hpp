@@ -5,10 +5,6 @@
 #include "platform.hpp"
 #include "util.hpp"
 
-struct AABB {
-  Vec3f min = {100000, 100000, 100000};
-  Vec3f max = {-100000, -100000, -100000};
-};
 struct Component {
   int offset, size, stride;
 };
@@ -93,6 +89,13 @@ Mesh load_fmesh_v2(Buffer<float> buffer, Memory mem)
     if (position.z < mesh.bounding_box.min.z) mesh.bounding_box.min.z = position.z;
     if (position.z > mesh.bounding_box.max.z) mesh.bounding_box.max.z = position.z;
   }
+  
+  
+    if (isinf( mesh.bounding_box.min.x)) {
+      i32 x =0;
+      x++;
+    }
+
 
   return mesh;
 }
