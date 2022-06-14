@@ -7,5 +7,6 @@ if not exist build mkdir build
 @REM popd
 
 clang -g -std=c++17 ./src/fracas_client.cpp ^
-    -I./generated -I ./thirdparty/glad/include -I ./thirdparty/glfw/include -I ./thirdparty ^
-    ./thirdparty/glad/src/glad.cpp  ./thirdparty/glfw/lib-clang/glfw3.lib -o ./build/fracas_client.exe
+    -I ./src -I./generated -I ./thirdparty/glad/include -I ./thirdparty/glfw/include -I ./thirdparty ^
+    ./thirdparty/glad/src/glad.cpp  ./thirdparty/glfw/lib-clang/glfw3.lib ^
+    -o ./build/fracas_client.exe

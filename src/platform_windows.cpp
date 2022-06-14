@@ -376,8 +376,8 @@ int main()
 
   auto loop_start_time = std::chrono::high_resolution_clock::now();
   while (!glfwWindowShouldClose(window)) {
-    printf("loop time: %lldms\n", (std::chrono::high_resolution_clock::now() -
-    loop_start_time).count() / 1000000);
+    // printf("loop time: %lldms\n", (std::chrono::high_resolution_clock::now() -
+    // loop_start_time).count() / 1000000);
     loop_start_time = std::chrono::high_resolution_clock::now();
 
     target.clear();

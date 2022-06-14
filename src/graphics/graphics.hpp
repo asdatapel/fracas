@@ -17,6 +17,7 @@
 #include "shader.hpp"
 
 Shader basic_shader;
+Shader debug_ui_shader;
 Shader lines_shader;
 Shader textured_shader;
 Shader textured_mapped_shader;
@@ -41,18 +42,22 @@ ComputeShader rtshadow_compute_shader;
 Shader threed_skinning_shader;
 
 struct Bitmap {
-  int width, height;
+  i32 width, height;
   Vec4i *data;
 };
 
 struct VertexBuffer {
-  unsigned int vao;
-  unsigned int vbo;
-  int size;
-  int vert_count;
+  u32 vao;
+  u32 vbo;
+  i32 size;
+  i32 vert_count;
 };
 
 RenderTarget init_graphics(uint32_t width, uint32_t height);
+
+VertexBuffer create_vertex_buffer();
+void enable_vertex_componenets(VertexBuffer vb, Component *components, i32 count);
+VertexBuffer reupload_vertex_buffer(VertexBuffer buf, float *data, i32 vert_count, i32 buf_size);
 
 ComputeShader load_compute_shader(const char *filepath);
 Shader create_shader(String vert_src, String frag_src, const char *debug_name = "");
@@ -74,6 +79,7 @@ void debug_draw_immediate(RenderTarget target, Rect rect, Color color);
 void debug_draw_lines(RenderTarget target, float *lines, int count);
 
 void draw(RenderTarget target, Shader shader, VertexBuffer buf);
+void draw_sub(RenderTarget target, Shader shader, VertexBuffer buf, i32 first, i32 count);
 void draw_rect();
 void draw_cube();
 void draw_rect(RenderTarget target, Rect rect, Color color);

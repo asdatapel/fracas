@@ -227,6 +227,7 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
   glBindVertexArray(0);
 
   basic_shader    = load_shader(create_shader_program("engine_resources/shaders/basic"));
+  debug_ui_shader = load_shader(create_shader_program("engine_resources/shaders/debug_ui"));
   lines_shader    = load_shader(create_shader_program("engine_resources/shaders/lines"));
   textured_shader = load_shader(create_shader_program("engine_resources/shaders/textured"));
   single_channel_font_shader =
@@ -260,6 +261,43 @@ RenderTarget init_graphics(uint32_t width, uint32_t height)
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bvh_ssbo);
 
   return main_target;
+}
+
+VertexBuffer create_vertex_buffer()
+{
+  VertexBuffer ret;
+  ret.size       = 0;
+  ret.vert_count = 0;
+
+  glGenVertexArrays(1, &ret.vao);
+  glBindVertexArray(ret.vao);
+  glGenBuffers(1, &ret.vbo);
+
+  return ret;
+}
+
+void enable_vertex_componenets(VertexBuffer vb, Component *components, i32 count)
+{
+  glBindVertexArray(vb.vao);
+  glBindBuffer(GL_ARRAY_BUFFER, vb.vbo);
+  for (int i = 0; i < count; i++) {
+    Component *c = components + i;
+    glVertexAttribPointer(i, c->size, GL_FLOAT, GL_FALSE, c->stride * sizeof(float),
+                          (void *)(c->offset * sizeof(float)));
+    glEnableVertexAttribArray(i);
+  }
+}
+
+VertexBuffer reupload_vertex_buffer(VertexBuffer buf, float *data, i32 vert_count, i32 buf_size)
+{
+  buf.size       = buf_size;
+  buf.vert_count = vert_count;
+
+  glBindVertexArray(buf.vao);
+  glBindBuffer(GL_ARRAY_BUFFER, buf.vbo);
+  glBufferData(GL_ARRAY_BUFFER, buf_size, data, GL_STATIC_DRAW);
+
+  return buf;
 }
 
 VertexBuffer upload_vertex_buffer(Mesh mesh)
@@ -337,12 +375,14 @@ void bind_texture(Shader shader, int texture_slot, Texture texture)
 
 void draw(RenderTarget target, Shader shader, VertexBuffer buf)
 {
-  static float t = 0.0f;
-  t += 0.01f;
-  glUniform1f(shader.uniform_handles[(int)UniformId::T], t);
-
   glBindVertexArray(buf.vao);
   glDrawArrays(GL_TRIANGLES, 0, buf.vert_count);
+}
+
+void draw_sub(RenderTarget target, Shader shader, VertexBuffer buf, i32 first, i32 vert_count)
+{
+  glBindVertexArray(buf.vao);
+  glDrawArrays(GL_TRIANGLES, first, vert_count);
 }
 
 void draw_cube()

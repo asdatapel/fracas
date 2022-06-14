@@ -122,6 +122,10 @@ struct Vec2B8 {
   bool x, y;
 };
 
+struct Vec2i {
+  uint8_t x, y;
+};
+
 struct Vec4i {
   uint8_t x, y, z, w;
 };

@@ -21,6 +21,7 @@
 #include "net/net.cpp"
 #include "platform_windows.cpp"
 #include "game/game_scripts.cpp"
+#include "debug_ui/debug_ui.hpp"
 
 Editor editor;
 
@@ -58,7 +59,8 @@ bool game_update(const float time_step, InputState *input_state, RenderTarget ma
 {
   if (!init_if_not()) return false;
 
-  editor.update_and_draw(main_target, input_state, memory);
+  Dui::debug_ui_test(main_target, input_state, memory);
+  // editor.update_and_draw(main_target, input_state, memory);
 
   return true;
 }
