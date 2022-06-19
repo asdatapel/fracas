@@ -14,6 +14,7 @@ const f32 TITLEBAR_HEIGHT               = 32;
 const f32 TITLEBAR_BOTTOM_BORDER_HEIGHT = 3.f;
 const f32 WINDOW_BORDER_SIZE            = 2.f;
 const f32 WINDOW_MARGIN_SIZE            = 4.f;
+const f32 SCROLLBAR_WIDTH               = 8.f;
 
 Color d_dark  = {0, 0.13725, 0.27843, 1};
 Color d       = {0, 0.2, 0.4, 1};
@@ -166,15 +167,10 @@ struct Group {
 
     return window_border_rect;
   }
-  Rect get_margin_rect()
+  Rect get_window_rect()
   {
     Rect window_border_rect = get_border_rect();
     return inset_rect(window_border_rect, WINDOW_BORDER_SIZE);
-  }
-  Rect get_content_rect()
-  {
-    Rect margin_rect = get_margin_rect();
-    return inset_rect(margin_rect, WINDOW_MARGIN_SIZE);
   }
 
   i32 get_window_idx(DuiId window_id)
@@ -198,9 +194,50 @@ struct Window {
   DuiId id;
   String title;
 
-  Color color;
+  Group *parent  = nullptr;
+  i64 last_frame = -1;
 
-  Group *parent = nullptr;
+  Vec2f scroll_offset_target = {};
+  Vec2f scroll_offset        = {};
+
+  Rect rect;
+
+  // per frame data
+
+  // total space requested by content last frame. this is whats used to determine free space and
+  // stretch controls to bounds.
+  Vec2f last_frame_minimum_content_span;
+
+  Vec2f current_frame_minimum_content_span;
+
+  Vec2f cursor;
+  f32 cursor_height;
+
+  Rect get_content_rect()
+  {
+    Rect content_rect = inset_rect(rect, WINDOW_MARGIN_SIZE);
+
+    if (last_frame_minimum_content_span.x > content_rect.width) {
+      content_rect.height -= 10;
+    }
+    if (last_frame_minimum_content_span.y > content_rect.height) {
+      content_rect.width -= 10;
+    }
+
+    return content_rect;
+  }
+
+  // stretch + minimum size (causing scroll)
+  // shrink + minimum size (causing scroll) + maximum size
+  // forced size (causing scroll)
+
+  // anything that expands scroll affects last_frame_minimum_content_span
+
+  // actiual remaining space is calculated by max(window_rect, last_frame_minimum_content_span)
+
+  f32 debug_last_frame_height = 0;
+  f32 debug_last_frame_width  = 0;
+  Color color;
 };
 
 }  // namespace Dui
@@ -327,50 +364,6 @@ void free_container(Group *g)
 
 Window *get_window(DuiId id) { return &s.windows.wrapped_get(id); }
 
-// FIXME parent_window and unparent_window do too much. parent should only parent and unparent
-// should only unparent.
-void parent_window(Group *g, DuiId window_id)
-{
-  Window *w = &s.windows.wrapped_get(window_id);
-
-  if (w->parent) {
-    Group *old_g = w->parent;
-    old_g->windows.shift_delete(old_g->get_window_idx(w->id));
-    if (old_g->active_window_idx >= old_g->windows.count) {
-      old_g->active_window_idx--;
-    }
-  }
-
-  w->parent = g;
-
-  g->windows.push_back(window_id);
-  g->active_window_idx = g->windows.count - 1;
-}
-
-Group *unparent_window(DuiId window_id)
-{
-  Window *w    = get_window(window_id);
-  Group *old_g = w->parent;
-
-  if (old_g->windows.count == 1) return old_g;
-
-  Group *g = create_container(nullptr, old_g->rect);
-  parent_window(g, window_id);
-  return g;
-}
-
-Window *create_new_window(DuiId id, String name, Rect rect, WindowOptions options)
-{
-  Window *window = s.windows.emplace_wrapped(id, {});
-  window->id     = id;
-  window->title  = name;
-
-  Group *g = create_container(nullptr, rect);
-  parent_window(g, window->id);
-
-  return window;
-}
-
 void propagate_containers(Group *g, Group *parent = nullptr)
 {
   if (parent) g->parent = parent;
@@ -403,8 +396,59 @@ void propagate_containers(Group *g, Group *parent = nullptr)
     for (i32 i = 0; i < g->windows.count; i++) {
       Window *w = get_window(g->windows[i]);
       w->parent = g;
+      w->rect   = g->get_window_rect();
     }
   }
+}
+
+// FIXME parent_window and unparent_window do too much. parent should only parent and unparent
+// should only unparent.
+void parent_window(Group *g, DuiId window_id)
+{
+  Window *w = &s.windows.wrapped_get(window_id);
+
+  if (w->parent) {
+    Group *old_g = w->parent;
+    old_g->windows.shift_delete(old_g->get_window_idx(w->id));
+    if (old_g->active_window_idx >= old_g->windows.count) {
+      old_g->active_window_idx--;
+    }
+
+    if (old_g->windows.count == 0) {
+      free_container(old_g);
+    }
+  }
+
+  w->parent = g;
+
+  g->windows.push_back(window_id);
+  g->active_window_idx = g->windows.count - 1;
+
+  propagate_containers(g);
+}
+
+Group *unparent_window(DuiId window_id)
+{
+  Window *w    = get_window(window_id);
+  Group *old_g = w->parent;
+
+  if (old_g->windows.count == 1) return old_g;
+
+  Group *g = create_container(nullptr, old_g->rect);
+  parent_window(g, window_id);
+  return g;
+}
+
+Window *create_new_window(DuiId id, String name, Rect rect, WindowOptions options)
+{
+  Window *window = s.windows.emplace_wrapped(id, {});
+  window->id     = id;
+  window->title  = name;
+
+  Group *g = create_container(nullptr, rect);
+  parent_window(g, window->id);
+
+  return window;
 }
 
 // returns true if successful.
@@ -574,6 +618,31 @@ void unsnap_container(Group *g)
 namespace Dui
 {
 
+void start_frame_for_window(Window *w)
+{
+  w->last_frame_minimum_content_span    = w->current_frame_minimum_content_span;
+  w->current_frame_minimum_content_span = {0, 0};
+
+  w->cursor        = {0, 0};
+  w->cursor_height = 0;
+
+  // FYI doing this here can cause the position of the scrollbar to lag behind a moving window. Its
+  // ok though because it will be drawn in the correct position, and you shouldn't be interacting
+  // with a scrollbar while moving a window anyway.
+  Rect content_rect = w->get_content_rect();
+  if (w->last_frame_minimum_content_span.x > content_rect.width) {
+  }
+  if (w->last_frame_minimum_content_span.y > content_rect.height) {
+    w->scroll_offset_target.y += s.input->scrollwheel_count * 100.f;
+  }
+
+  w->scroll_offset_target =
+      clamp(w->scroll_offset_target, -w->last_frame_minimum_content_span + content_rect.span(),
+            {0.f, 0.f});
+
+  w->scroll_offset = (w->scroll_offset + w->scroll_offset_target) / 2.f;
+}
+
 void start_frame_for_leaf(Group *g)
 {
   assert(g->active_window_idx < g->windows.count);
@@ -583,14 +652,16 @@ void start_frame_for_leaf(Group *g)
     DuiId window_id = g->windows[w_i];
     Window *w       = get_window(window_id);
 
+    start_frame_for_window(w);
+
     Rect tab_rect = g->get_tab_margin_rect(g->get_window_idx(window_id));
 
     SUB_ID(tab_handle_id, window_id);
     DuiId tab_handle_hot      = do_hot(tab_handle_id, tab_rect);
     DuiId tab_handle_active   = do_active(tab_handle_id);
     DuiId tab_handle_dragging = do_dragging(tab_handle_id);
-    if (tab_handle_hot) {
-      push_rect({500, 100, 100, 100}, {1, 1, 0, 1});
+    if (tab_handle_active) {
+      g->active_window_idx = w_i;
     }
     if (tab_handle_dragging) {
       g = unparent_window(window_id);
@@ -619,20 +690,6 @@ void start_frame_for_leaf(Group *g)
 
     propagate_containers(root_g);
   }
-
-  // Rect window_margin_rect = get_window_margin_rect(c);
-  // SUB_ID(parent_handle_id, active_window_id);
-  // DuiId parent_handle_hot      = do_hot(parent_handle_id, window_margin_rect);
-  // DuiId parent_handle_active   = do_active(parent_handle_id);
-  // DuiId parent_handle_dragging = do_dragging(parent_handle_id);
-  // if (parent_handle_dragging) {
-  //   unsnap_container(c);
-
-  //   c->rect.x += s.dragging_frame_delta.x;
-  //   c->rect.y += s.dragging_frame_delta.y;
-
-  //   propagate_containers(c);
-  // }
 }
 
 void start_frame_for_container(Group *g)
@@ -787,6 +844,8 @@ void start_frame(InputState *input)
   s.just_started_being_dragging = -1;
   s.just_stopped_being_dragging = -1;
 
+  s.frame++;
+
   clear_draw_list();
 
   for (i32 i = 0; i < s.containers.SIZE; i++) {
@@ -806,13 +865,13 @@ void start_frame(InputState *input)
     Group *g                         = &s.containers[i];
     Rect titlebar_rect               = g->get_titlebar_full_rect();
     Rect titlebar_bottom_border_rect = g->get_titlebar_bottom_border_rect();
-    Rect window_border_rect          = g->get_border_rect();
-    Rect window_margin_rect          = g->get_margin_rect();
+    Rect container_border_rect       = g->get_border_rect();
+    Rect window_rect                 = g->get_window_rect();
 
     push_rect(titlebar_rect, d);
     push_rect(titlebar_bottom_border_rect, d_light);
-    push_rect(window_border_rect, d);
-    push_rect(window_margin_rect, d_dark);
+    push_rect(container_border_rect, d);
+    push_rect(window_rect, d_dark);
 
     Rect titlebar_content_rect = g->get_titlebar_content_rect();
 
@@ -838,9 +897,12 @@ DuiId start_window(String name, Rect initial_rect, WindowOptions options = {})
                                            : create_new_window(id, name, initial_rect, options);
   Group *g  = w->parent;
 
-  s.cw = w;
+  s.cw          = w;
+  w->last_frame = s.frame;
 
-  Rect content_rect = g->get_content_rect();
+  if (g->windows[g->active_window_idx] != id) return id;
+
+  Rect content_rect = w->get_content_rect();
   push_rect(content_rect, w->color);
 
   // Rect titlebar_rect      = g->get_titlebar_margin_rect();
@@ -874,12 +936,72 @@ void set_window_color(Color color)
   }
 }
 
+// TODO allow pushing a temporary drawcall then can be updated later.
+// Useful for grouping controls with a background
+DrawCall *push_temp();
+
+void next_line()
+{
+  Window *w = s.cw;
+
+  w->cursor.y += w->cursor_height;
+  w->cursor.x      = 0;
+  w->cursor_height = 0;
+}
+
+void basic_test_control(Vec2f size, Color color)
+{
+  Window *w = s.cw;
+
+  Rect window_content_rect = w->get_content_rect();
+
+  Vec2f scrolled_cursor = w->cursor + w->scroll_offset;
+
+  Rect rect;
+  rect.x      = window_content_rect.x + scrolled_cursor.x;
+  rect.y      = window_content_rect.y + scrolled_cursor.y;
+  rect.width  = size.x;
+  rect.height = size.y;
+  push_rect(rect, color);
+
+  w->cursor_height = fmaxf(w->cursor_height, size.y);
+  w->cursor.x += size.x;
+
+  w->current_frame_minimum_content_span.x =
+      fmaxf(w->current_frame_minimum_content_span.x, w->cursor.x);
+  w->current_frame_minimum_content_span.y =
+      fmaxf(w->current_frame_minimum_content_span.y, w->cursor.y + w->cursor_height);
+}
+
 void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
 {
   static b8 init = false;
   if (!init) {
     init = true;
     init_draw_list();
+  }
+
+  static b8 paused = false;
+  if (input->key_down_events[(i32)Keys::Q]) {
+    paused = !paused;
+  }
+
+  if (paused) {
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    reupload_vertex_buffer(dl.vb, (float *)dl.verts, dl.vert_count, dl.vert_count * sizeof(Vertex));
+    bind_shader(debug_ui_shader);
+    bind_2i(debug_ui_shader, UniformId::RESOLUTION, target.width, target.height);
+    for (i32 i = 0; i < dl.draw_call_count; i++) {
+      DrawCall call = dl.draw_calls[i];
+      draw_sub(target, debug_ui_shader, dl.vb, call.vert_offset, call.tri_count * 3);
+    }
+    glDisable(GL_BLEND);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+
+    return;
   }
 
   start_frame(input);
@@ -902,6 +1024,16 @@ void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
 
   DuiId w5 = start_window("fifth", {500, 600, 200, 300});
   set_window_color({0.99216, 0.46667, 0.00784, .5});
+  basic_test_control({200, 300}, {1, 1, 1, 1});
+  basic_test_control({150, 100}, {1, 0, 0, 1});
+  basic_test_control({100, 400}, {1, 1, 0, 1});
+  next_line();
+  basic_test_control({200, 600}, {0, 1, 1, 1});
+  next_line();
+  basic_test_control({200, 700}, {1, 0, 1, 1});
+  basic_test_control({200, 300}, {1, 1, 0, 1});
+  next_line();
+  basic_test_control({200, 100}, {0, 0, 1, 1});
   end_window();
 
   DuiId w6 = start_window("sizth", {600, 700, 200, 300});
@@ -964,6 +1096,15 @@ void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
   glDisable(GL_BLEND);
   glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
+
+  std::vector<Group *> groups;
+  for (i32 i = 0; i < s.containers.SIZE; i++) {
+    if (s.containers.exists(i)) {
+      groups.push_back(&s.containers[i]);
+    }
+  }
+  printf("groups: %i\n", groups.size());
+
 }
 }  // namespace Dui
 

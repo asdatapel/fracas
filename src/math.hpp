@@ -143,6 +143,10 @@ inline Vec2f operator-(const Vec2f &lhs, const Vec2f &rhs)
 {
   return {lhs.x - rhs.x, lhs.y - rhs.y};
 }
+inline Vec2f operator-(const Vec2f &v)
+{
+  return {-v.x, -v.y};
+}
 inline void operator+=(Vec2f &lhs, const Vec2f &rhs) { lhs = lhs + rhs; }
 inline void operator-=(Vec2f &lhs, const Vec2f &rhs) { lhs = lhs - rhs; }
 inline Vec2f operator*(const Vec2f &lhs, const Vec2f &rhs)
@@ -155,6 +159,8 @@ inline Vec2f operator/(const Vec2f &lhs, const Vec2f &rhs)
 {
   return {lhs.x / rhs.x, lhs.y / rhs.y};
 }
+inline Vec2f operator/(const Vec2f &lhs, const float &rhs) { return lhs / Vec2f{rhs, rhs}; }
+inline Vec2f operator/(const float &lhs, const Vec2f &rhs) { return rhs / lhs; }
 inline float dot(const Vec2f &lhs, const Vec2f &rhs) { return lhs.x * rhs.x + lhs.y * rhs.y; }
 inline Vec2B8 operator<(const Vec2f &lhs, const Vec2f &rhs)
 {
@@ -169,6 +175,10 @@ Vec2f normalize(Vec2f v)
 {
   float len = sqrt(v.x * v.x + v.y * v.y);
   return {v.x / len, v.y / len};
+}
+Vec2f clamp(Vec2f val, Vec2f min, Vec2f max)
+{
+  return {clamp(val.x, min.x, max.x), clamp(val.y, min.y, max.y)};
 }
 
 struct Vec3f {
@@ -300,6 +310,9 @@ struct Rect {
 
   void set_bottom(float down) { height = down - y; }
   void set_right(float right) { width = right - x; }
+
+  Vec2f xy() { return {x, y}; }
+  Vec2f span() { return {width, height}; }
 
   static Rect from_ends(Vec2f a, Vec2f b)
   {
