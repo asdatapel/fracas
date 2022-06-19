@@ -162,6 +162,9 @@ inline Vec2f operator/(const Vec2f &lhs, const Vec2f &rhs)
 inline Vec2f operator/(const Vec2f &lhs, const float &rhs) { return lhs / Vec2f{rhs, rhs}; }
 inline Vec2f operator/(const float &lhs, const Vec2f &rhs) { return rhs / lhs; }
 inline float dot(const Vec2f &lhs, const Vec2f &rhs) { return lhs.x * rhs.x + lhs.y * rhs.y; }
+Vec2f min(Vec2f a, Vec2f b) { return {fminf(a.x, b.x), fminf(a.y, b.y)}; }
+Vec2f max(Vec2f a, Vec2f b) { return {fmaxf(a.x, b.x), fmaxf(a.y, b.y)}; }
+
 inline Vec2B8 operator<(const Vec2f &lhs, const Vec2f &rhs)
 {
   return {lhs.x < rhs.x, lhs.y < rhs.y};

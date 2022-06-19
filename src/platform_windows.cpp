@@ -263,6 +263,12 @@ void key_input_callback(GLFWwindow *window, int key, int scancode, int action, i
     case GLFW_KEY_F12:
       append_if_press(Keys::F12);
       break;
+    case GLFW_KEY_LEFT_SHIFT:
+      append_if_press(Keys::LSHIFT);
+      break;
+    case GLFW_KEY_RIGHT_SHIFT:
+      append_if_press(Keys::RSHIFT);
+      break;
     case GLFW_KEY_LEFT_CONTROL:
       append_if_press(Keys::LCTRL);
       break;

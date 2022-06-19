@@ -13,6 +13,7 @@
 const f32 TITLEBAR_HEIGHT               = 32;
 const f32 TITLEBAR_BOTTOM_BORDER_HEIGHT = 3.f;
 const f32 WINDOW_BORDER_SIZE            = 2.f;
+const f32 WINDOW_CONTROL_WIDTH          = 20.f;
 const f32 WINDOW_MARGIN_SIZE            = 4.f;
 const f32 SCROLLBAR_WIDTH               = 8.f;
 
@@ -30,6 +31,10 @@ Rect inset_rect(Rect rect, f32 inset)
   rect.width -= inset * 2;
   rect.height -= inset * 2;
   return rect;
+}
+Vec2f clamp_to_rect(Vec2f val, Rect rect)
+{
+  return max(min(val, rect.xy() + rect.span()), Vec2f{0, 0});
 }
 
 #define SUB_ID(name, id) DuiId name = extend_hash(id, #name)
@@ -142,15 +147,21 @@ struct Group {
   {
     Rect titlebar_content_rect = get_titlebar_content_rect();
 
-    f32 UNSELECTED_TAB_WIDTH  = 128.f;
-    f32 tab_gap               = 2.f;
-    f32 unselected_tab_height = titlebar_content_rect.height + WINDOW_MARGIN_SIZE;
+    // shrink left and right sides for window controls
+    Rect tabs_rect;
+    tabs_rect.x      = titlebar_content_rect.x + WINDOW_CONTROL_WIDTH;
+    tabs_rect.y      = titlebar_content_rect.y;
+    tabs_rect.width  = titlebar_content_rect.width - (WINDOW_CONTROL_WIDTH * 2);
+    tabs_rect.height = titlebar_content_rect.height + WINDOW_MARGIN_SIZE;
+
+    f32 UNSELECTED_TAB_WIDTH = 128.f;
+    f32 tab_gap              = 2.f;
 
     Rect rect;
-    rect.x      = titlebar_content_rect.x + (UNSELECTED_TAB_WIDTH + tab_gap) * window_idx;
-    rect.y      = titlebar_content_rect.y;
+    rect.x      = tabs_rect.x + (UNSELECTED_TAB_WIDTH + tab_gap) * window_idx;
+    rect.y      = tabs_rect.y;
     rect.width  = UNSELECTED_TAB_WIDTH;
-    rect.height = unselected_tab_height;
+    rect.height = tabs_rect.height;
 
     return rect;
   }
@@ -249,7 +260,9 @@ struct DuiState {
   StaticPoolAllocator<Group, 1024> containers;
 
   i64 frame = 0;
+
   InputState *input;
+  Vec2f canvas_span;
 
   Window *cw = 0;
 
@@ -309,8 +322,13 @@ b8 do_dragging(DuiId id)
     if ((s.input->mouse_pos - s.start_position_active).len() > drag_start_distance) {
       s.set_dragging(id);
     }
-    s.dragging_total_delta = s.input->mouse_pos - s.start_position_active;
-    s.dragging_frame_delta = s.input->mouse_pos_delta;
+
+    // prevent dragging off screen by clamping mouse_pos
+    Vec2f clamped_mouse_pos    = clamp_to_rect(s.input->mouse_pos, {{0, 0}, s.canvas_span});
+    Vec2f dragging_total_delta = clamped_mouse_pos - s.start_position_active;
+    s.dragging_frame_delta     = dragging_total_delta - s.dragging_total_delta;
+    s.dragging_total_delta     = dragging_total_delta;
+
   } else {
     s.clear_dragging(id);
   }
@@ -631,15 +649,19 @@ void start_frame_for_window(Window *w)
   // with a scrollbar while moving a window anyway.
   Rect content_rect = w->get_content_rect();
   if (w->last_frame_minimum_content_span.x > content_rect.width) {
+    if (s.input->keys[(i32)Keys::LSHIFT]) {
+      w->scroll_offset_target.x += s.input->scrollwheel_count * 100.f;
+    }
   }
   if (w->last_frame_minimum_content_span.y > content_rect.height) {
-    w->scroll_offset_target.y += s.input->scrollwheel_count * 100.f;
+    if (!s.input->keys[(i32)Keys::LSHIFT]) {
+      w->scroll_offset_target.y += s.input->scrollwheel_count * 100.f;
+    }
   }
 
   w->scroll_offset_target =
       clamp(w->scroll_offset_target, -w->last_frame_minimum_content_span + content_rect.span(),
             {0.f, 0.f});
-
   w->scroll_offset = (w->scroll_offset + w->scroll_offset_target) / 2.f;
 }
 
@@ -711,74 +733,110 @@ void start_frame_for_container(Group *g)
     }
 
     // resize handles that extend out of group
-    Rect left_handle_rect;
-    left_handle_rect.x      = g->rect.x - RESIZE_HANDLES_OVERSIZE;
-    left_handle_rect.y      = g->rect.y;
-    left_handle_rect.width  = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
-    left_handle_rect.height = g->rect.height;
-    SUB_ID(left_handle_id, g->id);
-    DuiId left_handle_hot      = do_hot(left_handle_id, left_handle_rect);
-    DuiId left_handle_active   = do_active(left_handle_id);
-    DuiId left_handle_dragging = do_dragging(left_handle_id);
-    if (left_handle_hot || left_handle_dragging) {
-      push_rect(left_handle_rect, {1, 1, 1, 1});
-    }
-    if (left_handle_dragging) {
-      g->rect.x += s.dragging_frame_delta.x;
-      g->rect.width -= s.dragging_frame_delta.x;
-      propagate_containers(g);
+    {
+      Rect left_handle_rect;
+      left_handle_rect.x      = g->rect.x - RESIZE_HANDLES_OVERSIZE;
+      left_handle_rect.y      = g->rect.y;
+      left_handle_rect.width  = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
+      left_handle_rect.height = g->rect.height;
+      SUB_ID(left_handle_id, g->id);
+      DuiId left_handle_hot      = do_hot(left_handle_id, left_handle_rect);
+      DuiId left_handle_active   = do_active(left_handle_id);
+      DuiId left_handle_dragging = do_dragging(left_handle_id);
+      if (left_handle_hot || left_handle_dragging) {
+        push_rect(left_handle_rect, {1, 1, 1, 1});
+      }
+      if (left_handle_dragging) {
+        g->rect.x += s.dragging_frame_delta.x;
+        g->rect.width -= s.dragging_frame_delta.x;
+        propagate_containers(g);
+      }
+
+      Rect right_handle_rect;
+      right_handle_rect.x     = g->rect.x + g->rect.width - WINDOW_BORDER_SIZE - WINDOW_MARGIN_SIZE;
+      right_handle_rect.y     = g->rect.y;
+      right_handle_rect.width = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
+      right_handle_rect.height = g->rect.height;
+      SUB_ID(right_handle_id, g->id);
+      DuiId right_handle_hot      = do_hot(right_handle_id, right_handle_rect);
+      DuiId right_handle_active   = do_active(right_handle_id);
+      DuiId right_handle_dragging = do_dragging(right_handle_id);
+      if (right_handle_hot || right_handle_dragging) {
+        push_rect(right_handle_rect, {1, 1, 1, 1});
+      }
+      if (right_handle_dragging) {
+        g->rect.width += s.dragging_frame_delta.x;
+        propagate_containers(g);
+      }
+
+      Rect top_handle_rect;
+      top_handle_rect.x      = g->rect.x;
+      top_handle_rect.y      = g->rect.y - RESIZE_HANDLES_OVERSIZE;
+      top_handle_rect.width  = g->rect.width;
+      top_handle_rect.height = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
+      SUB_ID(top_handle_id, g->id);
+      DuiId top_handle_hot      = do_hot(top_handle_id, top_handle_rect);
+      DuiId top_handle_active   = do_active(top_handle_id);
+      DuiId top_handle_dragging = do_dragging(top_handle_id);
+      if (top_handle_hot || top_handle_dragging) {
+        push_rect(top_handle_rect, {1, 1, 1, 1});
+      }
+      if (top_handle_dragging) {
+        g->rect.y += s.dragging_frame_delta.y;
+        g->rect.height -= s.dragging_frame_delta.y;
+        propagate_containers(g);
+      }
+
+      Rect bottom_handle_rect;
+      bottom_handle_rect.x = g->rect.x;
+      bottom_handle_rect.y = g->rect.y + g->rect.height - WINDOW_BORDER_SIZE - WINDOW_MARGIN_SIZE;
+      bottom_handle_rect.width  = g->rect.width;
+      bottom_handle_rect.height = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
+      SUB_ID(bottom_handle_id, g->id);
+      DuiId bottom_handle_hot      = do_hot(bottom_handle_id, bottom_handle_rect);
+      DuiId bottom_handle_active   = do_active(bottom_handle_id);
+      DuiId bottom_handle_dragging = do_dragging(bottom_handle_id);
+      if (bottom_handle_hot || bottom_handle_dragging) {
+        push_rect(bottom_handle_rect, {1, 1, 1, 1});
+      }
+      if (bottom_handle_dragging) {
+        g->rect.height += s.dragging_frame_delta.y;
+        propagate_containers(g);
+      }
     }
 
-    Rect right_handle_rect;
-    right_handle_rect.x      = g->rect.x + g->rect.width - WINDOW_BORDER_SIZE - WINDOW_MARGIN_SIZE;
-    right_handle_rect.y      = g->rect.y;
-    right_handle_rect.width  = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
-    right_handle_rect.height = g->rect.height;
-    SUB_ID(right_handle_id, g->id);
-    DuiId right_handle_hot      = do_hot(right_handle_id, right_handle_rect);
-    DuiId right_handle_active   = do_active(right_handle_id);
-    DuiId right_handle_dragging = do_dragging(right_handle_id);
-    if (right_handle_hot || right_handle_dragging) {
-      push_rect(right_handle_rect, {1, 1, 1, 1});
-    }
-    if (right_handle_dragging) {
-      g->rect.width += s.dragging_frame_delta.x;
-      propagate_containers(g);
-    }
+    // either the right or left window control should be fully in the canvas
+    {
+      Rect titlebar_content_rect = g->get_titlebar_content_rect();
 
-    Rect top_handle_rect;
-    top_handle_rect.x      = g->rect.x;
-    top_handle_rect.y      = g->rect.y - RESIZE_HANDLES_OVERSIZE;
-    top_handle_rect.width  = g->rect.width;
-    top_handle_rect.height = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
-    SUB_ID(top_handle_id, g->id);
-    DuiId top_handle_hot      = do_hot(top_handle_id, top_handle_rect);
-    DuiId top_handle_active   = do_active(top_handle_id);
-    DuiId top_handle_dragging = do_dragging(top_handle_id);
-    if (top_handle_hot || top_handle_dragging) {
-      push_rect(top_handle_rect, {1, 1, 1, 1});
-    }
-    if (top_handle_dragging) {
-      g->rect.y += s.dragging_frame_delta.y;
-      g->rect.height -= s.dragging_frame_delta.y;
-      propagate_containers(g);
-    }
+      Rect left_window_control  = titlebar_content_rect;
+      left_window_control.width = WINDOW_CONTROL_WIDTH;
 
-    Rect bottom_handle_rect;
-    bottom_handle_rect.x     = g->rect.x;
-    bottom_handle_rect.y     = g->rect.y + g->rect.height - WINDOW_BORDER_SIZE - WINDOW_MARGIN_SIZE;
-    bottom_handle_rect.width = g->rect.width;
-    bottom_handle_rect.height = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
-    SUB_ID(bottom_handle_id, g->id);
-    DuiId bottom_handle_hot      = do_hot(bottom_handle_id, bottom_handle_rect);
-    DuiId bottom_handle_active   = do_active(bottom_handle_id);
-    DuiId bottom_handle_dragging = do_dragging(bottom_handle_id);
-    if (bottom_handle_hot || bottom_handle_dragging) {
-      push_rect(bottom_handle_rect, {1, 1, 1, 1});
-    }
-    if (bottom_handle_dragging) {
-      g->rect.height += s.dragging_frame_delta.y;
-      propagate_containers(g);
+      Rect right_window_control = titlebar_content_rect;
+      right_window_control.x =
+          titlebar_content_rect.x + titlebar_content_rect.width - WINDOW_CONTROL_WIDTH;
+      right_window_control.width = WINDOW_CONTROL_WIDTH;
+
+      b8 need_to_propagate = false;
+      if (left_window_control.x + left_window_control.width > s.canvas_span.x) {
+        g->rect.x -= (left_window_control.x + left_window_control.width) - s.canvas_span.x;
+        need_to_propagate = true; 
+      }
+      if (left_window_control.y + left_window_control.height > s.canvas_span.y) {
+        g->rect.y -= (left_window_control.y + left_window_control.height) - s.canvas_span.y;
+        need_to_propagate = true; 
+      }
+      if (right_window_control.x < 0) {
+        g->rect.x -= right_window_control.x;
+        need_to_propagate = true;
+      }
+      if (right_window_control.y < 0) {
+        g->rect.y -= right_window_control.y;
+        need_to_propagate = true;
+      }
+      if (need_to_propagate) {
+        propagate_containers(g);
+      }
     }
   }
 
@@ -834,17 +892,19 @@ void start_frame_for_container(Group *g)
   }
 }
 
-void start_frame(InputState *input)
+void start_frame(InputState *input, RenderTarget target)
 {
-  s.input                       = input;
+  s.input       = input;
+  s.canvas_span = {(f32)target.width, (f32)target.height};
+
+  s.frame++;
+
   s.just_started_being_hot      = -1;
   s.just_stopped_being_hot      = -1;
   s.just_started_being_active   = -1;
   s.just_stopped_being_active   = -1;
   s.just_started_being_dragging = -1;
   s.just_stopped_being_dragging = -1;
-
-  s.frame++;
 
   clear_draw_list();
 
@@ -1004,7 +1064,7 @@ void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
     return;
   }
 
-  start_frame(input);
+  start_frame(input, target);
 
   DuiId w1 = start_window("first", {100, 200, 1500, 900});
   set_window_color({0, 0.13725, 0.27843, 1});
@@ -1104,7 +1164,6 @@ void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
     }
   }
   printf("groups: %i\n", groups.size());
-
 }
 }  // namespace Dui
 

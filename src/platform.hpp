@@ -58,6 +58,8 @@ enum struct Keys {
   F10,
   F11,
   F12,
+  LSHIFT,
+  RSHIFT,
   LCTRL,
   RCTRL,
   LALT,
