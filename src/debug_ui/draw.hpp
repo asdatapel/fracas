@@ -81,4 +81,8 @@ void push_rect(Rect rect, Color color)
   push_draw_call(2);
 }
 
+// TODO allow pushing a temporary drawcall then can be updated later.
+// Useful for grouping controls with a background
+DrawCall *push_temp();
+
 }  // namespace Dui

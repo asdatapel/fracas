@@ -257,7 +257,7 @@ namespace Dui
 {
 struct DuiState {
   StaticPoolAllocator<Window, 1024> windows;
-  StaticPoolAllocator<Group, 1024> containers;
+  StaticPoolAllocator<Group, 1024> groups;
 
   i64 frame = 0;
 
@@ -363,9 +363,9 @@ b8 do_dragging_but_only_start_if(DuiId id, b8 condition)
 namespace Dui
 {
 
-Group *create_container(Group *parent, Rect rect)
+Group *create_group(Group *parent, Rect rect)
 {
-  Group *g  = s.containers.push_back({});
+  Group *g  = s.groups.push_back({});
   g->id     = rand();
   g->parent = parent;
   g->rect   = rect;
@@ -373,16 +373,16 @@ Group *create_container(Group *parent, Rect rect)
   return g;
 }
 
-void free_container(Group *g)
+void free_group(Group *g)
 {
   assert(g->windows.count == 0 && g->splits.count == 0);
-  i64 index = s.containers.index_of(g);
-  s.containers.remove(index);
+  i64 index = s.groups.index_of(g);
+  s.groups.remove(index);
 }
 
 Window *get_window(DuiId id) { return &s.windows.wrapped_get(id); }
 
-void propagate_containers(Group *g, Group *parent = nullptr)
+void propagate_groups(Group *g, Group *parent = nullptr)
 {
   if (parent) g->parent = parent;
 
@@ -408,7 +408,7 @@ void propagate_containers(Group *g, Group *parent = nullptr)
         x += width;
       }
 
-      propagate_containers(child, g);
+      propagate_groups(child, g);
     }
   } else {
     for (i32 i = 0; i < g->windows.count; i++) {
@@ -433,7 +433,7 @@ void parent_window(Group *g, DuiId window_id)
     }
 
     if (old_g->windows.count == 0) {
-      free_container(old_g);
+      free_group(old_g);
     }
   }
 
@@ -442,7 +442,7 @@ void parent_window(Group *g, DuiId window_id)
   g->windows.push_back(window_id);
   g->active_window_idx = g->windows.count - 1;
 
-  propagate_containers(g);
+  propagate_groups(g);
 }
 
 Group *unparent_window(DuiId window_id)
@@ -452,7 +452,7 @@ Group *unparent_window(DuiId window_id)
 
   if (old_g->windows.count == 1) return old_g;
 
-  Group *g = create_container(nullptr, old_g->rect);
+  Group *g = create_group(nullptr, old_g->rect);
   parent_window(g, window_id);
   return g;
 }
@@ -463,24 +463,24 @@ Window *create_new_window(DuiId id, String name, Rect rect, WindowOptions option
   window->id     = id;
   window->title  = name;
 
-  Group *g = create_container(nullptr, rect);
+  Group *g = create_group(nullptr, rect);
   parent_window(g, window->id);
 
   return window;
 }
 
 // returns true if successful.
-b8 snap_container(Group *g, Group *target, i32 axis, b8 dir, Group *sibling = nullptr)
+b8 snap_group(Group *g, Group *target, i32 axis, b8 dir, Group *sibling = nullptr)
 {
   // target must either be a leaf node or be split on the same axis as the sibling
   if (target->windows.count == 0 && sibling && target->split_axis != axis) return false;
 
   // try adding it to the parent first
-  if (target->parent && snap_container(g, target->parent, axis, dir, target)) return true;
+  if (target->parent && snap_group(g, target->parent, axis, dir, target)) return true;
 
   if (target->windows.count > 0) {  // leaf
     // this is where the original leaf window will move
-    Group *new_g             = create_container(target, target->rect);
+    Group *new_g             = create_group(target, target->rect);
     new_g->windows           = target->windows;
     new_g->active_window_idx = target->active_window_idx;
 
@@ -501,7 +501,7 @@ b8 snap_container(Group *g, Group *target, i32 axis, b8 dir, Group *sibling = nu
     assert(!sibling);
 
     // move original children to a new group
-    Group *new_g      = create_container(target, target->rect);
+    Group *new_g      = create_group(target, target->rect);
     new_g->split_axis = target->split_axis;
     new_g->splits     = target->splits;
     for (i32 i = 0; i < new_g->splits.count; i++) {
@@ -554,12 +554,12 @@ b8 snap_container(Group *g, Group *target, i32 axis, b8 dir, Group *sibling = nu
     g->parent = target;
   }
 
-  propagate_containers(target);
+  propagate_groups(target);
 
   return true;
 }
 
-void unsnap_container(Group *g)
+void unsnap_group(Group *g)
 {
   if (!g->parent) return;
 
@@ -593,7 +593,7 @@ void unsnap_container(Group *g)
     other_child->splits.clear();
     other_child->windows.clear();
     other_child->split_axis = -1;
-    free_container(other_child);
+    free_group(other_child);
 
     // transfer again if axes match up
     Group *double_parent = parent_g->parent;
@@ -620,13 +620,13 @@ void unsnap_container(Group *g)
       parent_g->splits.clear();
       parent_g->windows.clear();
       parent_g->split_axis = -1;
-      free_container(parent_g);
+      free_group(parent_g);
 
       parent_g = double_parent;
     }
   }
 
-  propagate_containers(parent_g);
+  propagate_groups(parent_g);
 
   g->parent = nullptr;
 }
@@ -687,12 +687,12 @@ void start_frame_for_leaf(Group *g)
     }
     if (tab_handle_dragging) {
       g = unparent_window(window_id);
-      unsnap_container(g);
+      unsnap_group(g);
 
       g->rect.x += s.dragging_frame_delta.x;
       g->rect.y += s.dragging_frame_delta.y;
 
-      propagate_containers(g);
+      propagate_groups(g);
     }
   }
 
@@ -710,11 +710,11 @@ void start_frame_for_leaf(Group *g)
     root_g->rect.x += s.dragging_frame_delta.x;
     root_g->rect.y += s.dragging_frame_delta.y;
 
-    propagate_containers(root_g);
+    propagate_groups(root_g);
   }
 }
 
-void start_frame_for_container(Group *g)
+void start_frame_for_group(Group *g)
 {
   const f32 RESIZE_HANDLES_OVERSIZE = 2.f;
 
@@ -728,7 +728,7 @@ void start_frame_for_container(Group *g)
       if (root_controller_control_dragging) {
         g->rect.x += s.dragging_frame_delta.x;
         g->rect.y += s.dragging_frame_delta.y;
-        propagate_containers(g);
+        propagate_groups(g);
       }
     }
 
@@ -749,7 +749,7 @@ void start_frame_for_container(Group *g)
       if (left_handle_dragging) {
         g->rect.x += s.dragging_frame_delta.x;
         g->rect.width -= s.dragging_frame_delta.x;
-        propagate_containers(g);
+        propagate_groups(g);
       }
 
       Rect right_handle_rect;
@@ -766,7 +766,7 @@ void start_frame_for_container(Group *g)
       }
       if (right_handle_dragging) {
         g->rect.width += s.dragging_frame_delta.x;
-        propagate_containers(g);
+        propagate_groups(g);
       }
 
       Rect top_handle_rect;
@@ -784,7 +784,7 @@ void start_frame_for_container(Group *g)
       if (top_handle_dragging) {
         g->rect.y += s.dragging_frame_delta.y;
         g->rect.height -= s.dragging_frame_delta.y;
-        propagate_containers(g);
+        propagate_groups(g);
       }
 
       Rect bottom_handle_rect;
@@ -801,7 +801,7 @@ void start_frame_for_container(Group *g)
       }
       if (bottom_handle_dragging) {
         g->rect.height += s.dragging_frame_delta.y;
-        propagate_containers(g);
+        propagate_groups(g);
       }
     }
 
@@ -835,7 +835,7 @@ void start_frame_for_container(Group *g)
         need_to_propagate = true;
       }
       if (need_to_propagate) {
-        propagate_containers(g);
+        propagate_groups(g);
       }
     }
   }
@@ -863,7 +863,7 @@ void start_frame_for_container(Group *g)
         f32 move_pct = s.dragging_frame_delta.y / g->rect.height;
         g->splits[i - 1].div_pct += move_pct;
         g->splits[i].div_pct -= move_pct;
-        propagate_containers(g);
+        propagate_groups(g);
       }
     } else if (g->split_axis == 1) {
       Rect split_move_handle;
@@ -882,13 +882,13 @@ void start_frame_for_container(Group *g)
         f32 move_pct = s.dragging_frame_delta.x / g->rect.width;
         g->splits[i - 1].div_pct += move_pct;
         g->splits[i].div_pct -= move_pct;
-        propagate_containers(g);
+        propagate_groups(g);
       }
     }
   }
 
   for (i32 i = 0; i < g->splits.count; i++) {
-    start_frame_for_container(g->splits[i].child);
+    start_frame_for_group(g->splits[i].child);
   }
 }
 
@@ -908,29 +908,29 @@ void start_frame(InputState *input, RenderTarget target)
 
   clear_draw_list();
 
-  for (i32 i = 0; i < s.containers.SIZE; i++) {
-    if (!s.containers.exists(i)) continue;
-    if (s.containers[i].parent) continue;
+  for (i32 i = 0; i < s.groups.SIZE; i++) {
+    if (!s.groups.exists(i)) continue;
+    if (s.groups[i].parent) continue;
 
-    Group *g = &s.containers[i];
-    start_frame_for_container(g);
+    Group *g = &s.groups[i];
+    start_frame_for_group(g);
   }
 
   // draw
 
-  for (i32 i = 0; i < s.containers.SIZE; i++) {
-    if (!s.containers.exists(i)) continue;
-    if (s.containers[i].windows.count == 0) continue;
+  for (i32 i = 0; i < s.groups.SIZE; i++) {
+    if (!s.groups.exists(i)) continue;
+    if (s.groups[i].windows.count == 0) continue;
 
-    Group *g                         = &s.containers[i];
+    Group *g                         = &s.groups[i];
     Rect titlebar_rect               = g->get_titlebar_full_rect();
     Rect titlebar_bottom_border_rect = g->get_titlebar_bottom_border_rect();
-    Rect container_border_rect       = g->get_border_rect();
+    Rect group_border_rect       = g->get_border_rect();
     Rect window_rect                 = g->get_window_rect();
 
     push_rect(titlebar_rect, d);
     push_rect(titlebar_bottom_border_rect, d_light);
-    push_rect(container_border_rect, d);
+    push_rect(group_border_rect, d);
     push_rect(window_rect, d_dark);
 
     Rect titlebar_content_rect = g->get_titlebar_content_rect();
@@ -995,10 +995,6 @@ void set_window_color(Color color)
     s.cw->color = color;
   }
 }
-
-// TODO allow pushing a temporary drawcall then can be updated later.
-// Useful for grouping controls with a background
-DrawCall *push_temp();
 
 void next_line()
 {
@@ -1115,29 +1111,29 @@ void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
   static i32 count = 0;
   if (input->key_down_events[(i32)Keys::SPACE]) {
     if (count == 0) {
-      snap_container(p(w2), p(w1), 1, true);
+      snap_group(p(w2), p(w1), 1, true);
     }
 
     if (count == 1) {
-      snap_container(p(w3), p(w1), 0, false);
+      snap_group(p(w3), p(w1), 0, false);
     }
 
     if (count == 2) {
       root_2 = p(w2);
-      snap_container(p(w4), p(w2), 0, false);
+      snap_group(p(w4), p(w2), 0, false);
     }
 
     if (count == 3) {
-      snap_container(p(w5), root, 0, true);
+      snap_group(p(w5), root, 0, true);
     }
 
     if (count == 4) {
-      snap_container(p(w6), p(w4), 1, true);
+      snap_group(p(w6), p(w4), 1, true);
     }
 
     if (count == 5) {
       parent_window(p(w1), w7);
-      // snap_container(p(w7), root_2, 0, true);
+      // snap_group(p(w7), root_2, 0, true);
     }
 
     count++;
@@ -1156,14 +1152,6 @@ void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
   glDisable(GL_BLEND);
   glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
-
-  std::vector<Group *> groups;
-  for (i32 i = 0; i < s.containers.SIZE; i++) {
-    if (s.containers.exists(i)) {
-      groups.push_back(&s.containers[i]);
-    }
-  }
-  printf("groups: %i\n", groups.size());
 }
 }  // namespace Dui
 
