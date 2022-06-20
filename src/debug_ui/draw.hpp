@@ -28,57 +28,58 @@ struct DrawList {
   Component vertex_components[3];
 };
 
-DrawList dl;
+DrawList main_dl;
+DrawList forground_dl;
 
-void init_draw_list()
+void init_draw_list(DrawList *dl)
 {
-  dl.verts      = (Vertex *)malloc(sizeof(Vertex) * 1024 * 1024);
-  dl.draw_calls = (DrawCall *)malloc(sizeof(DrawCall) * 1024 * 1024);
+  dl->verts      = (Vertex *)malloc(sizeof(Vertex) * 1024 * 1024);
+  dl->draw_calls = (DrawCall *)malloc(sizeof(DrawCall) * 1024 * 1024);
 
-  dl.vertex_components[0].offset = 0;
-  dl.vertex_components[0].size = 2;
-  dl.vertex_components[0].stride = 8;
-  dl.vertex_components[1].offset = 2;
-  dl.vertex_components[1].size = 2;
-  dl.vertex_components[1].stride = 8;
-  dl.vertex_components[2].offset = 4;
-  dl.vertex_components[2].size = 4;
-  dl.vertex_components[2].stride = 8;
-  dl.vb = create_vertex_buffer();
-  enable_vertex_componenets(dl.vb, dl.vertex_components, 3);
+  dl->vertex_components[0].offset = 0;
+  dl->vertex_components[0].size = 2;
+  dl->vertex_components[0].stride = 8;
+  dl->vertex_components[1].offset = 2;
+  dl->vertex_components[1].size = 2;
+  dl->vertex_components[1].stride = 8;
+  dl->vertex_components[2].offset = 4;
+  dl->vertex_components[2].size = 4;
+  dl->vertex_components[2].stride = 8;
+  dl->vb = create_vertex_buffer();
+  enable_vertex_componenets(dl->vb, dl->vertex_components, 3);
 
 }
 
-void clear_draw_list()
+void clear_draw_list(DrawList *dl)
 {
-  dl.vert_count      = 0;
-  dl.draw_call_count = 0;
+  dl->vert_count      = 0;
+  dl->draw_call_count = 0;
 }
 
-void push_vert(Vec2f pos, Vec2f uv, Color color) { dl.verts[dl.vert_count++] = {pos, uv, color}; }
+void push_vert(DrawList *dl, Vec2f pos, Vec2f uv, Color color) { dl->verts[dl->vert_count++] = {pos, uv, color}; }
 
-void push_draw_call(i32 tri_count)
+void push_draw_call(DrawList *dl, i32 tri_count)
 {
-  if (dl.draw_call_count == 0) {
-    dl.draw_calls[0] = {0, tri_count};
-    dl.draw_call_count++;
+  if (dl->draw_call_count == 0) {
+    dl->draw_calls[0] = {0, tri_count};
+    dl->draw_call_count++;
     return;
   }
 
-  dl.draw_calls[0].tri_count += tri_count;
+  dl->draw_calls[0].tri_count += tri_count;
 }
 
-void push_rect(Rect rect, Color color)
+void push_rect(DrawList *dl, Rect rect, Color color)
 {
-  push_vert({rect.x, rect.y}, {}, color);
-  push_vert({rect.x + rect.width, rect.y}, {}, color);
-  push_vert({rect.x + rect.width, rect.y + rect.height}, {}, color);
+  push_vert(dl, {rect.x, rect.y}, {}, color);
+  push_vert(dl, {rect.x + rect.width, rect.y}, {}, color);
+  push_vert(dl, {rect.x + rect.width, rect.y + rect.height}, {}, color);
 
-  push_vert({rect.x, rect.y}, {}, color);
-  push_vert({rect.x + rect.width, rect.y + rect.height}, {}, color);
-  push_vert({rect.x, rect.y + rect.height}, {}, color);
+  push_vert(dl, {rect.x, rect.y}, {}, color);
+  push_vert(dl, {rect.x + rect.width, rect.y + rect.height}, {}, color);
+  push_vert(dl, {rect.x, rect.y + rect.height}, {}, color);
 
-  push_draw_call(2);
+  push_draw_call(dl, 2);
 }
 
 // TODO allow pushing a temporary drawcall then can be updated later.

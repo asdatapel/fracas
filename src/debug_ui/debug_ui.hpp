@@ -39,28 +39,30 @@ Vec2f clamp_to_rect(Vec2f val, Rect rect)
 
 #define SUB_ID(name, id) DuiId name = extend_hash(id, #name)
 
-#define INTERACTION_STATE(var)                   \
-  DuiId var                      = -1;           \
-  DuiId just_started_being_##var = -1;           \
-  DuiId just_stopped_being_##var = -1;           \
-  DuiId was_last_control_##var   = -1;           \
-  Vec2f start_position_##var     = {};           \
-                                                 \
-  b8 is_##var(DuiId id) { return var == id; }    \
-  void set_##var(DuiId id)                       \
-  {                                              \
-    just_stopped_being_##var = var;              \
-                                                 \
-    var                      = id;               \
-    just_started_being_##var = id;               \
-    start_position_##var     = input->mouse_pos; \
-  }                                              \
-  void clear_##var(DuiId id)                     \
-  {                                              \
-    if (var == id) {                             \
-      var                    = 0;                \
-      just_stopped_being_hot = id;               \
-    }                                            \
+#define INTERACTION_STATE(var)                                                  \
+  DuiId var                      = -1;                                          \
+  DuiId just_started_being_##var = -1;                                          \
+  DuiId just_stopped_being_##var = -1;                                          \
+  DuiId was_last_control_##var   = -1;                                          \
+  Vec2f start_position_##var     = {};                                          \
+                                                                                \
+  b8 is_##var(DuiId id) { return var == id || just_stopped_being_##var == id; } \
+                                                                                \
+  void set_##var(DuiId id)                                                      \
+  {                                                                             \
+    if (var != id) {                                                            \
+      just_started_being_##var = id;                                            \
+      start_position_##var     = input->mouse_pos;                              \
+    }                                                                           \
+                                                                                \
+    var = id;                                                                   \
+  }                                                                             \
+  void clear_##var(DuiId id)                                                    \
+  {                                                                             \
+    if (var == id) {                                                            \
+      var                      = 0;                                             \
+      just_stopped_being_##var = id;                                            \
+    }                                                                           \
   }
 
 typedef i64 DuiId;
@@ -110,6 +112,8 @@ struct Group {
 
   StaticArray<DuiId, 32> windows;
   i32 active_window_idx = -1;
+
+  b8 is_leaf() { return windows.count > 0; }
 
   Rect get_titlebar_full_rect()
   {
@@ -164,6 +168,14 @@ struct Group {
     rect.height = tabs_rect.height;
 
     return rect;
+  }
+  i32 get_tab_at_pos(Vec2f pos)
+  {
+    for (i32 i = 0; i < windows.count; i++) {
+      Rect tab_rect = get_tab_margin_rect(i);
+      if (pos.x >= tab_rect.x && pos.x < tab_rect.x + tab_rect.width) return i;
+    }
+    return 0;
   }
 
   Rect get_border_rect()
@@ -382,11 +394,31 @@ void free_group(Group *g)
 
 Window *get_window(DuiId id) { return &s.windows.wrapped_get(id); }
 
+Group *get_leaf_group_at_pos(Vec2f pos)
+{
+  for (i32 i = 0; i < s.groups.SIZE; i++) {
+    if (!s.groups.exists(i) || !s.groups[i].is_leaf()) continue;
+
+    if (in_rect(pos, s.groups[i].rect)) {
+      return &s.groups[i];
+    }
+  }
+
+  return nullptr;
+}
+
+b8 contained_in(Group *g, Group *in)
+{
+  if (g == in) return true;
+  if (g->parent == nullptr) return false;
+  return contained_in(g->parent, in);
+}
+
 void propagate_groups(Group *g, Group *parent = nullptr)
 {
   if (parent) g->parent = parent;
 
-  if (g->windows.count == 0) {
+  if (!g->is_leaf()) {
     f32 x = g->rect.x;
     f32 y = g->rect.y;
 
@@ -473,12 +505,12 @@ Window *create_new_window(DuiId id, String name, Rect rect, WindowOptions option
 b8 snap_group(Group *g, Group *target, i32 axis, b8 dir, Group *sibling = nullptr)
 {
   // target must either be a leaf node or be split on the same axis as the sibling
-  if (target->windows.count == 0 && sibling && target->split_axis != axis) return false;
+  if (!target->is_leaf() && sibling && target->split_axis != axis) return false;
 
   // try adding it to the parent first
   if (target->parent && snap_group(g, target->parent, axis, dir, target)) return true;
 
-  if (target->windows.count > 0) {  // leaf
+  if (target->is_leaf()) {
     // this is where the original leaf window will move
     Group *new_g             = create_group(target, target->rect);
     new_g->windows           = target->windows;
@@ -521,7 +553,7 @@ b8 snap_group(Group *g, Group *target, i32 axis, b8 dir, Group *sibling = nullpt
     target->splits.insert(dir ? 1 : 0, new_split);
 
     target->split_axis = axis;
-  } else if (sibling) {  // already split, same axis, at the ends
+  } else if (sibling) {  // already split, same axis, in the middle
     i32 sibling_idx = -1;
     for (i32 i = 0; i < target->splits.count; i++) {
       if (target->splits[i].child == sibling) {
@@ -540,7 +572,7 @@ b8 snap_group(Group *g, Group *target, i32 axis, b8 dir, Group *sibling = nullpt
     new_split.div_pct = half_size;
     target->splits.insert(dir ? sibling_idx + 1 : sibling_idx, new_split);
     g->parent = target;
-  } else {  // already split, same axis, in the middle
+  } else {  // already split, same axis, at the ends
     f32 new_split_pct = 1.f / (target->splits.count + 1);
 
     for (i32 i = 0; i < target->splits.count; i++) {
@@ -631,6 +663,38 @@ void unsnap_group(Group *g)
   g->parent = nullptr;
 }
 
+void combine_leaf_groups(Group *target, Group *src)
+{
+  assert(target->is_leaf());
+  assert(src->is_leaf());
+
+  while (src->windows.count > 0) {
+    parent_window(target, src->windows[0]);
+  }
+}
+
+// input group might get destroyed, so returns the new one
+Group *handle_dragging_group(Group *g, DuiId id)
+{
+  Group *target_group = get_leaf_group_at_pos(s.input->mouse_pos);
+
+  if (g->is_leaf() && target_group && !contained_in(target_group, g) &&
+      in_rect(s.input->mouse_pos, target_group->get_titlebar_content_rect())) {
+    push_rect(&forground_dl, {10, 10, 20, 20}, {1, 1, 1, 1});
+    if (s.just_stopped_being_dragging == id) {
+      combine_leaf_groups(target_group, g);
+      g = target_group;
+    }
+  }
+
+  g->rect.x += s.dragging_frame_delta.x;
+  g->rect.y += s.dragging_frame_delta.y;
+
+  propagate_groups(g);
+
+  return g;
+}
+
 }  // namespace Dui
 
 namespace Dui
@@ -676,7 +740,8 @@ void start_frame_for_leaf(Group *g)
 
     start_frame_for_window(w);
 
-    Rect tab_rect = g->get_tab_margin_rect(g->get_window_idx(window_id));
+    i32 window_idx = g->get_window_idx(window_id);
+    Rect tab_rect  = g->get_tab_margin_rect(window_idx);
 
     SUB_ID(tab_handle_id, window_id);
     DuiId tab_handle_hot      = do_hot(tab_handle_id, tab_rect);
@@ -686,13 +751,17 @@ void start_frame_for_leaf(Group *g)
       g->active_window_idx = w_i;
     }
     if (tab_handle_dragging) {
-      g = unparent_window(window_id);
-      unsnap_group(g);
-
-      g->rect.x += s.dragging_frame_delta.x;
-      g->rect.y += s.dragging_frame_delta.y;
-
-      propagate_groups(g);
+      if (g->windows.count == 1 || !in_rect(s.input->mouse_pos, g->get_titlebar_content_rect())) {
+        g = unparent_window(window_id);
+        unsnap_group(g);
+        g = handle_dragging_group(g, tab_handle_id);
+      } else {
+        i32 target_tab_idx = g->get_tab_at_pos(s.input->mouse_pos);
+        DuiId tmp          = g->windows[target_tab_idx];
+        g->windows.shift_delete(window_idx);
+        g->windows.insert(target_tab_idx, w->id);
+        g->active_window_idx = target_tab_idx;
+      }
     }
   }
 
@@ -702,15 +771,16 @@ void start_frame_for_leaf(Group *g)
   DuiId root_handle_active   = do_active(root_handle_id);
   DuiId root_handle_dragging = do_dragging(root_handle_id);
   if (root_handle_dragging) {
-    Group *root_g = g;
-    while (root_g->parent) {
-      root_g = root_g->parent;
+    if (s.input->keys[(i32)Keys::LCTRL]) {
+      unsnap_group(g);
+      g = handle_dragging_group(g, root_handle_id);
+    } else {
+      Group *root_g = g;
+      while (root_g->parent) {
+        root_g = root_g->parent;
+      }
+      root_g = handle_dragging_group(root_g, root_handle_id);
     }
-
-    root_g->rect.x += s.dragging_frame_delta.x;
-    root_g->rect.y += s.dragging_frame_delta.y;
-
-    propagate_groups(root_g);
   }
 }
 
@@ -720,7 +790,7 @@ void start_frame_for_group(Group *g)
 
   if (!g->parent) {
     // easy keyboard-based window manipulation
-    if (s.input->keys[(i32)Keys::LCTRL]) {
+    if (s.input->keys[(i32)Keys::LALT]) {
       SUB_ID(root_controller_control_id, g->id);
       DuiId root_controller_control_hot      = do_hot(root_controller_control_id, g->rect);
       DuiId root_controller_control_active   = do_active(root_controller_control_id);
@@ -744,7 +814,7 @@ void start_frame_for_group(Group *g)
       DuiId left_handle_active   = do_active(left_handle_id);
       DuiId left_handle_dragging = do_dragging(left_handle_id);
       if (left_handle_hot || left_handle_dragging) {
-        push_rect(left_handle_rect, {1, 1, 1, 1});
+        push_rect(&forground_dl, left_handle_rect, {1, 1, 1, 1});
       }
       if (left_handle_dragging) {
         g->rect.x += s.dragging_frame_delta.x;
@@ -762,7 +832,7 @@ void start_frame_for_group(Group *g)
       DuiId right_handle_active   = do_active(right_handle_id);
       DuiId right_handle_dragging = do_dragging(right_handle_id);
       if (right_handle_hot || right_handle_dragging) {
-        push_rect(right_handle_rect, {1, 1, 1, 1});
+        push_rect(&forground_dl, right_handle_rect, {1, 1, 1, 1});
       }
       if (right_handle_dragging) {
         g->rect.width += s.dragging_frame_delta.x;
@@ -779,7 +849,7 @@ void start_frame_for_group(Group *g)
       DuiId top_handle_active   = do_active(top_handle_id);
       DuiId top_handle_dragging = do_dragging(top_handle_id);
       if (top_handle_hot || top_handle_dragging) {
-        push_rect(top_handle_rect, {1, 1, 1, 1});
+        push_rect(&forground_dl, top_handle_rect, {1, 1, 1, 1});
       }
       if (top_handle_dragging) {
         g->rect.y += s.dragging_frame_delta.y;
@@ -797,7 +867,7 @@ void start_frame_for_group(Group *g)
       DuiId bottom_handle_active   = do_active(bottom_handle_id);
       DuiId bottom_handle_dragging = do_dragging(bottom_handle_id);
       if (bottom_handle_hot || bottom_handle_dragging) {
-        push_rect(bottom_handle_rect, {1, 1, 1, 1});
+        push_rect(&forground_dl, bottom_handle_rect, {1, 1, 1, 1});
       }
       if (bottom_handle_dragging) {
         g->rect.height += s.dragging_frame_delta.y;
@@ -820,11 +890,11 @@ void start_frame_for_group(Group *g)
       b8 need_to_propagate = false;
       if (left_window_control.x + left_window_control.width > s.canvas_span.x) {
         g->rect.x -= (left_window_control.x + left_window_control.width) - s.canvas_span.x;
-        need_to_propagate = true; 
+        need_to_propagate = true;
       }
       if (left_window_control.y + left_window_control.height > s.canvas_span.y) {
         g->rect.y -= (left_window_control.y + left_window_control.height) - s.canvas_span.y;
-        need_to_propagate = true; 
+        need_to_propagate = true;
       }
       if (right_window_control.x < 0) {
         g->rect.x -= right_window_control.x;
@@ -840,7 +910,7 @@ void start_frame_for_group(Group *g)
     }
   }
 
-  if (g->windows.count > 0) {
+  if (g->is_leaf()) {
     start_frame_for_leaf(g);
     return;
   }
@@ -856,9 +926,6 @@ void start_frame_for_group(Group *g)
       DuiId split_move_handle_hot      = do_hot(split_move_handle_id, split_move_handle);
       DuiId split_move_handle_active   = do_active(split_move_handle_id);
       DuiId split_move_handle_dragging = do_dragging(split_move_handle_id);
-      if (split_move_handle_hot || split_move_handle_dragging) {
-        push_rect({10, 10, 20, 20}, {1, 1, 1, 1});
-      }
       if (split_move_handle_dragging) {
         f32 move_pct = s.dragging_frame_delta.y / g->rect.height;
         g->splits[i - 1].div_pct += move_pct;
@@ -876,7 +943,7 @@ void start_frame_for_group(Group *g)
       DuiId split_move_handle_active   = do_active(split_move_handle_id);
       DuiId split_move_handle_dragging = do_dragging(split_move_handle_id);
       if (split_move_handle_hot || split_move_handle_dragging) {
-        push_rect({10, 10, 20, 20}, {1, 1, 1, 1});
+        push_rect(&forground_dl, {10, 10, 20, 20}, {1, 1, 1, 1});
       }
       if (split_move_handle_dragging) {
         f32 move_pct = s.dragging_frame_delta.x / g->rect.width;
@@ -906,7 +973,8 @@ void start_frame(InputState *input, RenderTarget target)
   s.just_started_being_dragging = -1;
   s.just_stopped_being_dragging = -1;
 
-  clear_draw_list();
+  clear_draw_list(&forground_dl);
+  clear_draw_list(&main_dl);
 
   for (i32 i = 0; i < s.groups.SIZE; i++) {
     if (!s.groups.exists(i)) continue;
@@ -920,18 +988,18 @@ void start_frame(InputState *input, RenderTarget target)
 
   for (i32 i = 0; i < s.groups.SIZE; i++) {
     if (!s.groups.exists(i)) continue;
-    if (s.groups[i].windows.count == 0) continue;
+    if (!s.groups[i].is_leaf()) continue;
 
     Group *g                         = &s.groups[i];
     Rect titlebar_rect               = g->get_titlebar_full_rect();
     Rect titlebar_bottom_border_rect = g->get_titlebar_bottom_border_rect();
-    Rect group_border_rect       = g->get_border_rect();
+    Rect group_border_rect           = g->get_border_rect();
     Rect window_rect                 = g->get_window_rect();
 
-    push_rect(titlebar_rect, d);
-    push_rect(titlebar_bottom_border_rect, d_light);
-    push_rect(group_border_rect, d);
-    push_rect(window_rect, d_dark);
+    push_rect(&main_dl, titlebar_rect, d);
+    push_rect(&main_dl, titlebar_bottom_border_rect, d_light);
+    push_rect(&main_dl, group_border_rect, d);
+    push_rect(&main_dl, window_rect, d_dark);
 
     Rect titlebar_content_rect = g->get_titlebar_content_rect();
 
@@ -945,7 +1013,7 @@ void start_frame(InputState *input, RenderTarget target)
       if (w_i == g->active_window_idx) {
         tab_color = d_light;
       }
-      push_rect(tab_rect, tab_color);
+      push_rect(&main_dl, tab_rect, tab_color);
     }
   }
 }
@@ -963,7 +1031,7 @@ DuiId start_window(String name, Rect initial_rect, WindowOptions options = {})
   if (g->windows[g->active_window_idx] != id) return id;
 
   Rect content_rect = w->get_content_rect();
-  push_rect(content_rect, w->color);
+  push_rect(&main_dl, content_rect, w->color);
 
   // Rect titlebar_rect      = g->get_titlebar_margin_rect();
   // Rect window_border_rect = g->get_border_rect();
@@ -1018,7 +1086,7 @@ void basic_test_control(Vec2f size, Color color)
   rect.y      = window_content_rect.y + scrolled_cursor.y;
   rect.width  = size.x;
   rect.height = size.y;
-  push_rect(rect, color);
+  push_rect(&main_dl, rect, color);
 
   w->cursor_height = fmaxf(w->cursor_height, size.y);
   w->cursor.x += size.x;
@@ -1029,12 +1097,29 @@ void basic_test_control(Vec2f size, Color color)
       fmaxf(w->current_frame_minimum_content_span.y, w->cursor.y + w->cursor_height);
 }
 
+void draw_draw_list(RenderTarget target, DrawList *dl) {
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    reupload_vertex_buffer(dl->vb, (float *)dl->verts, dl->vert_count, dl->vert_count * sizeof(Vertex));
+    bind_shader(debug_ui_shader);
+    bind_2i(debug_ui_shader, UniformId::RESOLUTION, target.width, target.height);
+    for (i32 i = 0; i < dl->draw_call_count; i++) {
+      DrawCall call = dl->draw_calls[i];
+      draw_sub(target, debug_ui_shader, dl->vb, call.vert_offset, call.tri_count * 3);
+    }
+    glDisable(GL_BLEND);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+}
+
 void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
 {
   static b8 init = false;
   if (!init) {
     init = true;
-    init_draw_list();
+    init_draw_list(&main_dl);
+    init_draw_list(&forground_dl);
   }
 
   static b8 paused = false;
@@ -1043,19 +1128,8 @@ void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
   }
 
   if (paused) {
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    reupload_vertex_buffer(dl.vb, (float *)dl.verts, dl.vert_count, dl.vert_count * sizeof(Vertex));
-    bind_shader(debug_ui_shader);
-    bind_2i(debug_ui_shader, UniformId::RESOLUTION, target.width, target.height);
-    for (i32 i = 0; i < dl.draw_call_count; i++) {
-      DrawCall call = dl.draw_calls[i];
-      draw_sub(target, debug_ui_shader, dl.vb, call.vert_offset, call.tri_count * 3);
-    }
-    glDisable(GL_BLEND);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
+    draw_draw_list(target, &main_dl);
+    draw_draw_list(target, &forground_dl);
 
     return;
   }
@@ -1139,19 +1213,16 @@ void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
     count++;
   }
 
-  glDisable(GL_CULL_FACE);
-  glDisable(GL_DEPTH_TEST);
-  glEnable(GL_BLEND);
-  reupload_vertex_buffer(dl.vb, (float *)dl.verts, dl.vert_count, dl.vert_count * sizeof(Vertex));
-  bind_shader(debug_ui_shader);
-  bind_2i(debug_ui_shader, UniformId::RESOLUTION, target.width, target.height);
-  for (i32 i = 0; i < dl.draw_call_count; i++) {
-    DrawCall call = dl.draw_calls[i];
-    draw_sub(target, debug_ui_shader, dl.vb, call.vert_offset, call.tri_count * 3);
+  draw_draw_list(target, &main_dl);
+  draw_draw_list(target, &forground_dl);
+
+  std::vector<Group *> groups;
+  for (i32 i = 0; i < s.groups.SIZE; i++) {
+    if (!s.groups.exists(i)) continue;
+
+    groups.push_back(&s.groups[i]);
   }
-  glDisable(GL_BLEND);
-  glEnable(GL_CULL_FACE);
-  glEnable(GL_DEPTH_TEST);
+  printf("groups count: %llu\n", groups.size());
 }
 }  // namespace Dui
 
