@@ -476,8 +476,6 @@ void parent_window(Group *g, DuiId window_id)
 
   g->windows.push_back(window_id);
   g->active_window_idx = g->windows.count - 1;
-
-  propagate_groups(g);
 }
 
 Group *unparent_window(DuiId window_id)
@@ -591,8 +589,6 @@ b8 snap_group(Group *g, Group *target, i32 axis, b8 dir, Group *sibling = nullpt
     g->parent = target;
   }
 
-  propagate_groups(target);
-
   return true;
 }
 
@@ -663,8 +659,6 @@ void unsnap_group(Group *g)
       parent_g = double_parent;
     }
   }
-
-  propagate_groups(parent_g);
 
   g->parent = nullptr;
 }
@@ -787,8 +781,6 @@ Group *handle_dragging_group(Group *g, DuiId id)
   g->rect.x += s.dragging_frame_delta.x;
   g->rect.y += s.dragging_frame_delta.y;
 
-  propagate_groups(g);
-
   return g;
 }
 
@@ -886,7 +878,6 @@ void start_frame_for_group(Group *g)
   const f32 RESIZE_HANDLES_OVERSIZE = 2.f;
 
   if (!g->parent) {
-
     // only do movement/resizing logic if window is not fullscreen
     if (!g->fullscreen) {
       // easy keyboard-based window manipulation
@@ -898,7 +889,6 @@ void start_frame_for_group(Group *g)
         if (root_controller_control_dragging) {
           g->rect.x += s.dragging_frame_delta.x;
           g->rect.y += s.dragging_frame_delta.y;
-          propagate_groups(g);
         }
       }
 
@@ -919,7 +909,6 @@ void start_frame_for_group(Group *g)
         if (left_handle_dragging) {
           g->rect.x += s.dragging_frame_delta.x;
           g->rect.width -= s.dragging_frame_delta.x;
-          propagate_groups(g);
         }
 
         Rect right_handle_rect;
@@ -936,7 +925,6 @@ void start_frame_for_group(Group *g)
         }
         if (right_handle_dragging) {
           g->rect.width += s.dragging_frame_delta.x;
-          propagate_groups(g);
         }
 
         Rect top_handle_rect;
@@ -954,7 +942,6 @@ void start_frame_for_group(Group *g)
         if (top_handle_dragging) {
           g->rect.y += s.dragging_frame_delta.y;
           g->rect.height -= s.dragging_frame_delta.y;
-          propagate_groups(g);
         }
 
         Rect bottom_handle_rect;
@@ -972,7 +959,6 @@ void start_frame_for_group(Group *g)
         }
         if (bottom_handle_dragging) {
           g->rect.height += s.dragging_frame_delta.y;
-          propagate_groups(g);
         }
       }
 
@@ -988,25 +974,17 @@ void start_frame_for_group(Group *g)
             titlebar_content_rect.x + titlebar_content_rect.width - WINDOW_CONTROL_WIDTH;
         right_window_control.width = WINDOW_CONTROL_WIDTH;
 
-        b8 need_to_propagate = false;
         if (left_window_control.x + left_window_control.width > s.canvas_span.x) {
           g->rect.x -= (left_window_control.x + left_window_control.width) - s.canvas_span.x;
-          need_to_propagate = true;
         }
         if (left_window_control.y + left_window_control.height > s.canvas_span.y) {
           g->rect.y -= (left_window_control.y + left_window_control.height) - s.canvas_span.y;
-          need_to_propagate = true;
         }
         if (right_window_control.x < 0) {
           g->rect.x -= right_window_control.x;
-          need_to_propagate = true;
         }
         if (right_window_control.y < 0) {
           g->rect.y -= right_window_control.y;
-          need_to_propagate = true;
-        }
-        if (need_to_propagate) {
-          propagate_groups(g);
         }
       }
     }
@@ -1032,7 +1010,6 @@ void start_frame_for_group(Group *g)
         f32 move_pct = s.dragging_frame_delta.y / g->rect.height;
         g->splits[i - 1].div_pct += move_pct;
         g->splits[i].div_pct -= move_pct;
-        propagate_groups(g);
       }
     } else if (g->split_axis == 1) {
       Rect split_move_handle;
@@ -1051,7 +1028,6 @@ void start_frame_for_group(Group *g)
         f32 move_pct = s.dragging_frame_delta.x / g->rect.width;
         g->splits[i - 1].div_pct += move_pct;
         g->splits[i].div_pct -= move_pct;
-        propagate_groups(g);
       }
     }
   }
@@ -1059,6 +1035,8 @@ void start_frame_for_group(Group *g)
   for (i32 i = 0; i < g->splits.count; i++) {
     start_frame_for_group(g->splits[i].child);
   }
+
+  // after handling children, honor any restriction here
 }
 
 void start_frame(InputState *input, RenderTarget target)
@@ -1078,6 +1056,7 @@ void start_frame(InputState *input, RenderTarget target)
   clear_draw_list(&forground_dl);
   clear_draw_list(&main_dl);
 
+  // one pass for input handling
   for (i32 i = 0; i < s.groups.SIZE; i++) {
     if (!s.groups.exists(i)) continue;
     if (s.groups[i].parent) continue;
@@ -1086,8 +1065,16 @@ void start_frame(InputState *input, RenderTarget target)
     start_frame_for_group(g);
   }
 
-  // draw
+  // one pass to propagate changes
+  for (i32 i = 0; i < s.groups.SIZE; i++) {
+    if (!s.groups.exists(i)) continue;
+    if (s.groups[i].parent) continue;
 
+    Group *g = &s.groups[i];
+    propagate_groups(g);
+  }
+
+  // one pass for drawing
   for (i32 i = 0; i < s.groups.SIZE; i++) {
     if (!s.groups.exists(i)) continue;
     if (!s.groups[i].is_leaf()) continue;
