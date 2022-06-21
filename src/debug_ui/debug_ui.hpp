@@ -16,6 +16,7 @@ const f32 WINDOW_BORDER_SIZE            = 2.f;
 const f32 WINDOW_CONTROL_WIDTH          = 20.f;
 const f32 WINDOW_MARGIN_SIZE            = 4.f;
 const f32 SCROLLBAR_WIDTH               = 8.f;
+const f32 DOCK_CONTROLS_WIDTH           = 100.f;
 
 Color d_dark  = {0, 0.13725, 0.27843, 1};
 Color d       = {0, 0.2, 0.4, 1};
@@ -615,12 +616,13 @@ void unsnap_group(Group *g)
     parent_g->splits[i].div_pct *= 1 / (1 - free_space);
   }
 
-  if (parent_g->splits.count == 1 && parent_g->parent) {
+  if (parent_g->splits.count == 1) {
     Group *other_child = parent_g->splits[0].child;
 
-    parent_g->split_axis = other_child->split_axis;
-    parent_g->splits     = other_child->splits;
-    parent_g->windows    = other_child->windows;
+    parent_g->split_axis        = other_child->split_axis;
+    parent_g->splits            = other_child->splits;
+    parent_g->windows           = other_child->windows;
+    parent_g->active_window_idx = other_child->active_window_idx;
 
     other_child->splits.clear();
     other_child->windows.clear();
@@ -678,12 +680,103 @@ Group *handle_dragging_group(Group *g, DuiId id)
 {
   Group *target_group = get_leaf_group_at_pos(s.input->mouse_pos);
 
-  if (g->is_leaf() && target_group && !contained_in(target_group, g) &&
-      in_rect(s.input->mouse_pos, target_group->get_titlebar_content_rect())) {
-    push_rect(&forground_dl, {10, 10, 20, 20}, {1, 1, 1, 1});
-    if (s.just_stopped_being_dragging == id) {
-      combine_leaf_groups(target_group, g);
-      g = target_group;
+  if (g->is_leaf() && target_group && !contained_in(target_group, g)) {
+    Rect window_rect = target_group->get_window_rect();
+
+    f32 dock_controls_width = DOCK_CONTROLS_WIDTH;
+    dock_controls_width     = fminf(dock_controls_width, window_rect.width * .75f);
+    dock_controls_width     = fminf(dock_controls_width, window_rect.height * .75f);
+
+    f32 three_fifth_dock_controls_width = dock_controls_width / 2.f;
+    f32 fifth_dock_controls_width       = dock_controls_width / 4.f;
+
+    Rect dock_control_rect;
+    dock_control_rect.x = window_rect.x + (window_rect.width * .5f) - (dock_controls_width * .5f);
+    dock_control_rect.y = window_rect.y + (window_rect.height * .5f) - (dock_controls_width * .5f);
+    dock_control_rect.width  = dock_controls_width;
+    dock_control_rect.height = dock_controls_width;
+
+    Rect left_dock_control_rect;
+    left_dock_control_rect.x      = dock_control_rect.x;
+    left_dock_control_rect.y      = dock_control_rect.y + fifth_dock_controls_width;
+    left_dock_control_rect.width  = fifth_dock_controls_width;
+    left_dock_control_rect.height = three_fifth_dock_controls_width;
+    SUB_ID(left_dock_control_id, id);
+    DuiId left_dock_control_hot = do_hot(left_dock_control_id, left_dock_control_rect);
+    if (left_dock_control_hot)
+      push_rect(&forground_dl, left_dock_control_rect, l_dark);
+    else
+      push_rect(&forground_dl, left_dock_control_rect, l);
+
+    Rect right_dock_control_rect;
+    right_dock_control_rect.x =
+        dock_control_rect.x + dock_control_rect.width - fifth_dock_controls_width;
+    right_dock_control_rect.y      = dock_control_rect.y + fifth_dock_controls_width;
+    right_dock_control_rect.width  = fifth_dock_controls_width;
+    right_dock_control_rect.height = three_fifth_dock_controls_width;
+    SUB_ID(right_dock_control_id, id);
+    DuiId right_dock_control_hot = do_hot(right_dock_control_id, right_dock_control_rect);
+    if (right_dock_control_hot)
+      push_rect(&forground_dl, right_dock_control_rect, l_dark);
+    else
+      push_rect(&forground_dl, right_dock_control_rect, l);
+
+    Rect top_dock_control_rect;
+    top_dock_control_rect.x      = dock_control_rect.x + fifth_dock_controls_width;
+    top_dock_control_rect.y      = dock_control_rect.y;
+    top_dock_control_rect.width  = three_fifth_dock_controls_width;
+    top_dock_control_rect.height = fifth_dock_controls_width;
+    SUB_ID(top_dock_control_id, id);
+    DuiId top_dock_control_hot = do_hot(top_dock_control_id, top_dock_control_rect);
+    if (top_dock_control_hot)
+      push_rect(&forground_dl, top_dock_control_rect, l_dark);
+    else
+      push_rect(&forground_dl, top_dock_control_rect, l);
+
+    Rect bottom_dock_control_rect;
+    bottom_dock_control_rect.x = dock_control_rect.x + fifth_dock_controls_width;
+    bottom_dock_control_rect.y =
+        dock_control_rect.y + dock_control_rect.height - fifth_dock_controls_width;
+    bottom_dock_control_rect.width  = three_fifth_dock_controls_width;
+    bottom_dock_control_rect.height = fifth_dock_controls_width;
+    SUB_ID(bottom_dock_control_id, id);
+    DuiId bottom_dock_control_hot = do_hot(bottom_dock_control_id, bottom_dock_control_rect);
+    if (bottom_dock_control_hot)
+      push_rect(&forground_dl, bottom_dock_control_rect, l_dark);
+    else
+      push_rect(&forground_dl, bottom_dock_control_rect, l);
+
+    if (left_dock_control_hot) {
+      push_rect(&forground_dl, window_rect, {1, 1, 1, .5}); // preview
+      if (s.just_stopped_being_dragging == id) {
+        snap_group(g, target_group, 1, 0);
+      }
+    }
+    if (right_dock_control_hot) {
+      push_rect(&forground_dl, window_rect, {1, 1, 1, .5}); // preview
+      if (s.just_stopped_being_dragging == id) {
+        snap_group(g, target_group, 1, 1);
+      }
+    }
+    if (top_dock_control_hot) {
+      push_rect(&forground_dl, window_rect, {1, 1, 1, .5}); // preview
+      if (s.just_stopped_being_dragging == id) {
+        snap_group(g, target_group, 0, 0);
+      }
+    }
+    if (bottom_dock_control_hot) {
+      push_rect(&forground_dl, window_rect, {1, 1, 1, .5}); // preview
+      if (s.just_stopped_being_dragging == id) {
+        snap_group(g, target_group, 0, 1);
+      }
+    }
+
+    if (in_rect(s.input->mouse_pos, target_group->get_titlebar_full_rect())) {
+      push_rect(&forground_dl, window_rect, {1, 1, 1, .5}); // preview
+      if (s.just_stopped_being_dragging == id) {
+        combine_leaf_groups(target_group, g);
+        g = target_group;
+      }
     }
   }
 
@@ -751,7 +844,7 @@ void start_frame_for_leaf(Group *g)
       g->active_window_idx = w_i;
     }
     if (tab_handle_dragging) {
-      if (g->windows.count == 1 || !in_rect(s.input->mouse_pos, g->get_titlebar_content_rect())) {
+      if (g->windows.count == 1 || !in_rect(s.input->mouse_pos, g->get_titlebar_full_rect())) {
         g = unparent_window(window_id);
         unsnap_group(g);
         g = handle_dragging_group(g, tab_handle_id);
@@ -1086,7 +1179,7 @@ void basic_test_control(Vec2f size, Color color)
   rect.y      = window_content_rect.y + scrolled_cursor.y;
   rect.width  = size.x;
   rect.height = size.y;
-  push_rect(&main_dl, rect, color);
+  // push_rect(&main_dl, rect, color);
 
   w->cursor_height = fmaxf(w->cursor_height, size.y);
   w->cursor.x += size.x;
@@ -1097,20 +1190,22 @@ void basic_test_control(Vec2f size, Color color)
       fmaxf(w->current_frame_minimum_content_span.y, w->cursor.y + w->cursor_height);
 }
 
-void draw_draw_list(RenderTarget target, DrawList *dl) {
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    reupload_vertex_buffer(dl->vb, (float *)dl->verts, dl->vert_count, dl->vert_count * sizeof(Vertex));
-    bind_shader(debug_ui_shader);
-    bind_2i(debug_ui_shader, UniformId::RESOLUTION, target.width, target.height);
-    for (i32 i = 0; i < dl->draw_call_count; i++) {
-      DrawCall call = dl->draw_calls[i];
-      draw_sub(target, debug_ui_shader, dl->vb, call.vert_offset, call.tri_count * 3);
-    }
-    glDisable(GL_BLEND);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
+void draw_draw_list(RenderTarget target, DrawList *dl)
+{
+  glDisable(GL_CULL_FACE);
+  glDisable(GL_DEPTH_TEST);
+  glEnable(GL_BLEND);
+  reupload_vertex_buffer(dl->vb, (float *)dl->verts, dl->vert_count,
+                         dl->vert_count * sizeof(Vertex));
+  bind_shader(debug_ui_shader);
+  bind_2i(debug_ui_shader, UniformId::RESOLUTION, target.width, target.height);
+  for (i32 i = 0; i < dl->draw_call_count; i++) {
+    DrawCall call = dl->draw_calls[i];
+    draw_sub(target, debug_ui_shader, dl->vb, call.vert_offset, call.tri_count * 3);
+  }
+  glDisable(GL_BLEND);
+  glEnable(GL_CULL_FACE);
+  glEnable(GL_DEPTH_TEST);
 }
 
 void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
