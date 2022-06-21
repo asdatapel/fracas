@@ -106,11 +106,13 @@ struct Group {
   Group *parent = nullptr;
   Rect rect;
 
+  b8 fullscreen = false;
+
+  // Either split into children groups...
   i32 split_axis = -1;
   StaticArray<Split, 32> splits;
 
-  // or
-
+  // or is a child node with windows
   StaticArray<DuiId, 32> windows;
   i32 active_window_idx = -1;
 
@@ -503,6 +505,8 @@ Window *create_new_window(DuiId id, String name, Rect rect, WindowOptions option
 }
 
 // returns true if successful.
+// if any new groups are created, they will be descendents of target (i.e. target will never move
+// down the hierarchy)
 b8 snap_group(Group *g, Group *target, i32 axis, b8 dir, Group *sibling = nullptr)
 {
   // target must either be a leaf node or be split on the same axis as the sibling
@@ -747,32 +751,32 @@ Group *handle_dragging_group(Group *g, DuiId id)
       push_rect(&forground_dl, bottom_dock_control_rect, l);
 
     if (left_dock_control_hot) {
-      push_rect(&forground_dl, window_rect, {1, 1, 1, .5}); // preview
+      push_rect(&forground_dl, window_rect, {1, 1, 1, .5});  // preview
       if (s.just_stopped_being_dragging == id) {
         snap_group(g, target_group, 1, 0);
       }
     }
     if (right_dock_control_hot) {
-      push_rect(&forground_dl, window_rect, {1, 1, 1, .5}); // preview
+      push_rect(&forground_dl, window_rect, {1, 1, 1, .5});  // preview
       if (s.just_stopped_being_dragging == id) {
         snap_group(g, target_group, 1, 1);
       }
     }
     if (top_dock_control_hot) {
-      push_rect(&forground_dl, window_rect, {1, 1, 1, .5}); // preview
+      push_rect(&forground_dl, window_rect, {1, 1, 1, .5});  // preview
       if (s.just_stopped_being_dragging == id) {
         snap_group(g, target_group, 0, 0);
       }
     }
     if (bottom_dock_control_hot) {
-      push_rect(&forground_dl, window_rect, {1, 1, 1, .5}); // preview
+      push_rect(&forground_dl, window_rect, {1, 1, 1, .5});  // preview
       if (s.just_stopped_being_dragging == id) {
         snap_group(g, target_group, 0, 1);
       }
     }
 
     if (in_rect(s.input->mouse_pos, target_group->get_titlebar_full_rect())) {
-      push_rect(&forground_dl, window_rect, {1, 1, 1, .5}); // preview
+      push_rect(&forground_dl, window_rect, {1, 1, 1, .5});  // preview
       if (s.just_stopped_being_dragging == id) {
         combine_leaf_groups(target_group, g);
         g = target_group;
@@ -882,123 +886,128 @@ void start_frame_for_group(Group *g)
   const f32 RESIZE_HANDLES_OVERSIZE = 2.f;
 
   if (!g->parent) {
-    // easy keyboard-based window manipulation
-    if (s.input->keys[(i32)Keys::LALT]) {
-      SUB_ID(root_controller_control_id, g->id);
-      DuiId root_controller_control_hot      = do_hot(root_controller_control_id, g->rect);
-      DuiId root_controller_control_active   = do_active(root_controller_control_id);
-      DuiId root_controller_control_dragging = do_dragging(root_controller_control_id);
-      if (root_controller_control_dragging) {
-        g->rect.x += s.dragging_frame_delta.x;
-        g->rect.y += s.dragging_frame_delta.y;
-        propagate_groups(g);
-      }
-    }
 
-    // resize handles that extend out of group
-    {
-      Rect left_handle_rect;
-      left_handle_rect.x      = g->rect.x - RESIZE_HANDLES_OVERSIZE;
-      left_handle_rect.y      = g->rect.y;
-      left_handle_rect.width  = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
-      left_handle_rect.height = g->rect.height;
-      SUB_ID(left_handle_id, g->id);
-      DuiId left_handle_hot      = do_hot(left_handle_id, left_handle_rect);
-      DuiId left_handle_active   = do_active(left_handle_id);
-      DuiId left_handle_dragging = do_dragging(left_handle_id);
-      if (left_handle_hot || left_handle_dragging) {
-        push_rect(&forground_dl, left_handle_rect, {1, 1, 1, 1});
-      }
-      if (left_handle_dragging) {
-        g->rect.x += s.dragging_frame_delta.x;
-        g->rect.width -= s.dragging_frame_delta.x;
-        propagate_groups(g);
+    // only do movement/resizing logic if window is not fullscreen
+    if (!g->fullscreen) {
+      // easy keyboard-based window manipulation
+      if (s.input->keys[(i32)Keys::LALT]) {
+        SUB_ID(root_controller_control_id, g->id);
+        DuiId root_controller_control_hot      = do_hot(root_controller_control_id, g->rect);
+        DuiId root_controller_control_active   = do_active(root_controller_control_id);
+        DuiId root_controller_control_dragging = do_dragging(root_controller_control_id);
+        if (root_controller_control_dragging) {
+          g->rect.x += s.dragging_frame_delta.x;
+          g->rect.y += s.dragging_frame_delta.y;
+          propagate_groups(g);
+        }
       }
 
-      Rect right_handle_rect;
-      right_handle_rect.x     = g->rect.x + g->rect.width - WINDOW_BORDER_SIZE - WINDOW_MARGIN_SIZE;
-      right_handle_rect.y     = g->rect.y;
-      right_handle_rect.width = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
-      right_handle_rect.height = g->rect.height;
-      SUB_ID(right_handle_id, g->id);
-      DuiId right_handle_hot      = do_hot(right_handle_id, right_handle_rect);
-      DuiId right_handle_active   = do_active(right_handle_id);
-      DuiId right_handle_dragging = do_dragging(right_handle_id);
-      if (right_handle_hot || right_handle_dragging) {
-        push_rect(&forground_dl, right_handle_rect, {1, 1, 1, 1});
-      }
-      if (right_handle_dragging) {
-        g->rect.width += s.dragging_frame_delta.x;
-        propagate_groups(g);
+      // resize handles that extend out of group
+      {
+        Rect left_handle_rect;
+        left_handle_rect.x      = g->rect.x - RESIZE_HANDLES_OVERSIZE;
+        left_handle_rect.y      = g->rect.y;
+        left_handle_rect.width  = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
+        left_handle_rect.height = g->rect.height;
+        SUB_ID(left_handle_id, g->id);
+        DuiId left_handle_hot      = do_hot(left_handle_id, left_handle_rect);
+        DuiId left_handle_active   = do_active(left_handle_id);
+        DuiId left_handle_dragging = do_dragging(left_handle_id);
+        if (left_handle_hot || left_handle_dragging) {
+          push_rect(&forground_dl, left_handle_rect, {1, 1, 1, 1});
+        }
+        if (left_handle_dragging) {
+          g->rect.x += s.dragging_frame_delta.x;
+          g->rect.width -= s.dragging_frame_delta.x;
+          propagate_groups(g);
+        }
+
+        Rect right_handle_rect;
+        right_handle_rect.x = g->rect.x + g->rect.width - WINDOW_BORDER_SIZE - WINDOW_MARGIN_SIZE;
+        right_handle_rect.y = g->rect.y;
+        right_handle_rect.width = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
+        right_handle_rect.height = g->rect.height;
+        SUB_ID(right_handle_id, g->id);
+        DuiId right_handle_hot      = do_hot(right_handle_id, right_handle_rect);
+        DuiId right_handle_active   = do_active(right_handle_id);
+        DuiId right_handle_dragging = do_dragging(right_handle_id);
+        if (right_handle_hot || right_handle_dragging) {
+          push_rect(&forground_dl, right_handle_rect, {1, 1, 1, 1});
+        }
+        if (right_handle_dragging) {
+          g->rect.width += s.dragging_frame_delta.x;
+          propagate_groups(g);
+        }
+
+        Rect top_handle_rect;
+        top_handle_rect.x      = g->rect.x;
+        top_handle_rect.y      = g->rect.y - RESIZE_HANDLES_OVERSIZE;
+        top_handle_rect.width  = g->rect.width;
+        top_handle_rect.height = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
+        SUB_ID(top_handle_id, g->id);
+        DuiId top_handle_hot      = do_hot(top_handle_id, top_handle_rect);
+        DuiId top_handle_active   = do_active(top_handle_id);
+        DuiId top_handle_dragging = do_dragging(top_handle_id);
+        if (top_handle_hot || top_handle_dragging) {
+          push_rect(&forground_dl, top_handle_rect, {1, 1, 1, 1});
+        }
+        if (top_handle_dragging) {
+          g->rect.y += s.dragging_frame_delta.y;
+          g->rect.height -= s.dragging_frame_delta.y;
+          propagate_groups(g);
+        }
+
+        Rect bottom_handle_rect;
+        bottom_handle_rect.x = g->rect.x;
+        bottom_handle_rect.y = g->rect.y + g->rect.height - WINDOW_BORDER_SIZE - WINDOW_MARGIN_SIZE;
+        bottom_handle_rect.width = g->rect.width;
+        bottom_handle_rect.height =
+            RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
+        SUB_ID(bottom_handle_id, g->id);
+        DuiId bottom_handle_hot      = do_hot(bottom_handle_id, bottom_handle_rect);
+        DuiId bottom_handle_active   = do_active(bottom_handle_id);
+        DuiId bottom_handle_dragging = do_dragging(bottom_handle_id);
+        if (bottom_handle_hot || bottom_handle_dragging) {
+          push_rect(&forground_dl, bottom_handle_rect, {1, 1, 1, 1});
+        }
+        if (bottom_handle_dragging) {
+          g->rect.height += s.dragging_frame_delta.y;
+          propagate_groups(g);
+        }
       }
 
-      Rect top_handle_rect;
-      top_handle_rect.x      = g->rect.x;
-      top_handle_rect.y      = g->rect.y - RESIZE_HANDLES_OVERSIZE;
-      top_handle_rect.width  = g->rect.width;
-      top_handle_rect.height = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
-      SUB_ID(top_handle_id, g->id);
-      DuiId top_handle_hot      = do_hot(top_handle_id, top_handle_rect);
-      DuiId top_handle_active   = do_active(top_handle_id);
-      DuiId top_handle_dragging = do_dragging(top_handle_id);
-      if (top_handle_hot || top_handle_dragging) {
-        push_rect(&forground_dl, top_handle_rect, {1, 1, 1, 1});
-      }
-      if (top_handle_dragging) {
-        g->rect.y += s.dragging_frame_delta.y;
-        g->rect.height -= s.dragging_frame_delta.y;
-        propagate_groups(g);
-      }
+      // either the right or left window control should be fully in the canvas
+      {
+        Rect titlebar_content_rect = g->get_titlebar_content_rect();
 
-      Rect bottom_handle_rect;
-      bottom_handle_rect.x = g->rect.x;
-      bottom_handle_rect.y = g->rect.y + g->rect.height - WINDOW_BORDER_SIZE - WINDOW_MARGIN_SIZE;
-      bottom_handle_rect.width  = g->rect.width;
-      bottom_handle_rect.height = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
-      SUB_ID(bottom_handle_id, g->id);
-      DuiId bottom_handle_hot      = do_hot(bottom_handle_id, bottom_handle_rect);
-      DuiId bottom_handle_active   = do_active(bottom_handle_id);
-      DuiId bottom_handle_dragging = do_dragging(bottom_handle_id);
-      if (bottom_handle_hot || bottom_handle_dragging) {
-        push_rect(&forground_dl, bottom_handle_rect, {1, 1, 1, 1});
-      }
-      if (bottom_handle_dragging) {
-        g->rect.height += s.dragging_frame_delta.y;
-        propagate_groups(g);
-      }
-    }
+        Rect left_window_control  = titlebar_content_rect;
+        left_window_control.width = WINDOW_CONTROL_WIDTH;
 
-    // either the right or left window control should be fully in the canvas
-    {
-      Rect titlebar_content_rect = g->get_titlebar_content_rect();
+        Rect right_window_control = titlebar_content_rect;
+        right_window_control.x =
+            titlebar_content_rect.x + titlebar_content_rect.width - WINDOW_CONTROL_WIDTH;
+        right_window_control.width = WINDOW_CONTROL_WIDTH;
 
-      Rect left_window_control  = titlebar_content_rect;
-      left_window_control.width = WINDOW_CONTROL_WIDTH;
-
-      Rect right_window_control = titlebar_content_rect;
-      right_window_control.x =
-          titlebar_content_rect.x + titlebar_content_rect.width - WINDOW_CONTROL_WIDTH;
-      right_window_control.width = WINDOW_CONTROL_WIDTH;
-
-      b8 need_to_propagate = false;
-      if (left_window_control.x + left_window_control.width > s.canvas_span.x) {
-        g->rect.x -= (left_window_control.x + left_window_control.width) - s.canvas_span.x;
-        need_to_propagate = true;
-      }
-      if (left_window_control.y + left_window_control.height > s.canvas_span.y) {
-        g->rect.y -= (left_window_control.y + left_window_control.height) - s.canvas_span.y;
-        need_to_propagate = true;
-      }
-      if (right_window_control.x < 0) {
-        g->rect.x -= right_window_control.x;
-        need_to_propagate = true;
-      }
-      if (right_window_control.y < 0) {
-        g->rect.y -= right_window_control.y;
-        need_to_propagate = true;
-      }
-      if (need_to_propagate) {
-        propagate_groups(g);
+        b8 need_to_propagate = false;
+        if (left_window_control.x + left_window_control.width > s.canvas_span.x) {
+          g->rect.x -= (left_window_control.x + left_window_control.width) - s.canvas_span.x;
+          need_to_propagate = true;
+        }
+        if (left_window_control.y + left_window_control.height > s.canvas_span.y) {
+          g->rect.y -= (left_window_control.y + left_window_control.height) - s.canvas_span.y;
+          need_to_propagate = true;
+        }
+        if (right_window_control.x < 0) {
+          g->rect.x -= right_window_control.x;
+          need_to_propagate = true;
+        }
+        if (right_window_control.y < 0) {
+          g->rect.y -= right_window_control.y;
+          need_to_propagate = true;
+        }
+        if (need_to_propagate) {
+          propagate_groups(g);
+        }
       }
     }
   }
