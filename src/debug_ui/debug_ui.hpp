@@ -1036,7 +1036,13 @@ void start_frame_for_group(Group *g)
     start_frame_for_group(g->splits[i].child);
   }
 
-  // after handling children, honor any restriction here
+  // after handling children, honor any obligations here
+  if (g->fullscreen) {
+    g->rect.x = 0;
+    g->rect.y = 0;
+    g->rect.width = s.canvas_span.x;
+    g->rect.height = s.canvas_span.y;
+  }
 }
 
 void start_frame(InputState *input, RenderTarget target)
@@ -1299,6 +1305,10 @@ void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
     if (count == 5) {
       parent_window(p(w1), w7);
       // snap_group(p(w7), root_2, 0, true);
+    }
+    
+    if (count == 6) {
+      root->fullscreen = true;
     }
 
     count++;
