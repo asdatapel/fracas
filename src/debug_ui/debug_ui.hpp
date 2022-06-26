@@ -273,15 +273,15 @@ struct DuiState {
   StaticPoolAllocator<Group, 1024> groups;
 
   StaticArray<Group *, 1024> root_groups;
+  Window *cw = 0;
 
   i64 frame = 0;
 
   InputState *input;
   Vec2f canvas_span;
 
-  Window *cw = 0;
-
   Group *fullscreen_group = nullptr;
+  Group *empty_group      = nullptr;
 
   INTERACTION_STATE(hot);
   INTERACTION_STATE(active);
@@ -301,6 +301,8 @@ i32 get_group_z(Group *g)
   }
   return -1;
 }
+
+b8 is_empty(Group *g) { return g == s.empty_group; }
 }  // namespace Dui
 
 namespace Dui
@@ -434,7 +436,7 @@ Window *get_window(DuiId id) { return &s.windows.wrapped_get(id); }
 // walks through children of parent_group until a leaf is found at the given pos.
 Group *get_leaf_group_at_pos(Vec2f pos, Group *parent_group)
 {
-  if (parent_group->is_leaf()) {
+  if (parent_group->is_leaf() || is_empty(parent_group)) {
     return in_rect(pos, parent_group->rect) ? parent_group : nullptr;
   }
 
@@ -513,7 +515,7 @@ void parent_window(Group *g, DuiId window_id)
       old_g->active_window_idx--;
     }
 
-    if (old_g->windows.count == 0) {
+    if (old_g->windows.count == 0 && !is_empty(old_g)) {
       free_group(old_g);
     }
   }
@@ -529,7 +531,7 @@ Group *unparent_window(DuiId window_id)
   Window *w    = get_window(window_id);
   Group *old_g = w->parent;
 
-  if (old_g->windows.count == 1) return old_g;
+  if (!is_empty(old_g) && old_g->windows.count == 1) return old_g;
 
   Group *g = create_group(nullptr, old_g->rect);
   parent_window(g, window_id);
@@ -553,7 +555,7 @@ void merge_splits(Group *g)
 {
   for (i32 i = 0; i < g->splits.count; i++) {
     Group *child = g->splits[i].child;
-    if (!child->is_leaf() && child->split_axis == g->split_axis) {
+    if (!child->is_leaf() && !is_empty(child) && child->split_axis == g->split_axis) {
       Split split = g->splits[i];
       g->splits.shift_delete(i);
 
@@ -586,6 +588,7 @@ b8 snap_group(Group *g, Group *target, i32 axis, b8 dir, Group *sibling = nullpt
     Group *new_g             = create_group(target, target->rect);
     new_g->windows           = target->windows;
     new_g->active_window_idx = target->active_window_idx;
+    if (s.empty_group == target) s.empty_group = new_g;
 
     target->windows.clear();
     target->split_axis = axis;
@@ -610,6 +613,7 @@ b8 snap_group(Group *g, Group *target, i32 axis, b8 dir, Group *sibling = nullpt
     for (i32 i = 0; i < new_g->splits.count; i++) {
       Group *target = new_g->splits[i].child;
     }
+    if (s.empty_group == target) s.empty_group = new_g;
 
     target->splits.clear();
 
@@ -665,13 +669,23 @@ b8 snap_group(Group *g, Group *target, i32 axis, b8 dir, Group *sibling = nullpt
   return true;
 }
 
-void unsnap_group(Group *g)
+Group *unsnap_group(Group *g)
 {
-  if (!g->parent) return;
+  assert(g->is_leaf());
 
+  if (is_empty(g)) {
+    // move all windows to a new group so the empty stays where it is.
+    Group *new_g             = create_group(nullptr, g->rect);
+    new_g->windows           = g->windows;
+    new_g->active_window_idx = g->active_window_idx;
+
+    g->windows.clear();
+    g->active_window_idx = -1;
+    return new_g;
+  }
+
+  if (!g->parent) return g;
   Group *parent_g = g->parent;
-
-  if (parent_g->windows.count == 1) return;  // only window in group
 
   DuiId idx;
   f32 free_space;
@@ -695,6 +709,8 @@ void unsnap_group(Group *g)
     parent_g->splits            = child->splits;
     parent_g->windows           = child->windows;
     parent_g->active_window_idx = child->active_window_idx;
+    if (is_empty(child)) s.empty_group = parent_g;
+
     free_group(child);
 
     if (parent_g->parent) {
@@ -703,11 +719,13 @@ void unsnap_group(Group *g)
   }
 
   add_root_group(g);
+
+  return g;
 }
 
 void combine_leaf_groups(Group *target, Group *src)
 {
-  assert(target->is_leaf());
+  assert(target->is_leaf() || is_empty(target));
   assert(src->is_leaf());
 
   while (src->windows.count > 0) {
@@ -718,6 +736,10 @@ void combine_leaf_groups(Group *target, Group *src)
 // input group might get destroyed, so returns the new one
 Group *handle_dragging_group(Group *g, DuiId id)
 {
+  auto center = [](f32 width1, f32 width2) { return (width1 * .5f) - (width2 * .5f); };
+
+  if (s.fullscreen_group == g) return g;
+
   Group *target_group = get_top_leaf_group_at_pos(s.input->mouse_pos, true);
 
   if (target_group && !contained_in(target_group, g)) {
@@ -728,17 +750,18 @@ Group *handle_dragging_group(Group *g, DuiId id)
     dock_controls_width     = fminf(dock_controls_width, window_rect.height * .75f);
 
     f32 three_fifth_dock_controls_width = dock_controls_width / 2.f;
-    f32 fifth_dock_controls_width       = dock_controls_width / 4.f;
+    f32 fifth_dock_controls_width       = dock_controls_width / 5.f;
 
     Rect dock_control_rect;
-    dock_control_rect.x = window_rect.x + (window_rect.width * .5f) - (dock_controls_width * .5f);
-    dock_control_rect.y = window_rect.y + (window_rect.height * .5f) - (dock_controls_width * .5f);
+    dock_control_rect.x      = window_rect.x + center(window_rect.width, dock_controls_width);
+    dock_control_rect.y      = window_rect.y + center(window_rect.height, dock_controls_width);
     dock_control_rect.width  = dock_controls_width;
     dock_control_rect.height = dock_controls_width;
 
     Rect left_dock_control_rect;
-    left_dock_control_rect.x      = dock_control_rect.x;
-    left_dock_control_rect.y      = dock_control_rect.y + fifth_dock_controls_width;
+    left_dock_control_rect.x = dock_control_rect.x;
+    left_dock_control_rect.y =
+        dock_control_rect.y + center(dock_controls_width, three_fifth_dock_controls_width);
     left_dock_control_rect.width  = fifth_dock_controls_width;
     left_dock_control_rect.height = three_fifth_dock_controls_width;
     SUB_ID(left_dock_control_id, id);
@@ -751,7 +774,8 @@ Group *handle_dragging_group(Group *g, DuiId id)
     Rect right_dock_control_rect;
     right_dock_control_rect.x =
         dock_control_rect.x + dock_control_rect.width - fifth_dock_controls_width;
-    right_dock_control_rect.y      = dock_control_rect.y + fifth_dock_controls_width;
+    right_dock_control_rect.y =
+        dock_control_rect.y + center(dock_controls_width, three_fifth_dock_controls_width);
     right_dock_control_rect.width  = fifth_dock_controls_width;
     right_dock_control_rect.height = three_fifth_dock_controls_width;
     SUB_ID(right_dock_control_id, id);
@@ -762,7 +786,8 @@ Group *handle_dragging_group(Group *g, DuiId id)
       push_rect(&forground_dl, right_dock_control_rect, l);
 
     Rect top_dock_control_rect;
-    top_dock_control_rect.x      = dock_control_rect.x + fifth_dock_controls_width;
+    top_dock_control_rect.x =
+        dock_control_rect.x + center(dock_controls_width, three_fifth_dock_controls_width);
     top_dock_control_rect.y      = dock_control_rect.y;
     top_dock_control_rect.width  = three_fifth_dock_controls_width;
     top_dock_control_rect.height = fifth_dock_controls_width;
@@ -774,7 +799,8 @@ Group *handle_dragging_group(Group *g, DuiId id)
       push_rect(&forground_dl, top_dock_control_rect, l);
 
     Rect bottom_dock_control_rect;
-    bottom_dock_control_rect.x = dock_control_rect.x + fifth_dock_controls_width;
+    bottom_dock_control_rect.x =
+        dock_control_rect.x + center(dock_controls_width, three_fifth_dock_controls_width);
     bottom_dock_control_rect.y =
         dock_control_rect.y + dock_control_rect.height - fifth_dock_controls_width;
     bottom_dock_control_rect.width  = three_fifth_dock_controls_width;
@@ -850,6 +876,10 @@ void draw_group_and_children(Group *g)
   push_rect(&main_dl, group_border_rect, d);
   push_rect(&main_dl, window_rect, d_dark);
 
+  if (is_empty(g)) {
+    push_rect(&main_dl, titlebar_rect, {1, 0, 0, 1});
+  }
+
   Rect titlebar_content_rect = g->get_titlebar_content_rect();
 
   for (i32 w_i = 0; w_i < g->windows.count; w_i++) {
@@ -919,7 +949,7 @@ void start_frame_for_leaf(Group *g)
     if (tab_handle_dragging) {
       if (g->windows.count == 1 || !in_rect(s.input->mouse_pos, g->get_titlebar_full_rect())) {
         g = unparent_window(window_id);
-        unsnap_group(g);
+        g = unsnap_group(g);
         g = handle_dragging_group(g, tab_handle_id);
       } else {
         i32 target_tab_idx = g->get_tab_at_pos(s.input->mouse_pos);
@@ -938,7 +968,7 @@ void start_frame_for_leaf(Group *g)
   DuiId root_handle_dragging = do_dragging(root_handle_id);
   if (root_handle_dragging) {
     if (s.input->keys[(i32)Keys::LCTRL]) {
-      unsnap_group(g);
+      g = unsnap_group(g);
       g = handle_dragging_group(g, root_handle_id);
     } else {
       Group *root_g = g;
@@ -1225,8 +1255,6 @@ DuiId start_window(String name, Rect initial_rect, WindowOptions options = {})
 
 void end_window() { s.cw = nullptr; }
 
-void set_fullscreen(Group *g) { s.fullscreen_group = g; }
-
 }  // namespace Dui
 
 namespace Dui
@@ -1297,6 +1325,9 @@ void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
     init = true;
     init_draw_list(&main_dl);
     init_draw_list(&forground_dl);
+
+    s.empty_group      = create_group(nullptr, {});
+    s.fullscreen_group = s.empty_group;
   }
 
   static b8 paused = false;
@@ -1385,10 +1416,6 @@ void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
     if (count == 5) {
       parent_window(p(w1), w7);
       // snap_group(p(w7), root_2, 0, true);
-    }
-
-    if (count == 6) {
-      set_fullscreen(root);
     }
 
     count++;
