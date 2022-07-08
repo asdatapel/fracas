@@ -7,6 +7,47 @@
 
 namespace Dui
 {
+
+template <typename T, i64 SIZE>
+struct StaticStack {
+  T elements[SIZE];
+  i64 count = 0;
+
+  StaticStack() = default;
+
+  T &top()
+  {
+    assert(count > 0);
+    return elements[count - 1];
+  };
+
+  T pop()
+  {
+    assert(count > 0);
+    count--;
+    return elements[count];
+  };
+
+  T &operator[](i64 i)
+  {
+    assert(i < count);
+    return elements[i];
+  }
+
+  int push_back(T val)
+  {
+    if (count >= SIZE) {
+      DEBUG_PRINT("static stack overfull\n");
+      return -1;
+    }
+
+    elements[count] = val;
+    return count++;
+  }
+
+  void clear() { count = 0; }
+};
+
 struct Vertex {
   Vec2f pos;
   Vec2f uv;
@@ -16,6 +57,7 @@ struct DrawCall {
   i32 vert_offset;
   i32 tri_count;
 
+  Rect scissor;
   // Texture texture;
 };
 struct DrawList {
@@ -26,6 +68,10 @@ struct DrawList {
 
   VertexBuffer vb;
   Component vertex_components[3];
+
+  StaticStack<Rect, 1024> scissors;
+  void push_scissor(Rect rect) { scissors.push_back(rect); }
+  void pop_scissor(Rect rect) { scissors.pop(); }
 };
 
 DrawList main_dl;
@@ -37,17 +83,16 @@ void init_draw_list(DrawList *dl)
   dl->draw_calls = (DrawCall *)malloc(sizeof(DrawCall) * 1024 * 1024);
 
   dl->vertex_components[0].offset = 0;
-  dl->vertex_components[0].size = 2;
+  dl->vertex_components[0].size   = 2;
   dl->vertex_components[0].stride = 8;
   dl->vertex_components[1].offset = 2;
-  dl->vertex_components[1].size = 2;
+  dl->vertex_components[1].size   = 2;
   dl->vertex_components[1].stride = 8;
   dl->vertex_components[2].offset = 4;
-  dl->vertex_components[2].size = 4;
+  dl->vertex_components[2].size   = 4;
   dl->vertex_components[2].stride = 8;
-  dl->vb = create_vertex_buffer();
+  dl->vb                          = create_vertex_buffer();
   enable_vertex_componenets(dl->vb, dl->vertex_components, 3);
-
 }
 
 void clear_draw_list(DrawList *dl)
@@ -56,12 +101,15 @@ void clear_draw_list(DrawList *dl)
   dl->draw_call_count = 0;
 }
 
-void push_vert(DrawList *dl, Vec2f pos, Vec2f uv, Color color) { dl->verts[dl->vert_count++] = {pos, uv, color}; }
+void push_vert(DrawList *dl, Vec2f pos, Vec2f uv, Color color)
+{
+  dl->verts[dl->vert_count++] = {pos, uv, color};
+}
 
 void push_draw_call(DrawList *dl, i32 tri_count)
 {
   if (dl->draw_call_count == 0) {
-    dl->draw_calls[0] = {0, tri_count};
+    dl->draw_calls[dl->draw_call_count] = {0, tri_count};
     dl->draw_call_count++;
     return;
   }

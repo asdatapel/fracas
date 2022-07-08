@@ -106,6 +106,9 @@ struct Group {
   Group *parent = nullptr;
   Rect rect;
 
+  // cache to prevent walking up the tree constantly
+  Group *root;
+
   // Either split into children groups...
   i32 split_axis = -1;
   StaticArray<Split, 32> splits;
@@ -275,8 +278,6 @@ struct DuiState {
   StaticArray<Group *, 1024> root_groups;
   Window *cw = 0;
 
-  i64 frame = 0;
-
   InputState *input;
   Vec2f canvas_span;
 
@@ -289,6 +290,9 @@ struct DuiState {
 
   Vec2f dragging_total_delta;
   Vec2f dragging_frame_delta;
+
+  i64 frame                     = 0;
+  Group *top_group_at_mouse_pos = nullptr;
 };
 
 DuiState s;
@@ -309,7 +313,10 @@ namespace Dui
 {
 b8 do_hot(DuiId id, Rect rect)
 {
-  b8 is_hot = in_rect(s.input->mouse_pos, rect);
+  b8 is_in_top_container =
+      !s.top_group_at_mouse_pos || in_rect(s.input->mouse_pos, s.top_group_at_mouse_pos->rect);
+  b8 is_in_current_window = !s.cw || in_rect(s.input->mouse_pos, s.cw->rect);
+  b8 is_hot               = is_in_top_container && is_in_current_window && in_rect(s.input->mouse_pos, rect);
   if (is_hot)
     s.set_hot(id);
   else
@@ -465,9 +472,11 @@ b8 contained_in(Group *g, Group *in)
   return contained_in(g->parent, in);
 }
 
-void propagate_groups(Group *g, Group *parent = nullptr)
+void propagate_groups(Group *g, Group *root = nullptr, Group *parent = nullptr)
 {
   if (parent) g->parent = parent;
+
+  g->root = root ? root : g;
 
   if (!g->is_leaf()) {
     f32 x = g->rect.x;
@@ -491,7 +500,7 @@ void propagate_groups(Group *g, Group *parent = nullptr)
         x += width;
       }
 
-      propagate_groups(child, g);
+      propagate_groups(child, g->root, g);
     }
   } else {
     for (i32 i = 0; i < g->windows.count; i++) {
@@ -1169,6 +1178,26 @@ void start_frame(InputState *input, RenderTarget target)
   clear_draw_list(&forground_dl);
   clear_draw_list(&main_dl);
 
+  // figure out the top groups first
+  s.top_group_at_mouse_pos     = nullptr;
+  i32 top_group_at_mouse_pos_z = -1;
+  for (i32 i = 0; i < s.root_groups.count; i++) {
+    if (in_rect(s.input->mouse_pos, s.root_groups[i]->rect)) {
+      s.top_group_at_mouse_pos = s.root_groups[i];
+      top_group_at_mouse_pos_z = i;
+      break;
+    }
+  }
+  if (s.input->mouse_button_down_events[(i32)MouseButton::LEFT]) {
+    if (top_group_at_mouse_pos_z > -1) {
+      Group *g = s.root_groups[top_group_at_mouse_pos_z];
+      if (s.fullscreen_group != g) {
+        s.root_groups.shift_delete(top_group_at_mouse_pos_z);
+        s.root_groups.insert(0, g);
+      }
+    }
+  }
+
   // one pass for input handling
   for (i32 i = 0; i < s.root_groups.count; i++) {
     Group *g = s.root_groups[i];
@@ -1194,25 +1223,6 @@ void start_frame(InputState *input, RenderTarget target)
   //   Group *g = &s.groups[i];
   //   propagate_groups(g);
   // }
-
-  // TODO: is this the best place to handle window focus
-  if (s.input->mouse_button_down_events[(i32)MouseButton::LEFT]) {
-    i32 top_window_at_mouse_pos_z = -1;
-    for (i32 i = 0; i < s.root_groups.count; i++) {
-      if (in_rect(s.input->mouse_pos, s.root_groups[i]->rect)) {
-        top_window_at_mouse_pos_z = i;
-        break;
-      }
-    }
-
-    if (top_window_at_mouse_pos_z > -1) {
-      Group *g = s.root_groups[top_window_at_mouse_pos_z];
-      if (s.fullscreen_group != g) {
-        s.root_groups.shift_delete(top_window_at_mouse_pos_z);
-        s.root_groups.insert(0, g);
-      }
-    }
-  }
 
   // one pass for drawing, in reverse z order
   for (i32 i = s.root_groups.count - 1; i >= 0; i--) {
