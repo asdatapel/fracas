@@ -276,7 +276,9 @@ struct DuiState {
   StaticPoolAllocator<Group, 1024> groups;
 
   StaticArray<Group *, 1024> root_groups;
-  Window *cw = 0;
+
+  Group *cg  = nullptr;
+  Window *cw = nullptr;
 
   InputState *input;
   Vec2f canvas_span;
@@ -291,8 +293,8 @@ struct DuiState {
   Vec2f dragging_total_delta;
   Vec2f dragging_frame_delta;
 
-  i64 frame                     = 0;
-  Group *top_group_at_mouse_pos = nullptr;
+  i64 frame                          = 0;
+  Group *top_root_group_at_mouse_pos = nullptr;
 };
 
 DuiState s;
@@ -313,10 +315,12 @@ namespace Dui
 {
 b8 do_hot(DuiId id, Rect rect)
 {
-  b8 is_in_top_container =
-      !s.top_group_at_mouse_pos || in_rect(s.input->mouse_pos, s.top_group_at_mouse_pos->rect);
+  b8 is_in_top_group = !s.top_root_group_at_mouse_pos || !s.cg ||
+                       (s.cg->root == s.top_root_group_at_mouse_pos &&
+                        in_rect(s.input->mouse_pos, s.top_root_group_at_mouse_pos->rect));
+
   b8 is_in_current_window = !s.cw || in_rect(s.input->mouse_pos, s.cw->rect);
-  b8 is_hot               = is_in_top_container && is_in_current_window && in_rect(s.input->mouse_pos, rect);
+  b8 is_hot = is_in_top_group && is_in_current_window && in_rect(s.input->mouse_pos, rect);
   if (is_hot)
     s.set_hot(id);
   else
@@ -993,6 +997,8 @@ void start_frame_for_group(Group *g)
 {
   const f32 RESIZE_HANDLES_OVERSIZE = 2.f;
 
+  s.cg = g;
+
   if (!g->parent) {
     // only do movement/resizing logic if window is not fullscreen
     if (s.fullscreen_group != g) {
@@ -1106,6 +1112,7 @@ void start_frame_for_group(Group *g)
     }
   }
 
+
   if (g->is_leaf()) {
     start_frame_for_leaf(g);
     return;
@@ -1147,6 +1154,8 @@ void start_frame_for_group(Group *g)
       }
     }
   }
+  
+  s.cg = nullptr;
 
   for (i32 i = 0; i < g->splits.count; i++) {
     start_frame_for_group(g->splits[i].child);
@@ -1179,20 +1188,20 @@ void start_frame(InputState *input, RenderTarget target)
   clear_draw_list(&main_dl);
 
   // figure out the top groups first
-  s.top_group_at_mouse_pos     = nullptr;
-  i32 top_group_at_mouse_pos_z = -1;
+  s.top_root_group_at_mouse_pos     = nullptr;
+  i32 top_root_group_at_mouse_pos_z = -1;
   for (i32 i = 0; i < s.root_groups.count; i++) {
     if (in_rect(s.input->mouse_pos, s.root_groups[i]->rect)) {
-      s.top_group_at_mouse_pos = s.root_groups[i];
-      top_group_at_mouse_pos_z = i;
+      s.top_root_group_at_mouse_pos = s.root_groups[i];
+      top_root_group_at_mouse_pos_z = i;
       break;
     }
   }
   if (s.input->mouse_button_down_events[(i32)MouseButton::LEFT]) {
-    if (top_group_at_mouse_pos_z > -1) {
-      Group *g = s.root_groups[top_group_at_mouse_pos_z];
+    if (top_root_group_at_mouse_pos_z > -1) {
+      Group *g = s.root_groups[top_root_group_at_mouse_pos_z];
       if (s.fullscreen_group != g) {
-        s.root_groups.shift_delete(top_group_at_mouse_pos_z);
+        s.root_groups.shift_delete(top_root_group_at_mouse_pos_z);
         s.root_groups.insert(0, g);
       }
     }
