@@ -223,6 +223,8 @@ struct Window {
 
   Group *parent  = nullptr;
   i64 last_frame = -1;
+  i64 last_frame_started =
+      -1;  // used to prevent start_frame from being called multiple times for the same window.
 
   Vec2f scroll_offset_target = {};
   Vec2f scroll_offset        = {};
@@ -749,7 +751,58 @@ void combine_leaf_groups(Group *target, Group *src)
 // input group might get destroyed, so returns the new one
 Group *handle_dragging_group(Group *g, DuiId id)
 {
-  auto center = [](f32 width1, f32 width2) { return (width1 * .5f) - (width2 * .5f); };
+  // _pos = 0 for left/top, 1 for middle, 2 for right/bottom
+  auto snap_in_rect = [](Vec2f span, Rect container, i32 x_pos, i32 y_pos) -> Rect {
+    Rect rect;
+    rect.width  = span.x;
+    rect.height = span.y;
+
+    if (x_pos == 0) {
+      rect.x = container.x;
+    } else if (x_pos == 1) {
+      rect.x = container.x + (container.width / 2.f) - (rect.width / 2.f);
+    } else {
+      rect.x = container.x + container.width - rect.width;
+    }
+
+    if (y_pos == 0) {
+      rect.y = container.y;
+    } else if (y_pos == 1) {
+      rect.y = container.y + (container.height / 2.f) - (rect.height / 2.f);
+    } else {
+      rect.y = container.y + container.height - rect.height;
+    }
+
+    return rect;
+  };
+
+  auto do_snap_control = [](DuiId control_id, DuiId dragging_id, Rect rect, Group *g,
+                            Group *target_group, i32 axis, b8 dir) -> bool {
+    DuiId hot = do_hot(control_id, rect);
+    if (hot)
+      push_rect(&forground_dl, rect, l_dark);
+    else
+      push_rect(&forground_dl, rect, l);
+
+    if (hot) {
+      Rect preview_rect = target_group->rect;
+      if (axis == 0) {
+        preview_rect.height /= 2;
+        if (dir) preview_rect.y += preview_rect.height;
+      } else {
+        preview_rect.width /= 2;
+        if (dir) preview_rect.x += preview_rect.width;
+      }
+
+      push_rect(&forground_dl, preview_rect, {1, 1, 1, .5});  // preview
+      if (s.just_stopped_being_dragging == dragging_id) {
+        snap_group(g, target_group, axis, dir);
+        return true;
+      }
+    }
+
+    return false;
+  };
 
   if (s.fullscreen_group == g) return g;
 
@@ -764,98 +817,88 @@ Group *handle_dragging_group(Group *g, DuiId id)
 
     f32 three_fifth_dock_controls_width = dock_controls_width / 2.f;
     f32 fifth_dock_controls_width       = dock_controls_width / 5.f;
+    Vec2f horizontal_button_span = {three_fifth_dock_controls_width, fifth_dock_controls_width};
+    Vec2f vertical_button_span   = {fifth_dock_controls_width, three_fifth_dock_controls_width};
 
-    Rect dock_control_rect;
-    dock_control_rect.x      = window_rect.x + center(window_rect.width, dock_controls_width);
-    dock_control_rect.y      = window_rect.y + center(window_rect.height, dock_controls_width);
-    dock_control_rect.width  = dock_controls_width;
-    dock_control_rect.height = dock_controls_width;
+    if (target_group->root != target_group) {
+      Rect root_window_rect = target_group->root->get_window_rect();
 
-    Rect left_dock_control_rect;
-    left_dock_control_rect.x = dock_control_rect.x;
-    left_dock_control_rect.y =
-        dock_control_rect.y + center(dock_controls_width, three_fifth_dock_controls_width);
-    left_dock_control_rect.width  = fifth_dock_controls_width;
-    left_dock_control_rect.height = three_fifth_dock_controls_width;
+      SUB_ID(left_root_dock_control_id, id);
+      SUB_ID(right_root_dock_control_id, id);
+      SUB_ID(top_root_dock_control_id, id);
+      SUB_ID(bottom_root_dock_control_id, id);
+      Rect left_root_dock_control_rect = snap_in_rect(vertical_button_span, root_window_rect, 0, 1);
+      Rect right_root_dock_control_rect =
+          snap_in_rect(vertical_button_span, root_window_rect, 2, 1);
+      Rect top_root_dock_control_rect =
+          snap_in_rect(horizontal_button_span, root_window_rect, 1, 0);
+      Rect bottom_root_dock_control_rect =
+          snap_in_rect(horizontal_button_span, root_window_rect, 1, 2);
+      if (do_snap_control(left_root_dock_control_id, id, left_root_dock_control_rect, g,
+                          target_group->root, 1, false) ||
+          do_snap_control(right_root_dock_control_id, id, right_root_dock_control_rect, g,
+                          target_group->root, 1, true) ||
+          do_snap_control(top_root_dock_control_id, id, top_root_dock_control_rect, g,
+                          target_group->root, 0, false) ||
+          do_snap_control(bottom_root_dock_control_id, id, bottom_root_dock_control_rect, g,
+                          target_group->root, 0, true)) {
+        return g;
+      }
+    }
+
+    Rect dock_control_rect =
+        snap_in_rect({dock_controls_width, dock_controls_width}, window_rect, 1, 1);
+
     SUB_ID(left_dock_control_id, id);
-    DuiId left_dock_control_hot = do_hot(left_dock_control_id, left_dock_control_rect);
-    if (left_dock_control_hot)
-      push_rect(&forground_dl, left_dock_control_rect, l_dark);
-    else
-      push_rect(&forground_dl, left_dock_control_rect, l);
-
-    Rect right_dock_control_rect;
-    right_dock_control_rect.x =
-        dock_control_rect.x + dock_control_rect.width - fifth_dock_controls_width;
-    right_dock_control_rect.y =
-        dock_control_rect.y + center(dock_controls_width, three_fifth_dock_controls_width);
-    right_dock_control_rect.width  = fifth_dock_controls_width;
-    right_dock_control_rect.height = three_fifth_dock_controls_width;
     SUB_ID(right_dock_control_id, id);
-    DuiId right_dock_control_hot = do_hot(right_dock_control_id, right_dock_control_rect);
-    if (right_dock_control_hot)
-      push_rect(&forground_dl, right_dock_control_rect, l_dark);
-    else
-      push_rect(&forground_dl, right_dock_control_rect, l);
-
-    Rect top_dock_control_rect;
-    top_dock_control_rect.x =
-        dock_control_rect.x + center(dock_controls_width, three_fifth_dock_controls_width);
-    top_dock_control_rect.y      = dock_control_rect.y;
-    top_dock_control_rect.width  = three_fifth_dock_controls_width;
-    top_dock_control_rect.height = fifth_dock_controls_width;
     SUB_ID(top_dock_control_id, id);
-    DuiId top_dock_control_hot = do_hot(top_dock_control_id, top_dock_control_rect);
-    if (top_dock_control_hot)
-      push_rect(&forground_dl, top_dock_control_rect, l_dark);
-    else
-      push_rect(&forground_dl, top_dock_control_rect, l);
-
-    Rect bottom_dock_control_rect;
-    bottom_dock_control_rect.x =
-        dock_control_rect.x + center(dock_controls_width, three_fifth_dock_controls_width);
-    bottom_dock_control_rect.y =
-        dock_control_rect.y + dock_control_rect.height - fifth_dock_controls_width;
-    bottom_dock_control_rect.width  = three_fifth_dock_controls_width;
-    bottom_dock_control_rect.height = fifth_dock_controls_width;
     SUB_ID(bottom_dock_control_id, id);
-    DuiId bottom_dock_control_hot = do_hot(bottom_dock_control_id, bottom_dock_control_rect);
-    if (bottom_dock_control_hot)
-      push_rect(&forground_dl, bottom_dock_control_rect, l_dark);
-    else
-      push_rect(&forground_dl, bottom_dock_control_rect, l);
-
-    if (left_dock_control_hot) {
-      push_rect(&forground_dl, window_rect, {1, 1, 1, .5});  // preview
-      if (s.just_stopped_being_dragging == id) {
-        snap_group(g, target_group, 1, 0);
-      }
-    }
-    if (right_dock_control_hot) {
-      push_rect(&forground_dl, window_rect, {1, 1, 1, .5});  // preview
-      if (s.just_stopped_being_dragging == id) {
-        snap_group(g, target_group, 1, 1);
-      }
-    }
-    if (top_dock_control_hot) {
-      push_rect(&forground_dl, window_rect, {1, 1, 1, .5});  // preview
-      if (s.just_stopped_being_dragging == id) {
-        snap_group(g, target_group, 0, 0);
-      }
-    }
-    if (bottom_dock_control_hot) {
-      push_rect(&forground_dl, window_rect, {1, 1, 1, .5});  // preview
-      if (s.just_stopped_being_dragging == id) {
-        snap_group(g, target_group, 0, 1);
-      }
+    Rect left_dock_control_rect   = snap_in_rect(vertical_button_span, dock_control_rect, 0, 1);
+    Rect right_dock_control_rect  = snap_in_rect(vertical_button_span, dock_control_rect, 2, 1);
+    Rect top_dock_control_rect    = snap_in_rect(horizontal_button_span, dock_control_rect, 1, 0);
+    Rect bottom_dock_control_rect = snap_in_rect(horizontal_button_span, dock_control_rect, 1, 2);
+    if (do_snap_control(left_dock_control_id, id, left_dock_control_rect, g, target_group, 1,
+                        false) ||
+        do_snap_control(right_dock_control_id, id, right_dock_control_rect, g, target_group, 1,
+                        true) ||
+        do_snap_control(top_dock_control_id, id, top_dock_control_rect, g, target_group, 0,
+                        false) ||
+        do_snap_control(bottom_dock_control_id, id, bottom_dock_control_rect, g, target_group, 0,
+                        true)) {
+      return g;
     }
 
     if (g->is_leaf() && in_rect(s.input->mouse_pos, target_group->get_titlebar_full_rect())) {
       push_rect(&forground_dl, window_rect, {1, 1, 1, .5});  // preview
       if (s.just_stopped_being_dragging == id) {
         combine_leaf_groups(target_group, g);
-        g = target_group;
+        return target_group;
       }
+    }
+
+    if (target_group == s.fullscreen_group &&
+        s.fullscreen_group == s.empty_group &&
+        in_rect(s.input->mouse_pos, target_group->get_titlebar_full_rect())) {
+      push_rect(&forground_dl, window_rect, {1, 1, 1, .5});  // preview
+      if (s.just_stopped_being_dragging == id) {
+        
+        Group *first_leaf_node = g;
+        while (!first_leaf_node->is_leaf()) {
+          first_leaf_node = first_leaf_node->splits[0].child;
+        }
+        s.empty_group = first_leaf_node;
+
+        free_group(s.fullscreen_group);
+        s.fullscreen_group = g;
+
+        // move new fullscreen group to the back
+        i32 fullscreen_group_z = get_group_z(g);
+        s.root_groups.shift_delete(fullscreen_group_z);
+        s.root_groups.push_back(g);
+
+        return g;
+      }
+      
     }
   }
 
@@ -946,6 +989,11 @@ void start_frame_for_leaf(Group *g)
   for (i32 w_i = 0; w_i < g->windows.count; w_i++) {
     DuiId window_id = g->windows[w_i];
     Window *w       = get_window(window_id);
+
+    if (w->last_frame_started == s.frame) {
+      continue;
+    }
+    w->last_frame_started = s.frame;
 
     start_frame_for_window(w);
 
@@ -1112,7 +1160,6 @@ void start_frame_for_group(Group *g)
     }
   }
 
-
   if (g->is_leaf()) {
     start_frame_for_leaf(g);
     return;
@@ -1154,7 +1201,7 @@ void start_frame_for_group(Group *g)
       }
     }
   }
-  
+
   s.cg = nullptr;
 
   for (i32 i = 0; i < g->splits.count; i++) {
