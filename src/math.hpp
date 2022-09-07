@@ -131,9 +131,15 @@ struct Vec4i {
 };
 
 struct Vec2f {
-  float x, y;
+  union {
+    struct {
+      float x, y;
+    };
+    float values[2];
+  };
 
   float len() { return sqrt(x * x + y * y); }
+  float &operator[](i32 i) { return values[i]; }
 };
 inline Vec2f operator+(const Vec2f &lhs, const Vec2f &rhs)
 {
@@ -194,7 +200,7 @@ struct Vec3f {
 
   Vec2f xy() { return {x, y}; }
   float len() { return sqrt(x * x + y * y + z * z); }
-  float operator[](i32 i) { return values[i]; }
+  float &operator[](i32 i) { return values[i]; }
 };
 inline Vec3f operator+(const Vec3f &lhs, const Vec3f &rhs)
 {
