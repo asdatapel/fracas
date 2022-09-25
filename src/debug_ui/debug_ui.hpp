@@ -104,8 +104,6 @@ struct Split {
 struct Group {
   DuiId id      = -1;
   Group *parent = nullptr;
-
-  Vec2f div_pct = {1.f, 1.f};  // percentage of root group that this group occupies
   Rect rect;
 
   // cache to prevent walking up the tree constantly
@@ -113,7 +111,7 @@ struct Group {
 
   // Either split into children groups...
   i32 split_axis = -1;
-  StaticArray<Group *, 32> children;
+  StaticArray<Split, 32> splits;
 
   // or is a child node with windows
   StaticArray<DuiId, 32> windows;
@@ -455,8 +453,8 @@ Group *get_leaf_group_at_pos(Vec2f pos, Group *parent_group)
     return in_rect(pos, parent_group->rect) ? parent_group : nullptr;
   }
 
-  for (i32 i = 0; i < parent_group->children.count; i++) {
-    Group *g = parent_group->children[i];
+  for (i32 i = 0; i < parent_group->splits.count; i++) {
+    Group *g = parent_group->splits[i].child;
 
     Group *possible_result = get_leaf_group_at_pos(pos, g);
     if (possible_result) return possible_result;
@@ -490,15 +488,20 @@ void propagate_groups(Group *g, Group *root = nullptr, Group *parent = nullptr)
     f32 x = g->rect.x;
     f32 y = g->rect.y;
 
-    for (i32 i = 0; i < g->children.count; i++) {
-      Group *child = g->children[i];
+    for (i32 i = 0; i < g->splits.count; i++) {
+      Split &split = g->splits[i];
+      Group *child = split.child;
 
       if (g->split_axis == 0) {
-        f32 height  = g->root->rect.height * child->div_pct.x;
+        split.div_position = y;
+
+        f32 height  = g->rect.height * split.div_pct;
         child->rect = {x, y, g->rect.width, height};
         y += height;
       } else {
-        f32 width   = g->root->rect.width * child->div_pct.y;
+        split.div_position = x;
+
+        f32 width   = g->rect.width * split.div_pct;
         child->rect = {x, y, width, g->rect.height};
         x += width;
       }
@@ -513,34 +516,6 @@ void propagate_groups(Group *g, Group *root = nullptr, Group *parent = nullptr)
     }
   }
 }
-
-void resize_splits_by_factor(Group *g, f32 factor, i32 axis)
-{
-  g->div_pct[axis] *= factor;
-
-  for (i32 i = 0; i < g->children.count; i++) {
-    resize_splits_by_factor(g->children[i], factor, axis);
-  }
-};
-
-b8 resize_border_splits_and_propagate(Group *g, f32 pct_change, i32 axis, b8 dir)
-{
-  g->div_pct[axis] += pct_change;
-
-  if (g->split_axis != axis) {
-    for (i32 i = 0; i < g->children.count; i++) {
-      if (!resize_border_splits_and_propagate(g->children[i], pct_change, axis, dir)) return false;
-    }
-  } else {
-    if (g->children.count > 0) {
-      if (!resize_border_splits_and_propagate(g->children[dir ? g->children.count - 1 : 0],
-                                              pct_change, axis, dir))
-        return false;
-    }
-  }
-
-  return true;
-};
 
 // FIXME parent_window and unparent_window do too much. parent should only parent and unparent
 // should only unparent.
@@ -593,17 +568,18 @@ Window *create_new_window(DuiId id, String name, Rect rect, WindowOptions option
 
 void merge_splits(Group *g)
 {
-  for (i32 i = 0; i < g->children.count; i++) {
-    Group *child = g->children[i];
+  for (i32 i = 0; i < g->splits.count; i++) {
+    Group *child = g->splits[i].child;
     if (!child->is_leaf() && !is_empty(child) && child->split_axis == g->split_axis) {
-      g->children.shift_delete(i);
+      Split split = g->splits[i];
+      g->splits.shift_delete(i);
 
-      for (i32 child_i = 0; child_i < child->children.count; child_i++) {
-        Group *grandchild = child->children[child_i];
-        grandchild->div_pct[g->split_axis] *= child->div_pct[g->split_axis];
-        g->children.insert(i + child_i, grandchild);
+      for (i32 child_i = 0; child_i < child->splits.count; child_i++) {
+        Split new_split = child->splits[child_i];
+        new_split.div_pct *= split.div_pct;
+        g->splits.insert(i + child_i, new_split);
 
-        grandchild->parent = g;
+        new_split.child->parent = g;
       }
 
       free_group(child);
@@ -627,62 +603,75 @@ b8 snap_group(Group *g, Group *target, i32 axis, b8 dir, Group *sibling = nullpt
     Group *new_g             = create_group(target, target->rect);
     new_g->windows           = target->windows;
     new_g->active_window_idx = target->active_window_idx;
-    new_g->div_pct           = target->div_pct;
-    new_g->div_pct[axis] *= .5f;
-
     if (s.empty_group == target) s.empty_group = new_g;
 
     target->windows.clear();
     target->split_axis = axis;
-    target->children.push_back(new_g);
-    target->children.insert(dir ? 1 : 0, g);
 
-    resize_splits_by_factor(g, target->div_pct[axis] * .5f, axis);
-    resize_splits_by_factor(g, target->div_pct[1 - axis], 1 - axis);
+    Split orig_split;
+    orig_split.child   = new_g;
+    orig_split.div_pct = .5f;
+    target->splits.push_back(orig_split);
+
+    Split new_split;
+    new_split.child   = g;
+    new_split.div_pct = .5f;
+    target->splits.insert(dir ? 1 : 0, new_split);
+
   } else if (target->split_axis != axis) {  // already split, but new axis
     assert(!sibling);
 
     // move original children to a new group
     Group *new_g      = create_group(target, target->rect);
-    new_g->children   = target->children;
     new_g->split_axis = target->split_axis;
-    new_g->div_pct    = target->div_pct;
-    resize_splits_by_factor(new_g, .5f, axis);
-
+    new_g->splits     = target->splits;
+    for (i32 i = 0; i < new_g->splits.count; i++) {
+      Group *target = new_g->splits[i].child;
+    }
     if (s.empty_group == target) s.empty_group = new_g;
 
-    resize_splits_by_factor(g, target->div_pct[axis] * .5f, axis);
-    resize_splits_by_factor(g, target->div_pct[1 - axis], 1 - axis);
+    target->splits.clear();
 
-    target->children.clear();
-    target->children.push_back(new_g);
+    Split orig_split;
+    orig_split.child   = new_g;
+    orig_split.div_pct = .5f;
+    target->splits.push_back(orig_split);
+
+    Split new_split;
+    new_split.child   = g;
+    new_split.div_pct = .5f;
+    target->splits.insert(dir ? 1 : 0, new_split);
+
     target->split_axis = axis;
-    target->children.insert(dir ? 1 : 0, g);
   } else if (sibling) {  // already split, same axis, in the middle
     i32 sibling_idx = -1;
-    for (i32 i = 0; i < target->children.count; i++) {
-      if (target->children[i] == sibling) {
+    for (i32 i = 0; i < target->splits.count; i++) {
+      if (target->splits[i].child == sibling) {
         sibling_idx = i;
         break;
       }
     }
+
     assert(sibling_idx > -1);
 
-    target->children.insert(dir ? sibling_idx + 1 : sibling_idx, g);
-    resize_splits_by_factor(g, target->children[sibling_idx]->div_pct[axis] * .5f, axis);
-    resize_splits_by_factor(g, target->children[sibling_idx]->div_pct[1 - axis], 1 - axis);
+    f32 half_size                       = target->splits[sibling_idx].div_pct / 2;
+    target->splits[sibling_idx].div_pct = half_size;
 
-    resize_splits_by_factor(target->children[sibling_idx], .5f, axis);
+    Split new_split;
+    new_split.child   = g;
+    new_split.div_pct = half_size;
+    target->splits.insert(dir ? sibling_idx + 1 : sibling_idx, new_split);
   } else {  // already split, same axis, at the ends
-    f32 new_split_pct = 1.f / (target->children.count + 1);
+    f32 new_split_pct = 1.f / (target->splits.count + 1);
 
-    target->children.insert(dir ? target->children.count : 0, g);
-    resize_splits_by_factor(g, target->div_pct[axis] * new_split_pct, axis);
-    resize_splits_by_factor(g, target->div_pct[1 - axis], 1 - axis);
-
-    for (i32 i = 0; i < target->children.count; i++) {
-      resize_splits_by_factor(target->children[i], 1 - new_split_pct, axis);
+    for (i32 i = 0; i < target->splits.count; i++) {
+      target->splits[i].div_pct *= 1 - new_split_pct;
     }
+
+    Split new_split;
+    new_split.child   = g;
+    new_split.div_pct = new_split_pct;
+    target->splits.insert(dir ? target->splits.count : 0, new_split);
   }
 
   if (!g->parent) {
@@ -715,24 +704,24 @@ Group *unsnap_group(Group *g)
 
   DuiId idx;
   f32 free_space;
-  for (i32 i = 0; i < parent_g->children.count; i++) {
-    Group *child = parent_g->children[i];
-    if (child == g) {
+  for (i32 i = 0; i < parent_g->splits.count; i++) {
+    Split split = parent_g->splits[i];
+    if (split.child == g) {
       idx        = i;
-      free_space = child->div_pct[parent_g->split_axis];
+      free_space = split.div_pct;
       break;
     }
   }
-  parent_g->children.shift_delete(idx);
+  parent_g->splits.shift_delete(idx);
 
-  for (i32 i = 0; i < parent_g->children.count; i++) {
-    parent_g->children[i]->div_pct[parent_g->split_axis] *= 1 / (1 - free_space);
+  for (i32 i = 0; i < parent_g->splits.count; i++) {
+    parent_g->splits[i].div_pct *= 1 / (1 - free_space);
   }
 
-  if (parent_g->children.count == 1) {
-    Group *child                = parent_g->children[0];
+  if (parent_g->splits.count == 1) {
+    Group *child                = parent_g->splits[0].child;
     parent_g->split_axis        = child->split_axis;
-    parent_g->children          = child->children;
+    parent_g->splits            = child->splits;
     parent_g->windows           = child->windows;
     parent_g->active_window_idx = child->active_window_idx;
     if (is_empty(child)) s.empty_group = parent_g;
@@ -887,13 +876,15 @@ Group *handle_dragging_group(Group *g, DuiId id)
       }
     }
 
-    if (target_group == s.fullscreen_group && s.fullscreen_group == s.empty_group &&
+    if (target_group == s.fullscreen_group &&
+        s.fullscreen_group == s.empty_group &&
         in_rect(s.input->mouse_pos, target_group->get_titlebar_full_rect())) {
       push_rect(&forground_dl, window_rect, {1, 1, 1, .5});  // preview
       if (s.just_stopped_being_dragging == id) {
+        
         Group *first_leaf_node = g;
         while (!first_leaf_node->is_leaf()) {
-          first_leaf_node = first_leaf_node->children[0];
+          first_leaf_node = first_leaf_node->splits[0].child;
         }
         s.empty_group = first_leaf_node;
 
@@ -907,6 +898,7 @@ Group *handle_dragging_group(Group *g, DuiId id)
 
         return g;
       }
+      
     }
   }
 
@@ -924,8 +916,8 @@ namespace Dui
 void draw_group_and_children(Group *g)
 {
   if (!g->is_leaf()) {
-    for (i32 i = 0; i < g->children.count; i++) {
-      draw_group_and_children(g->children[i]);
+    for (i32 i = 0; i < g->splits.count; i++) {
+      draw_group_and_children(g->splits[i].child);
     }
     return;
   }
@@ -1173,27 +1165,27 @@ void start_frame_for_group(Group *g)
     return;
   }
 
-  for (i32 i = 1; i < g->children.count; i++) {
+  for (i32 i = 1; i < g->splits.count; i++) {
     if (g->split_axis == 0) {
       Rect split_move_handle;
-      split_move_handle.x      = g->rect.x;
-      split_move_handle.y      = g->children[i]->rect.y - WINDOW_BORDER_SIZE - WINDOW_MARGIN_SIZE;
-      split_move_handle.width  = g->rect.width;
+      split_move_handle.x     = g->rect.x;
+      split_move_handle.y     = g->splits[i].div_position - WINDOW_BORDER_SIZE - WINDOW_MARGIN_SIZE;
+      split_move_handle.width = g->rect.width;
       split_move_handle.height = 2 * (WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE);
       SUB_ID(split_move_handle_id, g->id + i);
       DuiId split_move_handle_hot      = do_hot(split_move_handle_id, split_move_handle);
       DuiId split_move_handle_active   = do_active(split_move_handle_id);
       DuiId split_move_handle_dragging = do_dragging(split_move_handle_id);
       if (split_move_handle_dragging) {
-        f32 move_pct = s.dragging_frame_delta.y / g->root->rect.height;
-        resize_border_splits_and_propagate(g->children[i - 1], move_pct, 0, 1);
-        resize_border_splits_and_propagate(g->children[i], -move_pct, 0, 0);
+        f32 move_pct = s.dragging_frame_delta.y / g->rect.height;
+        g->splits[i - 1].div_pct += move_pct;
+        g->splits[i].div_pct -= move_pct;
       }
     } else if (g->split_axis == 1) {
       Rect split_move_handle;
-      split_move_handle.x      = g->children[i]->rect.x - WINDOW_BORDER_SIZE - WINDOW_MARGIN_SIZE;
-      split_move_handle.y      = g->rect.y;
-      split_move_handle.width  = 2 * (WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE);
+      split_move_handle.x     = g->splits[i].div_position - WINDOW_BORDER_SIZE - WINDOW_MARGIN_SIZE;
+      split_move_handle.y     = g->rect.y;
+      split_move_handle.width = 2 * (WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE);
       split_move_handle.height = g->rect.height;
       SUB_ID(split_move_handle_id, g->id + i);
       DuiId split_move_handle_hot      = do_hot(split_move_handle_id, split_move_handle);
@@ -1203,17 +1195,17 @@ void start_frame_for_group(Group *g)
         push_rect(&forground_dl, {10, 10, 20, 20}, {1, 1, 1, 1});
       }
       if (split_move_handle_dragging) {
-        f32 move_pct = s.dragging_frame_delta.x / g->root->rect.width;
-        resize_border_splits_and_propagate(g->children[i - 1], move_pct, 1, 1);
-        resize_border_splits_and_propagate(g->children[i], -move_pct, 1, 0);
+        f32 move_pct = s.dragging_frame_delta.x / g->rect.width;
+        g->splits[i - 1].div_pct += move_pct;
+        g->splits[i].div_pct -= move_pct;
       }
     }
   }
 
   s.cg = nullptr;
 
-  for (i32 i = 0; i < g->children.count; i++) {
-    start_frame_for_group(g->children[i]);
+  for (i32 i = 0; i < g->splits.count; i++) {
+    start_frame_for_group(g->splits[i].child);
   }
 
   // after handling children, honor any contraints here
@@ -1505,12 +1497,6 @@ void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
     groups.push_back(&s.groups[i]);
   }
   printf("groups count: %llu\n", groups.size());
-
-  Group *top_group = get_top_leaf_group_at_pos(s.input->mouse_pos);
-  if (top_group) {
-    printf("size: width: %f, height: %f\n", top_group->rect.width, top_group->rect.height);
-    printf("pct: x: %f, y: %f\n", top_group->div_pct.x, top_group->div_pct.y);
-  }
 }
 }  // namespace Dui
 
