@@ -311,26 +311,6 @@ i32 get_group_z(Group *g)
 }
 
 b8 is_empty(Group *g) { return g == s.empty_group; }
-
-const f32 MINIMUM_GROUP_WIDTH  = 100.f;
-const f32 MINIMUM_GROUP_HEIGHT = TITLEBAR_HEIGHT + 15.f;
-b8 too_small_width(Group *parent, f32 parent_width)
-{
-  for (i32 i = 0; i < parent->splits.count; i++) {
-    f32 width = parent->splits[i].div_pct * parent_width;
-    if (parent->split_axis == 1 && width < MINIMUM_GROUP_WIDTH) {
-      return true;
-    }
-    if (too_small_width(parent->splits[i].child, width)) return true;
-  }
-  return false;
-}
-b8 too_small_width(Group *root)
-{
-  if (root->rect.width < MINIMUM_GROUP_WIDTH) return true;
-  return too_small_width(root, root->rect.width);
-}
-
 }  // namespace Dui
 
 namespace Dui
@@ -537,31 +517,28 @@ void propagate_groups(Group *g, Group *root = nullptr, Group *parent = nullptr)
   }
 }
 
-f32 test_resize_border_splits(Group *g, f32 pct_change, i32 axis, b8 dir, f32 old_split_width)
+// returns px
+f32 get_minimum_size(Group *g, f32 g_size_px, i32 axis, b8 dir, b8 commmit = false)
 {
   if (g->splits.count > 0 && g->split_axis != axis) {
-    f32 max_pct_change =
-        test_resize_border_splits(g->splits[0].child, pct_change, axis, dir, old_split_width);
+    f32 min_size = get_minimum_size(g->splits[0].child, g_size_px, axis, dir);
     for (i32 i = 1; i < g->splits.count; i++) {
-      max_pct_change = fmaxf(
-          max_pct_change,
-          test_resize_border_splits(g->splits[i].child, pct_change, axis, dir, old_split_width));
+      min_size = fmaxf(min_size, get_minimum_size(g->splits[i].child, g_size_px, axis, dir));
     }
-    return max_pct_change;
+    return min_size;
   } else if (g->splits.count > 0) {
-    i32 changing_split_i = dir ? g->splits.count - 1 : 0;
-    f32 old_value        = g->splits[changing_split_i].div_pct;
-    f32 new_value        = 1 - ((1 - old_value) / pct_change);
+    f32 non_changing_divs_size_px = 0.f;
+    for (i32 i = 0; i < g->splits.count - 1; i++) {
+      non_changing_divs_size_px += g_size_px * g->splits[i - dir + 1].div_pct;
+    }
 
-    f32 tolerable_child_pct_change = test_resize_border_splits(
-        g->splits[changing_split_i].child, pct_change * (new_value / old_value), axis, dir,
-        old_value * old_split_width);
-
-    return tolerable_child_pct_change / (new_value / old_value);
+    Split *end_split = &g->splits[dir ? g->splits.count - 1 : 0];
+    return non_changing_divs_size_px +
+           get_minimum_size(end_split->child, g_size_px * end_split->div_pct, axis, dir);
   }
 
-  f32 tolerable_pct_change = MINIMUM_GROUP_WIDTH / old_split_width;
-  return fmaxf(tolerable_pct_change, pct_change);
+  const f32 MINIMUM_GROUP_SIZE[2]  = {TITLEBAR_HEIGHT + 15.f, 50.f};
+  return MINIMUM_GROUP_SIZE[axis];
 }
 
 void resize_border_splits_and_propagate(Group *g, f32 pct_change, i32 axis, b8 dir)
@@ -1244,9 +1221,33 @@ void start_frame_for_group(Group *g)
       DuiId split_move_handle_active   = do_active(split_move_handle_id);
       DuiId split_move_handle_dragging = do_dragging(split_move_handle_id);
       if (split_move_handle_dragging) {
-        f32 move_pct = s.dragging_frame_delta.y / g->rect.height;
-        g->splits[i - 1].div_pct += move_pct;
-        g->splits[i].div_pct -= move_pct;
+        f32 delta_px = s.input->mouse_pos.y - split_move_handle.y;
+
+        f32 min_px_up = get_minimum_size(g->splits[i - 1].child,
+                                           g->splits[i - 1].div_pct * g->rect.height, 0, 1);
+        f32 min_px_down =
+            get_minimum_size(g->splits[i].child, g->splits[i].div_pct * g->rect.height, 0, 0);
+
+        b8 too_far_up = min_px_up > g->splits[i - 1].child->rect.height + delta_px;
+        b8 too_far_down = min_px_down > g->splits[i].child->rect.height - delta_px;
+        if (too_far_up && too_far_down) {
+          break;
+        } else if (too_far_up) {
+          delta_px = min_px_up - g->splits[i - 1].child->rect.height;
+        } else if (too_far_down) {
+          delta_px = - (min_px_down - g->splits[i].child->rect.height);
+        }
+
+        f32 move_pct = delta_px / g->rect.height;
+
+        f32 up_pct_change =
+            (g->splits[i - 1].div_pct + move_pct) / g->splits[i - 1].div_pct;
+        f32 down_pct_change = (g->splits[i].div_pct - move_pct) / g->splits[i].div_pct;
+        
+        resize_border_splits_and_propagate(g->splits[i - 1].child, up_pct_change, 0, 1);
+        resize_border_splits_and_propagate(g->splits[i].child, down_pct_change, 0, 0);
+        g->splits[i - 1].div_pct *= up_pct_change;
+        g->splits[i].div_pct *= down_pct_change;
       }
     } else if (g->split_axis == 1) {
       Rect split_move_handle;
@@ -1262,37 +1263,29 @@ void start_frame_for_group(Group *g)
         push_rect(&forground_dl, {10, 10, 20, 20}, {1, 1, 1, 1});
       }
       if (split_move_handle_dragging) {
-        f32 want_move_pct = s.dragging_frame_delta.x / g->rect.width;
+        f32 delta_px = s.input->mouse_pos.x - split_move_handle.x;
 
-        f32 want_left_pct_change =
-            (g->splits[i - 1].div_pct + want_move_pct) / g->splits[i - 1].div_pct;
-        f32 want_right_pct_change = (g->splits[i].div_pct - want_move_pct) / g->splits[i].div_pct;
+        f32 min_px_left = get_minimum_size(g->splits[i - 1].child,
+                                           g->splits[i - 1].div_pct * g->rect.width, 1, 1);
+        f32 min_px_right =
+            get_minimum_size(g->splits[i].child, g->splits[i].div_pct * g->rect.width, 1, 0);
 
-        f32 left_tolerable_pct_change =
-            test_resize_border_splits(g->splits[i - 1].child, want_left_pct_change, 1, 1,
-                                      g->rect.width * g->splits[i - 1].div_pct);
-        f32 right_tolerable_pct_change = test_resize_border_splits(
-            g->splits[i].child, want_right_pct_change, 1, 0, g->rect.width * g->splits[i].div_pct);
-
-        f32 left_tolerable_move_pct =
-            (left_tolerable_pct_change * g->splits[i - 1].div_pct) - g->splits[i - 1].div_pct;
-        f32 right_tolerable_move_pct =
-            -(right_tolerable_pct_change * g->splits[i].div_pct) + g->splits[i].div_pct;
-
-        f32 move_pct = want_move_pct;
-        // basing the order of comparisons on move direction makes it more stable. haven't thought
-        // about why
-        if (move_pct < 0) {
-          if (left_tolerable_pct_change > want_left_pct_change)
-            move_pct = left_tolerable_move_pct;
-        } else {
-          if (right_tolerable_pct_change > want_right_pct_change)
-            move_pct = right_tolerable_move_pct;
+        b8 too_far_left = min_px_left > g->splits[i - 1].child->rect.width + delta_px;
+        b8 too_far_right = min_px_right > g->splits[i].child->rect.width - delta_px;
+        if (too_far_left && too_far_right) {
+          break;
+        } else if (too_far_left) {
+          delta_px = min_px_left - g->splits[i - 1].child->rect.width;
+        } else if (too_far_right) {
+          delta_px = - (min_px_right - g->splits[i].child->rect.width);
         }
 
-        f32 left_pct_change  = (g->splits[i - 1].div_pct + move_pct) / g->splits[i - 1].div_pct;
-        f32 right_pct_change = (g->splits[i].div_pct - move_pct) / g->splits[i].div_pct;
+        f32 move_pct = delta_px / g->rect.width;
 
+        f32 left_pct_change =
+            (g->splits[i - 1].div_pct + move_pct) / g->splits[i - 1].div_pct;
+        f32 right_pct_change = (g->splits[i].div_pct - move_pct) / g->splits[i].div_pct;
+        
         resize_border_splits_and_propagate(g->splits[i - 1].child, left_pct_change, 1, 1);
         resize_border_splits_and_propagate(g->splits[i].child, right_pct_change, 1, 0);
         g->splits[i - 1].div_pct *= left_pct_change;
@@ -1602,7 +1595,7 @@ void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
   if (top_group) {
     printf("topGroup x: %f, y: %f, width: %f, height: %f\n", top_group->rect.x, top_group->rect.y,
            top_group->rect.width, top_group->rect.height);
-    push_rect(&main_dl, top_group->rect, {1, 0, 0, .25});
+    // push_rect(&main_dl, top_group->rect, {1, 0, 0, .25});
   }
 
   draw_draw_list(target, &main_dl);
