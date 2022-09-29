@@ -71,7 +71,7 @@ struct DrawList {
 
   StaticStack<Rect, 1024> scissors;
   void push_scissor(Rect rect) { scissors.push_back(rect); }
-  void pop_scissor(Rect rect) { scissors.pop(); }
+  void pop_scissor() { scissors.pop(); }
 };
 
 DrawList main_dl;
@@ -101,6 +101,27 @@ void clear_draw_list(DrawList *dl)
   dl->draw_call_count = 0;
 }
 
+void draw_draw_list(RenderTarget target, DrawList *dl)
+{
+  glDisable(GL_CULL_FACE);
+  glDisable(GL_DEPTH_TEST);
+  glEnable(GL_BLEND);
+  reupload_vertex_buffer(dl->vb, (float *)dl->verts, dl->vert_count,
+                         dl->vert_count * sizeof(Vertex));
+  bind_shader(debug_ui_shader);
+  bind_2i(debug_ui_shader, UniformId::RESOLUTION, target.width, target.height);
+  for (i32 i = 0; i < dl->draw_call_count; i++) {
+    DrawCall call = dl->draw_calls[i];
+    
+    start_scissor(target, call.scissor);
+    draw_sub(target, debug_ui_shader, dl->vb, call.vert_offset, call.tri_count * 3);
+    end_scissor();
+  }
+  glDisable(GL_BLEND);
+  glEnable(GL_CULL_FACE);
+  glEnable(GL_DEPTH_TEST);
+}
+
 void push_vert(DrawList *dl, Vec2f pos, Vec2f uv, Color color)
 {
   dl->verts[dl->vert_count++] = {pos, uv, color};
@@ -108,13 +129,20 @@ void push_vert(DrawList *dl, Vec2f pos, Vec2f uv, Color color)
 
 void push_draw_call(DrawList *dl, i32 tri_count)
 {
-  if (dl->draw_call_count == 0) {
-    dl->draw_calls[dl->draw_call_count] = {0, tri_count};
-    dl->draw_call_count++;
+  Rect current_scissor_rect =
+      (dl->scissors.count == 0) ? Rect{0, 0, 10000000, 10000000} : dl->scissors.top();
+
+  if (dl->draw_call_count > 0 &&
+      dl->draw_calls[dl->draw_call_count - 1].scissor == current_scissor_rect) {
+    dl->draw_calls[dl->draw_call_count - 1].tri_count += tri_count;
     return;
   }
 
-  dl->draw_calls[0].tri_count += tri_count;
+  DrawCall dc = {dl->vert_count - (tri_count * 3), tri_count};
+  dc.scissor  = current_scissor_rect;
+
+  dl->draw_calls[dl->draw_call_count] = dc;
+  dl->draw_call_count++;
 }
 
 void push_rect(DrawList *dl, Rect rect, Color color)

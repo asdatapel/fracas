@@ -106,6 +106,9 @@ struct Group {
   Group *parent = nullptr;
   Rect rect;
 
+  // can change frame to frame
+  DrawList *dl;
+
   // cache to prevent walking up the tree constantly
   Group *root;
 
@@ -162,13 +165,19 @@ struct Group {
     tabs_rect.width  = titlebar_content_rect.width - (WINDOW_CONTROL_WIDTH * 2);
     tabs_rect.height = titlebar_content_rect.height + WINDOW_MARGIN_SIZE;
 
-    f32 UNSELECTED_TAB_WIDTH = 128.f;
-    f32 tab_gap              = 2.f;
+    const f32 UNSELECTED_TAB_WIDTH = 128.f;
+    const f32 TAB_GAP              = 2.f;
+
+    f32 tab_width = UNSELECTED_TAB_WIDTH;
+    if (UNSELECTED_TAB_WIDTH * windows.count > tabs_rect.width) {
+      tab_width -= ((UNSELECTED_TAB_WIDTH * windows.count) - tabs_rect.width) / windows.count;
+    }
+    tab_width = fmaxf(tab_width, 0.f);
 
     Rect rect;
-    rect.x      = tabs_rect.x + (UNSELECTED_TAB_WIDTH + tab_gap) * window_idx;
+    rect.x      = tabs_rect.x + (tab_width + TAB_GAP) * window_idx;
     rect.y      = tabs_rect.y;
-    rect.width  = UNSELECTED_TAB_WIDTH;
+    rect.width  = tab_width;
     rect.height = tabs_rect.height;
 
     return rect;
@@ -297,6 +306,8 @@ struct DuiState {
 
   i64 frame                          = 0;
   Group *top_root_group_at_mouse_pos = nullptr;
+
+  Array<DrawList, 20> draw_lists;
 };
 
 DuiState s;
@@ -409,8 +420,10 @@ void add_root_group(Group *g)
   // sanity check
   assert(get_group_z(g) == -1);
 
+  i32 index = s.root_groups.insert(0, g);
   g->parent = nullptr;
-  s.root_groups.insert(0, g);
+  g->root   = g;
+  g->dl     = &s.draw_lists[index];
 }
 
 void remove_root_group(Group *g)
@@ -481,7 +494,6 @@ b8 contained_in(Group *g, Group *in)
 void propagate_groups(Group *g, Group *root = nullptr, Group *parent = nullptr)
 {
   if (parent) g->parent = parent;
-
   g->root = root ? root : g;
 
   if (!g->is_leaf()) {
@@ -537,7 +549,7 @@ f32 get_minimum_size(Group *g, f32 g_size_px, i32 axis, b8 dir, b8 commmit = fal
            get_minimum_size(end_split->child, g_size_px * end_split->div_pct, axis, dir);
   }
 
-  const f32 MINIMUM_GROUP_SIZE[2]  = {TITLEBAR_HEIGHT + 15.f, 50.f};
+  const f32 MINIMUM_GROUP_SIZE[2] = {TITLEBAR_HEIGHT + 15.f, 50.f};
   return MINIMUM_GROUP_SIZE[axis];
 }
 
@@ -971,13 +983,13 @@ void draw_group_and_children(Group *g)
   Rect group_border_rect           = g->get_border_rect();
   Rect window_rect                 = g->get_window_rect();
 
-  push_rect(&main_dl, titlebar_rect, d);
-  push_rect(&main_dl, titlebar_bottom_border_rect, d_light);
-  push_rect(&main_dl, group_border_rect, d);
-  push_rect(&main_dl, window_rect, d_dark);
+  push_rect(g->root->dl, titlebar_rect, d);
+  push_rect(g->root->dl, titlebar_bottom_border_rect, d_light);
+  push_rect(g->root->dl, group_border_rect, d);
+  push_rect(g->root->dl, window_rect, d_dark);
 
   if (is_empty(g)) {
-    push_rect(&main_dl, titlebar_rect, {1, 0, 0, 1});
+    push_rect(g->root->dl, titlebar_rect, {1, 0, 0, 1});
   }
 
   Rect titlebar_content_rect = g->get_titlebar_content_rect();
@@ -992,7 +1004,7 @@ void draw_group_and_children(Group *g)
     if (w_i == g->active_window_idx) {
       tab_color = d_light;
     }
-    push_rect(&main_dl, tab_rect, tab_color);
+    push_rect(g->root->dl, tab_rect, tab_color);
   }
 }
 
@@ -1224,26 +1236,25 @@ void start_frame_for_group(Group *g)
         f32 delta_px = s.input->mouse_pos.y - split_move_handle.y;
 
         f32 min_px_up = get_minimum_size(g->splits[i - 1].child,
-                                           g->splits[i - 1].div_pct * g->rect.height, 0, 1);
+                                         g->splits[i - 1].div_pct * g->rect.height, 0, 1);
         f32 min_px_down =
             get_minimum_size(g->splits[i].child, g->splits[i].div_pct * g->rect.height, 0, 0);
 
-        b8 too_far_up = min_px_up > g->splits[i - 1].child->rect.height + delta_px;
+        b8 too_far_up   = min_px_up > g->splits[i - 1].child->rect.height + delta_px;
         b8 too_far_down = min_px_down > g->splits[i].child->rect.height - delta_px;
         if (too_far_up && too_far_down) {
           break;
         } else if (too_far_up) {
           delta_px = min_px_up - g->splits[i - 1].child->rect.height;
         } else if (too_far_down) {
-          delta_px = - (min_px_down - g->splits[i].child->rect.height);
+          delta_px = -(min_px_down - g->splits[i].child->rect.height);
         }
 
         f32 move_pct = delta_px / g->rect.height;
 
-        f32 up_pct_change =
-            (g->splits[i - 1].div_pct + move_pct) / g->splits[i - 1].div_pct;
+        f32 up_pct_change   = (g->splits[i - 1].div_pct + move_pct) / g->splits[i - 1].div_pct;
         f32 down_pct_change = (g->splits[i].div_pct - move_pct) / g->splits[i].div_pct;
-        
+
         resize_border_splits_and_propagate(g->splits[i - 1].child, up_pct_change, 0, 1);
         resize_border_splits_and_propagate(g->splits[i].child, down_pct_change, 0, 0);
         g->splits[i - 1].div_pct *= up_pct_change;
@@ -1270,22 +1281,21 @@ void start_frame_for_group(Group *g)
         f32 min_px_right =
             get_minimum_size(g->splits[i].child, g->splits[i].div_pct * g->rect.width, 1, 0);
 
-        b8 too_far_left = min_px_left > g->splits[i - 1].child->rect.width + delta_px;
+        b8 too_far_left  = min_px_left > g->splits[i - 1].child->rect.width + delta_px;
         b8 too_far_right = min_px_right > g->splits[i].child->rect.width - delta_px;
         if (too_far_left && too_far_right) {
           break;
         } else if (too_far_left) {
           delta_px = min_px_left - g->splits[i - 1].child->rect.width;
         } else if (too_far_right) {
-          delta_px = - (min_px_right - g->splits[i].child->rect.width);
+          delta_px = -(min_px_right - g->splits[i].child->rect.width);
         }
 
         f32 move_pct = delta_px / g->rect.width;
 
-        f32 left_pct_change =
-            (g->splits[i - 1].div_pct + move_pct) / g->splits[i - 1].div_pct;
+        f32 left_pct_change  = (g->splits[i - 1].div_pct + move_pct) / g->splits[i - 1].div_pct;
         f32 right_pct_change = (g->splits[i].div_pct - move_pct) / g->splits[i].div_pct;
-        
+
         resize_border_splits_and_propagate(g->splits[i - 1].child, left_pct_change, 1, 1);
         resize_border_splits_and_propagate(g->splits[i].child, right_pct_change, 1, 0);
         g->splits[i - 1].div_pct *= left_pct_change;
@@ -1325,6 +1335,9 @@ void start_frame(InputState *input, RenderTarget target)
 
   clear_draw_list(&forground_dl);
   clear_draw_list(&main_dl);
+  for (i32 i = 0; i < s.draw_lists.len; i++) {
+    clear_draw_list(&s.draw_lists[i]);
+  }
 
   // figure out the top groups first
   s.top_root_group_at_mouse_pos     = nullptr;
@@ -1351,30 +1364,17 @@ void start_frame(InputState *input, RenderTarget target)
     Group *g = s.root_groups[i];
     start_frame_for_group(g);
   }
-  // for (i32 i = 0; i < s.groups.SIZE; i++) {
-  //   if (!s.groups.exists(i)) continue;
-  //   if (s.groups[i].parent) continue;
-
-  //   Group *g = &s.groups[i];
-  //   start_frame_for_group(g);
-  // }
 
   // one pass to propagate changes
   for (i32 i = 0; i < s.root_groups.count; i++) {
     Group *g = s.root_groups[i];
     propagate_groups(g);
   }
-  // for (i32 i = 0; i < s.groups.SIZE; i++) {
-  //   if (!s.groups.exists(i)) continue;
-  //   if (s.groups[i].parent) continue;
-
-  //   Group *g = &s.groups[i];
-  //   propagate_groups(g);
-  // }
 
   // one pass for drawing, in reverse z order
   for (i32 i = s.root_groups.count - 1; i >= 0; i--) {
     Group *g = s.root_groups[i];
+    g->dl    = &s.draw_lists[i];
     draw_group_and_children(g);
   }
 }
@@ -1389,29 +1389,21 @@ DuiId start_window(String name, Rect initial_rect, WindowOptions options = {})
   s.cw          = w;
   w->last_frame = s.frame;
 
-  if (g->windows[g->active_window_idx] != id) return id;
-
   Rect content_rect = w->get_content_rect();
-  // push_rect(&main_dl, content_rect, w->color);
+  // push_rect(&main_dl, content_rect, {1, 1, 1, 1});
 
-  // Rect titlebar_rect      = g->get_titlebar_margin_rect();
-  // Rect window_border_rect = g->get_border_rect();
-  // Rect window_margin_rect = g->get_margin_rect();
+  g->root->dl->push_scissor(content_rect);
 
-  // push_rect(window_border_rect, d);
-  // push_rect(titlebar_rect, d_light);
-  // push_rect(window_margin_rect, d_dark);
-
-  // Rect titlebar_content_rect = g->get_titlebar_content_rect();
-  // push_rect(titlebar_content_rect, {1, 0, 0, 1});
-
-  // Rect tab_rect = g->get_tab_margin_rect(g->get_window_idx(id));
-  // push_rect(tab_rect, w->color);
+  if (g->windows[g->active_window_idx] != id) return id;
 
   return w->id;
 }
 
-void end_window() { s.cw = nullptr; }
+void end_window()
+{
+  s.cw->parent->root->dl->pop_scissor();
+  s.cw = nullptr;
+}
 
 }  // namespace Dui
 
@@ -1447,7 +1439,7 @@ void basic_test_control(Vec2f size, Color color)
   rect.y      = window_content_rect.y + scrolled_cursor.y;
   rect.width  = size.x;
   rect.height = size.y;
-  // push_rect(&main_dl, rect, color);
+  push_rect(w->parent->root->dl, rect, color);
 
   w->cursor_height = fmaxf(w->cursor_height, size.y);
   w->cursor.x += size.x;
@@ -1458,24 +1450,6 @@ void basic_test_control(Vec2f size, Color color)
       fmaxf(w->current_frame_minimum_content_span.y, w->cursor.y + w->cursor_height);
 }
 
-void draw_draw_list(RenderTarget target, DrawList *dl)
-{
-  glDisable(GL_CULL_FACE);
-  glDisable(GL_DEPTH_TEST);
-  glEnable(GL_BLEND);
-  reupload_vertex_buffer(dl->vb, (float *)dl->verts, dl->vert_count,
-                         dl->vert_count * sizeof(Vertex));
-  bind_shader(debug_ui_shader);
-  bind_2i(debug_ui_shader, UniformId::RESOLUTION, target.width, target.height);
-  for (i32 i = 0; i < dl->draw_call_count; i++) {
-    DrawCall call = dl->draw_calls[i];
-    draw_sub(target, debug_ui_shader, dl->vb, call.vert_offset, call.tri_count * 3);
-  }
-  glDisable(GL_BLEND);
-  glEnable(GL_CULL_FACE);
-  glEnable(GL_DEPTH_TEST);
-}
-
 void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
 {
   static b8 init = false;
@@ -1483,6 +1457,10 @@ void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
     init = true;
     init_draw_list(&main_dl);
     init_draw_list(&forground_dl);
+    for (i32 i = 0; i < s.draw_lists.MAX_LEN; i++) {
+      s.draw_lists.append({});
+      init_draw_list(&s.draw_lists[i]);
+    }
 
     s.empty_group      = create_group(nullptr, {});
     s.fullscreen_group = s.empty_group;
@@ -1496,6 +1474,9 @@ void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
   if (paused) {
     draw_draw_list(target, &main_dl);
     draw_draw_list(target, &forground_dl);
+    for (i32 i = 0; i < s.draw_lists.len; i++) {
+      draw_draw_list(target, &s.draw_lists[i]);
+    }
 
     return;
   }
@@ -1598,6 +1579,9 @@ void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
     // push_rect(&main_dl, top_group->rect, {1, 0, 0, .25});
   }
 
+  for (i32 i = s.root_groups.count - 1; i >= 0; i--) {
+    draw_draw_list(target, s.root_groups[i]->dl);
+  }
   draw_draw_list(target, &main_dl);
   draw_draw_list(target, &forground_dl);
 }
