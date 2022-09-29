@@ -1120,6 +1120,116 @@ void start_frame_for_group(Group *g)
 
       // resize handles that extend out of group
       {
+        const f32 MINIMUM_ROOT_WIDTH = 50.f;
+        const f32 MINIMUM_ROOT_HEIGHT = 75.f;
+        
+        Rect left_top_handle_rect;
+        left_top_handle_rect.x      = g->rect.x - RESIZE_HANDLES_OVERSIZE;
+        left_top_handle_rect.y      = g->rect.y - RESIZE_HANDLES_OVERSIZE;
+        left_top_handle_rect.width  = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
+        left_top_handle_rect.height = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
+        SUB_ID(left_top_handle_id, g->id);
+        DuiId left_top_handle_hot      = do_hot(left_top_handle_id, left_top_handle_rect);
+        DuiId left_top_handle_active   = do_active(left_top_handle_id);
+        DuiId left_top_handle_dragging = do_dragging(left_top_handle_id);
+        if (left_top_handle_hot || left_top_handle_dragging) {
+          push_rect(&forground_dl, left_top_handle_rect, {1, 1, 1, 1});
+        }
+        if (left_top_handle_dragging) {
+          g->rect.x += s.dragging_frame_delta.x;
+          g->rect.y += s.dragging_frame_delta.y;
+          g->rect.width -= s.dragging_frame_delta.x;
+          g->rect.height -= s.dragging_frame_delta.y;
+
+          if (g->rect.width < MINIMUM_ROOT_WIDTH) {
+            g->rect.x -= MINIMUM_ROOT_WIDTH - g->rect.width;
+            g->rect.width = MINIMUM_ROOT_WIDTH;
+          }
+          if (g->rect.height < MINIMUM_ROOT_HEIGHT) {
+            g->rect.y -= MINIMUM_ROOT_HEIGHT - g->rect.height;
+            g->rect.height = MINIMUM_ROOT_HEIGHT;
+          }
+        }
+        
+        Rect right_top_handle_rect;
+        right_top_handle_rect.x      = g->rect.x + g->rect.width - WINDOW_BORDER_SIZE - WINDOW_MARGIN_SIZE;;
+        right_top_handle_rect.y      = g->rect.y - RESIZE_HANDLES_OVERSIZE;
+        right_top_handle_rect.width  = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
+        right_top_handle_rect.height = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
+        SUB_ID(right_top_handle_id, g->id);
+        DuiId right_top_handle_hot      = do_hot(right_top_handle_id, right_top_handle_rect);
+        DuiId right_top_handle_active   = do_active(right_top_handle_id);
+        DuiId right_top_handle_dragging = do_dragging(right_top_handle_id);
+        if (right_top_handle_hot || right_top_handle_dragging) {
+          push_rect(&forground_dl, right_top_handle_rect, {1, 1, 1, 1});
+          printf("test\n");
+        }
+        if (right_top_handle_dragging) {
+          g->rect.width += s.dragging_frame_delta.x;
+          g->rect.y += s.dragging_frame_delta.y;
+          g->rect.height -= s.dragging_frame_delta.y;
+          
+          if (g->rect.width < MINIMUM_ROOT_WIDTH) {
+            g->rect.width = MINIMUM_ROOT_WIDTH;
+          }
+          if (g->rect.height < MINIMUM_ROOT_HEIGHT) {
+            g->rect.y -= MINIMUM_ROOT_HEIGHT - g->rect.height;
+            g->rect.height = MINIMUM_ROOT_HEIGHT;
+          }
+        }
+        
+        Rect left_bottom_handle_rect;
+        left_bottom_handle_rect.x      = g->rect.x - RESIZE_HANDLES_OVERSIZE;
+        left_bottom_handle_rect.y      = g->rect.y + g->rect.height - WINDOW_BORDER_SIZE - WINDOW_MARGIN_SIZE;
+        left_bottom_handle_rect.width  = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
+        left_bottom_handle_rect.height = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
+        SUB_ID(left_bottom_handle_id, g->id);
+        DuiId left_bottom_handle_hot      = do_hot(left_bottom_handle_id, left_bottom_handle_rect);
+        DuiId left_bottom_handle_active   = do_active(left_bottom_handle_id);
+        DuiId left_bottom_handle_dragging = do_dragging(left_bottom_handle_id);
+        if (left_bottom_handle_hot || left_bottom_handle_dragging) {
+          push_rect(&forground_dl, left_bottom_handle_rect, {1, 1, 1, 1});
+          printf("test\n");
+        }
+        if (left_bottom_handle_dragging) {
+          g->rect.x += s.dragging_frame_delta.x;
+          g->rect.width -= s.dragging_frame_delta.x;
+          g->rect.height += s.dragging_frame_delta.y;
+          
+          if (g->rect.width < MINIMUM_ROOT_WIDTH) {
+            g->rect.x -= MINIMUM_ROOT_WIDTH - g->rect.width;
+            g->rect.width = MINIMUM_ROOT_WIDTH;
+          }
+          if (g->rect.height < MINIMUM_ROOT_HEIGHT) {
+            g->rect.height = MINIMUM_ROOT_HEIGHT;
+          }
+        }
+        
+        Rect right_bottom_handle_rect;
+        right_bottom_handle_rect.x      = g->rect.x + g->rect.width - WINDOW_BORDER_SIZE - WINDOW_MARGIN_SIZE;
+        right_bottom_handle_rect.y      = g->rect.y + g->rect.height - WINDOW_BORDER_SIZE - WINDOW_MARGIN_SIZE;
+        right_bottom_handle_rect.width  = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
+        right_bottom_handle_rect.height = RESIZE_HANDLES_OVERSIZE + WINDOW_BORDER_SIZE + WINDOW_MARGIN_SIZE;
+        SUB_ID(right_bottom_handle_id, g->id);
+        DuiId right_bottom_handle_hot      = do_hot(right_bottom_handle_id, right_bottom_handle_rect);
+        DuiId right_bottom_handle_active   = do_active(right_bottom_handle_id);
+        DuiId right_bottom_handle_dragging = do_dragging(right_bottom_handle_id);
+        if (right_bottom_handle_hot || right_bottom_handle_dragging) {
+          push_rect(&forground_dl, right_bottom_handle_rect, {1, 1, 1, 1});
+          printf("test\n");
+        }
+        if (right_bottom_handle_dragging) {
+          g->rect.width += s.dragging_frame_delta.x;
+          g->rect.height += s.dragging_frame_delta.y;
+          if (g->rect.width < MINIMUM_ROOT_WIDTH) {
+            g->rect.width = MINIMUM_ROOT_WIDTH;
+          }
+          if (g->rect.height < MINIMUM_ROOT_HEIGHT) {
+            g->rect.height = MINIMUM_ROOT_HEIGHT;
+          }
+        }
+
+
         Rect left_handle_rect;
         left_handle_rect.x      = g->rect.x - RESIZE_HANDLES_OVERSIZE;
         left_handle_rect.y      = g->rect.y;
@@ -1135,6 +1245,10 @@ void start_frame_for_group(Group *g)
         if (left_handle_dragging) {
           g->rect.x += s.dragging_frame_delta.x;
           g->rect.width -= s.dragging_frame_delta.x;
+          if (g->rect.width < MINIMUM_ROOT_WIDTH) {
+            g->rect.x -= MINIMUM_ROOT_WIDTH - g->rect.width;
+            g->rect.width = MINIMUM_ROOT_WIDTH;
+          }
         }
 
         Rect right_handle_rect;
@@ -1151,6 +1265,9 @@ void start_frame_for_group(Group *g)
         }
         if (right_handle_dragging) {
           g->rect.width += s.dragging_frame_delta.x;
+          if (g->rect.width < MINIMUM_ROOT_WIDTH) {
+            g->rect.width = MINIMUM_ROOT_WIDTH;
+          }
         }
 
         Rect top_handle_rect;
@@ -1168,6 +1285,10 @@ void start_frame_for_group(Group *g)
         if (top_handle_dragging) {
           g->rect.y += s.dragging_frame_delta.y;
           g->rect.height -= s.dragging_frame_delta.y;
+          if (g->rect.height < MINIMUM_ROOT_HEIGHT) {
+            g->rect.y -= MINIMUM_ROOT_HEIGHT - g->rect.height;
+            g->rect.height = MINIMUM_ROOT_HEIGHT;
+          }
         }
 
         Rect bottom_handle_rect;
@@ -1185,6 +1306,9 @@ void start_frame_for_group(Group *g)
         }
         if (bottom_handle_dragging) {
           g->rect.height += s.dragging_frame_delta.y;
+          if (g->rect.height < MINIMUM_ROOT_HEIGHT) {
+            g->rect.height = MINIMUM_ROOT_HEIGHT;
+          }
         }
       }
 
