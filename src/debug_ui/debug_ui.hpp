@@ -1550,9 +1550,13 @@ void next_line()
   w->cursor_height = 0;
 }
 
-void basic_test_control(Vec2f size, Color color)
+void basic_test_control(String text, Vec2f size, Color color)
 {
+  DuiId id  = hash(text);
+
   Window *w = s.cw;
+
+  if (w->parent->windows[w->parent->active_window_idx] != w->id) return;
 
   Rect window_content_rect = w->get_content_rect();
 
@@ -1563,6 +1567,25 @@ void basic_test_control(Vec2f size, Color color)
   rect.y      = window_content_rect.y + scrolled_cursor.y;
   rect.width  = size.x;
   rect.height = size.y;
+  
+  b8 hot = do_hot(id, rect);
+  b8 active = do_active(id);
+  b8 clicked = hot && s.just_stopped_being_active == id;
+
+  static f32 darkenf = 0.f;
+  static ImmId darken_id = 0;
+
+  if (clicked) {
+    darken_id = id;
+    darkenf = 1.f;
+  }
+
+  if (darken_id == id) {
+    color = darken(color, darkenf);
+    darkenf -= 0.01f;
+    if (darkenf < 0.f) darken_id = 0;
+  }
+
   push_rect(w->parent->root->dl, rect, color);
 
   w->cursor_height = fmaxf(w->cursor_height, size.y);
@@ -1572,6 +1595,7 @@ void basic_test_control(Vec2f size, Color color)
       fmaxf(w->current_frame_minimum_content_span.x, w->cursor.x);
   w->current_frame_minimum_content_span.y =
       fmaxf(w->current_frame_minimum_content_span.y, w->cursor.y + w->cursor_height);
+
 }
 
 void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
@@ -1625,16 +1649,16 @@ void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
 
   DuiId w5 = start_window("fifth", {500, 600, 200, 300});
   set_window_color({0.99216, 0.46667, 0.00784, .5});
-  basic_test_control({200, 300}, {1, 1, 1, 1});
-  basic_test_control({150, 100}, {1, 0, 0, 1});
-  basic_test_control({100, 400}, {1, 1, 0, 1});
+  basic_test_control("test1", {200, 300}, {1, 1, 1, 1});
+  basic_test_control("test2", {150, 100}, {1, 0, 0, 1});
+  basic_test_control("test3", {100, 400}, {1, 1, 0, 1});
   next_line();
-  basic_test_control({200, 600}, {0, 1, 1, 1});
+  basic_test_control("test4", {200, 600}, {0, 1, 1, 1});
   next_line();
-  basic_test_control({200, 700}, {1, 0, 1, 1});
-  basic_test_control({200, 300}, {1, 1, 0, 1});
+  basic_test_control("test5", {200, 700}, {1, 0, 1, 1});
+  basic_test_control("test6", {200, 300}, {1, 1, 0, 1});
   next_line();
-  basic_test_control({200, 100}, {0, 0, 1, 1});
+  basic_test_control("test7", {200, 100}, {0, 0, 1, 1});
   end_window();
 
   DuiId w6 = start_window("sizth", {600, 700, 200, 300});
@@ -1712,14 +1736,6 @@ void debug_ui_test(RenderTarget target, InputState *input, Memory memory)
 }  // namespace Dui
 
 /*
-TODOs:
-
-!!! A 'Dockspace' is just a special group leaf (i.e no children but no window either)!
-- allows us to have 'center' space
-- doesn't show up as a tab when merged with another group, but still exists, so when the other
-group is removed, blank space remains
-- no titlebar
-
 {
   b8 x = Dui::button(...);
   DuiId button_id = Dui::Id();
